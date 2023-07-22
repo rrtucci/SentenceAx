@@ -1,0 +1,72 @@
+This file is best viewed in NotePad++, with the following preferences ON:
+ "View/Word Wrap" and "View/Show Symbol/Show All Symbols" 
+ This way, you will see where all the \t anf \n go.
+
+
+* extractions, tab separated values (imojie_data\dev\carb\extractions.tsv) 
+Blagoja ` Billy ' Celeski is an Australian footballer who plays as a midfielder for the Newcastle Jets .	is	Blagoja ` Billy ' Celeski	an Australian footballer
+Blagoja ` Billy ' Celeski is an Australian footballer who plays as a midfielder for the Newcastle Jets .	plays	Blagoja ` Billy ' Celeski	as a midfielder
+Blagoja ` Billy ' Celeski is an Australian footballer who plays as a midfielder for the Newcastle Jets .	plays	Blagoja ` Billy ' Celeski	for the Newcastle Jets
+Blagoja ` Billy ' Celeski is an Australian footballer who plays as a midfielder for the Newcastle Jets .	have	the Newcastle Jets	midfielder
+
+
+* extractions, tab separated vauues (imojie-data\test\carb\extractions.tsv)
+negotiations with the third bank .	said	A spokesman	HealthVest has paid two of the three banks it owed interest to in October and is in negotiations with the third bank
+A spokesman said HealthVest has paid two of the three banks it owed interest to in October and is in negotiations with the third bank .	has paid	HealthVest	two of the three banks	it owed interest to	T: in October	C: A spokesman said
+A spokesman said HealthVest has paid two of the three banks it owed interest to in October and is in negotiations with the third bank .	is in	HealthVest	negotiations	with the third bank	C: A spokesman said
+
+
+* extractions, semicolon separated values (imojie_data\dev\carb\extractions.txt)
+Blagoja ` Billy ' Celeski is an Australian footballer who plays as a midfielder for the Newcastle Jets .
+1 (Blagoja ` Billy ' Celeski ; is ; an Australian footballer)
+1 (Blagoja ` Billy ' Celeski ; plays ; as a midfielder)
+1 (Blagoja ` Billy ' Celeski ; plays ; for the Newcastle Jets)
+1 (the Newcastle Jets ; have ; midfielder)
+
+
+* extractions, allen (imojie-data\train\oie4_extractions.tsv)
+Hercule Poirot is a fictional Belgian detective , created by Agatha Christie .	<arg1> Hercule Poirot </arg1> <rel> is </rel> <arg2> a fictional Belgian detective , created by Agatha Christie </arg2>	0.95
+Hercule Poirot is a fictional Belgian detective , created by Agatha Christie .	<arg1> Hercule Poirot </arg1> <rel> is </rel> <arg2> a fictional Belgian detective </arg2>	-108.0506591796875
+Hercule Poirot is a fictional Belgian detective , created by Agatha Christie .	<arg1> a fictional Belgian detective </arg1> <rel> created </rel> <arg2> by Agatha Christie </arg2>	0.92
+Hercule Poirot is a fictional Belgian detective , created by Agatha Christie .	<arg1> a fictional Belgian detective </arg1> <rel> be created </rel> <arg2> by Agatha Christie </arg2>	-108.0506591796875
+Hercule Poirot is a fictional Belgian detective , created by Agatha Christie .	<arg1> Hercule Poirot </arg1> <rel> is </rel> <arg2> a fictional Belgian detective created by Agatha Christie </arg2>	-108.0506591796875
+
+
+* cctags (openie-data\ptb-dev.labels)
+Fidelity Investments placed new ads in newspapers yesterday , and wrote another new ad appearing today .
+NONE NONE CP_START CP CP CP CP CP OTHERS CC CP CP CP CP CP CP NONE
+NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE
+NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE
+
+
+* cctags (openie-data\ptb-train.labels)
+Bell , based in Los Angeles , makes and distributes electronic , computer and building products .
+NONE NONE NONE NONE NONE NONE NONE CP_START CC CP CP_START SEP CP CC CP NONE NONE
+NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE
+NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE
+
+
+* cctags (openie-data\ptb-test.labels)
+Under an agreement signed by the Big Board and the Chicago Mercantile Exchange , trading was temporarily halted in Chicago .
+NONE NONE NONE NONE NONE CP_START CP CP CC CP CP CP CP NONE NONE NONE NONE NONE NONE NONE NONE
+NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE
+NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE
+
+
+* extags (openie-data\openie4_labels)
+Hercule Poirot is a fictional Belgian detective , created by Agatha Christie . [unused1] [unused2] [unused3]
+ARG1 ARG1 REL ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 NONE NONE NONE NONE
+NONE NONE NONE ARG1 ARG1 ARG1 ARG1 NONE REL ARG2 ARG2 ARG2 NONE NONE NONE NONE
+
+
+* extags (openie-data\openie4_labels)
+When Christie 's daughter , Rosalind Hicks , observed Ustinov during a rehearsal , she said , `` That 's not Poirot ! [unused1] [unused2] [unused3]
+NONE ARG1 ARG1 ARG1 NONE NONE NONE NONE REL ARG2 TIME TIME TIME NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE
+TIME TIME TIME TIME TIME TIME TIME TIME TIME TIME TIME TIME TIME NONE ARG1 REL NONE NONE ARG2 ARG2 ARG2 ARG2 NONE NONE NONE NONE
+NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE ARG1 REL REL ARG2 NONE NONE NONE NONE
+NONE ARG2 NONE REL NONE ARG1 ARG1 NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE REL NONE
+
+
+* extags (openie-data\openie4_labels)
+In Agatha Christie 's Hercule Poirot , Japp was portrayed by Philip Jackson . [unused1] [unused2] [unused3]
+LOC LOC LOC LOC LOC LOC NONE ARG1 REL REL ARG2 ARG2 ARG2 NONE NONE NONE NONE

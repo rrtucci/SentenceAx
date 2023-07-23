@@ -1,6 +1,6 @@
 This file is best viewed in NotePad++, with the following preferences ON:
  "View/Word Wrap" and "View/Show Symbol/Show All Symbols" 
- This way, you will see where all the \t anf \n go.
+ This way, you will see where all the \t and \n go.
 
 
 * extractions, tab separated values (imojie_data\dev\carb\extractions.tsv) 

@@ -1,18 +1,19 @@
 # hparams=hyperparamters, fp = file path
 
 
-EXT_SAMPLES_PATH = "data/ext_samples.txt"
+EXT_SAMPLES_FPATH = "data/ext_samples.txt"
 # file paths for training, tuning and testing cctags (cc=conjunction)
-CCTAGS_TRAIN_PATH = "data/cctags_train.txt"
+CCTAGS_TRAIN_FPATH = "data/cctags_train.txt"
 #dev=development=validation=tuning
-CCTAGS_TUNE_PATH=  "data/cctags_tune.txt"
-CCTAGS_TEST_PATH= "data/cctags_test.txt"
+CCTAGS_TUNE_FPATH=  "data/cctags_tune.txt"
+CCTAGS_TEST_FPATH= "data/cctags_test.txt"
 
 # file paths for training, tuning and testing extags (ex=extraction)
-EXTAGS_TRAIN_PATH = "data/extags_train.txt"
+EXTAGS_FPATH = "data/extags_all.txt"
+EXTAGS_TRAIN_FPATH = "data/extags_train.txt"
 #dev=development=validation=tuning
-EXTAGS_TUNE_PATH=  "data/extags_tune.txt"
-EXTAGS_TEST_PATH= "data/extags_test.txt"
+EXTAGS_TUNE_FPATH=  "data/extags_tune.txt"
+EXTAGS_TEST_FPATH= "data/extags_test.txt"
 
 
 BOS_TOKEN_ID = 101 # bos=begin of sentence

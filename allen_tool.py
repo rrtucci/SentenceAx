@@ -4,15 +4,15 @@ from collections import OrderedDict
 from Extraction import *
 
 
-def write_allen_line(ext):
-    str0 = ext.in_ztz
-    str0 += " <arg1> " + ext.arg1 + r" <\arg1> "
-    str0 += " <rel> " + ext.rel + r" <\rel> "
-    str0 += " <arg2> " + ext.arg2 + r" <\arg2> "
-    str0 += str(ext.confidence)
+def write_allen_line(ex):
+    str0 = ex.in_ztz
+    str0 += " <arg1> " + ex.arg1 + r" <\arg1> "
+    str0 += " <rel> " + ex.rel + r" <\rel> "
+    str0 += " <arg2> " + ex.arg2 + r" <\arg2> "
+    str0 += str(ex.confidence)
     return str0
 
-def parse_allen_line(line):
+def read_allen_line(line):
     tab_sep_vals = line.strip().split('\t')
     in_ztz = tab_sep_vals[0]
     confidence = float(tab_sep_vals[2])
@@ -36,7 +36,19 @@ def parse_allen_line(line):
 
     return ext
 
-def parse_allen_file(allen_fpath):
+def get_num_sents_in_allen_file(allen_fpath):
+    with open(allen_fpath, 'r', encoding='utf-8') as f:
+        lines = f.readlines()
+    prev_in_ztz = ''
+    num_sents = 1
+    for line in lines:
+        ex = read_allen_line(line)
+        if ex.in_ztz != prev_in_ztz:
+            num_sents += 1
+        prev_in_ztz = ex.in_ztz
+    return num_sents
+
+def read_allen_file(allen_fpath):
     with open(allen_fpath, 'r', encoding='utf-8') as f:
         lines = f.readlines()
     lines = [unidecode(line) for line in lines]
@@ -45,19 +57,19 @@ def parse_allen_file(allen_fpath):
     prev_in_ztz = ''
     for line in lines:
         # print("bnhk", line)
-        ext = parse_allen_line(line)
-        extractions.append(ext)
-        # print("ooyp1", ext.in_ztz)
+        ex = read_allen_line(line)
+        extractions.append(ex)
+        # print("ooyp1", ex.in_ztz)
         # print("ooyp2", prev_in_ztz)
-        # print("ooyp3", ext.in_ztz == prev_in_ztz)
-        if ext.in_ztz != prev_in_ztz:
+        # print("ooyp3", ex.in_ztz == prev_in_ztz)
+        if ex.in_ztz != prev_in_ztz:
             if prev_in_ztz:
                 ztz_to_extractions[prev_in_ztz] = extractions[:-1]
                 # print("llkml", prev_in_ztz, extractions)
-                prev_in_ztz = ext.in_ztz
-                extractions = [ext]
+                prev_in_ztz = ex.in_ztz
+                extractions = [ex]
             else:
-                prev_in_ztz = ext.in_ztz
+                prev_in_ztz = ex.in_ztz
 
     # print("zlpd", ztz_to_extractions)
     return ztz_to_extractions
@@ -70,25 +82,25 @@ if __name__ == "__main__":
             lines = f.readlines()
         lines = [unidecode(line) for line in lines]
         for k, line in enumerate(lines[0:5]):
-            ext = parse_allen_line(line)
+            ex = read_allen_line(line)
             print(str(k+1) + ".")
-            print(ext.in_ztz)
-            print("arg1=", ext.arg1)
-            print("rel=", ext.rel)
-            print("arg2=", ext.arg2)
+            print(ex.in_ztz)
+            print("arg1=", ex.arg1)
+            print("rel=", ex.rel)
+            print("arg2=", ex.arg2)
 
     def main2():
         in_path = "data/imojie-data/train/oie4_extractions.tsv"
-        ztz_to_extractions = parse_allen_file(in_path)
+        ztz_to_extractions = read_allen_file(in_path)
         # print("llkp", list(ztz_to_extractions.keys())[0:2])
         for ztz in list(ztz_to_extractions.keys())[0:5]:
             extractions = ztz_to_extractions[ztz]
             print(ztz)
-            for k, ext in enumerate(extractions):
+            for k, ex in enumerate(extractions):
                 print(str(k+1) + ".")
-                print("arg1=", ext.arg1)
-                print("rel=", ext.rel)
-                print("arg2=", ext.arg2)
+                print("arg1=", ex.arg1)
+                print("rel=", ex.rel)
+                print("arg2=", ex.arg2)
             print()
 
 

@@ -1,6 +1,7 @@
 import difflib
 from my_globals import *
-from allen_tool import parse_allen_file
+from allen_tool import read_allen_file, get_num_sents_in_allen_file
+from math import floor
 
 
 # extag = extraction tag
@@ -404,24 +405,68 @@ def good_matches_gt_2(matches):
 def get_matches(list0, list1):
     return difflib.SequenceMatcher(None, list0, list1).get_matching_blocks()
 
-def write_extags_file(allen_fpath, extags_fpath):
-    ztz_to_extensions = parse_allen_file(allen_fpath)
+
+def write_extags_file(allen_fpath, # read
+                      extags_fpath, # write
+                      ztz_id_range):
+
+
+    ztz_to_extractions = read_allen_file(allen_fpath)
+    num_sents = len(ztz_to_extractions.keys())
+    assert 0 <= ztz_id_range[0] <= ztz_id_range[1] <= num_sents - 1
+
 
     with open(extags_fpath, 'w') as f:
-        current_tokens = []
-        for extraction in wiki_extractions:
-            if extraction['arg2_tagged'] and extraction['rel_tagged'] and\
-                    extraction['arg1_tagged']:
-                if 'REL' in extraction['tags'] and 'ARG1' in extraction['tags']:
-                    if extraction['arg2'] == '' or 'ARG2' in extraction['tags']:
-                        assert len(extraction['tokens']) == len(extraction['tags'])
-                        if extraction['tokens'] != current_tokens:
-                            current_tokens = extraction['tokens']
-                            f.write(' '.join(extraction['tokens']))
+        prev_ztz = ''
+        top_of_file = True
+        ztz_id = -1
+        for ztz, ex in ztz_to_extractions:
+            ztz_id += 1
+            if ztz_id < ztz_id_range[0] or ztz_id > ztz_id_range[1]:
+                continue
+            if ztz != prev_ztz:
+                new_in_ztz = True
+                prev_ztz = ztz
+                if top_of_file:
+                    top_of_file = False
+                else:
+                    f.write('\n')
+            else:
+                new_in_ztz = False
+            if ex.name_is_tagged["ARG2"] and \
+                ex.name_is_tagged["REL"] and\
+                    ex.name_is_tagged["ARG1"]:
+                if 'REL' in ex.ztz_tags and 'ARG1' in ex.ztz_tags:
+                    if (not ex.arg2) or 'ARG2' in ex.ztz_tags:
+                        assert len(ex.in3_tokens) == len(ex.ztz_tags)
+                        if new_in_ztz:
+                            f.write(' '.join(ex.in3_tokens))
                             f.write('\n')
-                        f.write(' '.join(extraction['tags']))
+                        f.write(' '.join(ex.ztz_tags))
                         f.write('\n')
 
+def write_extags_ttt_files(allen_fpath,
+                           extags_dir,
+                           ttt_fractions=(.6, .2, .2)):
+    # ttt = train, tune, test
+    assert abs(sum(ttt_fractions)-1) < 1e-8
 
+    extags_train_fpath = extags_dir + "/extags_train.txt"
+    # dev=development=validation=tuning
+    extags_tune_fpath = extags_dir + "/extags_tune.txt"
+    extags_test_fpath = extags_dir + "/extags_test.txt"
+
+    num_sents = get_num_sents_in_allen_file(allen_fpath)
+    num_train_sents = floor(ttt_fractions[0]*num_sents)
+    num_tune_sents = floor(ttt_fractions[1] * num_sents)
+    num_test_sents = floor(ttt_fractions[2] * num_sents)
+    more = num_sents - num_train_sents - num_tune_sents - num_test_sents
+    num_train_sents += more
+
+    for fpath in [extags_train_fpath, extags_tune_fpath, extags_test_fpath]:
+        write_extags_file(allen_fpath, fpath)
+
+
+    return num_train_sents, num_tune_sents, num_test_sents
 
 

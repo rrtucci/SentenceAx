@@ -5,7 +5,7 @@ class CCList: # analogous to Coordination
     # for , and, nor, but, or, yet, so
 
 
-    def __init__(self, ccsent, ccloc, spans, seplocs=None, label=None):
+    def __init__(self, ccsent, ccloc, seplocs, spans, tag=None):
         self.ccsent = ccsent
         # location always with respect to words
         # location of coordinating conjunctions
@@ -23,6 +23,8 @@ class CCList: # analogous to Coordination
 
         self.cctag_to_int = {'CP_START': 2, 'CP': 1,
                       'CC': 3, 'SEP': 4, 'OTHERS': 5, 'NONE': 0}
+        
+        self.spanned_locs=[]
 
     def is_parent(self, child):
         # parent, child are instances of CCList
@@ -65,4 +67,19 @@ class CCList: # analogous to Coordination
         words = self.ccsent.words
         cc_word = words[self.ccloc]
         span_words = [words[span[0]:span[1]] for span in self.spans]
-        return cc_word + ": " + ", ".join(span_words)
+        return ", ".join(span_words[:-1]) + \
+            " " + cc_word + " " + span_words[-1]
+
+    def set_spanned_locs(self, extra_locs=None):
+        self.spanned_locs = []
+        for span in self.spans:
+            for i in range(span[0], span[1]):
+                self.spanned_locs.append(i)
+        min = self.spans[0][0]
+        max = self.spans[-1][1] - 1
+        if extra_locs:
+            for i in extra_locs:
+                if i < min or i > max:
+                    self.spanned_locs.append(i)
+        self.spanned_locs.sort()
+

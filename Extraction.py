@@ -42,6 +42,9 @@ class Extraction:
         self.extag_to_int = {'NONE': 0, 'ARG1': 1, 'REL': 2, 'ARG2': 3,
                       'LOC': 4, 'TIME': 4, 'TYPE': 5, 'ARGS': 3}
 
+    def to_string(self):
+         return " ".join([self.arg1, self.rel. self.arg2])
+
     def tokenize_one_attr(self, name):
         assert name in self.tokenizables
         attr = getattr(self, name)

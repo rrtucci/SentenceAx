@@ -21,9 +21,6 @@ class CCList: # analogous to Coordination
         self.seplocs = seplocs
         self.label = label
 
-        self.cctag_to_int = {'CP_START': 2, 'CP': 1,
-                      'CC': 3, 'SEP': 4, 'OTHERS': 5, 'NONE': 0}
-        
         self.spanned_locs=[]
 
     def is_parent(self, child):

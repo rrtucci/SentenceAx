@@ -1,5 +1,5 @@
 class Model(pl.LightningModule):
-    def __init__(self, dim=28):
+    def __init__(self):
         super().__init__()
 
 

@@ -53,7 +53,8 @@ hparams_long = {
 
 hparams = {key: value for key, value in hparams_long.items()
            if value is not None}
-Hparams = type("Hparams", (object,), hparams)
+def Hparams():
+    return type("Hparams", (object,), hparams)
 
 
 META_DATA_VOCAB = None
@@ -77,9 +78,10 @@ EXTAGS_TEST_FPATH = "data/extags_test.txt"
 if __name__ == "__main__":
     def main1():
         h = {"x": 5, "y": 3}
-        H = type("H", (object,), h)
-        print(H.x)  # Output: 5
-        print(H.y)  # Output: 3
+        def H():
+            return type("H", (object,), h)
+        print(H().x)  # Output: 5
+        print(H().y)  # Output: 3
 
         def F(x, y):
             return x + y
@@ -88,7 +90,7 @@ if __name__ == "__main__":
 
     def main2():
         pprint(hparams)
-        print(Hparams.optimizer)
+        print(Hparams().optimizer)
 
     main1()
     main2()

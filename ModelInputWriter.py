@@ -7,7 +7,7 @@ import spacy
 # Refs:
 # https://spacy.io/usage/spacy-101/
 
-class NN_InputWriter:
+class ModelInputWriter:
 
     def __init__(self, allen_fpath):
 

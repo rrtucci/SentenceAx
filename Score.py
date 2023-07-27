@@ -1,5 +1,5 @@
 import numpy as np
-class Record:
+class Score:
     """
     Refs:
     See my book Bayesuvius, chapter "ROC curves
@@ -48,8 +48,8 @@ class Record:
         return np.nan
 
 
-class Recorder:  # formerly Counter
+class ScoreKeeper:  # formerly Counter
     def __init__(self, criteria):
         self._criteria = criteria
-        self._records = []
+        self._scores = []
         assert criteria in ["whole", "outer", "inner", "exact"]

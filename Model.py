@@ -1,4 +1,4 @@
-class NN_Model(pl.LightningModule):
+class Model(pl.LightningModule):
     def __init__(self, dim=28):
         super().__init__()
 

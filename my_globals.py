@@ -1,5 +1,57 @@
 # hparams=hyperparamters, fp = file path
 
+class Params:
+    accumulate_grad_batches=None
+    batch_size=32
+    bos_token_id=101 # bos=begin of sentence
+    build_cache=None
+    checkpoint= "data/save"
+    conj_model=None
+    constraints=None
+    cweights=None
+    debug=None
+    dev_fp=None
+    dropout=0.5
+    eos_token_id=102 # eos=end of sentence
+    epochs=24
+    gpus=None
+    gradient_clip_val=5
+    inp=None
+    iterative_layers=2
+    labelling_dim=300
+    lr=2E-5  # lr=learning rate
+    max_steps=None
+    mode=None
+    model_str=None
+    multi_opt=None
+    no_lt=None
+    num_extractions=5
+    num_sanity_val_steps=None
+    num_tpu_cores=None
+    oie_model=None
+    optimizer='adamw'
+    out=None
+    predict_fp=None
+    rescore_model=None
+    rescoring=None
+    save="data/save"
+    save_k=None
+    split_fp=None
+    task=None
+    test_fp=None
+    track_grad_norm=None
+    train_fp=None
+    train_percent_check=None
+    type=None
+    use_tpu=None
+    val_check_interval=None
+    wreg=0
+    write_allennlp=None
+    write_async=None
+
+
+MAX_EXTRACTION_LENGTH = 5
+UNUSED_TOKENS = ["[unused1]", "[unused2]", "[unused3]"]
 
 EXT_SAMPLES_FPATH = "data/ext_samples.txt"
 # file paths for training, tuning and testing cctags (cc=conjunction)
@@ -14,44 +66,4 @@ EXTAGS_TRAIN_FPATH = "data/extags_train.txt"
 #dev=development=validation=tuning
 EXTAGS_TUNE_FPATH=  "data/extags_tune.txt"
 EXTAGS_TEST_FPATH= "data/extags_test.txt"
-
-
-BOS_TOKEN_ID = 101 # bos=begin of sentence
-EOS_TOKEN_ID = 102 # eos=end of sentence
-#MODEL_STR =
-
-MAX_EXTRACTION_LENGTH = 5
-
-# optimization arguments
-NUM_EPOCHS=24
-BATCH_SIZE=32
-SEED=777
-LR=2E-5  # lr=learning rate
-OTHER_LR=1E-3
-OPTIMIZER='adamw'
-
-# data arguments
-# model arguments
-# bert-large-cased-whole-word-masking, bert-large-cased, bert-base-cased
-MODEL_STR='bert-base-cased'
-DROPOUT=0.0
-OPTIM_ADAM=True
-OPTIM_LSTM=True
-OPTIM_ADAM_LSTM=True
-ITERATIVE_LAYERS=2
-LABELLING_DIM=300
-NUM_EXTRACTIONS=5
-KEEP_ALL_PREDICTIONS=True
-OIE_SPLIT=True
-NO_LT=True
-WRITE_ALLENNLP=True
-WRITE_ASYNC=True
-
-# constraints
-WREG=0
-CWEIGHTS='1'
-MULTI_OPT=True
-
-
-UNUSED_TOKENS = ["[unused1]", "[unused2]", "[unused3]"]
 

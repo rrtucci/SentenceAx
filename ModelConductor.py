@@ -4,7 +4,7 @@ from glob import glob
 import torch
 
 
-class Conductor:
+class ModelConductor:
     def __init__(self, task):
 
         assert task in ["ex", "cc"]
@@ -12,7 +12,6 @@ class Conductor:
         self.saved = False
         self.save_dir = "data/save"
         self.has_cuda = torch.cuda.is_available()
-
 
         if task == 'cc':
             self.train_fp = 'data/openie-data/ptb-train.labels'
@@ -22,8 +21,6 @@ class Conductor:
             self.train_fp = 'data/openie-data/openie4_labels'
             self.dev_fp = 'data/carb-data/dev.txt'
             self.test_fp = 'data/carb-data/test.txt'
-
-        self.gradient_clip_val = 5
 
         train_dataset, val_dataset, test_dataset, \
             meta_data_vocab, all_sentences = data.process_data(hparams)

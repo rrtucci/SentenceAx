@@ -53,9 +53,13 @@ hparams_long = {
 
 hparams = {key: value for key, value in hparams_long.items()
            if value is not None}
-def Hparams():
-    return type("Hparams", (object,), hparams)
+class ClassFromDict(dict):
+    """dot.notation access to dictionary attributes"""
+    __getattr__ = dict.get
+    __setattr__ = dict.__setitem__
+    __delattr__ = dict.__delitem__
 
+Hparams = ClassFromDict(hparams)
 
 META_DATA_VOCAB = None
 MAX_EXTRACTION_LENGTH = 5
@@ -90,7 +94,10 @@ if __name__ == "__main__":
 
     def main2():
         pprint(hparams)
-        print(Hparams().optimizer)
+        print(Hparams.optimizer)
+        Hparams.optimizer = "xx"
+        print(Hparams.optimizer)
+
 
     main1()
     main2()

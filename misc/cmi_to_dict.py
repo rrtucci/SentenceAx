@@ -22,7 +22,7 @@ def sort_lines():
                 else:
                     next=None
             if curr== "--" and next!= "--":
-                block_end_locs.append(i-1)
+                block_end_locs.append(i)
             if prior!= "--" and curr== "--":
                 block_start_locs.append(i)
     assert(len(block_start_locs)==len(block_end_locs))

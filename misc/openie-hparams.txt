@@ -5,12 +5,12 @@ hparams={
 --gpus 1 
 --inp sentences.txt
 --mode splitpredict
+--num_extractions 5}
 --oie_model models/oie_model/epoch=14_eval_acc=0.551_v0.ckpt
 --out predictions.txt 
 --rescore_model models/rescore_model 
 --rescoring 
 --task oie 
---num_extractions 5}
 
 ## Training Model
 
@@ -21,23 +21,23 @@ hparams={
 --batch_size 24 
 --epochs 30 
 --gpus 1 
+--iterative_layers 2}
 --lr 2e-05 
 --mode train_test 
 --model_str bert-base-cased 
 --optimizer adamW 
 --save models/warmup_oie_model 
 --task oie 
---iterative_layers 2}
 
 Testing:
 
 hparams={ 
 --batch_size 24 
+--gpus 1}
 --mode test 
 --model_str bert-base-cased 
 --save models/warmup_oie_model 
 --task oie 
---gpus 1}
 
 
 Predicting
@@ -47,9 +47,9 @@ hparams={
 --inp sentences.txt 
 --mode predict 
 --model_str bert-base-cased 
+--out predictions.txt}
 --save models/warmup_oie_model 
 --task oie 
---out predictions.txt}
 
 ### Constrained Model
 Training
@@ -73,18 +73,18 @@ hparams={
 --save models/oie_model 
 --save_k 3 
 --task oie 
---wreg 1 
 --val_check_interval 0.1}
+--wreg 1 
 
 Testing
 
 hparams={ 
 --batch_size 16 
+--gpus 1}
 --mode test 
 --model_str bert-base-cased 
 --save models/oie_model 
 --task oie 
---gpus 1}
 
 Predicting
 
@@ -93,9 +93,9 @@ hparams={
 --inp sentences.txt 
 --mode predict 
 --model_str bert-base-cased 
+--out predictions.txt}
 --save models/oie_model 
 --task oie 
---out predictions.txt}
 
 ### Running Coordination Analysis
 
@@ -103,13 +103,13 @@ hparams={
 --batch_size 32 
 --epochs 40 
 --gpus 1 
+--iterative_layers 2}
 --lr 2e-05 
 --mode train_test 
 --model_str bert-large-cased 
 --optimizer adamW 
 --save models/conj_model 
 --task conj 
---iterative_layers 2}
 
 
 ### Final Model
@@ -121,9 +121,9 @@ hparams={
 --gpus 1 
 --inp carb/data/carb_sentences.txt 
 --mode splitpredict
+--num_extractions 5}
 --oie_model models/oie_model/epoch=14_eval_acc=0.551_v0.ckpt
 --out models/results/final 
 --rescore_model models/rescore_model 
 --rescoring 
 --task oie 
---num_extractions 5}

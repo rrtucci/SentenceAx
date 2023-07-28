@@ -1,3 +1,6 @@
+from my_globals import *
+import pytorch_lightning as pl
+
 class Model(pl.LightningModule):
     def __init__(self):
         super().__init__(**hparams)

@@ -1,3 +1,10 @@
+"""
+
+I inserted this script inside Openie code to get a sorted list of all
+hparams names.
+
+"""
+
 import re
 import os
 from pprint import pprint

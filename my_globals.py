@@ -1,4 +1,4 @@
-from pprint import pprint
+from dict_utils import *
 # hparams=hyperparamters, fp = file path
 
 hparams_long = {
@@ -22,7 +22,7 @@ hparams_long = {
     "labelling_dim": 300,
     "lr": 2E-5,  # lr":learning rate
     "max_steps": None,
-    "mode": None,
+    "mode": None, # "train", "test", "predict", "splitpredict"
     "model_str": None,
     "multi_opt": None,
     "no_lt": None,
@@ -38,7 +38,7 @@ hparams_long = {
     "save": "data/save",
     "save_k": None,
     "split_fp": None,
-    "task": None,
+    "task": None, # "cc", "ex"
     "test_fp": None,
     "track_grad_norm": None,
     "train_fp": None,
@@ -51,14 +51,8 @@ hparams_long = {
     "write_async": None
 }
 
-hparams = {key: value for key, value in hparams_long.items()
+hparams= {key: value for key, value in hparams_long.items()
            if value is not None}
-class ClassFromDict(dict):
-    """dot.notation access to dictionary attributes"""
-    __getattr__ = dict.get
-    __setattr__ = dict.__setitem__
-    __delattr__ = dict.__delitem__
-
 Hparams = ClassFromDict(hparams)
 
 META_DATA_VOCAB = None
@@ -78,26 +72,3 @@ EXTAGS_TRAIN_FPATH = "data/extags_train.txt"
 # dev=development=validation=tuning
 EXTAGS_TUNE_FPATH = "data/extags_tune.txt"
 EXTAGS_TEST_FPATH = "data/extags_test.txt"
-
-if __name__ == "__main__":
-    def main1():
-        h = {"x": 5, "y": 3}
-        def H():
-            return type("H", (object,), h)
-        print(H().x)  # Output: 5
-        print(H().y)  # Output: 3
-
-        def F(x, y):
-            return x + y
-
-        print(F(**h))  # Output: 8
-
-    def main2():
-        pprint(hparams)
-        print(Hparams.optimizer)
-        Hparams.optimizer = "xx"
-        print(Hparams.optimizer)
-
-
-    main1()
-    main2()

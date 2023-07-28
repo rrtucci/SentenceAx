@@ -1,0 +1,129 @@
+## Running Model
+
+hparams={ 
+--conj_model models/conj_model/epoch=28_eval_acc=0.854.ckpt
+--gpus 1 
+--inp sentences.txt
+--mode splitpredict
+--oie_model models/oie_model/epoch=14_eval_acc=0.551_v0.ckpt
+--out predictions.txt 
+--rescore_model models/rescore_model 
+--rescoring 
+--task oie 
+--num_extractions 5}
+
+## Training Model
+
+### Warmup Model
+Training:
+
+hparams={ 
+--batch_size 24 
+--epochs 30 
+--gpus 1 
+--lr 2e-05 
+--mode train_test 
+--model_str bert-base-cased 
+--optimizer adamW 
+--save models/warmup_oie_model 
+--task oie 
+--iterative_layers 2}
+
+Testing:
+
+hparams={ 
+--batch_size 24 
+--mode test 
+--model_str bert-base-cased 
+--save models/warmup_oie_model 
+--task oie 
+--gpus 1}
+
+
+Predicting
+
+hparams={ 
+--gpus 1 
+--inp sentences.txt 
+--mode predict 
+--model_str bert-base-cased 
+--save models/warmup_oie_model 
+--task oie 
+--out predictions.txt}
+
+### Constrained Model
+Training
+
+hparams={ 
+--accumulate_grad_batches 2 
+--batch_size 16 
+--checkpoint models/warmup_oie_model/epoch=13_eval_acc=0.544.ckpt
+--constraints posm_hvc_hvr_hve 
+--cweights 3_3_3_3 
+--epochs 16 
+--gpus 1 
+--gradient_clip_val 1 
+--iterative_layers 2 
+--lr 2e-5 
+--lr 5e-06 
+--mode resume 
+--model_str bert-base-cased 
+--multi_opt 
+--optimizer adam 
+--save models/oie_model 
+--save_k 3 
+--task oie 
+--wreg 1 
+--val_check_interval 0.1}
+
+Testing
+
+hparams={ 
+--batch_size 16 
+--mode test 
+--model_str bert-base-cased 
+--save models/oie_model 
+--task oie 
+--gpus 1}
+
+Predicting
+
+hparams={ 
+--gpus 1 
+--inp sentences.txt 
+--mode predict 
+--model_str bert-base-cased 
+--save models/oie_model 
+--task oie 
+--out predictions.txt}
+
+### Running Coordination Analysis
+
+hparams={ 
+--batch_size 32 
+--epochs 40 
+--gpus 1 
+--lr 2e-05 
+--mode train_test 
+--model_str bert-large-cased 
+--optimizer adamW 
+--save models/conj_model 
+--task conj 
+--iterative_layers 2}
+
+
+### Final Model
+
+Running
+
+hparams={
+--conj_model models/conj_model/epoch=28_eval_acc=0.854.ckpt
+--gpus 1 
+--inp carb/data/carb_sentences.txt 
+--mode splitpredict
+--oie_model models/oie_model/epoch=14_eval_acc=0.551_v0.ckpt
+--out models/results/final 
+--rescore_model models/rescore_model 
+--rescoring 
+--task oie 
+--num_extractions 5}

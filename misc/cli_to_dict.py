@@ -1,3 +1,6 @@
+from collections import OrderedDict
+# cli= command line interface
+
 with open("openie-hparams0.txt", mode="r") as f0:
     lines = f0.readlines()
 
@@ -43,12 +46,13 @@ def sort_lines(lines):
 
 # comment this out if sorting of parameter names in not desired
 lines = sort_lines(lines)
-# print("llkp", lines)
+# print("rted", lines)
 
+distinct_params = []
 with open("openie-hparams.txt", mode="w") as f:
     for line in lines:
-        if len(line)>2 and line[0:2] == "--":
-            print("llk", line[2:])
+        if len(line) > 2 and line[0:2] == "--":
+            # print("sdty", line[2:])
             words = line[2:].split()
             if len(words) == 2:
                 key, value = line[2:].split()
@@ -57,7 +61,12 @@ with open("openie-hparams.txt", mode="w") as f:
                 else:
                     value = value[:-1]
                     ending = "\n}"
+                key = '"' + key + '"'
+                if not value.isdigit():
+                    value = '"' + value + '"'
+
                 f.write("    " + key + ": " + value + ending)
+                distinct_params.append(key)
             elif len(words) == 1:
                 key = words[0]
                 if key[-1] != "}":
@@ -65,8 +74,34 @@ with open("openie-hparams.txt", mode="w") as f:
                 else:
                     key = key[:-1]
                     ending = "\n}"
+                key = '"' + key + '"'
                 f.write("    " + key + ": True" + ending)
+                distinct_params.append(key)
             else:
                 assert False, words
         else:
             f.write(line)
+
+        distinct_params = sorted(list(set(distinct_params)))
+        param_to_values = OrderedDict()
+        for param in distinct_params:
+            param_to_values[param] = set()
+
+with open("openie-hparams.txt", mode="r") as f:
+    for line in f:
+        if any([param in line for param in param_to_values.keys()]):
+            param, value = line.replace(",", "").split(":")
+            param = param.strip()
+            value = value.strip()
+            param_to_values[param].add(value)
+
+with open("openie-hparams.txt", mode="a") as f:
+    f.write("\n\nparameters to set of possible values:\n")
+    f.write("{\n")
+    for param in param_to_values:
+        values = param_to_values[param]
+        str0 = "    " + param + ": ("
+        for value in values:
+            str0 += value + ", "
+        f.write(str0 + ")\n")
+    f.write("}\n")

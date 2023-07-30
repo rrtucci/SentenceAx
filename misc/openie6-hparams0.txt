@@ -1,3 +1,11 @@
+The file `openie6-hparams0.txt` was constructed manually from the
+Openie6 README.
+
+The script `cli_to_dict` converted
+`openie6-hparams0.txt`
+into
+`openie6-hparams.txt`
+
 ## Running Model
 
 hparams={ 

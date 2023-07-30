@@ -1,7 +1,7 @@
 from collections import OrderedDict
 # cli= command line interface
 
-with open("openie-hparams0.txt", mode="r") as f0:
+with open("openie6-hparams0.txt", mode="r") as f0:
     lines = f0.readlines()
 
 
@@ -49,7 +49,7 @@ lines = sort_lines(lines)
 # print("rted", lines)
 
 distinct_params = []
-with open("openie-hparams.txt", mode="w") as f:
+with open("openie6-hparams.txt", mode="w") as f:
     for line in lines:
         if len(line) > 2 and line[0:2] == "--":
             # print("sdty", line[2:])
@@ -87,7 +87,7 @@ with open("openie-hparams.txt", mode="w") as f:
         for param in distinct_params:
             param_to_values[param] = set()
 
-with open("openie-hparams.txt", mode="r") as f:
+with open("openie6-hparams.txt", mode="r") as f:
     for line in f:
         if any([param in line for param in param_to_values.keys()]):
             param, value = line.replace(",", "").split(":")
@@ -95,7 +95,7 @@ with open("openie-hparams.txt", mode="r") as f:
             value = value.strip()
             param_to_values[param].add(value)
 
-with open("openie-hparams.txt", mode="a") as f:
+with open("openie6-hparams.txt", mode="a") as f:
     f.write("\n\nparameters to set of possible values:\n")
     f.write("{\n")
     for param in param_to_values:

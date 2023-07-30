@@ -1,6 +1,6 @@
 """
 
-I inserted this script inside Openie code to get a sorted list of all
+I inserted this script inside the Openie6 code to get a sorted list of all
 hparams names.
 
 """
@@ -35,6 +35,7 @@ if __name__ == "__main__":
 
     main()
 
+# output of this script:
 # ['hparams.accumulate_grad_batches',
 #  'hparams.batch_size',
 #  'hparams.bos_token_id',
@@ -83,4 +84,4 @@ if __name__ == "__main__":
 #  'hparams.write_allennlp',
 #  'hparams.write_async']
 #
-# Process finished with exit code 0
+

@@ -12,10 +12,9 @@ from my_globals import *
 from dict_utils import *
 
 
-
 class ModelConductor:
     def __init__(self, task):
-        self.self.model= None
+        self.self.model = None
         assert task in ["ex", "cc"]
         self.task = task
         self.saved = False
@@ -34,18 +33,18 @@ class ModelConductor:
         train_dataset, val_dataset, test_dataset, \
             meta_data_vocab, all_sentences = data.process_data(hparams)
         self.train_dataloader = DataLoader(train_dataset,
-                                      batch_size=hparams["batch_size"],
-                                      collate_fn=data.pad_data,
-                                      shuffle=True,
-                                      num_workers=1)
+                                           batch_size=hparams["batch_size"],
+                                           collate_fn=data.pad_data,
+                                           shuffle=True,
+                                           num_workers=1)
         self.val_dataloader = DataLoader(val_dataset,
-                                    batch_size=hparams["batch_size"],
-                                    collate_fn=data.pad_data,
-                                    num_workers=1)
+                                         batch_size=hparams["batch_size"],
+                                         collate_fn=data.pad_data,
+                                         num_workers=1)
         self.test_dataloader = DataLoader(test_dataset,
-                                     batch_size=hparams["batch_size"],
-                                     collate_fn=data.pad_data,
-                                     num_workers=1)
+                                          batch_size=hparams["batch_size"],
+                                          collate_fn=data.pad_data,
+                                          num_workers=1)
 
     def set_checkpoint_callback(self):
         if self.saved:
@@ -74,7 +73,8 @@ class ModelConductor:
             new_mode_index = len(mode_logs) + 1
             print('Moving old log to...')
             print(shutil.move(hparams["save"] + f'/logs/{mode}',
-                        hparams["save"] + f'/logs/{mode}_{new_mode_index}'))
+                              hparams[
+                                  "save"] + f'/logs/{mode}_{new_mode_index}'))
         logger = TensorBoardLogger(
             save_dir=hparams["save"],
             name='logs',
@@ -100,10 +100,10 @@ class ModelConductor:
         #     val_check_interval = hparams.val_check_interval)
 
         trainer = Trainer(
-            checkpoint_callback = self.checkpoint_callback,
-            logger = logger,
-            resume_from_checkpoint = checkpoint_path,
-            show_progress_bar = True,
+            checkpoint_callback=self.checkpoint_callback,
+            logger=logger,
+            resume_from_checkpoint=checkpoint_path,
+            show_progress_bar=True,
             **hparams)
         return trainer
 
@@ -120,12 +120,9 @@ class ModelConductor:
         if final_changes_hparams:
             update_dict(hparams, final_changes_hparams)
 
-
-
-
     def train(self):
         self.set_checkpoint_callback()
-        self.model= Model()
+        self.model = Model()
         logger = self.get_logger('train')
         trainer = self.get_trainer(logger)
         trainer.fit(self.model, train_dataloader=self.train_dataloader,
@@ -137,7 +134,7 @@ class ModelConductor:
         self.set_checkpoint_callback()
         checkpoint_path = self.get_checkpoint_path()
         self.update_hparams(checkpoint_path, **final_changes_hparams)
-        self.model= Model()
+        self.model = Model()
         logger = self.get_logger('resume')
         trainer = self.get_trainer(logger, checkpoint_path)
         trainer.fit(self.model, train_dataloader=self.train_dataloader,
@@ -155,7 +152,7 @@ class ModelConductor:
             self.update_hparams(checkpoint_path,
                                 **final_changes_hparams)
 
-        self.model= Model()
+        self.model = Model()
         if mapping != None:
             self.model._metric.mapping = mapping
         if conj_word_mapping != None:
@@ -181,10 +178,10 @@ class ModelConductor:
                 **final_changes_hparams):
         self.set_checkpoint_callback()
 
-    # def predict(hparams, checkpoint_callback, meta_data_vocab,
-    #             train_dataloader,
-    #             val_dataloader, test_dataloader, all_sentences, mapping=None,
-    #             conj_word_mapping=None):
+        # def predict(hparams, checkpoint_callback, meta_data_vocab,
+        #             train_dataloader,
+        #             val_dataloader, test_dataloader, all_sentences, mapping=None,
+        #             conj_word_mapping=None):
         if hparams.task == 'conj':
             hparams.checkpoint = hparams.conj_model
         if hparams.task == 'oie':
@@ -193,7 +190,7 @@ class ModelConductor:
         checkpoint_path = self.get_checkpoint_path()
         self.update_hparams(checkpoint_path, **final_changes_hparams)
 
-        self.model= Model()
+        self.model = Model()
 
         if mapping != None:
             self.model._metric.mapping = mapping
@@ -206,14 +203,14 @@ class ModelConductor:
         self.model.all_sentences = all_sentences
         trainer.test(self.model, test_dataloaders=self.test_dataloader)
         end_time = time()
-        print(f'Total Time taken = {(end_time - start_time)/60:2f} minutes')
+        print(f'Total Time taken = {(end_time - start_time) / 60:2f} minutes')
 
     def splitpredict(self):
         self.set_checkpoint_callback()
 
-    # def splitpredict(hparams, checkpoint_callback, meta_data_vocab,
-    #                  train_dataloader, val_dataloader, test_dataloader,
-    #                  all_sentences):
+        # def splitpredict(hparams, checkpoint_callback, meta_data_vocab,
+        #                  train_dataloader, val_dataloader, test_dataloader,
+        #                  all_sentences):
         mapping, conj_word_mapping = {}, {}
         hparams.write_allennlp = True
         if hparams.split_fp == '':
@@ -223,12 +220,12 @@ class ModelConductor:
             hparams.mode = 'predict'
             model = predict(hparams, None, meta_data_vocab, None, None,
                             test_dataloader, all_sentences)
-            conj_predictions = model.all_predictions_conj
-            sentences_indices = model.all_sentence_indices_conj
+            conj_predictions = model.all_cc_predictions
+            sentences_indices = model.all_cc_sent_locs
             # conj_predictions = model.predictions
             # sentences_indices = model.all_sentence_indices
             assert len(conj_predictions) == len(sentences_indices)
-            all_conj_words = model.all_conjunct_words_conj
+            all_conj_words = model.all_cc_words
 
             sentences, orig_sentences = [], []
             for i, sentences_str in enumerate(conj_predictions):
@@ -296,9 +293,10 @@ class ModelConductor:
                                            num_workers=1)
 
         model = self.predict(hparams, None, meta_data_vocab, None, None,
-                        split_test_dataloader,
-                        mapping=mapping, conj_word_mapping=conj_word_mapping,
-                        all_sentences=all_sentences)
+                             split_test_dataloader,
+                             mapping=mapping,
+                             conj_word_mapping=conj_word_mapping,
+                             all_sentences=all_sentences)
 
         if 'labels' in hparams.type:
             label_lines = get_labels(hparams, model, sentences, orig_sentences,
@@ -385,4 +383,3 @@ class ModelConductor:
             predictions_f.write('\n'.join(all_predictions) + '\n')
             predictions_f.close()
             return
-

@@ -1,6 +1,7 @@
 from dict_utils import *
 
-# HPARAMS = hyperparamters, fp = file path
+# params_d = hyperparamters, fp = file path
+# params_d = pamameters dictionary
 
 EXT_SAMPLES_FPATH = "data/ext_samples.txt"
 # file paths for training, tuning and testing cctags (cc=conjunction)
@@ -32,16 +33,16 @@ UNUSED_TOKENS_STR = " " + " ".join(UNUSED_TOKENS)
 # TASK in "ex", "cc", "custom1", custom2", etc
 # MODE in ("predict", "train_test", "splitpredict", "resume", "test", )
 TASK = "ex"
-MODE = "splipredict"
+MODE = "splitpredict"
 
 ## Running Model
 
-if TASK == "ex" and MODE == "splipredict":
-    HPARAMS = {
+if TASK == "ex" and MODE == "splitpredict":
+    PARAMS_D = {
         "conj_model": "models/conj_model/epoch=28_eval_acc=0.854.ckpt",
         "gpus": 1,
         "inp": "sentences.txt",
-        "mode": "splipredict",
+        "mode": "splitpredict",
         "num_extractions": 5,
         "oie_model": "models/oie_model/epoch=14_eval_acc=0.551_v0.ckpt",
         "out": "predictions.txt",
@@ -54,7 +55,7 @@ if TASK == "ex" and MODE == "splipredict":
 ### Warmup Model
 # Training:
 elif TASK == "ex" and MODE == "train_test":
-    HPARAMS = {
+    PARAMS_D = {
         "batch_size": 24,
         "epochs": 30,
         "gpus": 1,
@@ -68,7 +69,7 @@ elif TASK == "ex" and MODE == "train_test":
     }
 # Testing:
 elif TASK == "ex" and MODE == "test":
-    HPARAMS = {
+    PARAMS_D = {
         "batch_size": 24,
         "gpus": 1,
         "mode": "test",
@@ -79,7 +80,7 @@ elif TASK == "ex" and MODE == "test":
 
 # Predicting
 elif TASK == "ex" and MODE == "predict":
-    HPARAMS = {
+    PARAMS_D = {
         "gpus": 1,
         "inp": "sentences.txt",
         "mode": "predict",
@@ -91,7 +92,7 @@ elif TASK == "ex" and MODE == "predict":
 ### Constrained Model
 # Training
 elif TASK == "ex" and MODE == "resume":
-    HPARAMS = {
+    PARAMS_D = {
         "accumulate_grad_batches": 2,
         "batch_size": 16,
         "checkpoint": "models/warmup_oie_model/epoch=13_eval_acc=0.544.ckpt",
@@ -115,7 +116,7 @@ elif TASK == "ex" and MODE == "resume":
     }
 # Testing
 elif TASK == "ex" and MODE == "test":
-    HPARAMS = {
+    PARAMS_D = {
         "batch_size": 16,
         "gpus": 1,
         "mode": "test",
@@ -125,7 +126,7 @@ elif TASK == "ex" and MODE == "test":
     }
 # Predicting
 elif TASK == "ex" and MODE == "predict":
-    HPARAMS = {
+    PARAMS_D = {
         "gpus": 1,
         "inp": "sentences.txt",
         "mode": "predict",
@@ -136,7 +137,7 @@ elif TASK == "ex" and MODE == "predict":
     }
 ### Running Coordination Analysis
 elif TASK == "cc" and MODE == "train_test":
-    HPARAMS = {
+    PARAMS_D = {
         "batch_size": 32,
         "epochs": 40,
         "gpus": 1,
@@ -153,7 +154,7 @@ elif TASK == "cc" and MODE == "train_test":
 
 # Running
 elif TASK == "ex" and MODE == "splipredict":
-    HPARAMS = {
+    PARAMS_D = {
         "conj_model": "models/conj_model/epoch=28_eval_acc=0.854.ckpt",
         "gpus": 1,
         "inp": "carb/data/carb_sentences.txt",
@@ -168,7 +169,7 @@ elif TASK == "ex" and MODE == "splipredict":
 elif TASK == "custom1":
     # change dictionary values to custom ones
     # define TASK = "custom1", "custom2", etc.
-    HPARAMS_LONG = {
+    PARAMS_D_LONG = {
         "accumulate_grad_batches": None,
         "batch_size": None,
         "bos_token_id": BOS_TOKEN_ID,
@@ -220,5 +221,5 @@ elif TASK == "custom1":
 
     # eliminate params that are None, in case they are reset to
     # default values by pytorch lightning.
-    HPARAMS = {key: value for key, value in HPARAMS_LONG.items()
+    PARAMS_D = {key: value for key, value in PARAMS_D_LONG.items()
                if value is not None}

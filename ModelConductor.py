@@ -31,18 +31,18 @@ class ModelConductor:
             self.test_fp = 'data/carb-data/test.txt'
 
         train_dataset, val_dataset, test_dataset, \
-            meta_data_vocab, all_sentences = data.process_data(hparams)
+            meta_data_vocab, all_sentences = data.process_data(params_d)
         self.train_dataloader = DataLoader(train_dataset,
-                                           batch_size=hparams["batch_size"],
+                                           batch_size=params_d["batch_size"],
                                            collate_fn=data.pad_data,
                                            shuffle=True,
                                            num_workers=1)
         self.val_dataloader = DataLoader(val_dataset,
-                                         batch_size=hparams["batch_size"],
+                                         batch_size=params_d["batch_size"],
                                          collate_fn=data.pad_data,
                                          num_workers=1)
         self.test_dataloader = DataLoader(test_dataset,
-                                          batch_size=hparams["batch_size"],
+                                          batch_size=params_d["batch_size"],
                                           collate_fn=data.pad_data,
                                           num_workers=1)
 
@@ -53,7 +53,7 @@ class ModelConductor:
                 verbose=True,
                 monitor='eval_acc',
                 mode='max',
-                save_top_k=hparams["save_k"] if not hparams["debug"] else 0,
+                save_top_k=params_d["save_k"] if not params_d["debug"] else 0,
                 period=0)
         else:
             self.checkpoint_callback = None
@@ -67,58 +67,58 @@ class ModelConductor:
         return all_paths[0]
 
     def get_logger(self, mode):
-        log_dir = hparams["save"] + '/logs/'
+        log_dir = params_d["save"] + '/logs/'
         if os.path.exists(log_dir + f'{mode}'):
             mode_logs = list(glob(log_dir + f'/{mode}_*'))
             new_mode_index = len(mode_logs) + 1
             print('Moving old log to...')
-            print(shutil.move(hparams["save"] + f'/logs/{mode}',
-                              hparams[
+            print(shutil.move(params_d["save"] + f'/logs/{mode}',
+                              params_d[
                                   "save"] + f'/logs/{mode}_{new_mode_index}'))
         logger = TensorBoardLogger(
-            save_dir=hparams["save"],
+            save_dir=params_d["save"],
             name='logs',
             version=mode + '.part')
         return logger
 
     def get_trainer(self, logger, checkpoint_path=None):
         # trainer = Trainer(
-        #     accumulate_grad_batches = int(hparams.accumulate_grad_batches),
+        #     accumulate_grad_batches = int(params_d.accumulate_grad_batches),
         #     checkpoint_callback = self.checkpoint_callback,
-        #     gpus = hparams.gpus,
-        #     gradient_clip_val = hparams.gradient_clip_val,
+        #     gpus = params_d.gpus,
+        #     gradient_clip_val = params_d.gradient_clip_val,
         #     logger = logger,
-        #     max_epochs = hparams.epochs,
-        #     min_epochs = hparams.epochs,
-        #     num_sanity_val_steps = hparams.num_sanity_val_steps,
-        #     num_tpu_cores = hparams.num_tpu_cores,
+        #     max_epochs = params_d.epochs,
+        #     min_epochs = params_d.epochs,
+        #     num_sanity_val_steps = params_d.num_sanity_val_steps,
+        #     num_tpu_cores = params_d.num_tpu_cores,
         #     resume_from_checkpoint = checkpoint_path,
         #     show_progress_bar = True,
-        #     track_grad_norm = hparams.track_grad_norm,
-        #     train_percent_check = hparams.train_percent_check,
-        #     use_tpu = hparams.use_tpu,
-        #     val_check_interval = hparams.val_check_interval)
+        #     track_grad_norm = params_d.track_grad_norm,
+        #     train_percent_check = params_d.train_percent_check,
+        #     use_tpu = params_d.use_tpu,
+        #     val_check_interval = params_d.val_check_interval)
 
         trainer = Trainer(
             checkpoint_callback=self.checkpoint_callback,
             logger=logger,
             resume_from_checkpoint=checkpoint_path,
             show_progress_bar=True,
-            **hparams)
+            **params_d)
         return trainer
 
-    def update_hparams(self, checkpoint_path,
-                       **final_changes_hparams):
+    def update_params_d(self, checkpoint_path,
+                       **final_changes_params_d):
         if self.has_cuda:
-            loaded_hparams = torch.load(checkpoint_path)['hparams']
+            loaded_params_d = torch.load(checkpoint_path)['params_d']
         else:
-            loaded_hparams = torch.load(
+            loaded_params_d = torch.load(
                 checkpoint_path,
-                map_location=torch.device('cpu'))['hparams']
+                map_location=torch.device('cpu'))['params_d']
 
-        update_dict(hparams, loaded_hparams)
-        if final_changes_hparams:
-            update_dict(hparams, final_changes_hparams)
+        update_dict(params_d, loaded_params_d)
+        if final_changes_params_d:
+            update_dict(params_d, final_changes_params_d)
 
     def train(self):
         self.set_checkpoint_callback()
@@ -127,30 +127,30 @@ class ModelConductor:
         trainer = self.get_trainer(logger)
         trainer.fit(self.model, train_dataloader=self.train_dataloader,
                     val_dataloaders=self.val_dataloader)
-        shutil.move(hparams["save"] + f'/logs/train.part',
-                    hparams["save"] + f'/logs/train')
+        shutil.move(params_d["save"] + f'/logs/train.part',
+                    params_d["save"] + f'/logs/train')
 
-    def resume(self, **final_changes_hparams):
+    def resume(self, **final_changes_params_d):
         self.set_checkpoint_callback()
         checkpoint_path = self.get_checkpoint_path()
-        self.update_hparams(checkpoint_path, **final_changes_hparams)
+        self.update_params_d(checkpoint_path, **final_changes_params_d)
         self.model = Model()
         logger = self.get_logger('resume')
         trainer = self.get_trainer(logger, checkpoint_path)
         trainer.fit(self.model, train_dataloader=self.train_dataloader,
                     val_dataloaders=self.val_dataloader)
-        shutil.move(hparams.save + f'/logs/resume.part',
-                    hparams.save + f'/logs/resume')
+        shutil.move(params_d.save + f'/logs/resume.part',
+                    params_d.save + f'/logs/resume')
 
     def test(self, train,
              mapping=None, conj_word_mapping=None,
-             **final_changes_hparams):
+             **final_changes_params_d):
         self.set_checkpoint_callback()
         all_checkpoint_paths = self.get_all_checkpoint_paths()
         checkpoint_path = all_checkpoint_paths[0]
         if not train:
-            self.update_hparams(checkpoint_path,
-                                **final_changes_hparams)
+            self.update_params_d(checkpoint_path,
+                                **final_changes_params_d)
 
         self.model = Model()
         if mapping != None:
@@ -159,36 +159,36 @@ class ModelConductor:
             self.model._metric.conj_word_mapping = conj_word_mapping
 
         logger = self.get_logger('test')
-        test_f = open(hparams.save + '/logs/test.txt', 'w')
+        test_f = open(params_d.save + '/logs/test.txt', 'w')
 
         for checkpoint_path in all_checkpoint_paths:
             trainer = Trainer(logger=logger,
-                              gpus=hparams["gpus"],
+                              gpus=params_d["gpus"],
                               resume_from_checkpoint=checkpoint_path)
             trainer.test(self.model, test_dataloaders=self.test_dataloader)
             result = self.model.results
             test_f.write(f'{checkpoint_path}\t{result}\n')
             test_f.flush()
         test_f.close()
-        shutil.move(hparams.save + f'/logs/test.part',
-                    hparams.save + f'/logs/test')
+        shutil.move(params_d.save + f'/logs/test.part',
+                    params_d.save + f'/logs/test')
 
     def predict(self,
                 mapping=None, conj_word_mapping=None,
-                **final_changes_hparams):
+                **final_changes_params_d):
         self.set_checkpoint_callback()
 
-        # def predict(hparams, checkpoint_callback, meta_data_vocab,
+        # def predict(params_d, checkpoint_callback, meta_data_vocab,
         #             train_dataloader,
         #             val_dataloader, test_dataloader, all_sentences, mapping=None,
         #             conj_word_mapping=None):
-        if hparams.task == 'conj':
-            hparams.checkpoint = hparams.conj_model
-        if hparams.task == 'oie':
-            hparams.checkpoint = hparams.oie_model
+        if params_d.task == 'conj':
+            params_d.checkpoint = params_d.conj_model
+        if params_d.task == 'oie':
+            params_d.checkpoint = params_d.oie_model
 
         checkpoint_path = self.get_checkpoint_path()
-        self.update_hparams(checkpoint_path, **final_changes_hparams)
+        self.update_params_d(checkpoint_path, **final_changes_params_d)
 
         self.model = Model()
 
@@ -197,7 +197,7 @@ class ModelConductor:
         if conj_word_mapping != None:
             self.model._metric.conj_word_mapping = conj_word_mapping
 
-        trainer = Trainer(gpus=hparams.gpus, logger=None,
+        trainer = Trainer(gpus=params_d.gpus, logger=None,
                           resume_from_checkpoint=checkpoint_path)
         start_time = time()
         self.model.all_sentences = all_sentences
@@ -208,17 +208,17 @@ class ModelConductor:
     def splitpredict(self):
         self.set_checkpoint_callback()
 
-        # def splitpredict(hparams, checkpoint_callback, meta_data_vocab,
+        # def splitpredict(params_d, checkpoint_callback, meta_data_vocab,
         #                  train_dataloader, val_dataloader, test_dataloader,
         #                  all_sentences):
         mapping, conj_word_mapping = {}, {}
-        hparams.write_allennlp = True
-        if hparams.split_fp == '':
-            hparams.task = 'conj'
-            hparams.checkpoint = hparams.conj_model
-            hparams.model_str = 'bert-base-cased'
-            hparams.mode = 'predict'
-            model = predict(hparams, None, meta_data_vocab, None, None,
+        params_d.write_allennlp = True
+        if params_d.split_fp == '':
+            params_d.task = 'conj'
+            params_d.checkpoint = params_d.conj_model
+            params_d.model_str = 'bert-base-cased'
+            params_d.mode = 'predict'
+            model = predict(params_d, None, meta_data_vocab, None, None,
                             test_dataloader, all_sentences)
             conj_predictions = model.all_cc_predictions
             sentences_indices = model.all_cc_sent_locs
@@ -259,7 +259,7 @@ class ModelConductor:
             assert count == len(sentences) - 1
 
         else:
-            with open(hparams.predict_fp, 'r') as f:
+            with open(params_d.predict_fp, 'r') as f:
                 lines = f.read()
                 lines = lines.replace("\\", "")
 
@@ -281,31 +281,31 @@ class ModelConductor:
                     else:
                         assert False
 
-        hparams.task = 'oie'
-        hparams.checkpoint = hparams.oie_model
-        hparams.model_str = 'bert-base-cased'
+        params_d.task = 'oie'
+        params_d.checkpoint = params_d.oie_model
+        params_d.model_str = 'bert-base-cased'
         _, _, split_test_dataset, meta_data_vocab, _ = data.process_data(
-            hparams,
+            params_d,
             sentences)
         split_test_dataloader = DataLoader(split_test_dataset,
-                                           batch_size=hparams.batch_size,
+                                           batch_size=params_d.batch_size,
                                            collate_fn=data.pad_data,
                                            num_workers=1)
 
-        model = self.predict(hparams, None, meta_data_vocab, None, None,
+        model = self.predict(params_d, None, meta_data_vocab, None, None,
                              split_test_dataloader,
                              mapping=mapping,
                              conj_word_mapping=conj_word_mapping,
                              all_sentences=all_sentences)
 
-        if 'labels' in hparams.type:
-            label_lines = get_labels(hparams, model, sentences, orig_sentences,
+        if 'labels' in params_d.type:
+            label_lines = get_labels(params_d, model, sentences, orig_sentences,
                                      sentences_indices)
-            f = open(hparams.out + '.labels', 'w')
+            f = open(params_d.out + '.labels', 'w')
             f.write('\n'.join(label_lines))
             f.close()
 
-        if hparams.rescoring:
+        if params_d.rescoring:
             print()
             print("Starting re-scoring ...")
             print()
@@ -327,7 +327,7 @@ class ModelConductor:
 
             # testing rescoring
             inp_fp = model.predictions_f_allennlp
-            rescored = rescore(inp_fp, model_dir=hparams.rescore_model,
+            rescored = rescore(inp_fp, model_dir=params_d.rescore_model,
                                batch_size=256)
 
             all_predictions, sentence_str = [], ''
@@ -342,7 +342,7 @@ class ModelConductor:
                 if line_i in sentence_line_nums:
                     exts = sorted(exts, reverse=True,
                                   key=lambda x: float(x.split()[0][:-1]))
-                    exts = exts[:hparams.num_extractions]
+                    exts = exts[:params_d.num_extractions]
                     all_predictions.append(sentence_str + ''.join(exts))
                     sentence_str = f'{sentence}\n'
                     exts = []
@@ -362,7 +362,7 @@ class ModelConductor:
                                         index=0)
                 extraction.addArg(arg1)
                 extraction.addArg(arg2)
-                if hparams.type == 'sentences':
+                if params_d.type == 'sentences':
                     ext_str = data.ext_to_sentence(extraction) + '\n'
                 else:
                     ext_str = data.ext_to_string(extraction) + '\n'
@@ -370,16 +370,16 @@ class ModelConductor:
 
             exts = sorted(exts, reverse=True,
                           key=lambda x: float(x.split()[0][:-1]))
-            exts = exts[:hparams.num_extractions]
+            exts = exts[:params_d.num_extractions]
             all_predictions.append(sentence_str + ''.join(exts))
 
             if line_i + 1 in no_extractions:
                 for no_extraction_sentence in no_extractions[line_i + 1]:
                     all_predictions.append(f'{no_extraction_sentence}\n')
 
-            if hparams.out != None:
-                print('Predictions written to ', hparams.out)
-                predictions_f = open(hparams.out, 'w')
+            if params_d.out != None:
+                print('Predictions written to ', params_d.out)
+                predictions_f = open(params_d.out, 'w')
             predictions_f.write('\n'.join(all_predictions) + '\n')
             predictions_f.close()
             return

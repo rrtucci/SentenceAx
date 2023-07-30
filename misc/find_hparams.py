@@ -1,7 +1,7 @@
 """
 
 I inserted this script inside the Openie6 code to get a sorted list of all
-hparams names.
+params_d names.
 
 """
 
@@ -9,17 +9,17 @@ import re
 import os
 from pprint import pprint
 
-def find_hparams_variables(files):
-    hparams_variables = set()
-    variable_pattern = r'\bhparams\.\w+\b'
+def find_params_d_variables(files):
+    params_d_variables = set()
+    variable_pattern = r'\bparams_d\.\w+\b'
 
     for file_path in files:
         with open(file_path, 'r', encoding="utf-8") as file:
             content = file.read()
             variables = re.findall(variable_pattern, content)
-            hparams_variables.update(variables)
+            params_d_variables.update(variables)
 
-    return sorted(list(hparams_variables))
+    return sorted(list(params_d_variables))
 
 if __name__ == "__main__":
 
@@ -30,58 +30,58 @@ if __name__ == "__main__":
                  "model.py",
                  "params.py",
                  "run.py"]
-        li = find_hparams_variables(files)
+        li = find_params_d_variables(files)
         pprint(li)
 
     main()
 
 # output of this script:
-# ['hparams.accumulate_grad_batches',
-#  'hparams.batch_size',
-#  'hparams.bos_token_id',
-#  'hparams.build_cache',
-#  'hparams.checkpoint',
-#  'hparams.conj_model',
-#  'hparams.constraints',
-#  'hparams.cweights',
-#  'hparams.debug',
-#  'hparams.dev_fp',
-#  'hparams.dropout',
-#  'hparams.eos_token_id',
-#  'hparams.epochs',
-#  'hparams.gpus',
-#  'hparams.gradient_clip_val',
-#  'hparams.inp',
-#  'hparams.iterative_layers',
-#  'hparams.labelling_dim',
-#  'hparams.lr',
-#  'hparams.max_steps',
-#  'hparams.mode',
-#  'hparams.model_str',
-#  'hparams.multi_opt',
-#  'hparams.no_lt',
-#  'hparams.num_extractions',
-#  'hparams.num_sanity_val_steps',
-#  'hparams.num_tpu_cores',
-#  'hparams.oie_model',
-#  'hparams.optimizer',
-#  'hparams.out',
-#  'hparams.predict_fp',
-#  'hparams.rescore_model',
-#  'hparams.rescoring',
-#  'hparams.save',
-#  'hparams.save_k',
-#  'hparams.split_fp',
-#  'hparams.task',
-#  'hparams.test_fp',
-#  'hparams.track_grad_norm',
-#  'hparams.train_fp',
-#  'hparams.train_percent_check',
-#  'hparams.type',
-#  'hparams.use_tpu',
-#  'hparams.val_check_interval',
-#  'hparams.wreg',
-#  'hparams.write_allennlp',
-#  'hparams.write_async']
+# ['params_d.accumulate_grad_batches',
+#  'params_d.batch_size',
+#  'params_d.bos_token_id',
+#  'params_d.build_cache',
+#  'params_d.checkpoint',
+#  'params_d.conj_model',
+#  'params_d.constraints',
+#  'params_d.cweights',
+#  'params_d.debug',
+#  'params_d.dev_fp',
+#  'params_d.dropout',
+#  'params_d.eos_token_id',
+#  'params_d.epochs',
+#  'params_d.gpus',
+#  'params_d.gradient_clip_val',
+#  'params_d.inp',
+#  'params_d.iterative_layers',
+#  'params_d.labelling_dim',
+#  'params_d.lr',
+#  'params_d.max_steps',
+#  'params_d.mode',
+#  'params_d.model_str',
+#  'params_d.multi_opt',
+#  'params_d.no_lt',
+#  'params_d.num_extractions',
+#  'params_d.num_sanity_val_steps',
+#  'params_d.num_tpu_cores',
+#  'params_d.oie_model',
+#  'params_d.optimizer',
+#  'params_d.out',
+#  'params_d.predict_fp',
+#  'params_d.rescore_model',
+#  'params_d.rescoring',
+#  'params_d.save',
+#  'params_d.save_k',
+#  'params_d.split_fp',
+#  'params_d.task',
+#  'params_d.test_fp',
+#  'params_d.track_grad_norm',
+#  'params_d.train_fp',
+#  'params_d.train_percent_check',
+#  'params_d.type',
+#  'params_d.use_tpu',
+#  'params_d.val_check_interval',
+#  'params_d.wreg',
+#  'params_d.write_allennlp',
+#  'params_d.write_async']
 #
 

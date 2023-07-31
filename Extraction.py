@@ -3,6 +3,10 @@ from my_globals import *
 from allen_tool import read_allen_file, get_num_sents_in_allen_file
 from math import floor
 
+# important
+# carb has its own version of Extraction
+# from carb_subset.oie_readers.extraction import Extraction
+
 
 # extag = extraction tag
 
@@ -41,7 +45,12 @@ class Extraction:
 
 
     def to_string(self):
-         return " ".join([self.arg1, self.rel. self.arg2])
+         # return " ".join([self.arg1, self.rel. self.arg2])
+         ext_str = ''
+         ext_str = f'{self.args[0]} {self.pred}'
+         if len(self.args) >= 2:
+             ext_str = f'{ext_str} {" ".join(self.args[1:])}'
+         return ext_str
 
     def tokenize_one_attr(self, name):
         assert name in self.tokenizables
@@ -375,6 +384,13 @@ class Extraction:
         self.extag_it_loc_time("loc")
         self.extag_it_loc_time("time")
 
+    def is_in_list(self, ex_list):
+        str = ' '.join(self.args) + ' ' + self.pred
+        for ex in ex_list:
+            if str == ' '.join(ex.args) + ' ' + ex.pred:
+                return True
+        return False
+
 def tokenize(ztz):
     if ztz:
         x = ztz.strip().split()
@@ -405,6 +421,8 @@ def good_matches_gt_2(matches):
 
 def get_matches(list0, list1):
     return difflib.SequenceMatcher(None, list0, list1).get_matching_blocks()
+
+
 
 
 

@@ -1,5 +1,7 @@
 from my_globals import *
 from Extraction import *
+from CarbExMetric import *
+from CCMetric import *
 
 """
 
@@ -95,7 +97,14 @@ class Model(pl.LightningModule):
         self.labelling_dim = self.params_d["labelling_dim"]
         self.dropout = nn.Dropout(p=self.params_d["dropout"])
 
-        self.label_embeddings = nn.Embedding(100, self._hidden_size)
+        """
+        nn.Embedding(num_embeddings, embedding_size)
+        num_embeddings (int) – size of the dictionary of embeddings
+        embedding_dim (int) – the size of each embedding vector
+            
+        """
+        self.label_embeddings = nn.Embedding(100,
+                                             self._hidden_size)
         self.merge_layer = nn.Linear(self._hidden_size,
                                      self.labelling_dim)
         self.labelling_layer = nn.Linear(self.labelling_dim,
@@ -103,8 +112,8 @@ class Model(pl.LightningModule):
 
         self.loss = nn.CrossEntropyLoss()
 
-        self._metric = Carb(
-            params_d) if params_d["task"] == "ex" else Conjunction()
+        self._metric = CarbExMetric(
+            params_d) if params_d["task"] == "ex" else CCMetric()
         self.max_depth = 5 if params_d["task"] == "ex" else 3
 
         self.constraints_d = dict()
@@ -115,22 +124,33 @@ class Model(pl.LightningModule):
         self.all_ex_predictions = []
 
     def configure_optimizers(self):
+        # self.named_parameters() is Iterator[Tuple[str, Parameter]]
         all_params = list(self.named_parameters())
-        no_decay = ["bias", "gamma", "beta"]
-        opt_params = \
-            [{"params": [p for n, p in all_params if
-                         not any(nd in n for nd in no_decay) and
-                         'base_model' in n],
-              "weight_decay_rate": 0.01,
-              'lr': self.params_d["lr"]},
-             {"params": [p for n, p in all_params if
-                         any(nd in n for nd in no_decay) and
-                         'base_model' in n],
-              "weight_decay_rate": 0.0,
-              'lr': self.params_d["lr"]},
-             {"params": [p for n, p in all_params if
-                         'base_model' not in n],
-              'lr': self.params_d["lr"]}]
+        # opt= optimizer
+        # p = parameter
+        opt_p_names = ["bias", "gamma", "beta"]
+
+        def p_in_overlap_of_lists(p, li1, li2):
+            return any(p in li1 for p in li2)
+
+        def p_not_in_overlap_of_lists(p, li1, li2):
+            return not any(p in li1 for p in li2)
+
+        opt_params = [
+            {"params": [p for p_names, p in all_params if
+                        p_not_in_overlap_of_lists(p, p_names, opt_p_names) and
+                        'base_model' in p_names],
+             "weight_decay_rate": 0.01,
+             'lr': self.params_d["lr"]},
+            {"params": [p for p_names, p in all_params if
+                        p_in_overlap_of_lists(p, p_names, opt_p_names) and
+                        'base_model' in p_names],
+             "weight_decay_rate": 0.0,
+             'lr': self.params_d["lr"]},
+            {"params": [p for p_names, p in all_params if
+                        'base_model' not in p_names],
+             'lr': self.params_d["lr"]}
+        ]
         if self.params_d["optimizer"] == 'adamW':
             optimizer = AdamW(opt_params, lr=1e-3)
         elif self.params_d["optimizer"] == 'adam':
@@ -146,18 +166,16 @@ class Model(pl.LightningModule):
     def forward(self, batch_d, mode='train', batch_idx=-1,
                 constraints=None, cweights=None):
         if self.params_d["wreg"] != 0 and \
-                not hasattr(self, '_initial_parameters'):
-            self._initial_parameters = copy.deepcopy(
+                not hasattr(self, 'init_params_d'):
+            self.init_params_d = copy.deepcopy(
                 dict(self.named_parameters()))
 
         batch_size, depth, labels_length = batch_d["labels"].shape
         if mode != 'train':
             depth = self.max_depth
 
-        loss, lstm_loss = 0, 0
         hidden_states, _ = self.base_model(batch_d["text"])
         output_dict = dict()
-        # (batch_size, seq_length, max_depth, num_labels)
         all_depth_scores = []
 
         d = 0
@@ -166,11 +184,9 @@ class Model(pl.LightningModule):
                 hidden_states = layer(hidden_states)[0]
 
             hidden_states = self.dropout(hidden_states)
-            word_hidden_states = torch.gather(hidden_states, 1,
-                                              batch_d["word_starts"].unsqueeze(
-                                                  2).
-                                              repeat(1, 1,
-                                                     hidden_states.shape[2]))
+            bat = batch_d["word_starts"].unsqueeze(2). \
+                repeat(1, 1, hidden_states.shape[2])
+            word_hidden_states = torch.gather(hidden_states, 1, bat)
 
             if d != 0:
                 greedy_labels = torch.argmax(word_scores, dim=-1)
@@ -193,16 +209,25 @@ class Model(pl.LightningModule):
                         break
                 if not valid_ext:
                     break
+        return self.fill_forward_output_dict(
+            batch_d, mode,
+            constraints, cweights,
+            all_depth_scores, word_scores, output_dict)
 
-                    # (batch_size, seq_length, max_depth)
+    def fill_forward_output_dict(
+            self, batch_d, mode,
+            constraints, cweights,
+            all_depth_scores, word_scores, output_dict):
+
+        loss, lstm_loss = 0, 0
         all_depth_predictions, all_depth_confidences = [], []
         batch_size, num_words, _ = word_scores.shape
         batch_d["labels"] = batch_d["labels"].long()
         for d, word_scores in enumerate(all_depth_scores):
             if mode == 'train':
-                batch_labels_d = batch_d["labels"][:, d, :]
-                mask = torch.ones(batch_d["word_starts"].shape).int(). \
-                    type_as(hidden_states)
+                # batch_labels_d = batch_d["labels"][:, d, :]
+                # mask = torch.ones(batch_d["word_starts"].shape).int(). \
+                #     type_as(hidden_states)
                 loss += self.loss(
                     word_scores.reshape(batch_size * num_words, -1),
                     batch_d["labels"][:, d, :].reshape(-1))
@@ -232,18 +257,17 @@ class Model(pl.LightningModule):
 
                 const_loss = self.constrained_loss(
                     all_depth_scores, batch_d,
-                    constraints,
-                    cweights) / batch_size
+                    constraints, cweights) / batch_size
                 loss = const_loss
 
             if self.params_d["wreg"] != 0:
                 weight_diff = 0
                 current_parameters = dict(self.named_parameters())
-                for name in self._initial_parameters:
+                for name in self.init_params_d:
                     weight_diff += torch.norm(current_parameters[name]
-                                              - self._initial_parameters[name])
+                                              - self.init_params_d[name])
                 loss = loss + self.params_d["wreg"] * weight_diff
-        else:
+        else:  # not train
 
             all_depth_predictions = torch.cat(all_depth_predictions, dim=1)
             all_depth_confidences = torch.cat(all_depth_confidences, dim=1)
@@ -269,8 +293,8 @@ class Model(pl.LightningModule):
                 all_depth_scores.scatter_(3, labels.long(), 1)
 
                 constraints, cweights = 'posm_hvc_hvr_hve', '1_1_1_1'
-                constraints_list, cweights_list = constraints.split(
-                    '_'), cweights.split('_')
+                constraints_list, cweights_list = \
+                    constraints.split('_'), cweights.split('_')
                 if len(constraints_list) != len(cweights_list):
                     cweights_list = [cweights] * len(constraints_list)
 
@@ -290,10 +314,9 @@ class Model(pl.LightningModule):
                          constraints, cweights):
         batch_size, depth, num_words, labels = all_depth_scores.shape
         hinge_loss = 0
-        verb_scores = torch.gather(all_depth_scores, 2,
-                                   batch_d["verb_index"].unsqueeze(
-                                       1).unsqueeze(3).
-                                   repeat(1, depth, 1, labels))
+        bat = batch_d["verb_index"].unsqueeze(1).unsqueeze(3). \
+            repeat(1, depth, 1, labels)
+        verb_scores = torch.gather(all_depth_scores, 2, bat)
         verb_rel_scores = verb_scores[:, :, :, 2]
         # (batch_size, depth, num_words)
         verb_rel_scores = verb_rel_scores * (batch_d["verb_index"] != 0). \
@@ -319,10 +342,9 @@ class Model(pl.LightningModule):
             hinge_loss += cweights * ex_loss.sum()
 
         if 'posm' in constraints:
-            pos_scores = torch.gather(all_depth_scores, 2,
-                                      batch_d["pos_index"].unsqueeze(
-                                          1).unsqueeze(3).
-                                      repeat(1, depth, 1, labels))
+            bat = batch_d["pos_index"].unsqueeze(1).unsqueeze(3). \
+                repeat(1, depth, 1, labels)
+            pos_scores = torch.gather(all_depth_scores, 2, bat)
             pos_nnone_scores = \
                 torch.max(pos_scores[:, :, :, 1:], dim=-1)[0]
             column_loss = (1 - torch.max(pos_nnone_scores, dim=1)[0]) * \
@@ -343,7 +365,6 @@ class Model(pl.LightningModule):
         return tqdm
 
     def training_step(self, batch_d, batch_idx, optimizer_idx=-1):
-
         if self.params_d["multi_opt"]:
             constraints = self.params_d["constraints"].split('_')[
                 optimizer_idx]
@@ -470,6 +491,50 @@ class Model(pl.LightningModule):
     def val_dataloader(self):
         return None
 
+    def process_extraction(self, extraction, sentence, score):
+        # rel, arg1, arg2, loc, time = [], [], [], [], []
+        rel, arg1, arg2, loc_time, args = [], [], [], [], []
+        tag_mode = 'none'
+        rel_case = 0
+        for i, token in enumerate(sentence):
+            if '[unused' in token:
+                if extraction[i].item() == 2:
+                    rel_case = int(
+                        re.search('\[unused(.*)\]', token).group(1))
+                continue
+            if extraction[i] == 1:
+                arg1.append(token)
+            if extraction[i] == 2:
+                rel.append(token)
+            if extraction[i] == 3:
+                arg2.append(token)
+            if extraction[i] == 4:
+                loc_time.append(token)
+
+        rel = ' '.join(rel).strip()
+        if rel_case == 1:
+            rel = 'is ' + rel
+        elif rel_case == 2:
+            rel = 'is ' + rel + ' of'
+        elif rel_case == 3:
+            rel = 'is ' + rel + ' from'
+
+        arg1 = ' '.join(arg1).strip()
+        arg2 = ' '.join(arg2).strip()
+        args = ' '.join(args).strip()
+        loc_time = ' '.join(loc_time).strip()
+        if not self.params_d["no_lt"]:
+            arg2 = (arg2 + ' ' + loc_time + ' ' + args).strip()
+        sentence_str = ' '.join(sentence).strip()
+
+        extraction = Extraction(pred=rel, head_pred_index=None,
+                                sent=sentence_str, confidence=score,
+                                index=0)
+        extraction.addArg(arg1)
+        extraction.addArg(arg2)
+
+        return extraction
+
     def write_to_file(self, output, batch_idx, task):
         if self.params_d["write_async"]:
             while not sem.acquire(blocking=True):
@@ -480,58 +545,6 @@ class Model(pl.LightningModule):
         output['scores'] = output['scores'].cpu()
         output['ground_truth'] = output['ground_truth'].cpu()
         output['meta_data'] = output['meta_data'].cpu()
-
-        def process_extraction(extraction, sentence, score):
-            # rel, arg1, arg2, loc, time = [], [], [], [], []
-            rel, arg1, arg2, loc_time, args = [], [], [], [], []
-            tag_mode = 'none'
-            rel_case = 0
-            for i, token in enumerate(sentence):
-                if '[unused' in token:
-                    if extraction[i].item() == 2:
-                        rel_case = int(
-                            re.search('\[unused(.*)\]', token).group(1))
-                    continue
-                if extraction[i] == 1:
-                    arg1.append(token)
-                if extraction[i] == 2:
-                    rel.append(token)
-                if extraction[i] == 3:
-                    arg2.append(token)
-                if extraction[i] == 4:
-                    loc_time.append(token)
-
-            rel = ' '.join(rel).strip()
-            if rel_case == 1:
-                rel = 'is ' + rel
-            elif rel_case == 2:
-                rel = 'is ' + rel + ' of'
-            elif rel_case == 3:
-                rel = 'is ' + rel + ' from'
-
-            arg1 = ' '.join(arg1).strip()
-            arg2 = ' '.join(arg2).strip()
-            args = ' '.join(args).strip()
-            loc_time = ' '.join(loc_time).strip()
-            if not self.params_d["no_lt"]:
-                arg2 = (arg2 + ' ' + loc_time + ' ' + args).strip()
-            sentence_str = ' '.join(sentence).strip()
-
-            extraction = Extraction(pred=rel, head_pred_index=None,
-                                    sent=sentence_str, confidence=score,
-                                    index=0)
-            extraction.addArg(arg1)
-            extraction.addArg(arg2)
-
-            return extraction
-
-        def contains_extraction(extr, list_extr):
-            str = ' '.join(extr.args) + ' ' + extr.pred
-            for extraction in list_extr:
-                if str == ' '.join(extraction.args) + ' ' + extraction.pred:
-                    return True
-            return False
-
         output['meta_data'] = [self.meta_data_vocab.itos[m] for m
                                in output['meta_data']]
         if task == "ex":
@@ -557,22 +570,18 @@ class Model(pl.LightningModule):
                     extraction = predictions[i][j][:len(words)]
                     if sum(extraction) == 0:  # extractions completed
                         break
-                    pro_extraction = process_extraction(
+                    pro_extraction = self.process_extraction(
                         extraction, words, scores[i][j].item())
                     if pro_extraction.args[
                         0] != '' and pro_extraction.pred != '':
                         if self._metric.mapping:
-                            if not contains_extraction(pro_extraction,
-                                                       all_predictions[
-                                                           self._metric.mapping[
-                                                               orig_sentence]]):
+                            if not pro_extraction.is_in_list(all_predictions[
+                                    self._metric.mapping[orig_sentence]]):
                                 all_predictions[self._metric.mapping[
-                                    orig_sentence]].append(
-                                    pro_extraction)
+                                    orig_sentence]].append(pro_extraction)
                         else:
-                            if not contains_extraction(pro_extraction,
-                                                       all_predictions[
-                                                           orig_sentence]):
+                            if not pro_extraction.is_in_list(
+                                    all_predictions[orig_sentence]):
                                 all_predictions[orig_sentence].append(
                                     pro_extraction)
             all_pred = []
@@ -584,9 +593,9 @@ class Model(pl.LightningModule):
                 sentence_str = f'{sentence}\n'
                 for extraction in predicted_extractions:
                     if self.params_d["type"] == 'sentences':
-                        ext_str = data.ext_to_sentence(extraction) + '\n'
+                        ext_str = extraction.to_str() + '\n'
                     else:
-                        ext_str = data.ext_to_string(extraction) + '\n'
+                        ext_str = extraction.to_str() + '\n'
                     sentence_str += ext_str
                 all_pred.append(sentence_str)
                 sentence_str_allennlp = ''
@@ -623,7 +632,7 @@ class Model(pl.LightningModule):
 
                 words = sentence.split()
                 sentence_str = sentence + '\n'
-                split_sentences, conj_words, sentence_indices_list =\
+                split_sentences, conj_words, sentence_indices_list = \
                     data.coords_to_sentences(pred_coords, words)
                 all_sentence_indices.append(sentence_indices_list)
                 all_conjunct_words.append(conj_words)

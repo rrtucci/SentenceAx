@@ -57,7 +57,7 @@ class Extraction:
         attr = getattr(self, name)
         attr_tokens = getattr(self, name + "_tokens")
         if len(attr_tokens)==0:
-            attr_tokens = tokenize(attr)
+            attr_tokens = Extraction.tokenize(attr)
                 
     def tokenize_all(self):
         for name in self.tokenizables:
@@ -70,7 +70,7 @@ class Extraction:
 
     def extag_it_matches_2(self, matches, extag_name):
         assert extag_name in self.base_extags
-        assert good_matches_2(matches)
+        assert Extraction.good_matches_2(matches)
         m0 = matches[0]
         self.ztz_extags[m0.b: m0.b + m0.size] = [extag_name] * m0.size
         self.set_is_extagged_to_true(extag_name)
@@ -83,10 +83,10 @@ class Extraction:
                 len(self.time_tokens) == 0:
             self.arg2_extagged = True
 
-        elif count_subs(
+        elif Extraction.count_subs(
                 self.arg2_tokens + args_tokens + self.loc_tokens +
                 self.time_tokens, self.in3_tokens) == 1:
-            matches = get_matches(
+            matches = Extraction.get_matches(
                 self.arg2_tokens + args_tokens + self.loc_tokens +
                 self.time_tokens, self.in3_tokens)
             self.extag_it_matches_2(matches, "ARG2")
@@ -99,26 +99,26 @@ class Extraction:
         #         self.loc_tokens, self.in3_tokens)
         #     self.extag_it_matches_2(matches, "ARG2")
 
-        elif count_subs(
+        elif Extraction.count_subs(
                 self.arg2_tokens + args_tokens + self.time_tokens,
                 self.in3_tokens) == 1:
-            matches = get_matches(
+            matches = Extraction.get_matches(
                 self.arg2_tokens + args_tokens + self.time_tokens,
                 self.in3_tokens)
             self.extag_it_matches_2(matches, "ARG2")
 
-        elif count_subs(
+        elif Extraction.count_subs(
                 self.arg2_tokens + args_tokens + self.loc_tokens,
                 self.in3_tokens) == 1:
-            matches = get_matches(
+            matches = Extraction.get_matches(
                 self.arg2_tokens + args_tokens + self.loc_tokens,
                 self.in3_tokens)
             self.extag_it_matches_2(matches, "ARG2")
 
-        elif count_subs(
+        elif Extraction.count_subs(
                 self.arg2_tokens + self.time_tokens + self.loc_tokens,
                 self.in3_tokens) == 1:
-            matches = get_matches(
+            matches = Extraction.get_matches(
                 self.arg2_tokens + self.time_tokens + self.loc_tokens,
                 self.in3_tokens)
             self.extag_it_matches_2(matches, "ARG2")
@@ -131,21 +131,21 @@ class Extraction:
         #         self.in3_tokens)
         #     self.extag_it_matches_2(matches, "ARG2")
 
-        elif count_subs(
+        elif Extraction.count_subs(
                 self.arg2_tokens + self.time_tokens, self.in3_tokens) == 1:
-            matches = get_matches(
+            matches = Extraction.get_matches(
                 self.arg2_tokens + self.time_tokens, self.in3_tokens)
             self.extag_it_matches_2(matches, "ARG2")
 
-        elif count_subs(
+        elif Extraction.count_subs(
                 self.arg2_tokens + self.loc_tokens, self.in3_tokens) == 1:
-            matches = get_matches(
+            matches = Extraction.get_matches(
                 self.arg2_tokens + self.loc_tokens, self.in3_tokens)
             self.extag_it_matches_2(matches, "ARG2")
 
-        elif count_subs(
+        elif Extraction.count_subs(
                 self.time_tokens + self.loc_tokens, self.in3_tokens) == 1:
-            matches = get_matches(
+            matches = Extraction.get_matches(
                 self.time_tokens + self.loc_tokens + self.in3_tokens)
             self.extag_it_matches_2(matches, "ARG2")
 
@@ -155,15 +155,15 @@ class Extraction:
         #         self.loc_tokens + self.time_tokens , self.in3_tokens)
         #     self.extag_it_matches_2(matches, "ARG2")
 
-        elif count_subs(
+        elif Extraction.count_subs(
                 self.loc_tokens, self.in3_tokens) == 1:
-            matches = get_matches(
+            matches = Extraction.get_matches(
                 self.loc_tokens, self.in3_tokens)
             self.extag_it_matches_2(matches, "ARG2")
 
-        elif count_subs(
+        elif Extraction.count_subs(
                 self.time_tokens, self.in3_tokens) == 1:
-            matches = get_matches(
+            matches = Extraction.get_matches(
                 self.time_tokens, self.in3_tokens)
             self.extag_it_matches_2(matches, "ARG2")
 
@@ -176,17 +176,17 @@ class Extraction:
             arg_tokens = getattr(self, "rel_tokens")
         else:
             assert False
-        if count_subs(arg_tokens, self.in3_tokens) == 1:
-            matches = get_matches(arg_tokens, self.in3_tokens)
-            assert good_matches_2(matches)
+        if Extraction.count_subs(arg_tokens, self.in3_tokens) == 1:
+            matches = Extraction.get_matches(arg_tokens, self.in3_tokens)
+            assert Extraction.good_matches_2(matches)
             self.set_is_extagged_to_true(arg_name.upper())
             m0 = matches[0]
             self.ztz_extags[m0.b: m0.b + m0.size] = [arg_name.upper()] * m0.size
 
 
-        elif count_subs(arg_tokens, self.in3_tokens) == 0:
-            matches = get_matches(arg_tokens, self.in3_tokens)
-            if good_matches_gt_2(matches):
+        elif Extraction.count_subs(arg_tokens, self.in3_tokens) == 0:
+            matches = Extraction.get_matches(arg_tokens, self.in3_tokens)
+            if Extraction.good_matches_gt_2(matches):
                 self.set_is_extagged_to_true(arg_name.upper())
                 for m in matches:
                     self.ztz_extags[m.b: m.b + m.size] = \
@@ -205,9 +205,9 @@ class Extraction:
             elif self.rel_tokens[0] == '[is]' and \
                     self.rel_tokens[-1] == '[of]':
                 if len(self.rel_tokens) > 2 and \
-                        count_subs(self.rel_tokens[1:-1], self.in3_tokens)\
+                        Extraction.count_subs(self.rel_tokens[1:-1], self.in3_tokens)\
                         == 1:
-                    matches = get_matches(self.rel_tokens[1:-1], 
+                    matches = Extraction.get_matches(self.rel_tokens[1:-1],
                                           self.in3_tokens)
                     self.extag_it_matches_2(matches, "REL")
                     rel_is_extagged = True
@@ -215,11 +215,11 @@ class Extraction:
                     self.ztz_extags[-2] = 'REL'
 
                 elif len(self.rel_tokens) > 2 and \
-                        count_subs(self.rel_tokens[1:-1], self.in3_tokens) \
+                        Extraction.count_subs(self.rel_tokens[1:-1], self.in3_tokens) \
                         == 0:
-                    matches = get_matches(self.rel_tokens[1:-1], 
+                    matches = Extraction.get_matches(self.rel_tokens[1:-1],
                                           self.in3_tokens)
-                    if good_matches_gt_2(matches):
+                    if Extraction.good_matches_gt_2(matches):
                         self.set_is_extagged_to_true("REL")
                         for m in matches:
                             self.ztz_extags[m.b: m.b + m.size] = \
@@ -230,9 +230,9 @@ class Extraction:
             elif self.rel_tokens[0] == '[is]' and \
                     self.rel_tokens[-1] == '[from]':
                 if len(self.rel_tokens) > 2 and\
-                        count_subs(self.rel_tokens[1:-1], self.in3_tokens) \
+                        Extraction.count_subs(self.rel_tokens[1:-1], self.in3_tokens) \
                         == 1:
-                    matches = get_matches(self.rel_tokens[1:-1], 
+                    matches = Extraction.get_matches(self.rel_tokens[1:-1],
                                           self.in3_tokens)
                     self.extag_it_matches_2(matches, "REL")
                     rel_is_extagged = True
@@ -240,11 +240,11 @@ class Extraction:
                     self.ztz_extags[-1] = 'REL'
 
                 elif len(self.rel_tokens) > 2 and \
-                        count_subs(self.rel_tokens[1:-1], self.in3_tokens) \
+                        Extraction.count_subs(self.rel_tokens[1:-1], self.in3_tokens) \
                         == 0:
-                    matches = get_matches(self.rel_tokens[1:-1], 
+                    matches = Extraction.get_matches(self.rel_tokens[1:-1],
                                           self.in3_tokens)
-                    if good_matches_gt_2(matches):
+                    if Extraction.good_matches_gt_2(matches):
                         rel_is_extagged = True
                         for m in matches:
                             self.ztz_extags[m.b: m.b + m.size] = \
@@ -254,8 +254,8 @@ class Extraction:
 
             elif self.rel_tokens[0] == '[is]' and len(self.rel_tokens) > 1:
                 assert not self.rel_tokens[-1].startswith('[')
-                if count_subs(self.rel_tokens[1:], self.in3_tokens) == 1:
-                    matches = get_matches(
+                if Extraction.count_subs(self.rel_tokens[1:], self.in3_tokens) == 1:
+                    matches = Extraction.get_matches(
                         self.rel_tokens[1:], self.in3_tokens)
                     self.extag_it_matches_2(matches, "REL")
                     self.set_is_extagged_to_true("REL")
@@ -263,10 +263,10 @@ class Extraction:
                     self.ztz_extags[-3] = 'REL'
 
                 elif len(self.rel_tokens) > 2 and \
-                        count_subs(self.rel_tokens[1:], self.in3_tokens) == 0:
-                    matches = get_matches(
+                        Extraction.count_subs(self.rel_tokens[1:], self.in3_tokens) == 0:
+                    matches = Extraction.get_matches(
                         self.rel_tokens[1:-1], self.in3_tokens)
-                    if good_matches_gt_2(matches):
+                    if Extraction.good_matches_gt_2(matches):
                         self.set_is_extagged_to_true("REL")
                         for m in matches:
                             self.ztz_extags[m.b: m.b + m.size] = \
@@ -281,10 +281,10 @@ class Extraction:
 
         if rel_is_extagged and \
                 not arg1_is_extagged and \
-                count_subs(self.arg1_tokens, self.in3_tokens) > 1:
+                Extraction.count_subs(self.arg1_tokens, self.in3_tokens) > 1:
             starting_locs = [j for j in
                 range(len(self.in3_tokens)) if
-                sub_exists(self.arg1_tokens, self.in3_tokens, j)]
+                Extraction.sub_exists(self.arg1_tokens, self.in3_tokens, j)]
             assert len(starting_locs) > 1
 
             min_dist = int(1E8)
@@ -315,19 +315,19 @@ class Extraction:
         if arg1_is_extagged and arg2_is_extagged and not rel_is_extagged and\
                 len(self.rel_tokens) > 0:
             rt = None
-            if count_subs(self.rel_tokens, self.in3_tokens) > 1:
+            if Extraction.count_subs(self.rel_tokens, self.in3_tokens) > 1:
                 rt = self.rel_tokens
             elif self.rel_tokens[0] == '[is]' and \
-                    count_subs(self.rel_tokens[1:], self.in3_tokens) > 1:
+                    Extraction.count_subs(self.rel_tokens[1:], self.in3_tokens) > 1:
                 rt = self.rel_tokens[1:]
             elif self.rel_tokens[0] == '[is]' and \
                     self.rel_tokens[-1].startswith('[') and \
-                    count_subs(self.rel_tokens[1:-1], self.in3_tokens) > 1:
+                    Extraction.count_subs(self.rel_tokens[1:-1], self.in3_tokens) > 1:
                 rt = self.rel_tokens[1:-1]
 
             if rt:
                 starting_locs = [j for j in range(len(self.in3_tokens))
-                        if sub_exists( rt, self.in3_tokens, j)]
+                        if Extraction.sub_exists( rt, self.in3_tokens, j)]
                 assert len(starting_locs) > 1
 
                 min_dist = int(1e8)
@@ -370,8 +370,8 @@ class Extraction:
             arg = self.loc
         else:
             assert False
-        tokens = tokenize(arg)
-        matches = get_matches(tokens, self.in_ztz)
+        tokens = Extraction.tokenize(arg)
+        matches = Extraction.get_matches(tokens, self.in_ztz)
         self.extag_it_matches_2(matches, arg_name.upper())
             
     def do_all_extagging(self):
@@ -391,36 +391,40 @@ class Extraction:
                 return True
         return False
 
-def tokenize(ztz):
-    if ztz:
-        x = ztz.strip().split()
-    else:
-        x = None
-    return x
+    @staticmethod
+    def tokenize(ztz):
+        if ztz:
+            x = ztz.strip().split()
+        else:
+            x = None
+        return x
 
+    @staticmethod
+    def count_subs(sub, full): # seq_in_seq
+        return str(full)[1:-1].count(str(sub)[1:-1])
 
-def count_subs(sub, full): # seq_in_seq
-    return str(full)[1:-1].count(str(sub)[1:-1])
+    @staticmethod
+    def sub_exists(sub, full, loc): # starts_with
+        return all(sub[i] == full[loc + i] for i in range(0, len(sub)))
 
-def sub_exists(sub, full, loc): # starts_with
-    return all(sub[i] == full[loc + i] for i in range(0, len(sub)))
+    @staticmethod
+    def good_matches_2(matches):
+        return len(matches) == 2 and \
+            matches[0].a == 0 and \
+            matches[0].size == matches[1].a and \
+            matches[1].size == 0
 
+    @staticmethod
+    def good_matches_gt_2(matches):
+        return len(matches) > 2 and\
+            matches[0].a == 0 and \
+            all(matches[i].a == matches[i - 1].a + matches[i - 1].size
+                for i in range(1, len(matches) - 1)) and \
+            matches[-2].a + matches[-2].size == matches[-1].a
 
-def good_matches_2(matches):
-    return len(matches) == 2 and \
-        matches[0].a == 0 and \
-        matches[0].size == matches[1].a and \
-        matches[1].size == 0
-
-def good_matches_gt_2(matches):
-    return len(matches) > 2 and\
-        matches[0].a == 0 and \
-        all(matches[i].a == matches[i - 1].a + matches[i - 1].size
-            for i in range(1, len(matches) - 1)) and \
-        matches[-2].a + matches[-2].size == matches[-1].a
-
-def get_matches(list0, list1):
-    return difflib.SequenceMatcher(None, list0, list1).get_matching_blocks()
+    @staticmethod
+    def get_matches(list0, list1):
+        return difflib.SequenceMatcher(None, list0, list1).get_matching_blocks()
 
 
 

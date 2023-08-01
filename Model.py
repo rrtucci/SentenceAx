@@ -165,6 +165,7 @@ class Model(pl.LightningModule):
 
     def forward(self, batch_d, mode='train', batch_idx=-1,
                 constraints=None, cweights=None):
+        # signature of parent method:  def forward(self, *args, **kwargs):
         if self.params_d["wreg"] != 0 and \
                 not hasattr(self, 'init_params_d'):
             self.init_params_d = copy.deepcopy(
@@ -175,7 +176,7 @@ class Model(pl.LightningModule):
             depth = self.max_depth
 
         hidden_states, _ = self.base_model(batch_d["text"])
-        output_dict = dict()
+        output_d = dict()
         all_depth_scores = []
 
         d = 0
@@ -209,15 +210,15 @@ class Model(pl.LightningModule):
                         break
                 if not valid_ext:
                     break
-        return self.fill_forward_output_dict(
+        return self.fill_forward_output_d(
             batch_d, mode,
             constraints, cweights,
-            all_depth_scores, word_scores, output_dict)
+            all_depth_scores, word_scores, output_d)
 
-    def fill_forward_output_dict(
+    def fill_forward_output_d(
             self, batch_d, mode,
             constraints, cweights,
-            all_depth_scores, word_scores, output_dict):
+            all_depth_scores, word_scores, output_d):
 
         loss, lstm_loss = 0, 0
         all_depth_predictions, all_depth_confidences = [], []
@@ -272,8 +273,8 @@ class Model(pl.LightningModule):
             all_depth_predictions = torch.cat(all_depth_predictions, dim=1)
             all_depth_confidences = torch.cat(all_depth_confidences, dim=1)
 
-            output_dict['predictions'] = all_depth_predictions
-            output_dict['scores'] = all_depth_confidences
+            output_d['predictions'] = all_depth_predictions
+            output_d['scores'] = all_depth_confidences
 
             if constraints != '' and \
                     'predict' not in self.params_d["mode"] and \
@@ -307,8 +308,8 @@ class Model(pl.LightningModule):
                         self.constraints_d[constraint] = []
                     self.constraints_d[constraint].append(const_loss)
 
-        output_dict['loss'] = loss
-        return output_dict
+        output_d['loss'] = loss
+        return output_d
 
     def constrained_loss(self, all_depth_scores, batch_d,
                          constraints, cweights):
@@ -328,7 +329,7 @@ class Model(pl.LightningModule):
             column_loss = column_loss[batch_d["verb_index"] != 0]
             hinge_loss += cweights * column_loss.sum()
 
-        # extractions must have atleast k-relations with
+        # extractions must have at least k-relations with
         # a head verb in them
         if 'hvr' in constraints:
             row_rel_loss = F.relu(batch_d["verb"].sum(dim=1).float() -
@@ -374,62 +375,62 @@ class Model(pl.LightningModule):
             constraints = self.params_d["constraints"]
             cweights = float(self.params_d["cweights"])
 
-        output_dict = self.forward(batch_d, mode='train',
+        output_d = self.forward(batch_d, mode='train',
                                    batch_idx=batch_idx,
                                    constraints=constraints,
                                    cweights=cweights)
 
-        tqdm_dict = {"train_loss": output_dict['loss']}
-        output = OrderedDict({"loss": output_dict['loss'], "log": tqdm_dict})
+        tqdm_dict = {"train_loss": output_d['loss']}
+        output0_d = OrderedDict({"loss": output_d['loss'], "log": tqdm_dict})
 
-        return output
+        return output0_d
 
     def validation_step(self, batch_d, batch_idx):
-        output_dict = self.forward(
+        output_d = self.forward(
             batch_d,
             mode='val',
             constraints=self.params_d["constraints"],
             cweights=self.params_d["cweights"])
 
-        outputD = {"predictions": output_dict['predictions'],
-                   "scores": output_dict['scores'],
+        output0_d = {"predictions": output_d['predictions'],
+                   "scores": output_d['scores'],
                    "ground_truth": batch_d["labels"],
                    "meta_data": batch_d["meta_data"]}
-        output = OrderedDict(outputD)
+        output0_d = OrderedDict(output0_d)
 
         if self.params_d["mode"] != 'test':
             if self.params_d["write_async"]:
                 t = Thread(target=self.write_to_file,
-                           args=(output, batch_idx, self.params_d["task"]))
+                           args=(output0_d, batch_idx, self.params_d["task"]))
                 t.start()
             else:
-                self.write_to_file(output, batch_idx, self.params_d["task"])
+                self.write_to_file(output0_d, batch_idx, self.params_d["task"])
 
-        return output
+        return output0_d
 
     def test_step(self, batch_d, batch_idx):
         return self.validation_step(batch_d, batch_idx)
 
-    def evaluation_end(self, outputs, mode):
+    def evaluation_end(self, output_d_list, mode):
         result = None
         if self.params_d["mode"] == 'test':
-            for output_index, output in enumerate(outputs):
-                output['predictions'] = output['predictions'].cpu()
-                output['scores'] = output['scores'].cpu()
-                output['scores'] = (output['scores'] * 100).round() / 100
-                output['ground_truth'] = output['ground_truth'].cpu()
-                output['meta_data'] = output['meta_data'].cpu()
+            for output_index, output_d in enumerate(output_d_list):
+                output_d['predictions'] = output_d['predictions'].cpu()
+                output_d['scores'] = output_d['scores'].cpu()
+                output_d['scores'] = (output_d['scores'] * 100).round() / 100
+                output_d['ground_truth'] = output_d['ground_truth'].cpu()
+                output_d['meta_data'] = output_d['meta_data'].cpu()
         if self.params_d["task"] == 'conj':
             if 'predict' in self.params_d["mode"]:
                 metrics = {'P_exact': 0, 'R_exact': 0, 'F1_exact': 0}
             else:
-                for output in outputs:
-                    if type(output['meta_data'][0]) != type(""):
-                        output['meta_data'] = [self.meta_data_vocab.itos[m]
-                                               for m in output['meta_data']]
-                    self._metric(output['predictions'],
-                                 output['ground_truth'],
-                                 meta_data=output['meta_data'])
+                for output_d in output_d_list:
+                    if type(output_d['meta_data'][0]) != type(""):
+                        output_d['meta_data'] = [self.meta_data_vocab.itos[m]
+                                               for m in output_d['meta_data']]
+                    self._metric(output_d['predictions'],
+                                 output_d['ground_truth'],
+                                 meta_data=output_d['meta_data'])
                 metrics = self._metric.get_metric(reset=True, mode=mode)
 
             val_acc, val_auc = metrics['F1_exact'], 0
@@ -440,12 +441,12 @@ class Model(pl.LightningModule):
             if 'predict' in self.params_d["mode"]:
                 metrics = {'carb_f1': 0, 'carb_auc': 0, 'carb_lastf1': 0}
             else:
-                for output in outputs:
-                    if type(output['meta_data'][0]) != type(""):
-                        output['meta_data'] = [self.meta_data_vocab.itos[m]
-                                               for m in output['meta_data']]
-                    self._metric(output['predictions'], output['meta_data'],
-                                 output['scores'])
+                for output_d in output_d_list:
+                    if type(output_d['meta_data'][0]) != type(""):
+                        output_d['meta_data'] = [self.meta_data_vocab.itos[m]
+                                               for m in output_d['meta_data']]
+                    self._metric(output_d['predictions'], output_d['meta_data'],
+                                 output_d['scores'])
                 metrics = self._metric.get_metric(reset=True, mode=mode)
 
             result = {"eval_f1": metrics['carb_f1'],
@@ -462,8 +463,8 @@ class Model(pl.LightningModule):
         #     self.constraints_d = dict()
         return result
 
-    def validation_epoch_end(self, outputs):
-        eval_results = self.evaluation_end(outputs, 'dev')
+    def validation_epoch_end(self, output_d_list):
+        eval_results = self.evaluation_end(output_d_list, 'dev')
         result = {}
         if eval_results != None:
             result = {"log": eval_results,
@@ -471,9 +472,9 @@ class Model(pl.LightningModule):
 
         return result
 
-    def test_epoch_end(self, outputs):
-        eval_results = self.evaluation_end(outputs, 'test')
-        self.outputs = outputs
+    def test_epoch_end(self, output_d_list):
+        eval_results = self.evaluation_end(output_d_list, 'test')
+        self.output_d_list = output_d_list
         result = {"log": eval_results,
                   "progress_bar": eval_results,
                   "test_acc": eval_results['eval_f1']}
@@ -535,22 +536,22 @@ class Model(pl.LightningModule):
 
         return extraction
 
-    def write_to_file(self, output, batch_idx, task):
+    def write_to_file(self, output_d, batch_idx, task):
         if self.params_d["write_async"]:
             while not sem.acquire(blocking=True):
                 # print("No Semaphore available")
                 pass
             # print('Got semaphore')
-        output['predictions'] = output['predictions'].cpu()
-        output['scores'] = output['scores'].cpu()
-        output['ground_truth'] = output['ground_truth'].cpu()
-        output['meta_data'] = output['meta_data'].cpu()
-        output['meta_data'] = [self.meta_data_vocab.itos[m] for m
-                               in output['meta_data']]
+        output_d['predictions'] = output_d['predictions'].cpu()
+        output_d['scores'] = output_d['scores'].cpu()
+        output_d['ground_truth'] = output_d['ground_truth'].cpu()
+        output_d['meta_data'] = output_d['meta_data'].cpu()
+        output_d['meta_data'] = [self.meta_data_vocab.itos[m] for m
+                               in output_d['meta_data']]
         if task == "ex":
-            predictions = output['predictions']
-            sentences = output['meta_data']
-            scores = output['scores']
+            predictions = output_d['predictions']
+            sentences = output_d['meta_data']
+            scores = output_d['scores']
             num_sentences, extractions, max_sentence_len = predictions.shape
             assert num_sentences == len(sentences)
             all_predictions = {}
@@ -612,9 +613,9 @@ class Model(pl.LightningModule):
         if task == 'conj':
             example_id, correct = 0, True
             total1, total2 = 0, 0
-            predictions = output['predictions']
-            gt = output['ground_truth']
-            meta_data = output['meta_data']
+            predictions = output_d['predictions']
+            gt = output_d['ground_truth']
+            meta_data = output_d['meta_data']
             total_depth = predictions.shape[1]
             all_pred = []
             all_conjunct_words = []

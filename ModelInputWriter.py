@@ -2,6 +2,7 @@ from my_globals import *
 from allen_tool import *
 from transformers import AutoTokenizer
 import spacy
+import nltk
 
 
 # Refs:
@@ -9,178 +10,227 @@ import spacy
 
 class ModelInputWriter:
 
-    def __init__(self, allen_fpath):
+    def __init__(self, params_d):
 
-        # ttt = train, tune, test
-        assert abs(sum(self.ttt_fractions) - 1) < 1e-8
-        self.ttt_fractions = (.6, .2, .2)
+        self.params_d = params_d
 
-        self.ztz_to_extractions = read_allen_file(allen_fpath)
+    def get_examples(self, inp_fp, fields, tokenizer,
+                     label_dict, spacy_model=None):
+        # formerly _process_data()
+        model_str = self.params_d.model_str
+        examples, exampleDs, targets, lang_targets, orig_sentences = \
+            [], [], [], [], []
 
-        self.light_verbs = [
-            "take", "have", "give", "do", "make", "has", "have",
-            "be", "is", "were", "are", "was", "had", "being",
-            "began", "am", "following", "having", "do",
-            "does", "did", "started", "been", "became",
-            "left", "help", "helped", "get", "keep",
-            "think", "got", "gets", "include", "suggest",
-            "used", "see", "consider", "means", "try",
-            "start", "included", "lets", "say", "continued",
-            "go", "includes", "becomes", "begins", "keeps",
-            "begin", "starts", "said", "stop", "begin",
-            "start", "continue", "say"]
+        sentence = None
+        max_extraction_length = 5
 
-        tokenizer = AutoTokenizer.from_pretrained(
-            model_str="uncased",
-            do_lower_case=True,
-            use_fast=True,
-            data_dir='data',
-            add_special_tokens=False,
-            additional_special_tokens= UNUSED_TOKENS)
+        if type(inp_fp) == type([]):
+            inp_lines = inp_fp
+        else:
+            inp_lines = open(inp_fp, 'r').readlines()
+
+        new_example = True
+        for line_num, line in tqdm(enumerate(inp_lines)):
+            line = line.strip()
+            if line == '':
+                new_example = True
+
+            if '[unused' in line or new_example:
+                if sentence is not None:
+                    if len(targets) == 0:
+                        targets = [[0]]
+                        lang_targets = [[0]]
+                    orig_sentence = sentence.split('[unused1]')[0].strip()
+                    orig_sentences.append(orig_sentence)
+
+                    exampleD = {'text': input_ids,
+                                'labels': targets[:max_extraction_length],
+                                'word_starts': word_starts,
+                                'meta_data': orig_sentence}
+                    if len(sentence.split()) <= 100:
+                        exampleDs.append(exampleD)
+
+                    targets = []
+                    sentence = None
+                # starting new example
+                if line is not '':
+                    new_example = False
+                    sentence = line
+
+                    tokenized_words = tokenizer.batch_encode_plus(
+                        sentence.split())
+                    input_ids, word_starts, lang = [
+                        self.params_d.bos_token_id], [], []
+                    for tokens in tokenized_words['input_ids']:
+                        if len(tokens) == 0:  # special spacy_tokens like \x9c
+                            tokens = [100]
+                        word_starts.append(len(input_ids))
+                        input_ids.extend(tokens)
+                    input_ids.append(self.params_d.eos_token_id)
+                    assert len(sentence.split()) == len(
+                        word_starts), ipdb.set_trace()
+            else:
+                if sentence is not None:
+                    target = [label_dict[i] for i in line.split()]
+                    target = target[:len(word_starts)]
+                    assert len(target) == len(word_starts), ipdb.set_trace()
+                    targets.append(target)
+
+        if spacy_model != None:
+            sentences = [ed['meta_data'] for ed in exampleDs]
+            for sentence_index, spacy_sentence in tqdm(enumerate(
+                    spacy_model.pipe(sentences, batch_size=10000))):
+                spacy_sentence = remerge_sent(spacy_sentence)
+                assert len(sentences[sentence_index].split()) == len(
+                    spacy_sentence), ipdb.set_trace()
+                exampleD = exampleDs[sentence_index]
+
+                pos, pos_indices, pos_words = pos_tags(spacy_sentence)
+                exampleD['pos_index'] = pos_indices
+                exampleD['pos'] = pos
+                verb, verb_indices, verb_words = verb_tags(spacy_sentence)
+                if len(verb_indices) != 0:
+                    exampleD['verb_index'] = verb_indices
+                else:
+                    exampleD['verb_index'] = [0]
+                exampleD['verb'] = verb
+
+        for exampleD in exampleDs:
+            example = data.Example.fromdict(exampleD, fields)
+            examples.append(example)
+        return examples, orig_sentences
+
+    def get_ttt_datasets(self, predict_sentences=None):
+        # formerly precess_data()
+        train_fp, dev_fp, test_fp = \
+            self.params_d.train_fp, self.params_d.dev_fp, self.params_d.test_fp
+        self.params_d.bos_token_id, self.params_d.eos_token_id = 101, 102
+
+        do_lower_case = 'uncased' in self.params_d.model_str
+        tokenizer = AutoTokenizer.from_pretrained(self.params_d.model_str,
+                                                  do_lower_case=do_lower_case,
+                                                  use_fast=True,
+                                                  data_dir='data/pretrained_cache',
+                                                  add_special_tokens=False,
+                                                  additional_special_tokens=
+                                                  ['[unused1]', '[unused2]',
+                                                   '[unused3]'])
 
         nlp = spacy.load("en_core_web_sm")
+        pad_index = tokenizer.convert_tokens_to_ids(tokenizer.pad_token)
 
-        self.spacy_tokens = ""
-        self.simple_to_complex_sents = None  # analogous to conj_mapping
-        self.set_simple_to_complex_sents_dict()
+        TEXT = data.Field(use_vocab=False, batch_first=True,
+                          pad_token=pad_index)
+        WORD_STARTS = data.Field(use_vocab=False, batch_first=True,
+                                 pad_token=0)
+        POS = data.Field(use_vocab=False, batch_first=True, pad_token=0)
+        POS_INDEX = data.Field(use_vocab=False, batch_first=True, pad_token=0)
+        VERB = data.Field(use_vocab=False, batch_first=True, pad_token=0)
+        VERB_INDEX = data.Field(use_vocab=False, batch_first=True, pad_token=0)
+        META_DATA = data.Field(sequential=False)
+        VERB_WORDS = data.Field(sequential=False)
+        POS_WORDS = data.Field(sequential=False)
+        LABELS = data.NestedField(
+            data.Field(use_vocab=False, batch_first=True, pad_token=-100),
+            use_vocab=False)
 
-    def get_sentences(self):
-        return self.ztz_to_extractions.keys()
+        fields = {'text': ('text', TEXT), 'labels': ('labels', LABELS),
+                  'word_starts': (
+                      'word_starts', WORD_STARTS),
+                  'meta_data': ('meta_data', META_DATA)}
+        if 'predict' not in self.params_d.mode:
+            fields['pos'] = ('pos', POS)
+            fields['pos_index'] = ('pos_index', POS_INDEX)
+            fields['verb'] = ('verb', VERB)
+            fields['verb_index'] = ('verb_index', VERB_INDEX)
 
-    def get_num_sents(self):
-        return len(self.ztz_to_extractions.keys())
-
-    def get_num_ttt_sents(self):
-        num_sents = self.get_num_sents()
-        num_train_sents = floor(self.ttt_fractions[0] * num_sents)
-        num_tune_sents = floor(self.ttt_fractions[1] * num_sents)
-        num_test_sents = floor(self.ttt_fractions[2] * num_sents)
-        num_extra_sents = num_sents - num_train_sents - \
-                          num_tune_sents - num_test_sents
-        num_train_sents += num_extra_sents
-        return num_train_sents, num_tune_sents, num_test_sents
-
-    @staticmethod
-    def get_tag_to_int(tag_type):
-        if tag_type == "extags":
-            tag_to_int = {'NONE': 0, 'ARG1': 1, 'REL': 2, 'ARG2': 3,
+        if self.params_d.task == 'oie':
+            label_dict = {'NONE': 0, 'ARG1': 1, 'REL': 2, 'ARG2': 3,
                           'LOC': 4, 'TIME': 4, 'TYPE': 5, 'ARGS': 3}
-        elif tag_type == "cctags":
-
-            tag_to_int = {'CP_START': 2, 'CP': 1,
+        else:  # self.params_d.task == 'conj':
+            label_dict = {'CP_START': 2, 'CP': 1,
                           'CC': 3, 'SEP': 4, 'OTHERS': 5, 'NONE': 0}
+
+        cached_train_fp, cached_dev_fp, cached_test_fp = \
+            f'{train_fp}.{self.params_d.model_str.replace("/", "_")}.pkl', \
+                f'{dev_fp}.{self.params_d.model_str.replace("/", "_")}.pkl', \
+                f'{test_fp}.{self.params_d.model_str.replace("/", "_")}.pkl'
+
+        all_sentences = []
+        if 'predict' in self.params_d.mode:
+            # no caching used in predict mode
+            if predict_sentences == None:  # predict
+                if self.params_d.inp != None:
+                    predict_f = open(self.params_d.inp, 'r')
+                else:
+                    predict_f = open(self.params_d.predict_fp, 'r')
+                predict_lines = predict_f.readlines()
+                fullstops = []
+                predict_sentences = []
+                for line in predict_lines:
+                    # Normalize the quotes - similar to that in training data
+                    line = line.replace('’', '\'')
+                    line = line.replace('”', '\'\'')
+                    line = line.replace('“', '\'\'')
+
+                    # tokenized_line = line.split()
+                    tokenized_line = ' '.join(nltk.word_tokenize(line))
+                    predict_sentences.append(
+                        tokenized_line + ' [unused1] [unused2] [unused3]')
+                    predict_sentences.append('\n')
+
+            predict_examples, all_sentences = \
+                self.get_examples(predict_sentences, fields,
+                                  tokenizer, label_dict, None)
+            META_DATA.build_vocab(
+                data.Dataset(predict_examples, fields=fields.values()))
+
+            predict_dataset = [(len(ex.text), idx, ex, fields) for idx,
+            ex in enumerate(predict_examples)]
+            train_dataset, dev_dataset, test_dataset = \
+                predict_dataset, predict_dataset, predict_dataset
         else:
-            assert False
-
-        return tag_to_int
-
-    def remerge_sent(self):
-        # merges self.spacy_tokens which are not separated by white-space
-        # does this recursively until no further changes
-        changed = True
-        while changed:
-            changed = False
-            i = 0
-            while i < len(self.spacy_tokens) - 1:
-                tok = self.spacy_tokens[i]
-                if not tok.whitespace_:
-                    next_tok = self.spacy_tokens[i + 1]
-                    # in-place operation.
-                    self.spacy_tokens.merge(tok.idx,
-                                            next_tok.idx + len(next_tok))
-                    changed = True
-                i += 1
-        return self.spacy_tokens
-
-    def pos_tags(self):
-        pos_bool_list, pos_indices, pos_words = [], [], []
-        for token_index, token in enumerate(self.spacy_tokens):
-            if token.pos_ in ['ADJ', 'ADV', 'NOUN', 'PROPN', 'VERB']:
-                pos_bool_list.append(1)
-                pos_indices.append(token_index)
-                pos_words.append(token.lower_)
+            if not os.path.exists(
+                    cached_train_fp) or self.params_d.build_cache:
+                train_examples, _ = self.get_examples(train_fp,
+                                                      fields, tokenizer,
+                                                      label_dict, nlp)
+                pickle.dump(train_examples, open(cached_train_fp, 'wb'))
             else:
-                pos_bool_list.append(0)
-        pos_bool_list.append(0)
-        pos_bool_list.append(0)
-        pos_bool_list.append(0)
-        return pos_bool_list, pos_indices, pos_words
+                train_examples = pickle.load(open(cached_train_fp, 'rb'))
 
-    def verb_tags(self):
-        verb_bool_list, verb_indices, verb_words = [], [], []
-        for token_index, token in enumerate(self.spacy_tokens):
-            if token.pos_ in ['VERB'] and token.lower_ not in self.light_verbs:
-                verb_bool_list.append(1)
-                verb_indices.append(token_index)
-                verb_words.append(token.lower_)
+            if not os.path.exists(cached_dev_fp) or self.params_d.build_cache:
+                dev_examples, _ = self.get_examples(dev_fp, fields,
+                                                    tokenizer,
+                                                    label_dict, nlp)
+                pickle.dump(dev_examples, open(cached_dev_fp, 'wb'))
             else:
-                verb_bool_list.append(0)
-        verb_bool_list.append(0)
-        verb_bool_list.append(0)
-        verb_bool_list.append(0)
-        return verb_bool_list, verb_indices, verb_words
+                dev_examples = pickle.load(open(cached_dev_fp, 'rb'))
 
-    def set_simple_to_complex_sents_dict(self):
-        simple_to_complex_sents = {}
-        content = open(EXT_SAMPLES_PATH).read()
-        complex_ztz = ''
-        for sample in content.split('\n\n'):
-            for i, line in enumerate(sample.strip('\n').split('\n')):
-                if i == 0:
-                    complex_ztz = line
-                else:
-                    simple_to_complex_sents[line] = complex_ztz
-        return simple_to_complex_sents
+            if not os.path.exists(cached_test_fp) or self.params_d.build_cache:
+                test_examples, _ = self.get_examples(test_fp,
+                                                     fields,
+                                                     tokenizer, label_dict,
+                                                     nlp)
+                pickle.dump(test_examples, open(cached_test_fp, 'wb'))
+            else:
+                test_examples = pickle.load(open(cached_test_fp, 'rb'))
 
-    def write_tags_file(self,
-                        tag_type,
-                        out_fpath,
-                        ztz_id_range):
+            META_DATA.build_vocab(data.Dataset(train_examples,
+                                               fields=fields.values()),
+                                  data.Dataset(
+                                      dev_examples, fields=fields.values()),
+                                  data.Dataset(test_examples,
+                                               fields=fields.values()))
 
-        num_sents = len(self.ztz_to_extractions.keys())
-        assert 0 <= ztz_id_range[0] <= ztz_id_range[1] <= num_sents - 1
+            train_dataset = [(len(ex.text), idx, ex, fields) for
+                             idx, ex in enumerate(train_examples)]
+            dev_dataset = [(len(ex.text), idx, ex, fields) for
+                           idx, ex in enumerate(dev_examples)]
+            test_dataset = [(len(ex.text), idx, ex, fields) for
+                            idx, ex in enumerate(test_examples)]
+            train_dataset.sort()  # to simulate bucket sort (along with pad_data)
 
-        with open(out_fpath, 'w') as f:
-            prev_ztz = ''
-            top_of_file = True
-            ztz_id = -1
-            for ztz, ex in self.ztz_to_extractions:
-                ztz_id += 1
-                if ztz_id < ztz_id_range[0] or ztz_id > ztz_id_range[1]:
-                    continue
-                if ztz != prev_ztz:
-                    new_in_ztz = True
-                    prev_ztz = ztz
-                    if top_of_file:
-                        top_of_file = False
-                    else:
-                        f.write('\n')
-                else:
-                    new_in_ztz = False
-                if ex.name_is_tagged["ARG2"] and \
-                        ex.name_is_tagged["REL"] and \
-                        ex.name_is_tagged["ARG1"]:
-                    if 'REL' in ex.ztz_tags and 'ARG1' in ex.ztz_tags:
-                        if (not ex.arg2) or 'ARG2' in ex.ztz_tags:
-                            assert len(ex.in3_tokens) == len(ex.ztz_tags)
-                            if new_in_ztz:
-                                f.write(' '.join(ex.in3_tokens))
-                                f.write('\n')
-                            f.write(' '.join(ex.ztz_tags))
-                            f.write('\n')
+        return train_dataset, dev_dataset, test_dataset, \
+            META_DATA.vocab, all_sentences
 
-    def write_tags_ttt_files(self, tag_type, out_dir):
-
-        extags_train_fpath = out_dir + "/extags_train.txt"
-        # dev=development=validation=tuning
-        extags_tune_fpath = out_dir + "/extags_tune.txt"
-        extags_test_fpath = out_dir + "/extags_test.txt"
-
-        num_train_sents, num_tune_sents, num_test_sents = \
-            self.get_num_ttt_sents()
-
-        for fpath in [extags_train_fpath, extags_tune_fpath,
-                      extags_test_fpath]:
-            self.write_extags_file(fpath)
-
-        print(

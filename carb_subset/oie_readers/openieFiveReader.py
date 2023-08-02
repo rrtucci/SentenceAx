@@ -29,7 +29,7 @@ class OpenieFiveReader(OieReader):
                         #print "##########Not adding context" 
                         arg1 = s[s.index('(') + 1:s.index(',List(')] + ' ' + arg1
                         #print arg1 + rel, ",,,,, ", s[s.index('(') + 1:s.index(',List(')] 
-                #curExtraction = Extraction(pred = rel, sent = text, confidence = float(confidence))
+                #curExtraction = SaxExtraction(pred = rel, sent = text, confidence = float(confidence))
                 curExtraction = Extraction(pred = rel, head_pred_index = -1, sent = text, confidence = float(confidence))
                 curExtraction.addArg(arg1)
                 for arg in args:

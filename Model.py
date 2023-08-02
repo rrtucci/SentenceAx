@@ -1,5 +1,5 @@
-from my_globals import *
-from Extraction import *
+from sax_globals import *
+from SaxExtraction import *
 from CarbExMetric import *
 from CCMetric import *
 
@@ -27,7 +27,7 @@ class LitModel(pl.LightningModule):
     def configure_optimizers(self):
         return torch.optim.Adam(self.parameters(), lr=0.02)
 """
-from my_globals import *
+from sax_globals import *
 
 import os
 import random
@@ -112,8 +112,8 @@ class Model(pl.LightningModule):
 
         self.loss = nn.CrossEntropyLoss()
 
-        self._metric = CarbExMetric(
-            params_d) if params_d["task"] == "ex" else CCMetric()
+        self._metric = CarbExMetric(params_d) \
+            if params_d["task"] == "ex" else CCMetric()
         self.max_depth = 5 if params_d["task"] == "ex" else 3
 
         self.constraints_d = dict()
@@ -528,11 +528,11 @@ class Model(pl.LightningModule):
             arg2 = (arg2 + ' ' + loc_time + ' ' + args).strip()
         sentence_str = ' '.join(sentence).strip()
 
-        extraction = Extraction(pred=rel, head_pred_index=None,
-                                sent=sentence_str, confidence=score,
-                                index=0)
-        extraction.addArg(arg1)
-        extraction.addArg(arg2)
+        extraction = SaxExtraction(rel=rel,
+                                 sent=sentence_str,
+                                 confidence=score)
+        extraction.add_arg1(arg1)
+        extraction.add_arg2(arg2)
 
         return extraction
 
@@ -573,8 +573,8 @@ class Model(pl.LightningModule):
                         break
                     pro_extraction = self.process_extraction(
                         extraction, words, scores[i][j].item())
-                    if pro_extraction.args[
-                        0] != '' and pro_extraction.pred != '':
+                    if pro_extraction.arg1_pair[1] != '' and \
+                            pro_extraction.rel_pair[1] != '':
                         if self._metric.mapping:
                             if not pro_extraction.is_in_list(all_predictions[
                                     self._metric.mapping[orig_sentence]]):
@@ -601,11 +601,11 @@ class Model(pl.LightningModule):
                 all_pred.append(sentence_str)
                 sentence_str_allennlp = ''
                 for extraction in predicted_extractions:
-                    args1 = ' '.join(extraction.args[1:])
+                    arg1 = extraction.arg1
                     ext_str = \
-                        f'{sentence}\t<arg1> {extraction.args[0]} </arg1> ' \
+                        f'{sentence}\t<arg1> {extraction.arg1} </arg1> ' \
                         f'<rel> {extraction.pred} </rel> ' \
-                        f'<arg2> {args1} </arg2>\t{extraction.confidence}\n'
+                        f'<arg2> {arg1} </arg2>\t{extraction.confidence}\n'
                     sentence_str_allennlp += ext_str
                     sentence_str_allennlp.strip('\n')
                 all_pred_allennlp.append(sentence_str_allennlp)

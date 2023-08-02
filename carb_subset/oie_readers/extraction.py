@@ -34,12 +34,14 @@ class Extraction:
         return min(dists)
 
     def argsByDistFromPred(self, question):
-        return sorted(self.questions[question], key = lambda arg: self.distArgFromPred(arg))
+        return sorted(self.questions[question], key = \
+            lambda arg: self.distArgFromPred(arg))
 
     def addArg(self, arg, question = None):
         self.args.append(arg)
         if question:
-            self.questions[question] = self.questions.get(question,[]) + [Argument(arg)]
+            self.questions[question] = \
+                self.questions.get(question,[]) + [Argument(arg)]
 
     def noPronounArgs(self):
         """
@@ -110,7 +112,8 @@ class Extraction:
         return []
 
     def bow(self):
-        return ' '.join([self.elementToStr(elem) for elem in [self.pred] + self.args])
+        return ' '.join([self.elementToStr(elem) for
+                         elem in [self.pred] + self.args])
 
     def getSortedArgs(self):
         """

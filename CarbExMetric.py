@@ -1,17 +1,24 @@
-from carb_subset.Matcher import *
-from carb_subset.Benchmark import *
-
-# from Extraction import *
-# use carb version of Extraction
+from carb_subset.matcher import Matcher
+from carb_subset.carb import Benchmark
+import re
 from carb_subset.oie_readers.extraction import Extraction
 
 
-class CarbExMetric():
+def contains_extraction(extr, list_extr):
+    str = ' '.join(extr.args) + ' ' + extr.pred
+    for extraction in list_extr:
+        if str == ' '.join(extraction.args) + ' ' + extraction.pred:
+            return True
+    return False
+
+
+class CarbExMetric():  # formerly metric.Carb
     def __init__(self, hparams, mapping=None):
         self.dev_benchmark = Benchmark('carb/data/gold/dev.tsv')
         self.test_benchmark = Benchmark('carb/data/gold/test.tsv')
         self.matchingFunc = Matcher.binary_linient_tuple_match
-        self.all_predictions, self.all_pos_words, self.all_verb_words = {}, {}, {}
+        self.all_predictions, self.all_pos_words, self.all_verb_words = \
+            {}, {}, {}
         self.score = {'carb_auc': 0.0, 'carb_f1': 0.0, 'carb_sum': 0.0}
         self.hparams = hparams
         self.num_extractions = self.hparams.num_extractions
@@ -46,17 +53,19 @@ class CarbExMetric():
                     extraction, words, scores[i][j].item())
                 if pro_extraction.args[0] != '' and pro_extraction.pred != '':
                     if self.mapping:
-                        if not pro_extraction.is_in_list(
-                                self.all_predictions[
+                        if not contains_extraction(
+                                pro_extraction,
+                                self._all_predictions[
                                     self.mapping[orig_sentence]]):
-                            self.all_predictions[
-                                self.mapping[orig_sentence]].append(
-                                pro_extraction)
+                            self._all_predictions[
+                                self.mapping[orig_sentence]]. \
+                                append(pro_extraction)
                     else:
-                        if not pro_extraction.is_in_list(
-                                self.all_predictions[orig_sentence]):
-                            self.all_predictions[orig_sentence].append(
-                                pro_extraction)
+                        if not contains_extraction(
+                                pro_extraction,
+                                self._all_predictions[orig_sentence]):
+                            self._all_predictions[orig_sentence]. \
+                                append(pro_extraction)
 
         # if self.mapping or self.conj_word_mapping:
         #     for sentence in self.all_predictions:

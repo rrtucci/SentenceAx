@@ -44,7 +44,7 @@ from oie_readers.benchmarkGoldReader import BenchmarkGoldReader
 from oie_readers.allennlpReader import AllennlpReader
 from oie_readers.goldReader import GoldReader
 
-from Matcher import Matcher
+from matcher import Matcher
 from operator import itemgetter
 import pprint
 from copy import deepcopy, copy

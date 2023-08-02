@@ -1,13 +1,13 @@
 import re
 from unidecode import unidecode
 from collections import OrderedDict
-from Extraction import *
+from SaxExtraction import *
 
 
 def write_allen_line(ex):
-    str0 = ex.in_ztz
+    str0 = ex.sent
     str0 += " <arg1> " + ex.arg1 + r" <\arg1> "
-    str0 += " <rel> " + ex.rel + r" <\rel> "
+    str0 += " <rel> " + ex.pred + r" <\rel> "
     str0 += " <arg2> " + ex.arg2 + r" <\arg2> "
     str0 += str(ex.confidence)
     return str0
@@ -32,7 +32,7 @@ def read_allen_line(line):
         # print("vcbgh", part)
         part = ' '.join(part.strip(begin_tag).strip(end_tag).strip().split())
         parts.append(part)
-    ext = Extraction(in_ztz, parts[0], parts[1], parts[2], confidence)
+    ext = SaxExtraction(in_ztz, parts[0], parts[1], parts[2], confidence)
 
     return ext
 
@@ -43,9 +43,9 @@ def get_num_sents_in_allen_file(allen_fpath):
     num_sents = 1
     for line in lines:
         ex = read_allen_line(line)
-        if ex.in_ztz != prev_in_ztz:
+        if ex.sent != prev_in_ztz:
             num_sents += 1
-        prev_in_ztz = ex.in_ztz
+        prev_in_ztz = ex.sent
     return num_sents
 
 def read_allen_file(allen_fpath):
@@ -59,17 +59,17 @@ def read_allen_file(allen_fpath):
         # print("bnhk", line)
         ex = read_allen_line(line)
         extractions.append(ex)
-        # print("ooyp1", ex.in_ztz)
+        # print("ooyp1", ex.sent)
         # print("ooyp2", prev_in_ztz)
-        # print("ooyp3", ex.in_ztz == prev_in_ztz)
-        if ex.in_ztz != prev_in_ztz:
+        # print("ooyp3", ex.sent == prev_in_ztz)
+        if ex.sent != prev_in_ztz:
             if prev_in_ztz:
                 ztz_to_extractions[prev_in_ztz] = extractions[:-1]
                 # print("llkml", prev_in_ztz, extractions)
-                prev_in_ztz = ex.in_ztz
+                prev_in_ztz = ex.sent
                 extractions = [ex]
             else:
-                prev_in_ztz = ex.in_ztz
+                prev_in_ztz = ex.sent
 
     # print("zlpd", ztz_to_extractions)
     return ztz_to_extractions
@@ -84,9 +84,9 @@ if __name__ == "__main__":
         for k, line in enumerate(lines[0:5]):
             ex = read_allen_line(line)
             print(str(k+1) + ".")
-            print(ex.in_ztz)
+            print(ex.sent)
             print("arg1=", ex.arg1)
-            print("rel=", ex.rel)
+            print("rel=", ex.pred)
             print("arg2=", ex.arg2)
 
     def main2():
@@ -99,7 +99,7 @@ if __name__ == "__main__":
             for k, ex in enumerate(extractions):
                 print(str(k+1) + ".")
                 print("arg1=", ex.arg1)
-                print("rel=", ex.rel)
+                print("rel=", ex.pred)
                 print("arg2=", ex.arg2)
             print()
 

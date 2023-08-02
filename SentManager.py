@@ -1,4 +1,4 @@
-from my_globals import *
+from sax_globals import *
 from allen_tool import *
 from transformers import AutoTokenizer
 import spacy

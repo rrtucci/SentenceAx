@@ -1,4 +1,4 @@
-from my_globals import *
+from sax_globals import *
 from allen_tool import *
 from transformers import AutoTokenizer
 import spacy
@@ -8,7 +8,7 @@ import nltk
 # Refs:
 # https://spacy.io/usage/spacy-101/
 
-class ModelInputWriter:
+class ModelInputDataset:
 
     def __init__(self, params_d):
 

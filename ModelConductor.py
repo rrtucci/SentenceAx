@@ -49,7 +49,7 @@ from glob import glob
 from time import time
 from Model import *
 from sax_globals import *
-from dict_utils import *
+from sax_utils import *
 import tqdm
 
 
@@ -400,10 +400,10 @@ class ModelConductor:
                     '<rel>').strip('</rel>').strip()
                 arg2 = re.findall("<arg2>.*</arg2>", fields[1])[0].strip(
                     '<arg2>').strip('</arg2>').strip()
-                extraction = SaxExtraction(pred=rel, head_pred_index=None,
-                                         sent=sentence,
-                                         confidence=math.exp(confidence),
-                                         index=0)
+                extraction = ExTagger(pred=rel, head_pred_index=None,
+                                      sent=sentence,
+                                      confidence=math.exp(confidence),
+                                      index=0)
                 extraction.arg1 = arg1
                 extraction.arg2 = arg2
                 if self.params_d.type == 'sentences':

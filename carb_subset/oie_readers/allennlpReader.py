@@ -70,8 +70,8 @@ class AllennlpReader(OieReader):
                 continue
             #confidence = 1
             #print(arg1, rel, arg2, confidence)
-            # curExtraction = SaxExtraction(pred = rel, head_pred_index = -1, sent = text, confidence = -1/float(confidence))
-            # curExtraction = SaxExtraction(pred = rel, head_pred_index = -1, sent = text, confidence = math.exp(float(confidence)))
+            # curExtraction = ExTagger(pred = rel, head_pred_index = -1, sent = text, confidence = -1/float(confidence))
+            # curExtraction = ExTagger(pred = rel, head_pred_index = -1, sent = text, confidence = math.exp(float(confidence)))
             curExtraction = Extraction(pred = rel, head_pred_index = -1, sent = text, confidence = float(confidence))
             curExtraction.addArg(arg1)
             curExtraction.addArg(arg2)

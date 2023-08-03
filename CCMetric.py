@@ -70,35 +70,35 @@ class CCMetric():
         if self.dump_dir != None:
             if os.path.exists(dump_dir + '/tokens.pkl'):
                 os.remove(dump_dir + '/tokens.pkl')
-            if os.path.exists(dump_dir + '/pred_it_coords.pkl'):
-                os.remove(dump_dir + '/pred_it_coords.pkl')
-            if os.path.exists(dump_dir + '/gt_it_coords.pkl'):
-                os.remove(dump_dir + '/gt_it_coords.pkl')
+            if os.path.exists(dump_dir + '/pred_it_ccnodes.pkl'):
+                os.remove(dump_dir + '/pred_it_ccnodes.pkl')
+            if os.path.exists(dump_dir + '/gt_it_ccnodes.pkl'):
+                os.remove(dump_dir + '/gt_it_ccnodes.pkl')
 
     def __call__(self, predictions, ground_truth, meta_data=None,
-                 coords=False):
-        # coords == True when we give it the complete coords
+                 ccnodes=False):
+        # ccnodes == True when we give it the complete ccnodes
         # happens when we want to evaluate on the original system outputs
         for i in range(len(predictions)):
-            if not coords:
-                pred_coords = get_coords(
+            if not ccnodes:
+                pred_ccnodes = get_ccnodes(
                     predictions[i], meta_data[i], correct=True)
-                true_coords = get_coords(ground_truth[i], meta_data[i])
+                true_ccnodes = get_ccnodes(ground_truth[i], meta_data[i])
             else:
-                pred_coords = predictions[i]
-                true_coords = ground_truth[i]
+                pred_ccnodes = predictions[i]
+                true_ccnodes = ground_truth[i]
 
-            self.ccscorer_whole.append(pred_coords, true_coords)
-            self.ccscorer_outer.append(pred_coords, true_coords)
-            self.ccscorer_inner.append(pred_coords, true_coords)
-            self.ccscorer_exact.append(pred_coords, true_coords)
+            self.ccscorer_whole.append(pred_ccnodes, true_ccnodes)
+            self.ccscorer_outer.append(pred_ccnodes, true_ccnodes)
+            self.ccscorer_inner.append(pred_ccnodes, true_ccnodes)
+            self.ccscorer_exact.append(pred_ccnodes, true_ccnodes)
 
             if self.dump_dir:
                 pickle.dump(tokens, open(self.dump_dir + '/tokens.pkl', 'ab'))
-                pickle.dump(pred_coords, open(
-                    self.dump_dir + '/pred_it_coords.pkl', 'ab'))
-                pickle.dump(true_coords, open(
-                    self.dump_dir + '/gt_it_coords.pkl', 'ab'))
+                pickle.dump(pred_ccnodes, open(
+                    self.dump_dir + '/pred_it_ccnodes.pkl', 'ab'))
+                pickle.dump(true_ccnodes, open(
+                    self.dump_dir + '/gt_it_ccnodes.pkl', 'ab'))
         return
 
     def reset(self):

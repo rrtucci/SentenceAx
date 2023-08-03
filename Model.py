@@ -1,5 +1,5 @@
 from sax_globals import *
-from SaxExtraction import *
+from ExTagger import *
 from CarbExMetric import *
 from CCMetric import *
 
@@ -528,9 +528,9 @@ class Model(pl.LightningModule):
             arg2 = (arg2 + ' ' + loc_time + ' ' + args).strip()
         sentence_str = ' '.join(sentence).strip()
 
-        extraction = SaxExtraction(rel=rel,
-                                 sent=sentence_str,
-                                 confidence=score)
+        extraction = ExTagger(rel=rel,
+                              sent=sentence_str,
+                              confidence=score)
         extraction.add_arg1(arg1)
         extraction.add_arg2(arg2)
 
@@ -629,12 +629,12 @@ class Model(pl.LightningModule):
                     depth_predictions = predictions[idx][depth][:len(
                         words)].tolist()
                     sentence_predictions.append(depth_predictions)
-                pred_coords = metric.get_coords(sentence_predictions)
+                pred_ccnodes = metric.get_ccnodes(sentence_predictions)
 
                 words = sentence.split()
                 sentence_str = sentence + '\n'
                 split_sentences, conj_words, sentence_indices_list = \
-                    data.coords_to_sentences(pred_coords, words)
+                    data.ccnodes_to_sentences(pred_ccnodes, words)
                 all_sentence_indices.append(sentence_indices_list)
                 all_conjunct_words.append(conj_words)
                 total1 += len(split_sentences)

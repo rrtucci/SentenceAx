@@ -1,4 +1,4 @@
-class CCList: # analogous to Coordination
+class CCNode: # analogous to Coordination
 
     # cc: coordinating conjunction.
     # i.e., FANBOYS =
@@ -24,7 +24,7 @@ class CCList: # analogous to Coordination
         self.spanned_locs=[]
 
     def is_parent(self, child):
-        # parent, child are instances of CCList
+        # parent, child are instances of CCNode
         min = child.spans[0][0]
         max = child.spans[-1][1] - 1
 

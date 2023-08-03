@@ -1,7 +1,7 @@
 import re
 from unidecode import unidecode
 from collections import OrderedDict
-from SaxExtraction import *
+from ExTagger import *
 
 
 def write_allen_line(ex):
@@ -32,7 +32,7 @@ def read_allen_line(line):
         # print("vcbgh", part)
         part = ' '.join(part.strip(begin_tag).strip(end_tag).strip().split())
         parts.append(part)
-    ext = SaxExtraction(in_ztz, parts[0], parts[1], parts[2], confidence)
+    ext = ExTagger(in_ztz, parts[0], parts[1], parts[2], confidence)
 
     return ext
 

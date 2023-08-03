@@ -1,4 +1,4 @@
-from dict_utils import *
+from sax_utils import *
 
 # hparams = hyperparamters,
 # fp = file path
@@ -139,7 +139,7 @@ elif TASK == "ex" and MODE == "predict":
         "save": "models/oie_model",
         "task": "ex"
     }
-### Running Coordination Analysis
+### Running CCNode Analysis
 elif TASK == "cc" and MODE == "train_test":
     PARAMS_D = {
         "batch_size": 32,

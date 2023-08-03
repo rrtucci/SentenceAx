@@ -1,19 +1,18 @@
-import difflib
 from sax_globals import *
+from sax_utils import *
 
 
 # important
-# carb has its own version of Extraction,
-# so call ours SaxExtraction, SAx=SentenceAx
-# from carb_subset.oie_readers.extraction import Extraction
+# carb has its own Extraction class at
+# carb_subset.oie_readers.extraction
 
 
 # extag = extraction tag
 # pred=predicate same as rel=relation
-class SaxExtraction():
+class ExTagger():
     def __init__(self,
-                 orig_sent="",  # original sentence, before extractions
-                 # or adding unused tokens
+                 ex_sent,  # eextracted sentence, without
+                 # unused tokens but may have [is], [of], [from] tokens
                  arg1="",
                  rel="",
                  arg2="",
@@ -24,7 +23,7 @@ class SaxExtraction():
         """
 
         self.confidence = confidence
-        sent = orig_sent + UNUSED_TOKENS_STR
+        sent = ex_sent + UNUSED_TOKENS_STR
         self.sent_pair = (sent, get_words(sent))
         self.arg1_pair = (arg1, get_words(arg1))
         self.rel_pair = (rel, get_words(rel))
@@ -198,101 +197,101 @@ class SaxExtraction():
                 self.set_extags_for_unused_num(1)
 
 
-    def set_extags_of_arg1_if_repeated(self):
+    def set_extags_of_repeated_arg1(self):
         rel_is_extagged = self.base_extag_is_assigned["REL"]
         arg1_is_extagged = self.base_extag_is_assigned["ARG1"]
 
         if rel_is_extagged and \
-                arg1_is_extagged == False and \
+                (not arg1_is_extagged) and \
                 count_sub_reps(self.arg1_pair[1], self.sent_pair[1]) > 1:
-            starting_locs = [j for j in
+            start_locs = [start_loc for start_loc in
                              range(len(self.sent_pair[1])) if
                              sub_exists(self.arg1_pair[1],
-                                        self.sent_pair[1], j)]
-            assert len(starting_locs) > 1
+                                        self.sent_pair[1], start_loc)]
+            assert len(start_locs) > 1
 
-            min_dist = int(1E8)
             if 'REL' in self.sent_extags:
+                # li.index(x) gives first occurrence of x
                 rel_loc = self.sent_extags.index('REL')
-                final_loc = -1
+                dist0 = int(1E8)
+                loc0 = -1
 
-                for loc in starting_locs:
-                    dist = abs(rel_loc - loc)
-                    if dist < min_dist:
-                        min_dist = dist
-                        final_loc = loc
-
+                for start_loc in start_locs:
+                    dist = abs(rel_loc - start_loc)
+                    if dist < dist0:
+                        dist0 = dist
+                        loc0 = start_loc
                 assert self.arg1_pair[1] == self.sent_pair[1][
-                                            final_loc: final_loc + len(
-                                                self.arg1_pair[1])]
+                       loc0: loc0 + len(self.arg1_pair[1])]
                 self.set_is_extagged_to_true("ARG1")
+                # only extag the first occurrence of arg1
                 self.sent_extags[
-                final_loc: final_loc + len(self.arg1_pair[1])] = \
+                loc0: loc0 + len(self.arg1_pair[1])] = \
                     ['ARG1'] * len(self.arg1_pair[1])
-            else:
+            else: # 'REL" is not in extags
                 assert False
 
-    def set_extags_of_rel_if_repeated(self):
+    def set_extags_of_repeated_rel(self):
         arg1_is_extagged = self.base_extag_is_assigned["ARG1"]
         arg2_is_extagged = self.base_extag_is_assigned["ARG2"]
         rel_is_extagged = self.base_extag_is_assigned["REL"]
 
         if arg1_is_extagged and arg2_is_extagged and \
-                rel_is_extagged == "" and \
+                (not rel_is_extagged) and \
                 len(self.rel_pair[1]) > 0:
-            rt = None
+            words = None
             if count_sub_reps(self.rel_pair[1], self.sent_pair[1]) > 1:
-                rt = self.rel_pair[1]
+                words = self.rel_pair[1]
             elif self.rel_pair[1][0] == '[is]' and \
                     count_sub_reps(self.rel_pair[1][1:],
                                    self.sent_pair[1]) > 1:
-                rt = self.rel_pair[1][1:]
+                words = self.rel_pair[1][1:]
             elif self.rel_pair[1][0] == '[is]' and \
                     self.rel_pair[1][-1].startswith('[') and \
                     count_sub_reps(self.rel_pair[1][1:-1],
                                    self.sent_pair[1]) > 1:
-                rt = self.rel_pair[1][1:-1]
+                words = self.rel_pair[1][1:-1]
 
-            if rt:
-                starting_locs = [j for j in range(len(self.sent_pair[1]))
-                                 if sub_exists(rt, self.sent_pair[1], j)]
-                assert len(starting_locs) > 1
-
-                min_dist = int(1e8)
-                if 'ARG1' in self.sent_extags and \
-                        (self.arg2_pair[0] == "" or
-                         'ARG2' in self.sent_extags):
+            if words:
+                start_locs =\
+                    [start_loc for start_loc in range(len(self.sent_pair[1]))
+                        if sub_exists(words, self.sent_pair[1], start_loc)]
+                assert len(start_locs) > 1
+                cond = (not self.arg2_pair[0]) or 'ARG2' in self.sent_extags
+                if 'ARG1' in self.sent_extags and cond:
                     arg1_loc = self.sent_extags.index('ARG1')
                     if self.arg2_pair[0] == "":
+                        final_dist = int(1e8)
                         final_loc = -1
-                        for loc in starting_locs:
-                            dist = abs(arg1_loc - loc)
-                            if dist < min_dist:
-                                min_dist = dist
-                                final_loc = loc
+                        for start_loc in start_locs:
+                            dist = abs(arg1_loc - start_loc)
+                            if dist < final_dist:
+                                final_dist = dist
+                                final_loc = start_loc
 
-                        assert rt == \
+                        assert words == \
                                self.sent_pair[1][
-                               final_loc: final_loc + len(rt)]
+                               final_loc: final_loc + len(words)]
                         self.set_is_extagged_to_true("REL")
-                        self.sent_extags[final_loc: final_loc + len(rt)] = \
-                            ['REL'] * len(rt)
+                        self.sent_extags[final_loc: final_loc + len(words)] = \
+                            ['REL'] * len(words)
 
                     else:
                         arg2_loc = self.sent_extags.index('ARG2')
                         final_loc = -1
-                        for loc in starting_locs:
-                            dist = abs(arg1_loc - loc) + abs(arg2_loc - loc)
-                            if dist < min_dist:
-                                min_dist = dist
-                                final_loc = loc
+                        for start_loc in start_locs:
+                            dist = abs(arg1_loc - start_loc) + \
+                                   abs(arg2_loc - start_loc)
+                            if dist < final_dist:
+                                final_dist = dist
+                                final_loc = start_loc
 
-                        assert rt == \
+                        assert words == \
                                self.sent_pair[1][
-                               final_loc: final_loc + len(rt)]
+                               final_loc: final_loc + len(words)]
                         self.set_is_extagged_to_true('REL')
-                        self.sent_extags[final_loc: final_loc + len(rt)] = \
-                            ['REL'] * len(rt)
+                        self.sent_extags[final_loc: final_loc + len(words)] = \
+                            ['REL'] * len(words)
 
     def set_extags_of_loc_or_time(self, arg_name):
         if arg_name == "time":
@@ -309,8 +308,8 @@ class SaxExtraction():
         self.set_extags_of_arg1_or_rel("arg1")
         self.set_extags_of_arg1_or_rel("rel")
         self.set_extags_of_IS_OF_FROM()
-        self.set_extags_of_arg1_if_repeated()
-        self.set_extags_of_rel_if_repeated()
+        self.set_extags_of_repeated_arg1()
+        self.set_extags_of_repeated_rel()
         self.set_extags_of_loc_or_time("loc")
         self.set_extags_of_loc_or_time("time")
 
@@ -321,67 +320,3 @@ class SaxExtraction():
                 return True
         return False
 
-
-def get_words(ztz):
-    # get_words("") = []
-    if ztz:
-        li = ztz.strip().split()
-    else:
-        li = []
-    return li
-
-
-def count_sub_reps(sub, full):  # formerly seq_in_seq
-    # rep = repetitions
-    # ["apple", "banana", "cherry"].count("cherry") # output 1
-    # 'dog is in dog house'.count('dog') # output 2
-
-    # str(["dog", "pet"]) # output "['dog', 'pet']"
-    # the reason for the [1, -1] is to exclude '[' and ']'
-    #  return str(full)[1:-1].count(str(sub)[1:-1])
-    return " ".join(full).count(" ".join(sub))
-
-
-def sub_exists(sub, full, start_loc):  # formerly starts_with
-    return all(sub[i] == full[start_loc + i] for i in range(0, len(sub)))
-
-
-def has_2_matches(matches):
-    """
-    > sm = difflib.SequenceMatcher(None, a='ACT', b='ACTGACT')
-    > sm.get_matching_blocks()
-    [Match(a=0, b=0, size=3), Match(a=3, b=7, size=0)]
-    """
-    return len(matches) == 2 and \
-        matches[0].a == 0 and \
-        matches[1].a - matches[0].a == matches[0].size and \
-        matches[1].size == 0
-
-
-def has_gt_2_matches(matches):
-    """
-    len(matches) > 2 and
-    matches[0].a == 0 and
-    all(matches[i].a == matches[i-1].a + matches[i-1].size
-    for i in range(1, len(matches)-1)) and
-    matches[-2].a + matches[-2].size == matches[-1].a
-
-    # matches[-1].a - matches[-2].a == matches[-2].size
-    # is just li[i] when i=len(matches)-1
-    """
-    li = [matches[i].a - matches[i - 1].a == matches[i - 1].size
-          for i in range(1, len(matches))]
-    return len(matches) > 2 and \
-        matches[0].a == 0 and \
-        all(li) and \
-        matches[len(matches) - 1] == 0
-
-
-def get_matches(list0, list1):
-    """
-    > sm = difflib.SequenceMatcher(None, a='ACT', b='ACTGACT')
-    > sm.get_matching_blocks()
-    [Match(a=0, b=0, size=3), Match(a=3, b=7, size=0)]
-    """
-    return difflib.SequenceMatcher(None, list0, list1). \
-        get_matching_blocks()

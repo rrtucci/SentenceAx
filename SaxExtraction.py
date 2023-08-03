@@ -12,7 +12,8 @@ from sax_globals import *
 # pred=predicate same as rel=relation
 class SaxExtraction():
     def __init__(self,
-                 sent="",  # original sentence, before extractions.
+                 orig_sent="",  # original sentence, before extractions
+                 # or adding unused tokens
                  arg1="",
                  rel="",
                  arg2="",
@@ -23,10 +24,8 @@ class SaxExtraction():
         """
 
         self.confidence = confidence
-
+        sent = orig_sent + UNUSED_TOKENS_STR
         self.sent_pair = (sent, get_words(sent))
-        sent_plus = sent + UNUSED_TOKENS_STR
-        self.sent_plus_pair = (sent_plus, get_words(sent_plus))
         self.arg1_pair = (arg1, get_words(arg1))
         self.rel_pair = (rel, get_words(rel))
         self.arg2_pair = (arg2, get_words(arg2))
@@ -73,10 +72,18 @@ class SaxExtraction():
         self.sent_extags[m0.b: m0.b + m0.size] = [extag_name] * m0.size
         self.set_is_extagged_to_true(extag_name)
 
-    def set_extags_of_arg2(self): # formerly label_arg2()
+    def set_extags_of_gt_2_matches(self, matches, extag_name):
+        assert extag_name in self.base_extags
+        assert has_gt_2_matches(matches)
+        self.set_is_extagged_to_true(extag_name)
+        for m in matches:
+            self.sent_extags[m.b: m.b + m.size] = \
+                [extag_name] * m.size
 
-        li_2lt= self.arg2_pair[1] + self.loc_arg_pair[1] +\
-                self.time_arg_pair[1]
+    def set_extags_of_arg2(self):  # formerly label_arg2()
+
+        li_2lt = self.arg2_pair[1] + self.loc_arg_pair[1] + \
+                 self.time_arg_pair[1]
         li_2tl = self.arg2_pair[1] + self.time_arg_pair[1] + \
                  self.loc_arg_pair[1]
         li_2t = self.arg2_pair[1] + self.time_arg_pair[1]
@@ -92,143 +99,116 @@ class SaxExtraction():
 
         if len(self.arg2_pair[1]) != 0:
             for li in with_2_lists:
-                if count_subs(li, self.sent_plus_pair[1]) == 1:
-                    matches = get_matches(li, self.sent_plus_pair[1])
+                if count_sub_reps(li, self.sent_pair[1]) == 1:
+                    matches = get_matches(li, self.sent_pair[1])
                     self.set_extags_of_2_matches(matches, "ARG2")
                     return
-        else: # len(self.arg2_pair[1]) == 0
+        else:  # len(self.arg2_pair[1]) == 0
             for li in without_2_lists:
-                if count_subs(li, self.sent_plus_pair[1]) == 1:
-                    matches = get_matches(li, self.sent_plus_pair[1])
+                if count_sub_reps(li, self.sent_pair[1]) == 1:
+                    matches = get_matches(li, self.sent_pair[1])
                     self.set_extags_of_2_matches(matches, "ARG2")
                     return
         # if everything else fails, still
         # set this flag true
         self.arg2_extagged = True
 
-
     def set_extags_of_arg1_or_rel(self, arg_name):
         if arg_name == "arg1":
-            arg_words = getattr(self, "arg1_words")
+            arg_words = self.arg1_pair[1]
         elif arg_name == "rel":
-            arg_words = getattr(self, "rel_words")
+            arg_words = self.rel_pair[1]
         else:
             assert False
-        if count_subs(arg_words, self.sent_plus_pair[1]) == 1:
-            matches = get_matches(arg_words, self.sent_plus_pair[1])
-            assert has_2_matches(matches)
-            self.set_is_extagged_to_true(arg_name.upper())
-            m0 = matches[0]
-            self.sent_extags[m0.b: m0.b + m0.size] = \
-                [arg_name.upper()] * m0.size
+        if count_sub_reps(arg_words, self.sent_pair[1]) == 1:
+            matches = get_matches(arg_words, self.sent_pair[1])
+            self.set_extags_of_2_matches(matches, arg_name.upper())
 
-
-        elif count_subs(arg_words, self.sent_plus_pair[1]) == 0:
-            matches = get_matches(arg_words, self.sent_plus_pair[1])
+        elif count_sub_reps(arg_words, self.sent_pair[1]) == 0:
+            # sub doesn't fit in one piece into full
+            # but still possible it exists in fractured form
+            matches = get_matches(arg_words, self.sent_pair[1])
             if has_gt_2_matches(matches):
-                self.set_is_extagged_to_true(arg_name.upper())
-                for m in matches:
-                    self.sent_extags[m.b: m.b + m.size] = \
-                        [arg_name.upper()] * m.size
+                self.set_extags_of_gt_2_matches(matches, arg_name.upper())
 
-    def set_extags_of_is_of_from(self):
+    def set_extags_for_unused_num(self, unused_num):
+        assert unused_num in [1, 2, 3]
+        unused_str = '[unused' + unused_num + ']'
+        # this equals -3, -2, -1 for 1, 2, 3
+        unused_loc = -4 + unused_num
+        if unused_num in [2, 3]:
+            last_rel_loc = -1
+        elif unused_num == 1:
+            last_rel_loc = len(self.rel_pair[1])
+        else:
+            assert False
+        # [1:-1] when self.rel_pair[0][0] = "[is]"
+        # and self.rel_pair[0][-1] = "of" or 'from"
+        # [1: ] when self.rel_pair[0][0] = "[is]"
+        # and self.rel_pair[0][-1] is anything
+        # that doesn't start with "["
+        if count_sub_reps(self.rel_pair[1][1:last_rel_loc],
+                          self.sent_pair[1]) == 1:
+            matches = get_matches(
+                self.rel_pair[1][1:last_rel_loc], self.sent_pair[1])
+            self.set_extags_of_2_matches(matches, "REL")
+            assert self.sent_pair[1][unused_loc] == unused_str
+            self.sent_extags[unused_loc] = 'REL'
+        elif len(self.rel_pair[1]) > 2 and \
+                count_sub_reps(self.rel_pair[1][1:last_rel_loc],
+                               self.sent_pair[1]) == 0:
+            matches = get_matches(
+                self.rel_pair[1][1:last_rel_loc], self.sent_pair[1])
+            # sub doesn't fit in one piece into full
+            # but still possible it exists in fractured form
+            if has_gt_2_matches(matches):
+                self.set_extags_of_gt_2_matches(matches, "REL")
+                assert self.sent_pair[1][unused_loc] == unused_str
+                # if sent starts with "[is]" and ends with
+                # anything, "[of]", or "[from]"
+                # then switch the extag at sent positions of
+                # [unused1], [unused2], [unused3]
+                # from NONE to REL
+                self.sent_extags[unused_loc] = 'REL'
 
+
+    def set_extags_of_IS_OF_FROM(self):
+        # sent can have implicit "is", "of", "from"
+        # inserted in by hand and indicated by "[is]", "[of]" , "[from]"
+        # Note that this is different from explicit "is", "of", "from"
         rel_is_extagged = self.base_extag_is_assigned["rel"]
-        if rel_is_extagged == "" and len(self.rel_pair[1]) > 0:
+        if (not rel_is_extagged) and len(self.rel_pair[1]) > 0:
+            # IS
             if self.rel_pair[0] == '[is]':
                 self.set_is_extagged_to_true("REL")
-                assert self.sent_plus_pair[1][-3] == '[unused1]'
+                assert self.sent_pair[1][-3] == '[unused1]'
                 self.sent_extags[-3] = 'REL'
-
+            # IS-OF
             elif self.rel_pair[1][0] == '[is]' and \
                     self.rel_pair[1][-1] == '[of]':
-                if len(self.rel_pair[1]) > 2 and \
-                        count_subs(self.rel_pair[1][1:-1],
-                                   self.sent_plus_pair[1]) \
-                        == 1:
-                    matches = get_matches(self.rel_pair[1][1:-1],
-                                          self.sent_plus_pair[1])
-                    self.set_extags_of_2_matches(matches, "REL")
-                    rel_is_extagged = True
-                    assert self.sent_plus_pair[1][-2] == '[unused2]'
-                    self.sent_extags[-2] = 'REL'
-
-                elif len(self.rel_pair[1]) > 2 and \
-                        count_subs(self.rel_pair[1][1:-1],
-                                   self.sent_plus_pair[1]) \
-                        == 0:
-                    matches = get_matches(self.rel_pair[1][1:-1],
-                                          self.sent_plus_pair[1])
-                    if has_gt_2_matches(matches):
-                        self.set_is_extagged_to_true("REL")
-                        for m in matches:
-                            self.sent_extags[m.b: m.b + m.size] = \
-                                ["REL"] * m.size
-                        assert self.sent_plus_pair[1][-2] == '[unused2]'
-                        self.sent_extags[-2] = 'REL'
-
+                self.set_extags_for_unused_num(2)
+            # IS  FROM
             elif self.rel_pair[1][0] == '[is]' and \
                     self.rel_pair[1][-1] == '[from]':
-                if len(self.rel_pair[1]) > 2 and \
-                        count_subs(self.rel_pair[1][1:-1],
-                                   self.sent_plus_pair[1]) \
-                        == 1:
-                    matches = get_matches(self.rel_pair[1][1:-1],
-                                          self.sent_plus_pair[1])
-                    self.set_extags_of_2_matches(matches, "REL")
-                    rel_is_extagged = True
-                    assert self.sent_plus_pair[1][-1] == '[unused3]'
-                    self.sent_extags[-1] = 'REL'
-
-                elif len(self.rel_pair[1]) > 2 and \
-                        count_subs(self.rel_pair[1][1:-1],
-                                   self.sent_plus_pair[1]) \
-                        == 0:
-                    matches = get_matches(self.rel_pair[1][1:-1],
-                                          self.sent_plus_pair[1])
-                    if has_gt_2_matches(matches):
-                        rel_is_extagged = True
-                        for m in matches:
-                            self.sent_extags[m.b: m.b + m.size] = \
-                                ["REL"] * m.size
-                        assert self.sent_plus_pair[1][-1] == '[unused3]'
-                        self.sent_extags[-1] = 'REL'
-
-            elif self.rel_pair[1][0] == '[is]' and len(self.rel_pair[1]) > 1:
+                self.set_extags_for_unused_num(3)
+            # IS
+            elif self.rel_pair[1][0] == '[is]' and\
+                    len(self.rel_pair[1]) > 1:
                 assert self.rel_pair[1][-1].startswith('[') == ""
-                if count_subs(self.rel_pair[1][1:],
-                              self.sent_plus_pair[1]) == 1:
-                    matches = get_matches(
-                        self.rel_pair[1][1:], self.sent_plus_pair[1])
-                    self.set_extags_of_2_matches(matches, "REL")
-                    self.set_is_extagged_to_true("REL")
-                    assert self.sent_plus_pair[1][-3] == '[unused1]'
-                    self.sent_extags[-3] = 'REL'
+                self.set_extags_for_unused_num(1)
 
-                elif len(self.rel_pair[1]) > 2 and \
-                        count_subs(self.rel_pair[1][1:],
-                                   self.sent_plus_pair[1]) == 0:
-                    matches = get_matches(
-                        self.rel_pair[1][1:-1], self.sent_plus_pair[1])
-                    if has_gt_2_matches(matches):
-                        self.set_is_extagged_to_true("REL")
-                        for m in matches:
-                            self.sent_extags[m.b: m.b + m.size] = \
-                                ["REL"] * m.size
-                        assert self.sent_plus_pair[1][-3] == '[unused1]'
-                        self.sent_extags[-3] = 'REL'
 
-    def set_extags_of_multiple_arg1(self):
+    def set_extags_of_arg1_if_repeated(self):
         rel_is_extagged = self.base_extag_is_assigned["REL"]
         arg1_is_extagged = self.base_extag_is_assigned["ARG1"]
 
         if rel_is_extagged and \
-                arg1_is_extagged == "" and \
-                count_subs(self.arg1_pair[1], self.sent_plus_pair[1]) > 1:
+                arg1_is_extagged == False and \
+                count_sub_reps(self.arg1_pair[1], self.sent_pair[1]) > 1:
             starting_locs = [j for j in
-                             range(len(self.sent_plus_pair[1])) if
+                             range(len(self.sent_pair[1])) if
                              sub_exists(self.arg1_pair[1],
-                                        self.sent_plus_pair[1], j)]
+                                        self.sent_pair[1], j)]
             assert len(starting_locs) > 1
 
             min_dist = int(1E8)
@@ -242,7 +222,7 @@ class SaxExtraction():
                         min_dist = dist
                         final_loc = loc
 
-                assert self.arg1_pair[1] == self.sent_plus_pair[1][
+                assert self.arg1_pair[1] == self.sent_pair[1][
                                             final_loc: final_loc + len(
                                                 self.arg1_pair[1])]
                 self.set_is_extagged_to_true("ARG1")
@@ -252,7 +232,7 @@ class SaxExtraction():
             else:
                 assert False
 
-    def set_extags_of_multiple_rel(self):
+    def set_extags_of_rel_if_repeated(self):
         arg1_is_extagged = self.base_extag_is_assigned["ARG1"]
         arg2_is_extagged = self.base_extag_is_assigned["ARG2"]
         rel_is_extagged = self.base_extag_is_assigned["REL"]
@@ -261,21 +241,21 @@ class SaxExtraction():
                 rel_is_extagged == "" and \
                 len(self.rel_pair[1]) > 0:
             rt = None
-            if count_subs(self.rel_pair[1], self.sent_plus_pair[1]) > 1:
+            if count_sub_reps(self.rel_pair[1], self.sent_pair[1]) > 1:
                 rt = self.rel_pair[1]
             elif self.rel_pair[1][0] == '[is]' and \
-                    count_subs(self.rel_pair[1][1:],
-                               self.sent_plus_pair[1]) > 1:
+                    count_sub_reps(self.rel_pair[1][1:],
+                                   self.sent_pair[1]) > 1:
                 rt = self.rel_pair[1][1:]
             elif self.rel_pair[1][0] == '[is]' and \
                     self.rel_pair[1][-1].startswith('[') and \
-                    count_subs(self.rel_pair[1][1:-1],
-                               self.sent_plus_pair[1]) > 1:
+                    count_sub_reps(self.rel_pair[1][1:-1],
+                                   self.sent_pair[1]) > 1:
                 rt = self.rel_pair[1][1:-1]
 
             if rt:
-                starting_locs = [j for j in range(len(self.sent_plus_pair[1]))
-                                 if sub_exists(rt, self.sent_plus_pair[1], j)]
+                starting_locs = [j for j in range(len(self.sent_pair[1]))
+                                 if sub_exists(rt, self.sent_pair[1], j)]
                 assert len(starting_locs) > 1
 
                 min_dist = int(1e8)
@@ -292,7 +272,7 @@ class SaxExtraction():
                                 final_loc = loc
 
                         assert rt == \
-                               self.sent_plus_pair[1][
+                               self.sent_pair[1][
                                final_loc: final_loc + len(rt)]
                         self.set_is_extagged_to_true("REL")
                         self.sent_extags[final_loc: final_loc + len(rt)] = \
@@ -308,7 +288,7 @@ class SaxExtraction():
                                 final_loc = loc
 
                         assert rt == \
-                               self.sent_plus_pair[1][
+                               self.sent_pair[1][
                                final_loc: final_loc + len(rt)]
                         self.set_is_extagged_to_true('REL')
                         self.sent_extags[final_loc: final_loc + len(rt)] = \
@@ -328,9 +308,9 @@ class SaxExtraction():
         self.set_extags_of_arg2()
         self.set_extags_of_arg1_or_rel("arg1")
         self.set_extags_of_arg1_or_rel("rel")
-        self.set_extags_of_is_of_from()
-        self.set_extags_of_multiple_arg1()
-        self.set_extags_of_multiple_rel()
+        self.set_extags_of_IS_OF_FROM()
+        self.set_extags_of_arg1_if_repeated()
+        self.set_extags_of_rel_if_repeated()
         self.set_extags_of_loc_or_time("loc")
         self.set_extags_of_loc_or_time("time")
 
@@ -351,7 +331,8 @@ def get_words(ztz):
     return li
 
 
-def count_subs(sub, full):  # formerly seq_in_seq
+def count_sub_reps(sub, full):  # formerly seq_in_seq
+    # rep = repetitions
     # ["apple", "banana", "cherry"].count("cherry") # output 1
     # 'dog is in dog house'.count('dog') # output 2
 
@@ -402,5 +383,5 @@ def get_matches(list0, list1):
     > sm.get_matching_blocks()
     [Match(a=0, b=0, size=3), Match(a=3, b=7, size=0)]
     """
-    return difflib.SequenceMatcher(None, list0, list1).\
+    return difflib.SequenceMatcher(None, list0, list1). \
         get_matching_blocks()

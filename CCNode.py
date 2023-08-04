@@ -19,7 +19,6 @@ class CCNode: # analogous to Coordination
         self.spans = spans
         #separator (like commas) locations
         self.seplocs = seplocs
-        self.label = label
 
         self.spanned_locs=[]
 

@@ -5,13 +5,15 @@ from sax_utils import *
 # important
 # carb has its own Extraction class at
 # carb_subset.oie_readers.extraction
+# call ours Extraction_sax
+#sax = sentence ax
 
 
 # extag = extraction tag
 # pred=predicate same as rel=relation
-class ExTagger():
+class Extraction_sax():
     def __init__(self,
-                 ex_sent,  # eextracted sentence, without
+                 ex_sent,  # extracted sentence, without
                  # unused tokens but may have [is], [of], [from] tokens
                  arg1="",
                  rel="",
@@ -59,6 +61,9 @@ class ExTagger():
               self.time_arg_pair[1]]
         li = [x for x in li if x]
         return " ".join(li)
+
+    def is_in_ex_list(self, ex_list):
+        return self.to_string() in ex_list
 
     def set_is_extagged_to_true(self, extag_name):
         assert extag_name in self.base_extags
@@ -213,14 +218,11 @@ class ExTagger():
             if 'REL' in self.sent_extags:
                 # li.index(x) gives first occurrence of x
                 rel_loc = self.sent_extags.index('REL')
-                dist0 = int(1E8)
-                loc0 = -1
 
-                for start_loc in start_locs:
-                    dist = abs(rel_loc - start_loc)
-                    if dist < dist0:
-                        dist0 = dist
-                        loc0 = start_loc
+                xlist = start_locs
+                cost_fun = lambda x: abs(rel_loc - x)
+                loc0, cost0 = \
+                    find_xlist_item_that_minimizes_cost_fun(xlist, cost_fun)
                 assert self.arg1_pair[1] == self.sent_pair[1][
                        loc0: loc0 + len(self.arg1_pair[1])]
                 self.set_is_extagged_to_true("ARG1")
@@ -239,59 +241,61 @@ class ExTagger():
         if arg1_is_extagged and arg2_is_extagged and \
                 (not rel_is_extagged) and \
                 len(self.rel_pair[1]) > 0:
-            words = None
+            rel_words = []
             if count_sub_reps(self.rel_pair[1], self.sent_pair[1]) > 1:
-                words = self.rel_pair[1]
+                rel_words = self.rel_pair[1]
             elif self.rel_pair[1][0] == '[is]' and \
                     count_sub_reps(self.rel_pair[1][1:],
                                    self.sent_pair[1]) > 1:
-                words = self.rel_pair[1][1:]
+                rel_words = self.rel_pair[1][1:]
             elif self.rel_pair[1][0] == '[is]' and \
                     self.rel_pair[1][-1].startswith('[') and \
                     count_sub_reps(self.rel_pair[1][1:-1],
                                    self.sent_pair[1]) > 1:
-                words = self.rel_pair[1][1:-1]
+                rel_words = self.rel_pair[1][1:-1]
 
-            if words:
+            if rel_words:
                 start_locs =\
                     [start_loc for start_loc in range(len(self.sent_pair[1]))
-                        if sub_exists(words, self.sent_pair[1], start_loc)]
+                        if sub_exists(rel_words, self.sent_pair[1], start_loc)]
                 assert len(start_locs) > 1
-                cond = (not self.arg2_pair[0]) or 'ARG2' in self.sent_extags
-                if 'ARG1' in self.sent_extags and cond:
+                arg2_condition = self.arg2_pair[0] == "" or \
+                       'ARG2' in self.sent_extags
+                if 'ARG1' in self.sent_extags and arg2_condition:
                     arg1_loc = self.sent_extags.index('ARG1')
+
                     if self.arg2_pair[0] == "":
-                        final_dist = int(1e8)
-                        final_loc = -1
-                        for start_loc in start_locs:
-                            dist = abs(arg1_loc - start_loc)
-                            if dist < final_dist:
-                                final_dist = dist
-                                final_loc = start_loc
+                        xlist = start_locs
+                        cost_fun = lambda x: abs(arg1_loc - x)
+                        loc0, cost0 = \
+                            find_xlist_item_that_minimizes_cost_fun(xlist,
+                                                                    cost_fun)
 
-                        assert words == \
+                        assert rel_words == \
                                self.sent_pair[1][
-                               final_loc: final_loc + len(words)]
+                               loc0: loc0 + len(rel_words)]
                         self.set_is_extagged_to_true("REL")
-                        self.sent_extags[final_loc: final_loc + len(words)] = \
-                            ['REL'] * len(words)
+                        self.sent_extags[loc0: loc0 + len(rel_words)] = \
+                            ['REL'] * len(rel_words)
 
-                    else:
+                    else: # self.arg2_pair[0] non-empty
                         arg2_loc = self.sent_extags.index('ARG2')
-                        final_loc = -1
-                        for start_loc in start_locs:
-                            dist = abs(arg1_loc - start_loc) + \
-                                   abs(arg2_loc - start_loc)
-                            if dist < final_dist:
-                                final_dist = dist
-                                final_loc = start_loc
+                        xlist = start_locs
+                        # this cost function has as minimum
+                        # abs(arg1_loc - arg2_loc). This minimum is achieved
+                        # by any x in the interval [arg1_loc, arg2_loc]
+                        cost_fun =\
+                            lambda x: abs(arg1_loc - x) + abs(arg2_loc - x)
+                        loc0, cost0 = \
+                            find_xlist_item_that_minimizes_cost_fun(xlist,
+                                                                    cost_fun)
 
-                        assert words == \
+                        assert rel_words == \
                                self.sent_pair[1][
-                               final_loc: final_loc + len(words)]
+                               loc0: loc0 + len(rel_words)]
                         self.set_is_extagged_to_true('REL')
-                        self.sent_extags[final_loc: final_loc + len(words)] = \
-                            ['REL'] * len(words)
+                        self.sent_extags[loc0: loc0 + len(rel_words)] = \
+                            ['REL'] * len(rel_words)
 
     def set_extags_of_loc_or_time(self, arg_name):
         if arg_name == "time":
@@ -301,7 +305,8 @@ class ExTagger():
         else:
             assert False
         matches = get_matches(pair[1], self.sent_pair[1])
-        self.set_extags_of_2_matches(matches, arg_name.upper())
+        if has_2_matches(matches):
+            self.set_extags_of_2_matches(matches, arg_name.upper())
 
     def set_extags_of_all(self):
         self.set_extags_of_arg2()
@@ -312,11 +317,3 @@ class ExTagger():
         self.set_extags_of_repeated_rel()
         self.set_extags_of_loc_or_time("loc")
         self.set_extags_of_loc_or_time("time")
-
-    def is_in_list(self, ex_list):
-        str = ' '.join(self.args) + ' ' + self.rel_pair[1]
-        for ex in ex_list:
-            if str == ' '.join(ex.args) + ' ' + ex.rel:
-                return True
-        return False
-

@@ -1,6 +1,6 @@
 from sax_globals import *
-from ExTagger import *
-from CarbExMetric import *
+from Extraction_sax import *
+from ExMetricFromCarb import *
 from CCMetric import *
 
 """
@@ -528,9 +528,9 @@ class Model(pl.LightningModule):
             arg2 = (arg2 + ' ' + loc_time + ' ' + args).strip()
         sentence_str = ' '.join(sentence).strip()
 
-        extraction = ExTagger(rel=rel,
-                              sent=sentence_str,
-                              confidence=score)
+        extraction = Extraction_sax(rel=rel,
+                                    sent=sentence_str,
+                                    confidence=score)
         extraction.add_arg1(arg1)
         extraction.add_arg2(arg2)
 
@@ -576,12 +576,12 @@ class Model(pl.LightningModule):
                     if pro_extraction.arg1_pair[1] != '' and \
                             pro_extraction.rel_pair[1] != '':
                         if self._metric.mapping:
-                            if not pro_extraction.is_in_list(all_predictions[
+                            if not pro_extraction.is_in_ex_list(all_predictions[
                                     self._metric.mapping[orig_sentence]]):
                                 all_predictions[self._metric.mapping[
                                     orig_sentence]].append(pro_extraction)
                         else:
-                            if not pro_extraction.is_in_list(
+                            if not pro_extraction.is_in_ex_list(
                                     all_predictions[orig_sentence]):
                                 all_predictions[orig_sentence].append(
                                     pro_extraction)

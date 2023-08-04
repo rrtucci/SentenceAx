@@ -576,13 +576,14 @@ class Model(pl.LightningModule):
                     if pro_extraction.arg1_pair[1] != '' and \
                             pro_extraction.rel_pair[1] != '':
                         if self._metric.mapping:
-                            if not pro_extraction.is_in_ex_list(all_predictions[
-                                    self._metric.mapping[orig_sentence]]):
+                            if not pro_extraction.get_str() in \
+                                   all_predictions[
+                                    self._metric.mapping[orig_sentence]]:
                                 all_predictions[self._metric.mapping[
                                     orig_sentence]].append(pro_extraction)
                         else:
-                            if not pro_extraction.is_in_ex_list(
-                                    all_predictions[orig_sentence]):
+                            if not pro_extraction.get_str() in \
+                                   all_predictions[orig_sentence]:
                                 all_predictions[orig_sentence].append(
                                     pro_extraction)
             all_pred = []
@@ -594,9 +595,9 @@ class Model(pl.LightningModule):
                 sentence_str = f'{sentence}\n'
                 for extraction in predicted_extractions:
                     if self.params_d["type"] == 'sentences':
-                        ext_str = extraction.to_str() + '\n'
+                        ext_str = extraction.get_str() + '\n'
                     else:
-                        ext_str = extraction.to_str() + '\n'
+                        ext_str = extraction.get_str() + '\n'
                     sentence_str += ext_str
                 all_pred.append(sentence_str)
                 sentence_str_allennlp = ''

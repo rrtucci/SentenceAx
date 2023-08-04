@@ -53,7 +53,7 @@ class Extraction_sax():
     def add_loc_arg(self, str0):
         self.loc_arg_pair = (str0, get_words(str0))
 
-    def to_string(self):
+    def get_str(self):
         li = [self.arg1_pair[1],
               self.rel_pair[1],
               self.arg2_pair[1],
@@ -62,10 +62,7 @@ class Extraction_sax():
         li = [x for x in li if x]
         return " ".join(li)
 
-    def is_in_ex_list(self, ex_list):
-        return self.to_string() in ex_list
-
-    def set_is_extagged_to_true(self, extag_name):
+    def set_is_extagged_flag_to_true(self, extag_name):
         assert extag_name in self.base_extags
         self.base_extag_is_assigned[extag_name] = True
 
@@ -74,12 +71,12 @@ class Extraction_sax():
         assert has_2_matches(matches)
         m0 = matches[0]
         self.sent_extags[m0.b: m0.b + m0.size] = [extag_name] * m0.size
-        self.set_is_extagged_to_true(extag_name)
+        self.set_is_extagged_flag_to_true(extag_name)
 
     def set_extags_of_gt_2_matches(self, matches, extag_name):
         assert extag_name in self.base_extags
         assert has_gt_2_matches(matches)
-        self.set_is_extagged_to_true(extag_name)
+        self.set_is_extagged_flag_to_true(extag_name)
         for m in matches:
             self.sent_extags[m.b: m.b + m.size] = \
                 [extag_name] * m.size
@@ -184,7 +181,7 @@ class Extraction_sax():
         if (not rel_is_extagged) and len(self.rel_pair[1]) > 0:
             # IS
             if self.rel_pair[0] == '[is]':
-                self.set_is_extagged_to_true("REL")
+                self.set_is_extagged_flag_to_true("REL")
                 assert self.sent_pair[1][-3] == '[unused1]'
                 self.sent_extags[-3] = 'REL'
             # IS-OF
@@ -225,7 +222,7 @@ class Extraction_sax():
                     find_xlist_item_that_minimizes_cost_fun(xlist, cost_fun)
                 assert self.arg1_pair[1] == self.sent_pair[1][
                        loc0: loc0 + len(self.arg1_pair[1])]
-                self.set_is_extagged_to_true("ARG1")
+                self.set_is_extagged_flag_to_true("ARG1")
                 # only extag the first occurrence of arg1
                 self.sent_extags[
                 loc0: loc0 + len(self.arg1_pair[1])] = \
@@ -274,7 +271,7 @@ class Extraction_sax():
                         assert rel_words == \
                                self.sent_pair[1][
                                loc0: loc0 + len(rel_words)]
-                        self.set_is_extagged_to_true("REL")
+                        self.set_is_extagged_flag_to_true("REL")
                         self.sent_extags[loc0: loc0 + len(rel_words)] = \
                             ['REL'] * len(rel_words)
 
@@ -293,7 +290,7 @@ class Extraction_sax():
                         assert rel_words == \
                                self.sent_pair[1][
                                loc0: loc0 + len(rel_words)]
-                        self.set_is_extagged_to_true('REL')
+                        self.set_is_extagged_flag_to_true('REL')
                         self.sent_extags[loc0: loc0 + len(rel_words)] = \
                             ['REL'] * len(rel_words)
 

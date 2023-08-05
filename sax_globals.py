@@ -34,10 +34,14 @@ UNUSED_TOKENS_STR = " " + " ".join(UNUSED_TOKENS)
 # choose current TASK and MODE here if not already defined
 # TASK in "ex", "cc", "custom1", custom2", etc
 # MODE in ("predict", "train_test", "splitpredict", "resume", "test", )
-if TASK is None:
+
+if "TASK" not in globals():
     TASK = "ex"
-if MODE is None:
+if "MODE" not in globals():
     MODE = "splitpredict"
+
+print("MODE= " + MODE)
+print("TASK= " + TASK)
 
 ## Running Model
 

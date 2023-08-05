@@ -1,17 +1,19 @@
 from CCNode import *
 from numpy import np
 from sax_utils import get_words
+import copy as cp
 
 
 class CCTree:
-    def __init__(self, ccsent):
+    def __init__(self, ccsent, depth_to_predictions):
         # ccsent is a coordinated sentence, the full original sentence
         # before extractions
+        self.ccsent = ccsent
         self.words = get_words(ccsent)
         self.extra_locs = []
 
         self.ccnodes = None
-        self.set_ccnodes()
+        self.set_ccnodes(depth_to_predictions)
 
         self.root_cclocs = []
         self.par_ccloc_to_child_cclocs = {}
@@ -26,50 +28,63 @@ class CCTree:
                 k = self.ccnodes.index(ccnode)
                 self.ccnodes.pop(k)
 
-    def set_ccnodes(self, depth_to_tags): # get_ccnodes()
+    def set_ccnodes(self, depth_to_predictions): # get_coords()
         self.ccnodes = []
 
-        for depth in range(len(depth_to_tags)):
+        for depth in range(len(depth_to_predictions)):
             ccnode = None
-            spans = []
             start_loc = -1
-            is_conjunction = False
-            tags = depth_to_tags[depth]
+            is_CP = False
+            predictions = depth_to_predictions[depth]
 
-            for i, tag in enumerate(tags):
-                if tag != 1:  # conjunction can end
-                    if is_conjunction and ccnode != None:
-                        is_conjunction = False
-                        spans.append((start_loc, i - 1))
-                if tag == 0 or tag == 2:  # ccnode phrase can end
+            # tag_to_int = {
+            #   'NONE': 0
+            #   'CP': 1,
+            #   'CP_START': 2,
+            #    'CC': 3,
+            #    'SEP': 4,
+            #    'OTHERS': 5
+            #}
+            # I think CP stands for coordinating phrase
+
+            for i, prediction in enumerate(predictions):
+                if prediction != 1:  # CP
+                    if is_CP and ccnode != None:
+                        is_CP = False
+                        ccnode.spans.append((start_loc, i - 1))
+                if prediction == 0 or prediction == 2:  #NONE or CP_START
+                    # ccnode phrase can end
                     if ccnode and \
-                            len(spans) >= 2 and \
-                            ccloc > spans[0][1] and \
-                            ccloc < spans[-1][0]:
-                        ccnode = CCNode(self, ccloc, seplocs,
-                                       spans, tag=depth)
-                        self.ccnodes.append(ccnode)
+                            len(ccnode.spans) >= 2 and \
+                            ccnode.ccloc > ccnode.spans[0][1] and \
+                            ccnode.ccloc < ccnode.spans[-1][0]:
+                        self.ccnodes.append(cp.deepcopy(ccnode))
                         ccnode = None
-
-                if tag == 0:
+                if prediction == 0: # NONE
                     continue
-                if tag == 1:  # can start a conjunction
-                    if not is_conjunction:
-                        is_conjunction = True
+                if prediction == 1:  # CP
+                    if not is_CP:
+                        is_CP = True
                         start_loc = i
-                if tag == 2:  # starts a ccnode phrase
-                    ccloc, spans, seplocs = -1, [], []
-                    is_conjunction = True
+                if prediction == 2:  # CP_START
+                    ccnode = CCNode(ccsent=self.ccsent,
+                                    ccloc=-1,
+                                    seplocs=[],
+                                    spans=[],
+                                    depth=depth)
+                    is_CP = True
                     start_loc = i
-                if tag == 3 and ccnode != None:
-                    ccloc = i
-                if tag == 4 and ccnode != None:
-                    seplocs.append(i)
-                if tag == 5:  # nothing to be done
+                if prediction == 3: #CC
+                    if ccnode != None:
+                        ccnode.ccloc = i
+                    else:
+                        # ccnode words which do not have associated spans
+                        self.ccnodes[i] = None
+                if prediction == 4 and ccnode != None: # SEP
+                    ccnode.seplocs.append(i)
+                if prediction == 5:  # OTHERS
                     continue
-                if tag == 3 and ccnode == None:
-                    # ccnode words which do not have associated spans
-                    self.ccnodes[i] = None
+
 
         self.fix_ccnodes()
 
@@ -148,7 +163,7 @@ class CCTree:
                 #     spanned_locs_list.remove(loc_list)
                 # spanned_locs_list.extend(to_be_added_loc_lists)
 
-    def get_spanned_phrases(self):  # ccnodes_to_sentences()
+    def get_simple_sentences(self):  # ccnodes_to_sentences()
 
         spanned_words = []
         for ccnode in self.ccnodes:
@@ -179,10 +194,10 @@ class CCTree:
                 root_count = new_child_count
                 new_child_count = 0
                 ccnodes_same_level = []
-        spanned_phrases = [' '.join([self.words[i] for i in
+        simple_sentences = [' '.join([self.words[i] for i in
             sorted(spanned_locs)]) for spanned_locs in spanned_locs_list]
 
-        return spanned_phrases
+        return simple_sentences
 
     # def get_shifted_ccnodes(self, arr):  # post_process()
     #     new_ccnodes = []

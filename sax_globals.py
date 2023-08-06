@@ -263,3 +263,9 @@ elif TASK == "custom1":
     # default values by pytorch lightning.
     PARAMS_D = {key: value for key, value in PARAMS_D_LONG.items()
                if value is not None}
+
+    EXTAG_TO_INT = {'NONE': 0, 'ARG1': 1, 'REL': 2, 'ARG2': 3,
+                  'LOC': 4, 'TIME': 4, 'TYPE': 5, 'ARGS': 3}
+
+    CCTAG_TO_INT = {'NONE': 0, 'CP': 1, 'CP_START': 2,
+                  'CC': 3, 'SEP': 4, 'OTHERS': 5, }

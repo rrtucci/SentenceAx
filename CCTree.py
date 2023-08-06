@@ -5,7 +5,7 @@ import copy as cp
 
 
 class CCTree:
-    def __init__(self, ccsent, depth_to_predictions):
+    def __init__(self, ccsent, predictions_for_each_depth):
         # ccsent is a coordinated sentence, the full original sentence
         # before extractions
         self.ccsent = ccsent
@@ -13,7 +13,7 @@ class CCTree:
         self.extra_locs = []
 
         self.ccnodes = None
-        self.set_ccnodes(depth_to_predictions)
+        self.set_ccnodes(predictions_for_each_depth)
 
         self.root_cclocs = []
         self.par_ccloc_to_child_cclocs = {}
@@ -28,16 +28,16 @@ class CCTree:
                 k = self.ccnodes.index(ccnode)
                 self.ccnodes.pop(k)
 
-    def set_ccnodes(self, depth_to_predictions): # get_coords()
+    def set_ccnodes(self, predictions_for_each_depth): # get_coords()
         self.ccnodes = []
 
-        for depth in range(len(depth_to_predictions)):
+        for depth in range(len(predictions_for_each_depth)):
             ccnode = None
             start_loc = -1
             is_CP = False
-            predictions = depth_to_predictions[depth]
+            predictions = predictions_for_each_depth[depth]
 
-            # tag_to_int = {
+            # cctag_to_int = {
             #   'NONE': 0
             #   'CP': 1,
             #   'CP_START': 2,

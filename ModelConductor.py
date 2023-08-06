@@ -36,8 +36,6 @@ batch_d={
 }
 
 """
-import torch
-from torch.utils.data import DataLoader
 from pytorch_lightning import Trainer
 from pytorch_lightning.logging import TensorBoardLogger
 from pytorch_lightning.callbacks import ModelCheckpoint
@@ -48,17 +46,18 @@ import shutil
 from glob import glob
 from time import time
 from Model import *
+from ModelDataLoader import *
 from sax_globals import *
 from sax_utils import *
 import tqdm
 
 
-class ModelConductor:
+class ModelConductor: # formerly run.py
     def __init__(self, params_d, task):
         self.params_d = params_d
-        self.model = None 
         self.task = task 
         assert task in ["ex", "cc"]
+        self.model = None
         self.saved = False
         self.save_dir = "data/save"
         self.has_cuda = torch.cuda.is_available()
@@ -72,22 +71,9 @@ class ModelConductor:
             self.dev_fp = 'data/carb-data/dev.txt'
             self.test_fp = 'data/carb-data/test.txt'
 
-        train_dataset, val_dataset, test_dataset, \
-            meta_data_vocab, all_sentences = self.get_ttt_datasets()
-        self.train_dataloader = DataLoader(train_dataset,
-                                           batch_size=params_d["batch_size"],
-                                           collate_fn=data.pad_data,
-                                           shuffle=True,
-                                           num_workers=1)
-        self.val_dataloader = DataLoader(val_dataset,
-                                         batch_size=params_d["batch_size"],
-                                         collate_fn=data.pad_data,
-                                         num_workers=1)
-        self.test_dataloader = DataLoader(test_dataset,
-                                          batch_size=params_d["batch_size"],
-                                          collate_fn=data.pad_data,
-                                          num_workers=1)
-
+        self.model_dataloader = ModelDataLoader(params_d)
+        self.train_dataloader, self.val_dataloader, self.test_dataloader= \
+            self.model_dataloader.get_ttt_dataloaders()
 
     def set_checkpoint_callback(self):
         if self.saved:
@@ -265,10 +251,10 @@ class ModelConductor:
             model = self.predict(None, meta_data_vocab, None, None,
                             test_dataloader, all_sentences)
             conj_predictions = model.all_cc_predictions
-            sentences_indices = model.all_cc_sent_locs
+            sentences_indices_list = model.all_cc_sent_locs
             # conj_predictions = model.predictions
             # sentences_indices = model.all_sentence_indices
-            assert len(conj_predictions) == len(sentences_indices)
+            assert len(conj_predictions) == len(sentences_indices_list)
             all_conj_words = model.all_cc_words
 
             sentences, orig_sentences = [], []
@@ -295,7 +281,7 @@ class ModelConductor:
             sentences.append('\n')
 
             count = 0
-            for sentence_indices in sentences_indices:
+            for sentence_indices in sentences_indices_list:
                 if len(sentence_indices) == 0:
                     count += 1
                 else:
@@ -329,21 +315,27 @@ class ModelConductor:
         self.params_d.checkpoint = self.params_d.oie_model
         self.params_d.model_str = 'bert-base-cased'
         _, _, split_test_dataset, meta_data_vocab, _ =\
-            self.get_ttt_datasets(sentences)
-        split_test_dataloader = DataLoader(split_test_dataset,
-                                           batch_size=self.params_d.batch_size,
-                                           collate_fn=data.pad_data,
-                                           num_workers=1)
+            self.model_dataloader.get_ttt_datasets(sentences)
+        split_test_dataloader = DataLoader(
+            split_test_dataset,
+            batch_size=self.params_d["batch_size"],
+            collate_fn=self.model_dataloader.pad_data,
+            num_workers=1)
 
-        model = self.predict(self.params_d, None, meta_data_vocab, None, None,
+        model = self.predict(self.params_d,
+                             None,
+                             meta_data_vocab,
+                             None,
+                             None,
                              split_test_dataloader,
                              mapping=mapping,
                              conj_word_mapping=conj_word_mapping,
                              all_sentences=all_sentences)
 
         if 'labels' in self.params_d.type:
-            label_lines = get_labels(self.params_d, model, sentences, orig_sentences,
-                                     sentences_indices)
+            label_lines = self.get_extags(model, sentences,
+                                      orig_sentences,
+                                     sentences_indices_list)
             f = open(self.params_d.out + '.labels', 'w')
             f.write('\n'.join(label_lines))
             f.close()
@@ -400,16 +392,20 @@ class ModelConductor:
                     '<rel>').strip('</rel>').strip()
                 arg2 = re.findall("<arg2>.*</arg2>", fields[1])[0].strip(
                     '<arg2>').strip('</arg2>').strip()
-                extraction = Extraction_sax(pred=rel, head_pred_index=None,
-                                            sent=sentence,
-                                            confidence=math.exp(confidence),
-                                            index=0)
+
+                # why must confidence be exponentiated?
+
+                extraction = Extraction_sax(arg1=arg1,
+                                            rel=rel,
+                                            arg2=arg2,
+                                            ex_sent=sentence,
+                                            confidence=math.exp(confidence))
                 extraction.arg1 = arg1
                 extraction.arg2 = arg2
                 if self.params_d.type == 'sentences':
-                    ext_str = data.ext_to_sentence(extraction) + '\n'
+                    ext_str = extraction.get_str() + '\n'
                 else:
-                    ext_str = data.ext_to_string(extraction) + '\n'
+                    ext_str = extraction.get_str() + '\n'
                 exts.append(ext_str)
 
             exts = sorted(exts, reverse=True,
@@ -424,7 +420,6 @@ class ModelConductor:
             if self.params_d.out != None:
                 print('Predictions written to ', self.params_d.out)
                 predictions_f = open(self.params_d.out, 'w')
-            predictions_f.write('\n'.join(all_predictions) + '\n')
-            predictions_f.close()
+                predictions_f.write('\n'.join(all_predictions) + '\n')
+                predictions_f.close()
             return
-

@@ -3,12 +3,11 @@ from allen_tool import *
 from transformers import AutoTokenizer
 import spacy
 import nltk
+import torch
+from torch.utils.data import DataLoader
 
 
-# Refs:
-# https://spacy.io/usage/spacy-101/
-
-class ModelInputDataset:
+class ModelDataLoader:
 
     def __init__(self, params_d):
 
@@ -68,12 +67,12 @@ class ModelInputDataset:
                         input_ids.extend(tokens)
                     input_ids.append(self.params_d.eos_token_id)
                     assert len(sentence.split()) == len(
-                        word_starts), ipdb.set_trace()
+                        word_starts)
             else:
                 if sentence is not None:
                     target = [label_dict[i] for i in line.split()]
                     target = target[:len(word_starts)]
-                    assert len(target) == len(word_starts), ipdb.set_trace()
+                    assert len(target) == len(word_starts)
                     targets.append(target)
 
         if spacy_model != None:
@@ -82,7 +81,7 @@ class ModelInputDataset:
                     spacy_model.pipe(sentences, batch_size=10000))):
                 spacy_sentence = remerge_sent(spacy_sentence)
                 assert len(sentences[sentence_index].split()) == len(
-                    spacy_sentence), ipdb.set_trace()
+                    spacy_sentence)
                 exampleD = exampleDs[sentence_index]
 
                 pos, pos_indices, pos_words = pos_tags(spacy_sentence)
@@ -101,7 +100,7 @@ class ModelInputDataset:
         return examples, orig_sentences
 
     def get_ttt_datasets(self, predict_sentences=None):
-        # formerly precess_data()
+        # formerly process_data()
         train_fp, dev_fp, test_fp = \
             self.params_d.train_fp, self.params_d.dev_fp, self.params_d.test_fp
         self.params_d.bos_token_id, self.params_d.eos_token_id = 101, 102
@@ -233,4 +232,82 @@ class ModelInputDataset:
 
         return train_dataset, dev_dataset, test_dataset, \
             META_DATA.vocab, all_sentences
+    
+    def get_ttt_dataloaders(self, predict_sentences=None):
+        train_dataset, val_dataset, test_dataset, \
+            meta_data_vocab, all_sentences = self.get_ttt_datasets(
+                predict_sentences)
 
+        train_dataloader = DataLoader(train_dataset,
+                                           batch_size=self.params_d[
+                                               "batch_size"],
+                                           collate_fn=self.pad_data,
+                                           shuffle=True,
+                                           num_workers=1)
+        val_dataloader = DataLoader(val_dataset,
+                                         batch_size=self.params_d[
+                                             "batch_size"],
+                                         collate_fn=self.pad_data,
+                                         num_workers=1)
+        test_dataloader = DataLoader(test_dataset,
+                                          batch_size=self.params_d[
+                                              "batch_size"],
+                                          collate_fn=self.pad_data,
+                                          num_workers=1)
+
+        return train_dataloader, val_dataloader, test_dataloader
+
+
+    def pad_data(data):
+        fields = data[0][-1]
+        TEXT = fields['text'][1]
+        text_list = [ex[2].text for ex in data]
+        padded_text = torch.tensor(TEXT.pad(text_list))
+
+        LABELS = fields['labels'][1]
+        labels_list = [ex[2].labels for ex in data]
+        # max_depth = max([len(l) for l in labels_list])
+        max_depth = 5
+        for i in range(len(labels_list)):
+            pad_depth = max_depth - len(labels_list[i])
+            num_words = len(labels_list[i][0])
+            # print(num_words, pad_depth)
+            labels_list[i] = labels_list[i] + [[0]*num_words]*pad_depth
+        # print(labels_list)
+        padded_labels = torch.tensor(LABELS.pad(labels_list))
+
+        WORD_STARTS = fields['word_starts'][1]
+        word_starts_list = [ex[2].word_starts for ex in data]
+        padded_word_starts = torch.tensor(WORD_STARTS.pad(word_starts_list))
+
+        META_DATA = fields['meta_data'][1]
+        meta_data_list = [META_DATA.vocab.stoi[ex[2].meta_data] for ex in data]
+        padded_meta_data = torch.tensor(META_DATA.pad(meta_data_list))
+
+        paddedD = {'text': padded_text, 'labels': padded_labels,
+                   'word_starts': padded_word_starts,
+                   'meta_data': padded_meta_data}
+
+        if 'pos' in fields:
+            POS = fields['pos'][1]
+            pos_list = [ex[2].pos for ex in data]
+            padded_pos = torch.tensor(POS.pad(pos_list))
+            paddedD['pos'] = padded_pos
+
+            POS_INDEX = fields['pos_index'][1]
+            pos_index_list = [ex[2].pos_index for ex in data]
+            padded_pos_index = torch.tensor(POS_INDEX.pad(pos_index_list))
+            paddedD['pos_index'] = padded_pos_index
+
+        if 'verb' in fields:
+            VERB = fields['verb'][1]
+            verb_list = [ex[2].verb for ex in data]
+            padded_verb = torch.tensor(VERB.pad(verb_list))
+            paddedD['verb'] = padded_verb
+
+            VERB_INDEX = fields['verb_index'][1]
+            verb_index_list = [ex[2].verb_index for ex in data]
+            padded_verb_index = torch.tensor(VERB_INDEX.pad(verb_index_list))
+            paddedD['verb_index'] = padded_verb_index
+
+        return paddedD

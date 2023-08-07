@@ -2,6 +2,7 @@ from sax_globals import *
 from Extraction_sax import *
 from ExMetricFromCarb import *
 from CCMetric import *
+from CCTree import *
 
 """
 
@@ -634,8 +635,9 @@ class Model(pl.LightningModule):
 
                 words = sentence.split()
                 sentence_str = sentence + '\n'
+                tree = CCTree(ccsent, predictions_for_each_depth)
                 split_sentences, conj_words, sentence_indices_list = \
-                    data.ccnodes_to_sentences(pred_ccnodes, words)
+                    tree.get_simple_sentences()
                 all_sentence_indices.append(sentence_indices_list)
                 all_conjunct_words.append(conj_words)
                 total1 += len(split_sentences)

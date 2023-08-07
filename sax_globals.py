@@ -4,19 +4,19 @@ from sax_utils import *
 # fp = file path
 # params_d = pamameters dictionary
 
-EXT_SAMPLES_FPATH = "data/ext_samples.txt"
+EXT_SAMPLES_FP = "data/ext_samples.txt"
 # file paths for training, tuning and testing cctags (cc=conjunction)
-CCTAGS_TRAIN_FPATH = "data/cctags_train.txt"
+CCTAGS_TRAIN_FP = "data/cctags_train.txt"
 # dev=development=validation=tuning
-CCTAGS_TUNE_FPATH = "data/cctags_tune.txt"
-CCTAGS_TEST_FPATH = "data/cctags_test.txt"
+CCTAGS_TUNE_FP = "data/cctags_tune.txt"
+CCTAGS_TEST_FP = "data/cctags_test.txt"
 
 # file paths for training, tuning and testing extags (ex=extraction)
-EXTAGS_FPATH = "data/extags_all.txt"
-EXTAGS_TRAIN_FPATH = "data/extags_train.txt"
+EXTAGS_FP = "data/extags_all.txt"
+EXTAGS_TRAIN_FP = "data/extags_train.txt"
 # dev=development=validation=tuning
-EXTAGS_TUNE_FPATH = "data/extags_tune.txt"
-EXTAGS_TEST_FPATH = "data/extags_test.txt"
+EXTAGS_TUNE_FP = "data/extags_tune.txt"
+EXTAGS_TEST_FP = "data/extags_test.txt"
 BOS_TOKEN_ID = 101 # bos = begin of sentence
 EOS_TOKEN_ID = 102 # eos = end of sentence
 
@@ -264,8 +264,21 @@ elif TASK == "custom1":
     PARAMS_D = {key: value for key, value in PARAMS_D_LONG.items()
                if value is not None}
 
-    EXTAG_TO_INT = {'NONE': 0, 'ARG1': 1, 'REL': 2, 'ARG2': 3,
+    EXTAG_TO_ILABEL = {'NONE': 0, 'ARG1': 1, 'REL': 2, 'ARG2': 3,
                   'LOC': 4, 'TIME': 4, 'TYPE': 5, 'ARGS': 3}
 
-    CCTAG_TO_INT = {'NONE': 0, 'CP': 1, 'CP_START': 2,
+    CCTAG_TO_ILABEL = {'NONE': 0, 'CP': 1, 'CP_START': 2,
                   'CC': 3, 'SEP': 4, 'OTHERS': 5, }
+
+    LIGHT_VERBS = [
+        "take", "have", "give", "do", "make", "has", "have",
+        "be", "is", "were", "are", "was", "had", "being",
+        "began", "am", "following", "having", "do",
+        "does", "did", "started", "been", "became",
+        "left", "help", "helped", "get", "keep",
+        "think", "got", "gets", "include", "suggest",
+        "used", "see", "consider", "means", "try",
+        "start", "included", "lets", "say", "continued",
+        "go", "includes", "becomes", "begins", "keeps",
+        "begin", "starts", "said", "stop", "begin",
+        "start", "continue", "say"]

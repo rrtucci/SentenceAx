@@ -163,7 +163,7 @@ class CCTree:
                 #     spanned_locs_list.remove(loc_list)
                 # spanned_locs_list.extend(to_be_added_loc_lists)
 
-    def get_simple_sentences(self):  # ccnodes_to_sentences()
+    def get_simple_sentences(self):  # analogous to coords_to_sentences()
 
         spanned_words = []
         for ccnode in self.ccnodes:
@@ -197,7 +197,7 @@ class CCTree:
         simple_sentences = [' '.join([self.words[i] for i in
             sorted(spanned_locs)]) for spanned_locs in spanned_locs_list]
 
-        return simple_sentences
+        return simple_sentences, spanned_words ,spanned_locs_list
 
     # def get_shifted_ccnodes(self, arr):  # post_process()
     #     new_ccnodes = []

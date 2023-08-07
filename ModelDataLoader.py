@@ -2,9 +2,16 @@ from sax_globals import *
 from allen_tool import *
 from transformers import AutoTokenizer
 import spacy
-import nltk
 import torch
 from torch.utils.data import DataLoader
+import pickle
+import os
+# use of
+# tt.data.Field,
+# tt.data.Example
+# tt.Dataset
+# are deprecated
+import torchtext as tt
 
 
 class ModelDataLoader:
@@ -13,129 +20,372 @@ class ModelDataLoader:
 
         self.params_d = params_d
 
-    def get_examples(self, inp_fp, fields, tokenizer,
-                     label_dict, spacy_model=None):
-        # formerly _process_data()
-        model_str = self.params_d.model_str
-        examples, exampleDs, targets, lang_targets, orig_sentences = \
-            [], [], [], [], []
+    @staticmethod
+    def remerge_sent(tokens):
+        # merges spacy tokens which are not separated by white-space
+        # does this recursively until no further changes
+        changed = True
+        while changed:
+            changed = False
+            i = 0
+            while i < len(tokens) - 1:
+                tok = tokens[i]
+                if not tok.whitespace_:
+                    next_tok = tokens[i + 1]
+                    # in-place operation.
+                    tokens.merge(tok.idx,
+                                 next_tok.idx + len(next_tok))
+                    changed = True
+                i += 1
+        return tokens
 
-        sentence = None
-        max_extraction_length = 5
+    @staticmethod
+    def pos_mask(tokens):
+        pos_mask = []
+        pos_indices = []
+        pos_words = []
+        for token_index, token in enumerate(tokens):
+            if token.pos_ in ['ADJ', 'ADV', 'NOUN', 'PROPN', 'VERB']:
+                pos_mask.append(1)
+                pos_indices.append(token_index)
+                pos_words.append(token.lower_)
+            else:
+                pos_mask.append(0)
+        pos_mask.append(0)
+        pos_mask.append(0)
+        pos_mask.append(0)
+        return pos_mask, pos_indices, pos_words
+
+    @staticmethod
+    def verb_mask(tokens):
+        verb_mask, verb_indices, verb_words = [], [], []
+        for token_index, token in enumerate(tokens):
+            if token.pos_ in ['VERB'] and \
+                    token.lower_ not in LIGHT_VERBS:
+                verb_mask.append(1)
+                verb_indices.append(token_index)
+                verb_words.append(token.lower_)
+            else:
+                verb_mask.append(0)
+        verb_mask.append(0)
+        verb_mask.append(0)
+        verb_mask.append(0)
+        return verb_mask, verb_indices, verb_words
+
+    @staticmethod
+    def pad_data(data):
+        model_str = 'bert-base-cased'
+        do_lower_case = True
+        # old pad_data() uses spacy for this
+        auto_tokenizer = AutoTokenizer.from_pretrained(
+            model_str,
+            do_lower_case=do_lower_case)
+        pad_id = auto_tokenizer.convert_tokens_to_ids(
+            auto_tokenizer.pad_token)
+
+        max_text_len = -1
+        texts = [d['text'] for d in data]
+        for t in texts:
+            if len(t) > max_text_len:
+                max_text_len = len(t)
+        padded_texts = []
+        for t in texts:
+            num_pad_id = max_text_len - len(t)
+            padded_t = t.copy() + [pad_id] * num_pad_id
+            padded_texts.append(padded_t)
+
+        labels = [d['labels'] for d in data]
+        max_depth = 5
+        for i in range(len(labels)):
+            pad_depth = max_depth - len(labels[i])
+            num_words = len(labels[i][0])
+            labels[i] = labels[i] + [[0] * num_words] * pad_depth
+
+        max_label_len = -1
+        for label in labels:
+            if (len(label[0]) > max_label_len):
+                max_label_len = len(label[0])
+        padded_labels = []
+        for label in labels:
+            new_label = []
+            for sub_label in label:
+                num_pad_id = max_label_len - len(sub_label)
+                padded_sub_label = sub_label.copy() + [-100] * num_pad_id
+                new_label.append(padded_sub_label)
+            padded_labels.append(new_label)
+
+        max_ws_len = -1
+        ws = [d['word_starts'] for d in data]
+        for w in ws:
+            if (len(w) > max_ws_len):
+                max_ws_len = len(w)
+        padded_word_starts = []
+        for w in ws:
+            num_pad_id = max_ws_len - len(w)
+            padded_w = w.copy() + [0] * num_pad_id
+            padded_word_starts.append(padded_w)
+
+        padded_meta_data = [d['meta_data'] for d in data]
+
+        padded_texts = torch.tensor(padded_texts)
+        padded_labels = torch.tensor(padded_labels)
+        padded_word_starts = torch.tensor(padded_word_starts)
+        # padded_meta_data=torch.tensor(padded_meta_data)
+
+        padded_data_d = {'text': padded_texts,
+                         'labels': padded_labels,
+                         'word_starts': padded_word_starts,
+                         'meta_data': padded_meta_data}
+
+        # fields = data[0][-1]
+        # TEXT = fields['text'][1]
+        # text_list = [ex[2].text for ex in data]
+        # padded_text = torch.tensor(TEXT.pad(text_list))
+        #
+        # LABELS = fields['labels'][1]
+        # labels_list = [ex[2].labels for ex in data]
+        # # max_depth = max([len(l) for l in labels_list])
+        # max_depth = 5
+        # for i in range(len(labels_list)):
+        #     pad_depth = max_depth - len(labels_list[i])
+        #     num_words = len(labels_list[i][0])
+        #     # print(num_words, pad_depth)
+        #     labels_list[i] = labels_list[i] + [[0]*num_words]*pad_depth
+        # # print(labels_list)
+        # padded_labels = torch.tensor(LABELS.pad(labels_list))
+        #
+        # WORD_STARTS = fields['word_starts'][1]
+        # word_starts_list = [ex[2].word_starts for ex in data]
+        # padded_word_starts = \
+        #     torch.tensor(WORD_STARTS.pad(
+        # word_starts_list))
+        #
+        # META_DATA = fields['meta_data'][1]
+        # meta_data_list = [META_DATA.vocab.stoi[ex[2].meta_data] for \
+        #     ex in data]
+        # padded_meta_data = torch.tensor(META_DATA.pad(meta_data_list))
+        #
+        # padded_data_d = {'text': padded_texts,
+        #                  'labels': padded_labels,
+        #                  'word_starts': padded_word_starts,
+        #                  'meta_data': padded_meta_data}
+
+        return padded_data_d
+
+    @staticmethod
+    def pad_data_old(data):
+        padded_data_d = {}
+
+        fields = data[0][-1]
+        TEXT = fields['text'][1]
+        text_list = [example[2].text for example in data]
+        padded_data_d['text'] = torch.tensor(TEXT.pad(text_list))
+
+        LABELS = fields['labels'][1]
+        labels_list = [example[2].labels for example in data]
+        # max_depth = max([len(l) for l in labels_list])
+        max_depth = 5
+        for i in range(len(labels_list)):
+            pad_depth = max_depth - len(labels_list[i])
+            num_words = len(labels_list[i][0])
+            # print(num_words, pad_depth)
+            labels_list[i] = labels_list[i] + [[0] * num_words] * pad_depth
+        # print(labels_list)
+        padded_data_d['labels'] = torch.tensor(LABELS.pad(labels_list))
+
+        WORD_STARTS = fields['word_starts'][1]
+        word_starts_list = [example[2].word_starts for example in data]
+        padded_data_d['word_starts'] = \
+            torch.tensor(WORD_STARTS.pad(word_starts_list))
+
+        META_DATA = fields['meta_data'][1]
+        meta_data_list = [META_DATA.vocab.stoi[example[2].meta_data]
+                          for example in data]
+        padded_data_d['meta_data'] = \
+            torch.tensor(META_DATA.pad(meta_data_list))
+
+        # padded_data_d = {
+        #     'text': padded_text,
+        #     'labels': padded_labels,
+        #     'word_starts': padded_word_starts,
+        #     'meta_data': padded_meta_data}
+
+        if 'pos' in fields:
+            POS = fields['pos'][1]
+            pos_list = [example[2].pos for example in data]
+            padded_pos = torch.tensor(POS.pad(pos_list))
+            padded_data_d['pos'] = padded_pos
+
+            POS_INDEX = fields['pos_index'][1]
+            pos_index_list = [example[2].pos_index for example in data]
+            padded_pos_index = torch.tensor(POS_INDEX.pad(pos_index_list))
+            padded_data_d['pos_index'] = padded_pos_index
+
+        if 'verb' in fields:
+            VERB = fields['verb'][1]
+            verb_list = [example[2].verb for example in data]
+            padded_verb = torch.tensor(VERB.pad(verb_list))
+            padded_data_d['verb'] = padded_verb
+
+            VERB_INDEX = fields['verb_index'][1]
+            verb_index_list = [example[2].verb_index for example in data]
+            padded_verb_index = torch.tensor(VERB_INDEX.pad(verb_index_list))
+            padded_data_d['verb_index'] = padded_verb_index
+
+        return padded_data_d
+
+    def get_examples(self, inp_fp, fields, auto_tokenizer,
+                     tag_to_ilabel, spacy_model=None):
+        # formerly _process_data()
+        """
+        this reads a file of the form
+        
+        Hercule Poirot is a fictional Belgian detective , created by Agatha Christie . [unused1] [unused2] [unused3]
+        ARG1 ARG1 REL ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 NONE NONE NONE NONE
+        NONE NONE NONE ARG1 ARG1 ARG1 ARG1 NONE REL ARG2 ARG2 ARG2 NONE NONE NONE NONE
+        
+        Hercule Poirot is a fictional Belgian detective , created by Agatha Christie . [unused1] [unused2] [unused3]
+        ARG1 ARG1 REL ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 NONE NONE NONE NONE
+        NONE NONE NONE ARG1 ARG1 ARG1 ARG1 NONE REL ARG2 ARG2 ARG2 NONE NONE NONE NONE
+        
+        Hercule Poirot is a fictional Belgian detective , created by Agatha Christie . [unused1] [unused2] [unused3]
+        ARG1 ARG1 REL ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 NONE NONE NONE NONE
+        NONE NONE NONE ARG1 ARG1 ARG1 ARG1 NONE REL ARG2 ARG2 ARG2 NONE NONE NONE NONE
+
+        the tags may be extags or cctags
+        each original sentence and its tag sequences constitute a new example
+        """
+
+        examples = []  # list[example]
+        example_ds = []  # list[example_d]
+        ilabels_for_each_ex = []  # a list of a list of ilabels, list[list[in]]
+        original_sents = []
 
         if type(inp_fp) == type([]):
-            inp_lines = inp_fp
+            inp_lines = None
         else:
             inp_lines = open(inp_fp, 'r').readlines()
 
-        new_example = True
-        for line_num, line in tqdm(enumerate(inp_lines)):
+        prev_line = ""
+        for line in inp_lines:
             line = line.strip()
-            if line == '':
-                new_example = True
+            if '[used' in line:  # it's the  beginning of an example
+                sent_plus = line
+                encoding = auto_tokenizer.batch_encode_plus(sent_plus.split())
+                input_ids = [BOS_TOKEN_ID]
+                word_starts = []
+                for ids in encoding['input_ids']:
+                    # special spacy tokens like \x9c have zero length
+                    if len(ids) == 0:
+                        ids = [100]
+                    word_starts.append(len(input_ids))
+                    input_ids += ids  # same as input_ids.extend(ids)
+                input_ids.append(EOS_TOKEN_ID)
 
-            if '[unused' in line or new_example:
-                if sentence is not None:
-                    if len(targets) == 0:
-                        targets = [[0]]
-                        lang_targets = [[0]]
-                    orig_sentence = sentence.split('[unused1]')[0].strip()
-                    orig_sentences.append(orig_sentence)
+                original_sent = sent_plus.split('[unused1]')[0].strip()
+                original_sents.append(original_sent)
 
-                    exampleD = {'text': input_ids,
-                                'labels': targets[:max_extraction_length],
-                                'word_starts': word_starts,
-                                'meta_data': orig_sentence}
-                    if len(sentence.split()) <= 100:
-                        exampleDs.append(exampleD)
+            elif line and '[used' not in line:  # it's a line of tags
+                ilabels = [tag_to_ilabel[tag] for tag in line.split()]
+                # take away last 3 ids for unused tokens
+                ilabels = ilabels[:len(word_starts)]
+                ilabels_for_each_ex.append(ilabels)
+                prev_line = line
+            # last line of file or empty line after example
+            # line is either "" or None
+            elif len(prev_line) != 0 and not line:
+                if len(ilabels_for_each_ex) == 0:
+                    ilabels_for_each_ex = [[0]]
+                # note that if li=[2,3]
+                # then li[:100] = [2,3]
+                example_d = {
+                    'text': input_ids,
+                    'labels': ilabels_for_each_ex[:MAX_EXTRACTION_LENGTH],
+                    'word_starts': word_starts,
+                    'meta_data': original_sent
+                }
+                if len(sent_plus.split()) <= 100:
+                    example_ds.append(example_d)
+                ilabels_for_each_ex = []
+                prev_line = line
 
-                    targets = []
-                    sentence = None
-                # starting new example
-                if line is not '':
-                    new_example = False
-                    sentence = line
-
-                    tokenized_words = tokenizer.batch_encode_plus(
-                        sentence.split())
-                    input_ids, word_starts, lang = [
-                        self.params_d.bos_token_id], [], []
-                    for tokens in tokenized_words['input_ids']:
-                        if len(tokens) == 0:  # special spacy_tokens like \x9c
-                            tokens = [100]
-                        word_starts.append(len(input_ids))
-                        input_ids.extend(tokens)
-                    input_ids.append(self.params_d.eos_token_id)
-                    assert len(sentence.split()) == len(
-                        word_starts)
             else:
-                if sentence is not None:
-                    target = [label_dict[i] for i in line.split()]
-                    target = target[:len(word_starts)]
-                    assert len(target) == len(word_starts)
-                    targets.append(target)
+                assert False
 
+        # so far, we haven't assumed any spacy derived data nanalysis
+        # if spacy is allowed, the example_d can carry more info.
         if spacy_model != None:
-            sentences = [ed['meta_data'] for ed in exampleDs]
-            for sentence_index, spacy_sentence in tqdm(enumerate(
-                    spacy_model.pipe(sentences, batch_size=10000))):
-                spacy_sentence = remerge_sent(spacy_sentence)
-                assert len(sentences[sentence_index].split()) == len(
-                    spacy_sentence)
-                exampleD = exampleDs[sentence_index]
+            sents = [example_d['meta_data'] for example_d in example_ds]
+            for sent_index, spacy_tokens in enumerate(
+                    spacy_model.pipe(sents, batch_size=10000)):
+                spacy_tokens = ModelDataLoader.remerge_sent(spacy_tokens)
+                assert len(sents[sent_index].split()) == len(
+                    spacy_tokens)
+                example_d = example_ds[sent_index]
 
-                pos, pos_indices, pos_words = pos_tags(spacy_sentence)
-                exampleD['pos_index'] = pos_indices
-                exampleD['pos'] = pos
-                verb, verb_indices, verb_words = verb_tags(spacy_sentence)
+                pos, pos_indices, pos_words = \
+                    ModelDataLoader.pos_mask(spacy_tokens)
+                example_d['pos_index'] = pos_indices
+                example_d['pos'] = pos
+                verb_mask, verb_indices, verb_words = \
+                    ModelDataLoader.verb_mask(spacy_tokens)
                 if len(verb_indices) != 0:
-                    exampleD['verb_index'] = verb_indices
+                    example_d['verb_index'] = verb_indices
                 else:
-                    exampleD['verb_index'] = [0]
-                exampleD['verb'] = verb
+                    example_d['verb_index'] = [0]
+                example_d['verb'] = verb_mask
 
-        for exampleD in exampleDs:
-            example = data.Example.fromdict(exampleD, fields)
-            examples.append(example)
-        return examples, orig_sentences
+        # use of tt.Example is deprecated
+        # for example_d in example_ds:
+        #     example = tt.data.Example.fromdict(example_d, fields)
+        #     examples.append(example)
+        # return examples, original_sents
+        return example_ds, original_sents
 
     def get_ttt_datasets(self, predict_sentences=None):
         # formerly process_data()
-        train_fp, dev_fp, test_fp = \
-            self.params_d.train_fp, self.params_d.dev_fp, self.params_d.test_fp
-        self.params_d.bos_token_id, self.params_d.eos_token_id = 101, 102
+        # this method call AutoTokenizer
+        train_fp = self.params_d.train_fp
+        dev_fp = self.params_d.dev_fp
+        test_fp = self.params_d.test_fp
 
         do_lower_case = 'uncased' in self.params_d.model_str
-        tokenizer = AutoTokenizer.from_pretrained(self.params_d.model_str,
-                                                  do_lower_case=do_lower_case,
-                                                  use_fast=True,
-                                                  data_dir='data/pretrained_cache',
-                                                  add_special_tokens=False,
-                                                  additional_special_tokens=
-                                                  ['[unused1]', '[unused2]',
-                                                   '[unused3]'])
+        auto_tokenizer = AutoTokenizer.from_pretrained(
+            self.params_d.model_str,
+            do_lower_case=do_lower_case,
+            use_fast=True,
+            data_dir='data/pretrained_cache',
+            add_special_tokens=False,
+            additional_special_tokens=UNUSED_TOKENS)
 
-        nlp = spacy.load("en_core_web_sm")
-        pad_index = tokenizer.convert_tokens_to_ids(tokenizer.pad_token)
+        spacy_model = spacy.load("en_core_web_sm")
+        # spacy usage:
+        # doc = spacy_model("This is a text")
+        # spacy_model.pipe()
+        # spacy_model usually abbreviated as nlp
+        pad_id = auto_tokenizer.convert_tokens_to_ids(
+            auto_tokenizer.pad_token)
 
-        TEXT = data.Field(use_vocab=False, batch_first=True,
-                          pad_token=pad_index)
-        WORD_STARTS = data.Field(use_vocab=False, batch_first=True,
-                                 pad_token=0)
-        POS = data.Field(use_vocab=False, batch_first=True, pad_token=0)
-        POS_INDEX = data.Field(use_vocab=False, batch_first=True, pad_token=0)
-        VERB = data.Field(use_vocab=False, batch_first=True, pad_token=0)
-        VERB_INDEX = data.Field(use_vocab=False, batch_first=True, pad_token=0)
-        META_DATA = data.Field(sequential=False)
-        VERB_WORDS = data.Field(sequential=False)
-        POS_WORDS = data.Field(sequential=False)
-        LABELS = data.NestedField(
-            data.Field(use_vocab=False, batch_first=True, pad_token=-100),
+        TEXT = tt.data.Field(use_vocab=False, batch_first=True,
+                             pad_token=pad_id)
+        WORD_STARTS = tt.data.Field(use_vocab=False, batch_first=True,
+                                    pad_token=0)
+        POS = tt.data.Field(use_vocab=False, batch_first=True, pad_token=0)
+        POS_INDEX = tt.data.Field(use_vocab=False, batch_first=True,
+                                  pad_token=0)
+        VERB = tt.data.Field(use_vocab=False, batch_first=True, pad_token=0)
+        VERB_INDEX = tt.data.Field(use_vocab=False, batch_first=True,
+                                   pad_token=0)
+        META_DATA = tt.data.Field(sequential=False)
+        VERB_WORDS = tt.data.Field(sequential=False)
+        POS_WORDS = tt.data.Field(sequential=False)
+        LABELS = tt.data.NestedField(
+            tt.data.Field(use_vocab=False, batch_first=True, pad_token=-100),
             use_vocab=False)
 
-        fields = {'text': ('text', TEXT), 'labels': ('labels', LABELS),
-                  'word_starts': (
-                      'word_starts', WORD_STARTS),
+        fields = {'text': ('text', TEXT),
+                  'labels': ('labels', LABELS),
+                  'word_starts': ('word_starts', WORD_STARTS),
                   'meta_data': ('meta_data', META_DATA)}
         if 'predict' not in self.params_d.mode:
             fields['pos'] = ('pos', POS)
@@ -143,19 +393,19 @@ class ModelDataLoader:
             fields['verb'] = ('verb', VERB)
             fields['verb_index'] = ('verb_index', VERB_INDEX)
 
-        if self.params_d.task == 'oie':
-            label_dict = {'NONE': 0, 'ARG1': 1, 'REL': 2, 'ARG2': 3,
-                          'LOC': 4, 'TIME': 4, 'TYPE': 5, 'ARGS': 3}
-        else:  # self.params_d.task == 'conj':
-            label_dict = {'CP_START': 2, 'CP': 1,
-                          'CC': 3, 'SEP': 4, 'OTHERS': 5, 'NONE': 0}
+        if self.params_d.task == "ex":
+            tag_to_ilabel = EXTAG_TO_ILABEL
+        elif self.params_d.task == "cc":
+            tag_to_ilabel = CCTAG_TO_ILABEL
+        else:
+            assert False
 
-        cached_train_fp, cached_dev_fp, cached_test_fp = \
-            f'{train_fp}.{self.params_d.model_str.replace("/", "_")}.pkl', \
-                f'{dev_fp}.{self.params_d.model_str.replace("/", "_")}.pkl', \
-                f'{test_fp}.{self.params_d.model_str.replace("/", "_")}.pkl'
+        model_str = self.params_d.model_str.replace("/", "_")
+        cached_train_fp = f'{train_fp}.{model_str}.pkl'
+        cached_dev_fp = f'{dev_fp}.{model_str}.pkl'
+        cached_test_fp = f'{test_fp}.{model_str}.pkl'
 
-        all_sentences = []
+        original_sents = []
         if 'predict' in self.params_d.mode:
             # no caching used in predict mode
             if predict_sentences == None:  # predict
@@ -173,35 +423,52 @@ class ModelDataLoader:
                     line = line.replace('“', '\'\'')
 
                     # tokenized_line = line.split()
+
+                    # Why use both nltk and spacy to word tokenize
+                    # get_ttt_datasets() uses nltk.word_tokenize()
+                    # get_examples() uses spacy_model.pipe(sents...)
+                    # get_examples() uses transformers.AutoTokenizer
+
                     tokenized_line = ' '.join(nltk.word_tokenize(line))
                     predict_sentences.append(
-                        tokenized_line + ' [unused1] [unused2] [unused3]')
+                        tokenized_line + UNUSED_TOKENS_STR)
                     predict_sentences.append('\n')
 
-            predict_examples, all_sentences = \
-                self.get_examples(predict_sentences, fields,
-                                  tokenizer, label_dict, None)
+            # this use of get_examples() is wrong
+            # get_examples()
+            # returns: examples, original_sents
+            predict_examples, original_sents = \
+                self.get_examples(predict_fp,
+                                  fields,
+                                  auto_tokenizer,
+                                  tag_to_ilabel,
+                                  spacy_model=None)
             META_DATA.build_vocab(
-                data.Dataset(predict_examples, fields=fields.values()))
+                tt.data.Dataset(predict_examples, fields=fields.values()))
 
-            predict_dataset = [(len(ex.text), idx, ex, fields) for idx,
-            ex in enumerate(predict_examples)]
+            predict_dataset = [
+                (len(example.text), idx, example, fields)
+                for idx, example in enumerate(predict_examples)]
             train_dataset, dev_dataset, test_dataset = \
                 predict_dataset, predict_dataset, predict_dataset
         else:
             if not os.path.exists(
                     cached_train_fp) or self.params_d.build_cache:
                 train_examples, _ = self.get_examples(train_fp,
-                                                      fields, tokenizer,
-                                                      label_dict, nlp)
+                                                      fields,
+                                                      auto_tokenizer,
+                                                      tag_to_ilabel,
+                                                      spacy_model)
                 pickle.dump(train_examples, open(cached_train_fp, 'wb'))
             else:
                 train_examples = pickle.load(open(cached_train_fp, 'rb'))
 
             if not os.path.exists(cached_dev_fp) or self.params_d.build_cache:
-                dev_examples, _ = self.get_examples(dev_fp, fields,
-                                                    tokenizer,
-                                                    label_dict, nlp)
+                dev_examples, _ = self.get_examples(dev_fp,
+                                                    fields,
+                                                    auto_tokenizer,
+                                                    tag_to_ilabel,
+                                                    spacy_model)
                 pickle.dump(dev_examples, open(cached_dev_fp, 'wb'))
             else:
                 dev_examples = pickle.load(open(cached_dev_fp, 'rb'))
@@ -209,105 +476,51 @@ class ModelDataLoader:
             if not os.path.exists(cached_test_fp) or self.params_d.build_cache:
                 test_examples, _ = self.get_examples(test_fp,
                                                      fields,
-                                                     tokenizer, label_dict,
-                                                     nlp)
+                                                     auto_tokenizer,
+                                                     tag_to_ilabel,
+                                                     spacy_model)
                 pickle.dump(test_examples, open(cached_test_fp, 'wb'))
             else:
                 test_examples = pickle.load(open(cached_test_fp, 'rb'))
 
-            META_DATA.build_vocab(data.Dataset(train_examples,
-                                               fields=fields.values()),
-                                  data.Dataset(
-                                      dev_examples, fields=fields.values()),
-                                  data.Dataset(test_examples,
-                                               fields=fields.values()))
+            META_DATA.build_vocab(
+                tt.data.Dataset(train_examples,
+                                fields=fields.values()),
+                tt.data.Dataset(dev_examples, fields=fields.values()),
+                tt.data.Dataset(test_examples, fields=fields.values()))
 
-            train_dataset = [(len(ex.text), idx, ex, fields) for
-                             idx, ex in enumerate(train_examples)]
-            dev_dataset = [(len(ex.text), idx, ex, fields) for
-                           idx, ex in enumerate(dev_examples)]
-            test_dataset = [(len(ex.text), idx, ex, fields) for
-                            idx, ex in enumerate(test_examples)]
+            train_dataset = [(len(example.text), idx, example, fields) for
+                             idx, example in enumerate(train_examples)]
+            dev_dataset = [(len(example.text), idx, example, fields) for
+                           idx, example in enumerate(dev_examples)]
+            test_dataset = [(len(example.text), idx, example, fields) for
+                            idx, example in enumerate(test_examples)]
             train_dataset.sort()  # to simulate bucket sort (along with pad_data)
 
         return train_dataset, dev_dataset, test_dataset, \
-            META_DATA.vocab, all_sentences
-    
-    def get_ttt_dataloaders(self, predict_sentences=None):
+            META_DATA.vocab, original_sents
+
+    def get_ttt_dataloaders(self, type, predict_sentences=None):
         train_dataset, val_dataset, test_dataset, \
-            meta_data_vocab, all_sentences = self.get_ttt_datasets(
-                predict_sentences)
+            meta_data_vocab, original_sents = self.get_ttt_datasets(
+            predict_sentences)
+        # this method calls DataLoader
 
-        train_dataloader = DataLoader(train_dataset,
-                                           batch_size=self.params_d[
-                                               "batch_size"],
-                                           collate_fn=self.pad_data,
-                                           shuffle=True,
-                                           num_workers=1)
-        val_dataloader = DataLoader(val_dataset,
-                                         batch_size=self.params_d[
-                                             "batch_size"],
-                                         collate_fn=self.pad_data,
-                                         num_workers=1)
-        test_dataloader = DataLoader(test_dataset,
-                                          batch_size=self.params_d[
-                                              "batch_size"],
-                                          collate_fn=self.pad_data,
-                                          num_workers=1)
-
-        return train_dataloader, val_dataloader, test_dataloader
-
-
-    def pad_data(data):
-        fields = data[0][-1]
-        TEXT = fields['text'][1]
-        text_list = [ex[2].text for ex in data]
-        padded_text = torch.tensor(TEXT.pad(text_list))
-
-        LABELS = fields['labels'][1]
-        labels_list = [ex[2].labels for ex in data]
-        # max_depth = max([len(l) for l in labels_list])
-        max_depth = 5
-        for i in range(len(labels_list)):
-            pad_depth = max_depth - len(labels_list[i])
-            num_words = len(labels_list[i][0])
-            # print(num_words, pad_depth)
-            labels_list[i] = labels_list[i] + [[0]*num_words]*pad_depth
-        # print(labels_list)
-        padded_labels = torch.tensor(LABELS.pad(labels_list))
-
-        WORD_STARTS = fields['word_starts'][1]
-        word_starts_list = [ex[2].word_starts for ex in data]
-        padded_word_starts = torch.tensor(WORD_STARTS.pad(word_starts_list))
-
-        META_DATA = fields['meta_data'][1]
-        meta_data_list = [META_DATA.vocab.stoi[ex[2].meta_data] for ex in data]
-        padded_meta_data = torch.tensor(META_DATA.pad(meta_data_list))
-
-        paddedD = {'text': padded_text, 'labels': padded_labels,
-                   'word_starts': padded_word_starts,
-                   'meta_data': padded_meta_data}
-
-        if 'pos' in fields:
-            POS = fields['pos'][1]
-            pos_list = [ex[2].pos for ex in data]
-            padded_pos = torch.tensor(POS.pad(pos_list))
-            paddedD['pos'] = padded_pos
-
-            POS_INDEX = fields['pos_index'][1]
-            pos_index_list = [ex[2].pos_index for ex in data]
-            padded_pos_index = torch.tensor(POS_INDEX.pad(pos_index_list))
-            paddedD['pos_index'] = padded_pos_index
-
-        if 'verb' in fields:
-            VERB = fields['verb'][1]
-            verb_list = [ex[2].verb for ex in data]
-            padded_verb = torch.tensor(VERB.pad(verb_list))
-            paddedD['verb'] = padded_verb
-
-            VERB_INDEX = fields['verb_index'][1]
-            verb_index_list = [ex[2].verb_index for ex in data]
-            padded_verb_index = torch.tensor(VERB_INDEX.pad(verb_index_list))
-            paddedD['verb_index'] = padded_verb_index
-
-        return paddedD
+        if type == "train":
+            return DataLoader(train_dataset,
+                              batch_size=self.params_d["batch_size"],
+                              collate_fn=self.pad_data,
+                              shuffle=True,
+                              num_workers=1)
+        elif type == "val":
+            return DataLoader(val_dataset,
+                              batch_size=self.params_d["batch_size"],
+                              collate_fn=self.pad_data,
+                              num_workers=1)
+        elif type == "test":
+            return DataLoader(test_dataset,
+                              batch_size=self.params_d["batch_size"],
+                              collate_fn=self.pad_data,
+                              num_workers=1)
+        else:
+            assert False

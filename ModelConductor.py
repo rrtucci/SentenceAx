@@ -52,10 +52,10 @@ from sax_utils import *
 import tqdm
 
 
-class ModelConductor: # formerly run.py
+class ModelConductor:  # formerly run.py
     def __init__(self, params_d, task):
         self.params_d = params_d
-        self.task = task 
+        self.task = task
         assert task in ["ex", "cc"]
         self.model = None
         self.saved = False
@@ -70,10 +70,6 @@ class ModelConductor: # formerly run.py
             self.train_fp = 'data/openie-data/openie4_labels'
             self.dev_fp = 'data/carb-data/dev.txt'
             self.test_fp = 'data/carb-data/test.txt'
-
-        self.model_dataloader = ModelDataLoader(params_d)
-        self.train_dataloader, self.val_dataloader, self.test_dataloader= \
-            self.model_dataloader.get_ttt_dataloaders()
 
     def set_checkpoint_callback(self):
         if self.saved:
@@ -138,7 +134,7 @@ class ModelConductor: # formerly run.py
         return trainer
 
     def update_params_d(self, checkpoint_path,
-                       **final_changes_params_d):
+                        **final_changes_params_d):
         if self.has_cuda:
             loaded_params_d = torch.load(checkpoint_path)['params_d']
         else:
@@ -155,8 +151,10 @@ class ModelConductor: # formerly run.py
         self.model = Model()
         logger = self.get_logger('train')
         trainer = self.get_trainer(logger)
-        trainer.fit(self.model, train_dataloader=self.train_dataloader,
-                    val_dataloaders=self.val_dataloader)
+        mdl = ModelDataLoader(self.params_d)
+        trainer.fit(self.model,
+                    train_dataloader=mdl.get_ttt_dataloaders("train"),
+                    val_dataloaders=mdl.get_ttt_dataloaders("val"))
         shutil.move(self.params_d["save"] + f'/logs/train.part',
                     self.params_d["save"] + f'/logs/train')
 
@@ -167,8 +165,10 @@ class ModelConductor: # formerly run.py
         self.model = Model()
         logger = self.get_logger('resume')
         trainer = self.get_trainer(logger, checkpoint_path)
-        trainer.fit(self.model, train_dataloader=self.train_dataloader,
-                    val_dataloaders=self.val_dataloader)
+        mdl = ModelDataLoader(self.params_d)
+        trainer.fit(self.model,
+                    train_dataloader=mdl.get_ttt_dataloaders("train"),
+                    val_dataloaders=mdl.get_ttt_dataloaders("val"))
         shutil.move(self.params_d.save + f'/logs/resume.part',
                     self.params_d.save + f'/logs/resume')
 
@@ -180,7 +180,7 @@ class ModelConductor: # formerly run.py
         checkpoint_path = all_checkpoint_paths[0]
         if not train:
             self.update_params_d(checkpoint_path,
-                                **final_changes_params_d)
+                                 **final_changes_params_d)
 
         self.model = Model()
         if mapping != None:
@@ -195,7 +195,9 @@ class ModelConductor: # formerly run.py
             trainer = Trainer(logger=logger,
                               gpus=self.params_d["gpus"],
                               resume_from_checkpoint=checkpoint_path)
-            trainer.test(self.model, test_dataloaders=self.test_dataloader)
+            mdl = ModelDataLoader(self.params_d)
+            trainer.test(self.model,
+                         test_dataloaders=mdl.get_ttt_dataloaders("test"))
             result = self.model.results
             test_f.write(f'{checkpoint_path}\t{result}\n')
             test_f.flush()
@@ -231,7 +233,9 @@ class ModelConductor: # formerly run.py
                           resume_from_checkpoint=checkpoint_path)
         start_time = time()
         self.model.all_sentences = all_sentences
-        trainer.test(self.model, test_dataloaders=self.test_dataloader)
+        mdl = ModelDataLoader(self.params_d)
+        trainer.test(self.model,
+                     test_dataloaders=mdl.get_ttt_dataloaders("test"))
         end_time = time()
         print(f'Total Time taken = {(end_time - start_time) / 60:2f} minutes')
 
@@ -248,8 +252,13 @@ class ModelConductor: # formerly run.py
             self.params_d.checkpoint = self.params_d.conj_model
             self.params_d.model_str = 'bert-base-cased'
             self.params_d.mode = 'predict'
-            model = self.predict(None, meta_data_vocab, None, None,
-                            test_dataloader, all_sentences)
+            mdl = ModelDataLoader(self.params_d)
+            model = self.predict(None,
+                                 meta_data_vocab,
+                                 None,
+                                 None,
+                                 mdl.get_ttt_dataloaders("test"),
+                                 all_sentences)
             conj_predictions = model.all_cc_predictions
             sentences_indices_list = model.all_cc_sent_locs
             # conj_predictions = model.predictions
@@ -314,12 +323,13 @@ class ModelConductor: # formerly run.py
         self.params_d.task = 'oie'
         self.params_d.checkpoint = self.params_d.oie_model
         self.params_d.model_str = 'bert-base-cased'
-        _, _, split_test_dataset, meta_data_vocab, _ =\
-            self.model_dataloader.get_ttt_datasets(sentences)
+        mdl = ModelDataLoader(self.params_d)
+        _, _, split_test_dataset, meta_data_vocab, _ = \
+            mdl.get_ttt_datasets(predict_sentences=sentences)
         split_test_dataloader = DataLoader(
             split_test_dataset,
             batch_size=self.params_d["batch_size"],
-            collate_fn=self.model_dataloader.pad_data,
+            collate_fn=mdl.pad_data,
             num_workers=1)
 
         model = self.predict(self.params_d,
@@ -334,8 +344,8 @@ class ModelConductor: # formerly run.py
 
         if 'labels' in self.params_d.type:
             label_lines = self.get_extags(model, sentences,
-                                      orig_sentences,
-                                     sentences_indices_list)
+                                          orig_sentences,
+                                          sentences_indices_list)
             f = open(self.params_d.out + '.labels', 'w')
             f.write('\n'.join(label_lines))
             f.close()
@@ -363,8 +373,8 @@ class ModelConductor: # formerly run.py
             # testing rescoring
             inp_fp = model.predictions_f_allennlp
             rescored = self.rescore(inp_fp,
-                                  model_dir=self.params_d.rescore_model,
-                               batch_size=256)
+                                    model_dir=self.params_d.rescore_model,
+                                    batch_size=256)
 
             all_predictions, sentence_str = [], ''
             for line_i, line in enumerate(rescored):

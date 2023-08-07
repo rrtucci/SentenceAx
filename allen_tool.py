@@ -36,8 +36,8 @@ def read_allen_line(line):
 
     return ext
 
-def get_num_sents_in_allen_file(allen_fpath):
-    with open(allen_fpath, 'r', encoding='utf-8') as f:
+def get_num_sents_in_allen_file(allen_fp):
+    with open(allen_fp, 'r', encoding='utf-8') as f:
         lines = f.readlines()
     prev_in_ztz = ''
     num_sents = 1
@@ -48,8 +48,8 @@ def get_num_sents_in_allen_file(allen_fpath):
         prev_in_ztz = ex.sent
     return num_sents
 
-def read_allen_file(allen_fpath):
-    with open(allen_fpath, 'r', encoding='utf-8') as f:
+def read_allen_file(allen_fp):
+    with open(allen_fp, 'r', encoding='utf-8') as f:
         lines = f.readlines()
     lines = [unidecode(line) for line in lines]
     ztz_to_extractions = OrderedDict()

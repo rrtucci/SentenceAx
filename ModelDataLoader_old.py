@@ -19,14 +19,6 @@ class ModelDataLoader:
     def __init__(self, params_d):
 
         self.params_d = params_d
-        do_lower_case = 'uncased' in self.params_d["model_str"]
-        self.auto_tokenizer = AutoTokenizer.from_pretrained(
-            self.params_d["model_str"],
-            do_lower_case=do_lower_case,
-            use_fast=True,
-            data_dir='data/pretrained_cache',
-            add_special_tokens=False,
-            additional_special_tokens=UNUSED_TOKENS)
 
     @staticmethod
     def remerge_sent(tokens):
@@ -80,111 +72,71 @@ class ModelDataLoader:
         verb_mask.append(0)
         return verb_mask, verb_indices, verb_words
 
-    def pad_data(self, data):
 
-        # old pad_data() uses spacy to find pad_id
+    @staticmethod
+    def pad_data(data):
+        padded_data_d = {}
 
-        # model_str = 'bert-base-cased'
-        # do_lower_case = True
-        # self.auto_tokenizer = AutoTokenizer.from_pretrained(
-        #     model_str,
-        #     do_lower_case=do_lower_case)
-        # pad_id = self.auto_tokenizer.convert_tokens_to_ids(
-        #     self.auto_tokenizer.pad_token)
+        fields = data[0][-1]
+        TEXT = fields['text'][1]
+        text_list = [example[2].text for example in data]
+        padded_data_d['text'] = torch.tensor(TEXT.pad(text_list))
 
-        pad_id = self.auto_tokenizer.convert_tokens_to_ids(
-            self.auto_tokenizer.pad_token)
-
-        max_text_len = -1
-        texts = [d['text'] for d in data]
-        for t in texts:
-            if len(t) > max_text_len:
-                max_text_len = len(t)
-        padded_texts = []
-        for t in texts:
-            num_pad_id = max_text_len - len(t)
-            padded_t = t.copy() + [pad_id] * num_pad_id
-            padded_texts.append(padded_t)
-
-        labels = [d['labels'] for d in data]
+        LABELS = fields['labels'][1]
+        labels_list = [example[2].labels for example in data]
+        # max_depth = max([len(l) for l in labels_list])
         max_depth = 5
-        for i in range(len(labels)):
-            pad_depth = max_depth - len(labels[i])
-            num_words = len(labels[i][0])
-            labels[i] = labels[i] + [[0] * num_words] * pad_depth
+        for i in range(len(labels_list)):
+            pad_depth = max_depth - len(labels_list[i])
+            num_words = len(labels_list[i][0])
+            # print(num_words, pad_depth)
+            labels_list[i] = labels_list[i] + [[0] * num_words] * pad_depth
+        # print(labels_list)
+        padded_data_d['labels'] = torch.tensor(LABELS.pad(labels_list))
 
-        max_label_len = -1
-        for label in labels:
-            if (len(label[0]) > max_label_len):
-                max_label_len = len(label[0])
-        padded_labels = []
-        for label in labels:
-            new_label = []
-            for sub_label in label:
-                num_pad_id = max_label_len - len(sub_label)
-                padded_sub_label = sub_label.copy() + [-100] * num_pad_id
-                new_label.append(padded_sub_label)
-            padded_labels.append(new_label)
+        WORD_STARTS = fields['word_starts'][1]
+        word_starts_list = [example[2].word_starts for example in data]
+        padded_data_d['word_starts'] = \
+            torch.tensor(WORD_STARTS.pad(word_starts_list))
 
-        max_ws_len = -1
-        ws = [d['word_starts'] for d in data]
-        for w in ws:
-            if (len(w) > max_ws_len):
-                max_ws_len = len(w)
-        padded_word_starts = []
-        for w in ws:
-            num_pad_id = max_ws_len - len(w)
-            padded_w = w.copy() + [0] * num_pad_id
-            padded_word_starts.append(padded_w)
+        META_DATA = fields['meta_data'][1]
+        meta_data_list = [META_DATA.vocab.stoi[example[2].meta_data]
+                          for example in data]
+        padded_data_d['meta_data'] = \
+            torch.tensor(META_DATA.pad(meta_data_list))
 
-        padded_meta_data = [d['meta_data'] for d in data]
+        # padded_data_d = {
+        #     'text': padded_text,
+        #     'labels': padded_labels,
+        #     'word_starts': padded_word_starts,
+        #     'meta_data': padded_meta_data}
 
-        padded_texts = torch.tensor(padded_texts)
-        padded_labels = torch.tensor(padded_labels)
-        padded_word_starts = torch.tensor(padded_word_starts)
-        # padded_meta_data=torch.tensor(padded_meta_data)
+        if 'pos' in fields:
+            POS = fields['pos'][1]
+            pos_list = [example[2].pos for example in data]
+            padded_pos = torch.tensor(POS.pad(pos_list))
+            padded_data_d['pos'] = padded_pos
 
-        padded_data_d = {'text': padded_texts,
-                         'labels': padded_labels,
-                         'word_starts': padded_word_starts,
-                         'meta_data': padded_meta_data}
+            POS_INDEX = fields['pos_index'][1]
+            pos_index_list = [example[2].pos_index for example in data]
+            padded_pos_index = torch.tensor(POS_INDEX.pad(pos_index_list))
+            padded_data_d['pos_index'] = padded_pos_index
 
-        # fields = data[0][-1]
-        # TEXT = fields['text'][1]
-        # text_list = [ex[2].text for ex in data]
-        # padded_text = torch.tensor(TEXT.pad(text_list))
-        #
-        # LABELS = fields['labels'][1]
-        # labels_list = [ex[2].labels for ex in data]
-        # # max_depth = max([len(l) for l in labels_list])
-        # max_depth = 5
-        # for i in range(len(labels_list)):
-        #     pad_depth = max_depth - len(labels_list[i])
-        #     num_words = len(labels_list[i][0])
-        #     # print(num_words, pad_depth)
-        #     labels_list[i] = labels_list[i] + [[0]*num_words]*pad_depth
-        # # print(labels_list)
-        # padded_labels = torch.tensor(LABELS.pad(labels_list))
-        #
-        # WORD_STARTS = fields['word_starts'][1]
-        # word_starts_list = [ex[2].word_starts for ex in data]
-        # padded_word_starts = \
-        #     torch.tensor(WORD_STARTS.pad(
-        # word_starts_list))
-        #
-        # META_DATA = fields['meta_data'][1]
-        # meta_data_list = [META_DATA.vocab.stoi[ex[2].meta_data] for \
-        #     ex in data]
-        # padded_meta_data = torch.tensor(META_DATA.pad(meta_data_list))
-        #
-        # padded_data_d = {'text': padded_texts,
-        #                  'labels': padded_labels,
-        #                  'word_starts': padded_word_starts,
-        #                  'meta_data': padded_meta_data}
+        if 'verb' in fields:
+            VERB = fields['verb'][1]
+            verb_list = [example[2].verb for example in data]
+            padded_verb = torch.tensor(VERB.pad(verb_list))
+            padded_data_d['verb'] = padded_verb
+
+            VERB_INDEX = fields['verb_index'][1]
+            verb_index_list = [example[2].verb_index for example in data]
+            padded_verb_index = torch.tensor(VERB_INDEX.pad(verb_index_list))
+            padded_data_d['verb_index'] = padded_verb_index
 
         return padded_data_d
 
-    def get_examples(self, inp_fp, tag_to_ilabel, spacy_model=None):
+    def get_examples(self, inp_fp, fields, auto_tokenizer,
+                     tag_to_ilabel, spacy_model=None):
         # formerly _process_data()
         """
         this reads a file of the form
@@ -208,7 +160,7 @@ class ModelDataLoader:
         examples = []  # list[example]
         example_ds = []  # list[example_d]
         ilabels_for_each_ex = []  # a list of a list of ilabels, list[list[in]]
-        orig_sents = []
+        original_sents = []
 
         if type(inp_fp) == type([]):
             inp_lines = None
@@ -220,7 +172,7 @@ class ModelDataLoader:
             line = line.strip()
             if '[used' in line:  # it's the  beginning of an example
                 sent_plus = line
-                encoding = self.auto_tokenizer.batch_encode_plus(sent_plus.split())
+                encoding = auto_tokenizer.batch_encode_plus(sent_plus.split())
                 input_ids = [BOS_TOKEN_ID]
                 word_starts = []
                 for ids in encoding['input_ids']:
@@ -231,8 +183,8 @@ class ModelDataLoader:
                     input_ids += ids  # same as input_ids.extend(ids)
                 input_ids.append(EOS_TOKEN_ID)
 
-                orig_sent = sent_plus.split('[unused1]')[0].strip()
-                orig_sents.append(orig_sent)
+                original_sent = sent_plus.split('[unused1]')[0].strip()
+                original_sents.append(original_sent)
 
             elif line and '[used' not in line:  # it's a line of tags
                 ilabels = [tag_to_ilabel[tag] for tag in line.split()]
@@ -251,7 +203,7 @@ class ModelDataLoader:
                     'text': input_ids,
                     'labels': ilabels_for_each_ex[:MAX_EXTRACTION_LENGTH],
                     'word_starts': word_starts,
-                    'meta_data': orig_sent
+                    'meta_data': original_sent
                 }
                 if len(sent_plus.split()) <= 100:
                     example_ds.append(example_d)
@@ -285,22 +237,34 @@ class ModelDataLoader:
                 example_d['verb'] = verb_mask
 
         # use of tt.Example is deprecated
-        # for example_d in example_ds:
-        #     example = tt.data.Example.fromdict(example_d, fields)
-        #     examples.append(example)
-        # return examples, orig_sents
-        examples = example_ds
-        return examples, orig_sents
+        for example_d in example_ds:
+            example = tt.data.Example.fromdict(example_d, fields)
+            examples.append(example)
+        return examples, original_sents
 
     def get_ttt_datasets(self, predict_sentences=None):
         # formerly process_data()
-
+        # this method call AutoTokenizer
         train_fp = self.params_d["train_fp"]
         dev_fp = self.params_d["dev_fp"]
         test_fp = self.params_d["test_fp"]
 
-        pad_id = self.auto_tokenizer.convert_tokens_to_ids(
-            self.auto_tokenizer.pad_token)
+        do_lower_case = 'uncased' in self.params_d["mode"]l_str
+        auto_tokenizer = AutoTokenizer.from_pretrained(
+            self.params_d["mode"]l_str,
+            do_lower_case=do_lower_case,
+            use_fast=True,
+            data_dir='data/pretrained_cache',
+            add_special_tokens=False,
+            additional_special_tokens=UNUSED_TOKENS)
+
+        spacy_model = spacy.load("en_core_web_sm")
+        # spacy usage:
+        # doc = spacy_model("This is a text")
+        # spacy_model.pipe()
+        # spacy_model usually abbreviated as nlp
+        pad_id = auto_tokenizer.convert_tokens_to_ids(
+            auto_tokenizer.pad_token)
 
         TEXT = tt.data.Field(use_vocab=False, batch_first=True,
                              pad_token=pad_id)
@@ -336,12 +300,12 @@ class ModelDataLoader:
         else:
             assert False
 
-        model_str = self.params_d["model_str"].replace("/", "_")
+        model_str = self.params_d["mode"]l_str.replace("/", "_")
         cached_train_fp = f'{train_fp}.{model_str}.pkl'
         cached_dev_fp = f'{dev_fp}.{model_str}.pkl'
         cached_test_fp = f'{test_fp}.{model_str}.pkl'
 
-        orig_sents = []
+        original_sents = []
         if 'predict' in self.params_d["mode"]:
             # no caching used in predict mode
             if predict_sentences == None:  # predict
@@ -372,9 +336,11 @@ class ModelDataLoader:
 
             # this use of get_examples() is wrong
             # get_examples()
-            # returns: examples, orig_sents
-            predict_examples, orig_sents = \
+            # returns: examples, original_sents
+            predict_examples, original_sents = \
                 self.get_examples(predict_fp,
+                                  fields,
+                                  auto_tokenizer,
                                   tag_to_ilabel,
                                   spacy_model=None)
             META_DATA.build_vocab(
@@ -386,14 +352,11 @@ class ModelDataLoader:
             train_dataset, dev_dataset, test_dataset = \
                 predict_dataset, predict_dataset, predict_dataset
         else:
-            spacy_model = spacy.load("en_core_web_sm")
-            # spacy usage:
-            # doc = spacy_model("This is a text")
-            # spacy_model.pipe()
-            # spacy_model usually abbreviated as nlp
             if not os.path.exists(
                     cached_train_fp) or self.params_d["build_cache"]:
                 train_examples, _ = self.get_examples(train_fp,
+                                                      fields,
+                                                      auto_tokenizer,
                                                       tag_to_ilabel,
                                                       spacy_model)
                 pickle.dump(train_examples, open(cached_train_fp, 'wb'))
@@ -402,6 +365,8 @@ class ModelDataLoader:
 
             if not os.path.exists(cached_dev_fp) or self.params_d["build_cache"]:
                 dev_examples, _ = self.get_examples(dev_fp,
+                                                    fields,
+                                                    auto_tokenizer,
                                                     tag_to_ilabel,
                                                     spacy_model)
                 pickle.dump(dev_examples, open(cached_dev_fp, 'wb'))
@@ -410,6 +375,8 @@ class ModelDataLoader:
 
             if not os.path.exists(cached_test_fp) or self.params_d["build_cache"]:
                 test_examples, _ = self.get_examples(test_fp,
+                                                     fields,
+                                                     auto_tokenizer,
                                                      tag_to_ilabel,
                                                      spacy_model)
                 pickle.dump(test_examples, open(cached_test_fp, 'wb'))
@@ -431,11 +398,11 @@ class ModelDataLoader:
             train_dataset.sort()  # to simulate bucket sort (along with pad_data)
 
         return train_dataset, dev_dataset, test_dataset, \
-            META_DATA.vocab, orig_sents
+            META_DATA.vocab, original_sents
 
     def get_ttt_dataloaders(self, type, predict_sentences=None):
         train_dataset, val_dataset, test_dataset, \
-            meta_data_vocab, orig_sents = self.get_ttt_datasets(
+            meta_data_vocab, original_sents = self.get_ttt_datasets(
             predict_sentences)
         # this method calls DataLoader
 

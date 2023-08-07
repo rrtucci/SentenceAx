@@ -169,8 +169,8 @@ class ModelConductor:  # formerly run.py
         trainer.fit(self.model,
                     train_dataloader=mdl.get_ttt_dataloaders("train"),
                     val_dataloaders=mdl.get_ttt_dataloaders("val"))
-        shutil.move(self.params_d.save + f'/logs/resume.part',
-                    self.params_d.save + f'/logs/resume')
+        shutil.move(self.params_d["save"] + f'/logs/resume.part',
+                    self.params_d["save"] + f'/logs/resume')
 
     def test(self, train,
              mapping=None, conj_word_mapping=None,
@@ -189,7 +189,7 @@ class ModelConductor:  # formerly run.py
             self.model._metric.conj_word_mapping = conj_word_mapping
 
         logger = self.get_logger('test')
-        test_f = open(self.params_d.save + '/logs/test.txt', 'w')
+        test_f = open(self.params_d["save"] + '/logs/test.txt', 'w')
 
         for checkpoint_path in all_checkpoint_paths:
             trainer = Trainer(logger=logger,
@@ -202,8 +202,8 @@ class ModelConductor:  # formerly run.py
             test_f.write(f'{checkpoint_path}\t{result}\n')
             test_f.flush()
         test_f.close()
-        shutil.move(self.params_d.save + f'/logs/test.part',
-                    self.params_d.save + f'/logs/test')
+        shutil.move(self.params_d["save"] + f'/logs/test.part',
+                    self.params_d["save"] + f'/logs/test')
 
     def predict(self,
                 mapping=None, conj_word_mapping=None,
@@ -214,10 +214,10 @@ class ModelConductor:  # formerly run.py
         #             train_dataloader,
         #             val_dataloader, test_dataloader, all_sentences, mapping=None,
         #             conj_word_mapping=None):
-        if self.params_d.task == 'conj':
-            self.params_d.checkpoint = self.params_d.conj_model
-        if self.params_d.task == 'oie':
-            self.params_d.checkpoint = self.params_d.oie_model
+        if self.params_d["task"] == 'conj':
+            self.params_d["checkpoint"] = self.params_d["conj_model"]
+        if self.params_d["task"] == 'oie':
+            self.params_d["checkpoint"] = self.params_d["oie_model"]
 
         checkpoint_path = self.get_checkpoint_path()
         self.update_params_d(checkpoint_path, **final_changes_params_d)
@@ -229,7 +229,7 @@ class ModelConductor:  # formerly run.py
         if conj_word_mapping != None:
             self.model._metric.conj_word_mapping = conj_word_mapping
 
-        trainer = Trainer(gpus=self.params_d.gpus, logger=None,
+        trainer = Trainer(gpus=self.params_d["gpus"], logger=None,
                           resume_from_checkpoint=checkpoint_path)
         start_time = time()
         self.model.all_sentences = all_sentences
@@ -246,12 +246,12 @@ class ModelConductor:  # formerly run.py
         #                  train_dataloader, val_dataloader, test_dataloader,
         #                  all_sentences):
         mapping, conj_word_mapping = {}, {}
-        self.params_d.write_allennlp = True
-        if self.params_d.split_fp == '':
-            self.params_d.task = 'conj'
-            self.params_d.checkpoint = self.params_d.conj_model
-            self.params_d.model_str = 'bert-base-cased'
-            self.params_d.mode = 'predict'
+        self.params_d["write_allennlp"] = True
+        if self.params_d["split_fp"] == '':
+            self.params_d["task"] = 'conj'
+            self.params_d["checkpoint"] = self.params_d["conj_model"]
+            self.params_d["mode"]l_str = 'bert-base-cased'
+            self.params_d["mode"] = 'predict'
             mdl = ModelDataLoader(self.params_d)
             model = self.predict(None,
                                  meta_data_vocab,
@@ -298,7 +298,7 @@ class ModelConductor:  # formerly run.py
             assert count == len(sentences) - 1
 
         else:
-            with open(self.params_d.predict_fp, 'r') as f:
+            with open(self.params_d["predict_fp"], 'r') as f:
                 lines = f.read()
                 lines = lines.replace("\\", "")
 
@@ -320,9 +320,9 @@ class ModelConductor:  # formerly run.py
                     else:
                         assert False
 
-        self.params_d.task = 'oie'
-        self.params_d.checkpoint = self.params_d.oie_model
-        self.params_d.model_str = 'bert-base-cased'
+        self.params_d["task"] = 'oie'
+        self.params_d["checkpoint"] = self.params_d["oie_model"]
+        self.params_d["mode"]l_str = 'bert-base-cased'
         mdl = ModelDataLoader(self.params_d)
         _, _, split_test_dataset, meta_data_vocab, _ = \
             mdl.get_ttt_datasets(predict_sentences=sentences)
@@ -342,15 +342,15 @@ class ModelConductor:  # formerly run.py
                              conj_word_mapping=conj_word_mapping,
                              all_sentences=all_sentences)
 
-        if 'labels' in self.params_d.type:
+        if 'labels' in self.params_d["type"]:
             label_lines = self.get_extags(model, sentences,
                                           orig_sentences,
                                           sentences_indices_list)
-            f = open(self.params_d.out + '.labels', 'w')
+            f = open(self.params_d["out"] + '.labels', 'w')
             f.write('\n'.join(label_lines))
             f.close()
 
-        if self.params_d.rescoring:
+        if self.params_d["rescoring"]:
             print()
             print("Starting re-scoring ...")
             print()
@@ -373,7 +373,7 @@ class ModelConductor:  # formerly run.py
             # testing rescoring
             inp_fp = model.predictions_f_allennlp
             rescored = self.rescore(inp_fp,
-                                    model_dir=self.params_d.rescore_model,
+                                    model_dir=self.params_d["rescore_model"],
                                     batch_size=256)
 
             all_predictions, sentence_str = [], ''
@@ -388,7 +388,7 @@ class ModelConductor:  # formerly run.py
                 if line_i in sentence_line_nums:
                     exts = sorted(exts, reverse=True,
                                   key=lambda x: float(x.split()[0][:-1]))
-                    exts = exts[:self.params_d.num_extractions]
+                    exts = exts[:self.params_d["num_extractions"]]
                     all_predictions.append(sentence_str + ''.join(exts))
                     sentence_str = f'{sentence}\n'
                     exts = []
@@ -412,7 +412,7 @@ class ModelConductor:  # formerly run.py
                                             confidence=math.exp(confidence))
                 extraction.arg1 = arg1
                 extraction.arg2 = arg2
-                if self.params_d.type == 'sentences':
+                if self.params_d["type"] == 'sentences':
                     ext_str = extraction.get_str() + '\n'
                 else:
                     ext_str = extraction.get_str() + '\n'
@@ -420,16 +420,16 @@ class ModelConductor:  # formerly run.py
 
             exts = sorted(exts, reverse=True,
                           key=lambda x: float(x.split()[0][:-1]))
-            exts = exts[:self.params_d.num_extractions]
+            exts = exts[:self.params_d["num_extractions"]]
             all_predictions.append(sentence_str + ''.join(exts))
 
             if line_i + 1 in no_extractions:
                 for no_extraction_sentence in no_extractions[line_i + 1]:
                     all_predictions.append(f'{no_extraction_sentence}\n')
 
-            if self.params_d.out != None:
-                print('Predictions written to ', self.params_d.out)
-                predictions_f = open(self.params_d.out, 'w')
+            if self.params_d["out"] != None:
+                print('Predictions written to ', self.params_d["out"])
+                predictions_f = open(self.params_d["out"], 'w')
                 predictions_f.write('\n'.join(all_predictions) + '\n')
                 predictions_f.close()
             return

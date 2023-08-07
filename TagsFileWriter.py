@@ -59,7 +59,7 @@ class TagsFileWriter:
         outputs = model.outputs
         idx1, idx2, idx3 = 0, 0, 0
         count = 0
-        prev_original_sentence = ''
+        prev_orig_sentence = ''
 
         for i in range(0, len(sentence_indices_list)):
             if len(sentence_indices_list[i]) == 0:
@@ -76,7 +76,7 @@ class TagsFileWriter:
                 sentence = outputs[idx1]['meta_data'][
                                idx2].strip() + ' [unused1] [unused2] [unused3]'
                 assert sentence == sentences[idx3]
-                original_sentence = orig_sentences[i]
+                orig_sentence = orig_sentences[i]
                 predictions = outputs[idx1]['predictions'][idx2]
 
                 all_extractions, all_str_labels, len_exts = [], [], []
@@ -84,7 +84,7 @@ class TagsFileWriter:
                     if prediction.sum().item() == 0:
                         break
 
-                    labels = [0] * len(original_sentence.strip().split())
+                    labels = [0] * len(orig_sentence.strip().split())
                     prediction = prediction[:len(sentence.split())].tolist()
                     for idx, value in enumerate(
                             sorted(sentence_indices_list[i][j])):
@@ -178,7 +178,7 @@ class TagsFileWriter:
         outputs = model.outputs
         idx1, idx2, idx3 = 0, 0, 0
         count = 0
-        prev_original_sentence = ''
+        prev_orig_sentence = ''
 
         for i in range(0, len(sentence_indices_list)):
             if len(sentence_indices_list[i]) == 0:
@@ -195,7 +195,7 @@ class TagsFileWriter:
                 sentence = outputs[idx1]['meta_data'][
                                idx2].strip() + ' [unused1] [unused2] [unused3]'
                 assert sentence == sentences[idx3]
-                original_sentence = orig_sentences[i]
+                orig_sentence = orig_sentences[i]
                 predictions = outputs[idx1]['predictions'][idx2]
 
                 all_extractions, all_str_labels, len_exts = [], [], []
@@ -203,7 +203,7 @@ class TagsFileWriter:
                     if prediction.sum().item() == 0:
                         break
 
-                    labels = [0] * len(original_sentence.strip().split())
+                    labels = [0] * len(orig_sentence.strip().split())
                     prediction = prediction[:len(sentence.split())].tolist()
                     for idx, value in enumerate(
                             sorted(sentence_indices_list[i][j])):

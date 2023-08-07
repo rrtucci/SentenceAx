@@ -139,30 +139,30 @@ hparams={
 
 parameters to set of possible values:
 {
-    "accumulate_grad_batches": (2, )
-    "batch_size": (24, 32, 16, )
-    "checkpoint": ("models/warmup_oie_model/epoch=13_eval_acc=0.544.ckpt", )
-    "conj_model": ("models/conj_model/epoch=28_eval_acc=0.854.ckpt", )
-    "constraints": ("posm_hvc_hvr_hve", )
-    "cweights": ("3_3_3_3", )
-    "epochs": (30, 16, 40, )
-    "gpus": (1, )
-    "gradient_clip_val": (1, )
-    "inp": ("carb/data/carb_sentences.txt", "sentences.txt", )
-    "iterative_layers": (2, )
-    "lr": ("2e-5", "5e-06", "2e-05", )
-    "mode": ("predict", "train_test", "splitpredict", "resume", "test", )
-    "model_str": ("bert-large-cased", "bert-base-cased", )
-    "multi_opt": (True, )
-    "num_extractions": (5, )
-    "oie_model": ("models/oie_model/epoch=14_eval_acc=0.551_v0.ckpt", )
-    "optimizer": ("adamW", "adam", )
-    "out": ("predictions.txt", "models/results/final", )
-    "rescore_model": ("models/rescore_model", )
-    "rescoring": (True, )
-    "save": ("models/warmup_oie_model", "models/oie_model", "models/conj_model", )
-    "save_k": (3, )
-    "task": ("conj", "oie", )
-    "val_check_interval": ("0.1", )
-    "wreg": (1, )
+    "accumulate_grad_batches": (2, ),
+    "batch_size": (32, 16, 24, ),
+    "checkpoint": ("models/warmup_oie_model/epoch=13_eval_acc=0.544.ckpt", ),
+    "conj_model": ("models/conj_model/epoch=28_eval_acc=0.854.ckpt", ),
+    "constraints": ("posm_hvc_hvr_hve", ),
+    "cweights": ("3_3_3_3", ),
+    "epochs": (30, 16, 40, ),
+    "gpus": (1, ),
+    "gradient_clip_val": (1, ),
+    "inp": ("carb/data/carb_sentences.txt", "sentences.txt", ),
+    "iterative_layers": (2, ),
+    "lr": ("2e-5", "2e-05", "5e-06", ),
+    "mode": ("train_test", "resume", "splitpredict", "test", "predict", ),
+    "model_str": ("bert-large-cased", "bert-base-cased", ),
+    "multi_opt": (True, ),
+    "num_extractions": (5, ),
+    "oie_model": ("models/oie_model/epoch=14_eval_acc=0.551_v0.ckpt", ),
+    "optimizer": ("adam", "adamW", ),
+    "out": ("predictions.txt", "models/results/final", ),
+    "rescore_model": ("models/rescore_model", ),
+    "rescoring": (True, ),
+    "save": ("models/oie_model", "models/conj_model", "models/warmup_oie_model", ),
+    "save_k": (3, ),
+    "task": ("conj", "oie", ),
+    "val_check_interval": ("0.1", ),
+    "wreg": (1, ),
 }

@@ -88,7 +88,7 @@ elif TASK == "ex" and MODE == "train_test":
         "epochs": 30,
         "gpus": 1,
         "iterative_layers": 2,
-        "lr": "2e-05",
+        "lr": 2E-5,
         "mode": "train_test",
         "model_str": "bert-base-cased",
         "optimizer": "adamW",
@@ -122,6 +122,9 @@ elif TASK == "ex" and MODE == "predict":
 ### Constrained Model
 # Training
 elif TASK == "ex" and MODE == "resume":
+    # error in openie6 paper
+    #         "lr": 5e-6, and "lr: 2e-5
+    
     PARAMS_D = none_dd({
         "accumulate_grad_batches": 2,
         "batch_size": 16,
@@ -132,8 +135,7 @@ elif TASK == "ex" and MODE == "resume":
         "gpus": 1,
         "gradient_clip_val": 1,
         "iterative_layers": 2,
-        "lr": "2e-5",
-        "lr": "5e-06",
+        "lr": 2E-5,
         "mode": "resume",
         "model_str": "bert-base-cased",
         "multi_opt": True,
@@ -141,7 +143,7 @@ elif TASK == "ex" and MODE == "resume":
         "save": "models/oie_model",
         "save_k": 3,
         "task": "ex",
-        "val_check_interval": "0.1",
+        "val_check_interval": 0.1,
         "wreg": 1
     })
 # Testing
@@ -174,7 +176,7 @@ elif TASK == "cc" and MODE == "train_test":
         "epochs": 40,
         "gpus": 1,
         "iterative_layers": 2,
-        "lr": "2e-05",
+        "lr": 2E-5,
         "mode": "train_test",
         "model_str": "bert-large-cased",
         "optimizer": "adamW",
@@ -213,7 +215,7 @@ elif TASK == "custom1":
     #     "gradient_clip_val": (1,)
     #     "inp": ("carb/data/carb_sentences.txt", "sentences.txt",)
     #     "iterative_layers": (2,)
-    #     "lr": ("2e-5", "5e-06", "2e-05",)
+    #     "lr": (2E-5, 5e-06,)
     #     "mode": ("predict", "train_test", "splitpredict", "resume", "test",)
     #     "model_str": ("bert-large-cased", "bert-base-cased",)
     #     "multi_opt": (True,)
@@ -227,7 +229,7 @@ elif TASK == "custom1":
     #     "models/warmup_oie_model", "models/oie_model", "models/conj_model",)
     #     "save_k": (3,)
     #     "task": ("conj", "oie",)
-    #     "val_check_interval": ("0.1",)
+    #     "val_check_interval": (0.1,)
     #     "wreg": (1,)
     # }
 

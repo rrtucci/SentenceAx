@@ -28,6 +28,25 @@ UNUSED_TOKENS = ["[unused1]", "[unused2]", "[unused3]"]
 UNUSED_TOKENS_STR = " " + " ".join(UNUSED_TOKENS)
 # NUM_EMBEDDINGS = 100
 
+EXTAG_TO_ILABEL = {'NONE': 0, 'ARG1': 1, 'REL': 2, 'ARG2': 3,
+                   'LOC': 4, 'TIME': 4, 'TYPE': 5, 'ARGS': 3}
+
+CCTAG_TO_ILABEL = {'NONE': 0, 'CP': 1, 'CP_START': 2,
+                   'CC': 3, 'SEP': 4, 'OTHERS': 5, }
+
+LIGHT_VERBS = [
+    "take", "have", "give", "do", "make", "has", "have",
+    "be", "is", "were", "are", "was", "had", "being",
+    "began", "am", "following", "having", "do",
+    "does", "did", "started", "been", "became",
+    "left", "help", "helped", "get", "keep",
+    "think", "got", "gets", "include", "suggest",
+    "used", "see", "consider", "means", "try",
+    "start", "included", "lets", "say", "continued",
+    "go", "includes", "becomes", "begins", "keeps",
+    "begin", "starts", "said", "stop", "begin",
+    "start", "continue", "say"]
+
 # I use "ex" instead of "oie" for task
 # I use "cc" instead of "conj" for task
 
@@ -46,7 +65,7 @@ print("TASK= " + TASK)
 ## Running Model
 
 if TASK == "ex" and MODE == "splitpredict":
-    PARAMS_D = {
+    PARAMS_D = none_dd({
         "conj_model": "models/conj_model/epoch=28_eval_acc=0.854.ckpt",
         "gpus": 1,
         "inp": "sentences.txt",
@@ -57,13 +76,14 @@ if TASK == "ex" and MODE == "splitpredict":
         "rescore_model": "models/rescore_model",
         "rescoring": True,
         "task": "ex"
-    }
+    })
+
 ## Training Model
 
 ### Warmup Model
 # Training:
 elif TASK == "ex" and MODE == "train_test":
-    PARAMS_D = {
+    PARAMS_D = none_dd({
         "batch_size": 24,
         "epochs": 30,
         "gpus": 1,
@@ -74,21 +94,22 @@ elif TASK == "ex" and MODE == "train_test":
         "optimizer": "adamW",
         "save": "models/warmup_oie_model",
         "task": "ex"
-    }
+    })
+    
 # Testing:
 elif TASK == "ex" and MODE == "test":
-    PARAMS_D = {
+    PARAMS_D = none_dd({
         "batch_size": 24,
         "gpus": 1,
         "mode": "test",
         "model_str": "bert-base-cased",
         "save": "models/warmup_oie_model",
         "task": "ex"
-    }
+    })
 
 # Predicting
 elif TASK == "ex" and MODE == "predict":
-    PARAMS_D = {
+    PARAMS_D = none_dd({
         "gpus": 1,
         "inp": "sentences.txt",
         "mode": "predict",
@@ -96,11 +117,12 @@ elif TASK == "ex" and MODE == "predict":
         "out": "predictions.txt",
         "save": "models/warmup_oie_model",
         "task": "ex"
-    }
+    })
+
 ### Constrained Model
 # Training
 elif TASK == "ex" and MODE == "resume":
-    PARAMS_D = {
+    PARAMS_D = none_dd({
         "accumulate_grad_batches": 2,
         "batch_size": 16,
         "checkpoint": "models/warmup_oie_model/epoch=13_eval_acc=0.544.ckpt",
@@ -121,20 +143,21 @@ elif TASK == "ex" and MODE == "resume":
         "task": "ex",
         "val_check_interval": "0.1",
         "wreg": 1
-    }
+    })
 # Testing
 elif TASK == "ex" and MODE == "test":
-    PARAMS_D = {
+    PARAMS_D = none_dd({
         "batch_size": 16,
         "gpus": 1,
         "mode": "test",
         "model_str": "bert-base-cased",
         "save": "models/oie_model",
         "task": "ex"
-    }
+    })
+
 # Predicting
 elif TASK == "ex" and MODE == "predict":
-    PARAMS_D = {
+    PARAMS_D = none_dd({
         "gpus": 1,
         "inp": "sentences.txt",
         "mode": "predict",
@@ -142,10 +165,11 @@ elif TASK == "ex" and MODE == "predict":
         "out": "predictions.txt",
         "save": "models/oie_model",
         "task": "ex"
-    }
+    })
+
 ### Running CCNode Analysis
 elif TASK == "cc" and MODE == "train_test":
-    PARAMS_D = {
+    PARAMS_D = none_dd({
         "batch_size": 32,
         "epochs": 40,
         "gpus": 1,
@@ -156,13 +180,13 @@ elif TASK == "cc" and MODE == "train_test":
         "optimizer": "adamW",
         "save": "models/conj_model",
         "task": "cc"
-    }
+    })
 
 ### Final Model
 
 # Running
 elif TASK == "ex" and MODE == "splipredict":
-    PARAMS_D = {
+    PARAMS_D = none_dd({
         "conj_model": "models/conj_model/epoch=28_eval_acc=0.854.ckpt",
         "gpus": 1,
         "inp": "carb/data/carb_sentences.txt",
@@ -173,7 +197,7 @@ elif TASK == "ex" and MODE == "splipredict":
         "rescore_model": "models/rescore_model",
         "rescoring": True,
         "task": "ex"
-    }
+    })
 elif TASK == "custom1":
 
     # parameters to set of possible values:
@@ -263,22 +287,5 @@ elif TASK == "custom1":
     # default values by pytorch lightning.
     PARAMS_D = {key: value for key, value in PARAMS_D_LONG.items()
                if value is not None}
+    PARAMS_D = none_dd(PARAMS_D)
 
-    EXTAG_TO_ILABEL = {'NONE': 0, 'ARG1': 1, 'REL': 2, 'ARG2': 3,
-                  'LOC': 4, 'TIME': 4, 'TYPE': 5, 'ARGS': 3}
-
-    CCTAG_TO_ILABEL = {'NONE': 0, 'CP': 1, 'CP_START': 2,
-                  'CC': 3, 'SEP': 4, 'OTHERS': 5, }
-
-    LIGHT_VERBS = [
-        "take", "have", "give", "do", "make", "has", "have",
-        "be", "is", "were", "are", "was", "had", "being",
-        "began", "am", "following", "having", "do",
-        "does", "did", "started", "been", "became",
-        "left", "help", "helped", "get", "keep",
-        "think", "got", "gets", "include", "suggest",
-        "used", "see", "consider", "means", "try",
-        "start", "included", "lets", "say", "continued",
-        "go", "includes", "becomes", "begins", "keeps",
-        "begin", "starts", "said", "stop", "begin",
-        "start", "continue", "say"]

@@ -1,4 +1,5 @@
 import difflib
+from collections import defaultdict
 
 class ClassFromDict(dict):
     """
@@ -96,7 +97,9 @@ def find_xlist_item_that_minimizes_cost_fun(xlist, cost_fun):
 
     return x0, y0
 
-
+def none_dd(di):
+    # dd = default dictionary
+    return defaultdict(lambda: None, di)
 
 if __name__ == "__main__":
     def main():

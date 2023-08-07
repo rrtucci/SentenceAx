@@ -80,23 +80,20 @@ class ModelDataLoader:
         verb_mask.append(0)
         return verb_mask, verb_indices, verb_words
 
-    def pad_data(self, data):
+    def pad_data(self, example_ds):
 
-        # old pad_data() uses spacy to find pad_id
-
-        # model_str = 'bert-base-cased'
-        # do_lower_case = True
-        # self.auto_tokenizer = AutoTokenizer.from_pretrained(
-        #     model_str,
-        #     do_lower_case=do_lower_case)
-        # pad_id = self.auto_tokenizer.convert_tokens_to_ids(
-        #     self.auto_tokenizer.pad_token)
+        # example_d = {
+        #     'text': input_ids,
+        #     'labels': ilabels_for_each_ex[:MAX_EXTRACTION_LENGTH],
+        #     'word_starts': word_starts,
+        #     'meta_data': orig_sent
+        # }
 
         pad_id = self.auto_tokenizer.convert_tokens_to_ids(
             self.auto_tokenizer.pad_token)
 
         max_text_len = -1
-        texts = [d['text'] for d in data]
+        texts = [example_d['text'] for example_d in example_ds]
         for t in texts:
             if len(t) > max_text_len:
                 max_text_len = len(t)
@@ -106,7 +103,8 @@ class ModelDataLoader:
             padded_t = t.copy() + [pad_id] * num_pad_id
             padded_texts.append(padded_t)
 
-        labels = [d['labels'] for d in data]
+        labels = [example_d['labels'] for example_d in example_ds]
+        #labels = ilabels_for_each_ex
         max_depth = 5
         for i in range(len(labels)):
             pad_depth = max_depth - len(labels[i])
@@ -127,7 +125,7 @@ class ModelDataLoader:
             padded_labels.append(new_label)
 
         max_ws_len = -1
-        ws = [d['word_starts'] for d in data]
+        ws = [example_d['word_starts'] for example_d in example_ds]
         for w in ws:
             if (len(w) > max_ws_len):
                 max_ws_len = len(w)
@@ -137,7 +135,8 @@ class ModelDataLoader:
             padded_w = w.copy() + [0] * num_pad_id
             padded_word_starts.append(padded_w)
 
-        padded_meta_data = [d['meta_data'] for d in data]
+        padded_meta_data = [example_d['meta_data'] for
+                            example_d in example_ds]
 
         padded_texts = torch.tensor(padded_texts)
         padded_labels = torch.tensor(padded_labels)
@@ -148,39 +147,6 @@ class ModelDataLoader:
                          'labels': padded_labels,
                          'word_starts': padded_word_starts,
                          'meta_data': padded_meta_data}
-
-        # fields = data[0][-1]
-        # TEXT = fields['text'][1]
-        # text_list = [ex[2].text for ex in data]
-        # padded_text = torch.tensor(TEXT.pad(text_list))
-        #
-        # LABELS = fields['labels'][1]
-        # labels_list = [ex[2].labels for ex in data]
-        # # max_depth = max([len(l) for l in labels_list])
-        # max_depth = 5
-        # for i in range(len(labels_list)):
-        #     pad_depth = max_depth - len(labels_list[i])
-        #     num_words = len(labels_list[i][0])
-        #     # print(num_words, pad_depth)
-        #     labels_list[i] = labels_list[i] + [[0]*num_words]*pad_depth
-        # # print(labels_list)
-        # padded_labels = torch.tensor(LABELS.pad(labels_list))
-        #
-        # WORD_STARTS = fields['word_starts'][1]
-        # word_starts_list = [ex[2].word_starts for ex in data]
-        # padded_word_starts = \
-        #     torch.tensor(WORD_STARTS.pad(
-        # word_starts_list))
-        #
-        # META_DATA = fields['meta_data'][1]
-        # meta_data_list = [META_DATA.vocab.stoi[ex[2].meta_data] for \
-        #     ex in data]
-        # padded_meta_data = torch.tensor(META_DATA.pad(meta_data_list))
-        #
-        # padded_data_d = {'text': padded_texts,
-        #                  'labels': padded_labels,
-        #                  'word_starts': padded_word_starts,
-        #                  'meta_data': padded_meta_data}
 
         return padded_data_d
 
@@ -220,7 +186,8 @@ class ModelDataLoader:
             line = line.strip()
             if '[used' in line:  # it's the  beginning of an example
                 sent_plus = line
-                encoding = self.auto_tokenizer.batch_encode_plus(sent_plus.split())
+                encoding = self.auto_tokenizer.batch_encode_plus(
+                    sent_plus.split())
                 input_ids = [BOS_TOKEN_ID]
                 word_starts = []
                 for ids in encoding['input_ids']:
@@ -289,8 +256,7 @@ class ModelDataLoader:
         #     example = tt.data.Example.fromdict(example_d, fields)
         #     examples.append(example)
         # return examples, orig_sents
-        examples = example_ds
-        return examples, orig_sents
+        return example_ds, orig_sents
 
     def get_ttt_datasets(self, predict_sentences=None):
         # formerly process_data()
@@ -400,7 +366,8 @@ class ModelDataLoader:
             else:
                 train_examples = pickle.load(open(cached_train_fp, 'rb'))
 
-            if not os.path.exists(cached_dev_fp) or self.params_d["build_cache"]:
+            if not os.path.exists(cached_dev_fp) or \
+                    self.params_d["build_cache"]:
                 dev_examples, _ = self.get_examples(dev_fp,
                                                     tag_to_ilabel,
                                                     spacy_model)
@@ -408,7 +375,8 @@ class ModelDataLoader:
             else:
                 dev_examples = pickle.load(open(cached_dev_fp, 'rb'))
 
-            if not os.path.exists(cached_test_fp) or self.params_d["build_cache"]:
+            if not os.path.exists(cached_test_fp) or self.params_d[
+                "build_cache"]:
                 test_examples, _ = self.get_examples(test_fp,
                                                      tag_to_ilabel,
                                                      spacy_model)

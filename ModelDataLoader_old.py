@@ -74,16 +74,16 @@ class ModelDataLoader:
 
 
     @staticmethod
-    def pad_data(data):
+    def pad_data(examples):
         padded_data_d = {}
 
-        fields = data[0][-1]
+        fields = examples[0][-1]
         TEXT = fields['text'][1]
-        text_list = [example[2].text for example in data]
+        text_list = [example[2].text for example in examples]
         padded_data_d['text'] = torch.tensor(TEXT.pad(text_list))
 
         LABELS = fields['labels'][1]
-        labels_list = [example[2].labels for example in data]
+        labels_list = [example[2].labels for example in examples]
         # max_depth = max([len(l) for l in labels_list])
         max_depth = 5
         for i in range(len(labels_list)):
@@ -95,13 +95,13 @@ class ModelDataLoader:
         padded_data_d['labels'] = torch.tensor(LABELS.pad(labels_list))
 
         WORD_STARTS = fields['word_starts'][1]
-        word_starts_list = [example[2].word_starts for example in data]
+        word_starts_list = [example[2].word_starts for example in examples]
         padded_data_d['word_starts'] = \
             torch.tensor(WORD_STARTS.pad(word_starts_list))
 
         META_DATA = fields['meta_data'][1]
         meta_data_list = [META_DATA.vocab.stoi[example[2].meta_data]
-                          for example in data]
+                          for example in examples]
         padded_data_d['meta_data'] = \
             torch.tensor(META_DATA.pad(meta_data_list))
 
@@ -113,23 +113,23 @@ class ModelDataLoader:
 
         if 'pos' in fields:
             POS = fields['pos'][1]
-            pos_list = [example[2].pos for example in data]
+            pos_list = [example[2].pos for example in examples]
             padded_pos = torch.tensor(POS.pad(pos_list))
             padded_data_d['pos'] = padded_pos
 
             POS_INDEX = fields['pos_index'][1]
-            pos_index_list = [example[2].pos_index for example in data]
+            pos_index_list = [example[2].pos_index for example in examples]
             padded_pos_index = torch.tensor(POS_INDEX.pad(pos_index_list))
             padded_data_d['pos_index'] = padded_pos_index
 
         if 'verb' in fields:
             VERB = fields['verb'][1]
-            verb_list = [example[2].verb for example in data]
+            verb_list = [example[2].verb for example in examples]
             padded_verb = torch.tensor(VERB.pad(verb_list))
             padded_data_d['verb'] = padded_verb
 
             VERB_INDEX = fields['verb_index'][1]
-            verb_index_list = [example[2].verb_index for example in data]
+            verb_index_list = [example[2].verb_index for example in examples]
             padded_verb_index = torch.tensor(VERB_INDEX.pad(verb_index_list))
             padded_data_d['verb_index'] = padded_verb_index
 
@@ -249,9 +249,9 @@ class ModelDataLoader:
         dev_fp = self.params_d["dev_fp"]
         test_fp = self.params_d["test_fp"]
 
-        do_lower_case = 'uncased' in self.params_d["mode"]l_str
+        do_lower_case = 'uncased' in self.params_d["model_str"]
         auto_tokenizer = AutoTokenizer.from_pretrained(
-            self.params_d["mode"]l_str,
+            self.params_d["model_str"],
             do_lower_case=do_lower_case,
             use_fast=True,
             data_dir='data/pretrained_cache',
@@ -300,7 +300,7 @@ class ModelDataLoader:
         else:
             assert False
 
-        model_str = self.params_d["mode"]l_str.replace("/", "_")
+        model_str = self.params_d["model_str"].replace("/", "_")
         cached_train_fp = f'{train_fp}.{model_str}.pkl'
         cached_dev_fp = f'{dev_fp}.{model_str}.pkl'
         cached_test_fp = f'{test_fp}.{model_str}.pkl'

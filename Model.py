@@ -115,7 +115,6 @@ class Model(pl.LightningModule):
 
         self._metric = CarbExMetric(params_d) \
             if params_d["task"] == "ex" else CCMetric()
-        self.max_depth = 5 if params_d["task"] == "ex" else 3
 
         self.constraints_d = dict()
 
@@ -172,9 +171,13 @@ class Model(pl.LightningModule):
             self.init_params_d = copy.deepcopy(
                 dict(self.named_parameters()))
 
+        # remember: labels = li_li_li_label
+        # first (outer) list over batch events
+        # second list over extractions
+        # third (inner) list over number of ilabels in a line
         batch_size, depth, labels_length = batch_d["labels"].shape
         if mode != 'train':
-            depth = self.max_depth
+            depth = MAX_DEPTH
 
         hidden_states, _ = self.base_model(batch_d["text"])
         output_d = dict()
@@ -237,7 +240,10 @@ class Model(pl.LightningModule):
                 word_log_probs = torch.log_softmax(word_scores, dim=2)
                 max_log_probs, predictions = \
                     torch.max(word_log_probs, dim=2)
-
+                # remember: labels = li_li_li_label
+                # first (outer) list over batch events
+                # second list over extractions
+                # third (inner) list over number of ilabels in a line
                 padding_labels = (batch_d["labels"][:, 0, :] != -100).float()
 
                 sro_label_predictions = \

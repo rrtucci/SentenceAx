@@ -4,6 +4,8 @@ from transformers import AutoTokenizer
 import spacy
 import torch
 from torch.utils.data import DataLoader
+from torch.nn.utils.rnn import pad_sequence
+
 import pickle
 import os
 # use of
@@ -12,9 +14,17 @@ import os
 # tt.Dataset
 # are deprecated
 import torchtext as tt
+import nltk
 
 
 class ModelDataLoader:
+    """
+    Classes Example and Field from tt were used in the Openie6 code,
+    but they are now deprecated, so they are not used Mappa Mundi. Here is
+    link explaining a migration route ot of them.
+
+    https://colab.research.google.com/github/pytorch/text/blob/master/examples/legacy_tutorial/migration_tutorial.ipynb#scrollTo=kBV-Wvlo07ye
+    """
 
     def __init__(self, params_d):
 
@@ -27,6 +37,8 @@ class ModelDataLoader:
             data_dir='data/pretrained_cache',
             add_special_tokens=False,
             additional_special_tokens=UNUSED_TOKENS)
+
+        self.spacy_model = None
 
     @staticmethod
     def remerge_sent(tokens):
@@ -78,79 +90,63 @@ class ModelDataLoader:
         verb_mask.append(0)
         verb_mask.append(0)
         verb_mask.append(0)
-        return verb_mask, verb_indices, verb_words
+        return verb_mask, verb_indices,
 
-    def pad_data(self, example_ds):
-
+    def pad_data(self, l_example_d):
+        # data_in = l_example_d
         # example_d = {
-        #     'text': input_ids,
-        #     'labels': ilabels_for_each_ex[:MAX_EXTRACTION_LENGTH],
+        #     'sent_plus_ids': sent_plus_ids,
+        #     'l_ilabels': ilabels_for_each_ex[:MAX_EXTRACTION_LENGTH],
         #     'word_starts': word_starts,
-        #     'meta_data': orig_sent
+        #     'meta_data': orig_sent,
+        #     # if spacy_model:
+        #     'pos_mask': pos_mask,
+        #     'pos_indices': pos_indices,
+        #     'verb_mask': verb_mask,
+        #     'verb_indices': verb_indices
         # }
-
         pad_id = self.auto_tokenizer.convert_tokens_to_ids(
             self.auto_tokenizer.pad_token)
 
-        max_text_len = -1
-        texts = [example_d['text'] for example_d in example_ds]
-        for t in texts:
-            if len(t) > max_text_len:
-                max_text_len = len(t)
-        padded_texts = []
-        for t in texts:
-            num_pad_id = max_text_len - len(t)
-            padded_t = t.copy() + [pad_id] * num_pad_id
-            padded_texts.append(padded_t)
+        l_sent_plus_ids = [example_d['sent_plus_ids'] for example_d in
+                           l_example_d]
+        padded_l_sent_plus_ids = get_padded_list(l_sent_plus_ids, pad_id)
 
-        labels = [example_d['labels'] for example_d in example_ds]
-        #labels = ilabels_for_each_ex
-        max_depth = 5
-        for i in range(len(labels)):
-            pad_depth = max_depth - len(labels[i])
-            num_words = len(labels[i][0])
-            labels[i] = labels[i] + [[0] * num_words] * pad_depth
+        ll_ilabels = [example_d['l_ilabels'] for example_d in l_example_d]
+        padded_ll_ilabels = get_padded_list_list(ll_ilabels,
+                                                 pad_id0=0,
+                                                 pad_id1=-100,
+                                                 max_outer_dim=MAX_DEPTH)
 
-        max_label_len = -1
-        for label in labels:
-            if (len(label[0]) > max_label_len):
-                max_label_len = len(label[0])
-        padded_labels = []
-        for label in labels:
-            new_label = []
-            for sub_label in label:
-                num_pad_id = max_label_len - len(sub_label)
-                padded_sub_label = sub_label.copy() + [-100] * num_pad_id
-                new_label.append(padded_sub_label)
-            padded_labels.append(new_label)
+        l_word_starts = [example_d['word_starts'] for example_d in l_example_d]
+        padded_l_word_starts = get_padded_list(l_word_starts, 0)
 
-        max_ws_len = -1
-        ws = [example_d['word_starts'] for example_d in example_ds]
-        for w in ws:
-            if (len(w) > max_ws_len):
-                max_ws_len = len(w)
-        padded_word_starts = []
-        for w in ws:
-            num_pad_id = max_ws_len - len(w)
-            padded_w = w.copy() + [0] * num_pad_id
-            padded_word_starts.append(padded_w)
+        # meta_data not padded
+        l_meta_data = [example_d['meta_data'] for
+                       example_d in l_example_d]
 
-        padded_meta_data = [example_d['meta_data'] for
-                            example_d in example_ds]
+        padded_l_sent_plus_ids = torch.tensor(padded_l_sent_plus_ids)
+        padded_ll_ilabels = torch.tensor(padded_ll_ilabels)
+        padded_l_word_starts = torch.tensor(padded_l_word_starts)
 
-        padded_texts = torch.tensor(padded_texts)
-        padded_labels = torch.tensor(padded_labels)
-        padded_word_starts = torch.tensor(padded_word_starts)
-        # padded_meta_data=torch.tensor(padded_meta_data)
+        data_out = {'l_sent_plus_ids': padded_l_sent_plus_ids,
+                       'll_ilabels': padded_ll_ilabels,
+                       'l_word_starts': padded_l_word_starts,
+                       'l_meta_data': l_meta_data}
 
-        padded_data_d = {'text': padded_texts,
-                         'labels': padded_labels,
-                         'word_starts': padded_word_starts,
-                         'meta_data': padded_meta_data}
+        if self.spacy_model:
+            names = ["pos_mask", "pos_indices", "verb_mask", "verb_indices"]
+            for i in range(len(names)):
+                l = [example_d[names[i]] for example_d in
+                     l_example_d]
+                padded_l = get_padded_list(l, pad_id=0)
+                data_out[names[i]] = torch.tensor(padded_l)
 
-        return padded_data_d
+        # data_in was a list of dictionaries
+        # data_out is a dictionary
+        return data_out
 
-    def get_examples(self, inp_fp, tag_to_ilabel, spacy_model=None):
+    def get_examples(self, inp_fp, tag_to_ilabel):
         # formerly _process_data()
         """
         this reads a file of the form
@@ -172,7 +168,7 @@ class ModelDataLoader:
         """
 
         examples = []  # list[example]
-        example_ds = []  # list[example_d]
+        l_example_d = []  # list[example_d]
         ilabels_for_each_ex = []  # a list of a list of ilabels, list[list[in]]
         orig_sents = []
 
@@ -188,15 +184,15 @@ class ModelDataLoader:
                 sent_plus = line
                 encoding = self.auto_tokenizer.batch_encode_plus(
                     sent_plus.split())
-                input_ids = [BOS_TOKEN_ID]
+                sent_plus_ids = [BOS_TOKEN_ID]
                 word_starts = []
                 for ids in encoding['input_ids']:
                     # special spacy tokens like \x9c have zero length
                     if len(ids) == 0:
                         ids = [100]
-                    word_starts.append(len(input_ids))
-                    input_ids += ids  # same as input_ids.extend(ids)
-                input_ids.append(EOS_TOKEN_ID)
+                    word_starts.append(len(sent_plus_ids))
+                    sent_plus_ids += ids  # same as sent_plus_ids.extend(ids)
+                sent_plus_ids.append(EOS_TOKEN_ID)
 
                 orig_sent = sent_plus.split('[unused1]')[0].strip()
                 orig_sents.append(orig_sent)
@@ -215,13 +211,13 @@ class ModelDataLoader:
                 # note that if li=[2,3]
                 # then li[:100] = [2,3]
                 example_d = {
-                    'text': input_ids,
-                    'labels': ilabels_for_each_ex[:MAX_EXTRACTION_LENGTH],
+                    'sent_plus_ids': sent_plus_ids,
+                    'l_ilabels': ilabels_for_each_ex[:MAX_EXTRACTION_LENGTH],
                     'word_starts': word_starts,
                     'meta_data': orig_sent
                 }
                 if len(sent_plus.split()) <= 100:
-                    example_ds.append(example_d)
+                    l_example_d.append(example_d)
                 ilabels_for_each_ex = []
                 prev_line = line
 
@@ -230,33 +226,46 @@ class ModelDataLoader:
 
         # so far, we haven't assumed any spacy derived data nanalysis
         # if spacy is allowed, the example_d can carry more info.
-        if spacy_model != None:
-            sents = [example_d['meta_data'] for example_d in example_ds]
+        if self.spacy_model:
+            sents = [example_d['meta_data'] for example_d in l_example_d]
             for sent_index, spacy_tokens in enumerate(
-                    spacy_model.pipe(sents, batch_size=10000)):
+                    self.spacy_model.pipe(sents, batch_size=10000)):
                 spacy_tokens = ModelDataLoader.remerge_sent(spacy_tokens)
                 assert len(sents[sent_index].split()) == len(
                     spacy_tokens)
-                example_d = example_ds[sent_index]
+                example_d = l_example_d[sent_index]
 
-                pos, pos_indices, pos_words = \
+                pos_mask, pos_indices, pos_words = \
                     ModelDataLoader.pos_mask(spacy_tokens)
-                example_d['pos_index'] = pos_indices
-                example_d['pos'] = pos
+                example_d['pos_mask'] = pos_mask
+                example_d['pos_indices'] = pos_indices
+
                 verb_mask, verb_indices, verb_words = \
                     ModelDataLoader.verb_mask(spacy_tokens)
+                example_d['verb_mask'] = verb_mask
                 if len(verb_indices) != 0:
-                    example_d['verb_index'] = verb_indices
+                    example_d['verb_indices'] = verb_indices
                 else:
-                    example_d['verb_index'] = [0]
-                example_d['verb'] = verb_mask
+                    example_d['verb_indices'] = [0]
+
+        # example_d = {
+        #     'sent_plus_ids': sent_plus_ids,
+        #     'l_ilabels': ilabels_for_each_ex[:MAX_EXTRACTION_LENGTH],
+        #     'word_starts': word_starts,
+        #     'meta_data': orig_sent,
+        #     # if spacy_model:
+        #     'pos_mask': pos_mask,
+        #     'pos_indices': pos_indices,
+        #     'verb_mask': verb_mask,
+        #     'verb_indices': verb_indices
+        # }
 
         # use of tt.Example is deprecated
-        # for example_d in example_ds:
+        # for example_d in l_example_d:
         #     example = tt.data.Example.fromdict(example_d, fields)
         #     examples.append(example)
         # return examples, orig_sents
-        return example_ds, orig_sents
+        return l_example_d, orig_sents
 
     def get_ttt_datasets(self, predict_sentences=None):
         # formerly process_data()
@@ -275,7 +284,8 @@ class ModelDataLoader:
         POS = tt.data.Field(use_vocab=False, batch_first=True, pad_token=0)
         POS_INDEX = tt.data.Field(use_vocab=False, batch_first=True,
                                   pad_token=0)
-        VERB = tt.data.Field(use_vocab=False, batch_first=True, pad_token=0)
+        VERB = tt.data.Field(use_vocab=False, batch_first=True,
+                             pad_token=0)
         VERB_INDEX = tt.data.Field(use_vocab=False, batch_first=True,
                                    pad_token=0)
         META_DATA = tt.data.Field(sequential=False)
@@ -326,17 +336,17 @@ class ModelDataLoader:
 
                     # tokenized_line = line.split()
 
-                    # Why use both nltk and spacy to word tokenize
+                    # Why use both nltk and spacy to word tokenize.
                     # get_ttt_datasets() uses nltk.word_tokenize()
                     # get_examples() uses spacy_model.pipe(sents...)
-                    # get_examples() uses transformers.AutoTokenizer
 
                     tokenized_line = ' '.join(nltk.word_tokenize(line))
                     predict_sentences.append(
                         tokenized_line + UNUSED_TOKENS_STR)
                     predict_sentences.append('\n')
 
-            # this use of get_examples() is wrong
+            # openie 6 is wrong here. Uses wrong arguments for
+            # process_data() which is get_examples() for us.
             # get_examples()
             # returns: examples, orig_sents
             predict_examples, orig_sents = \

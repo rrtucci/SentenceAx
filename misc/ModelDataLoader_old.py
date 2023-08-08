@@ -2,6 +2,7 @@ from sax_globals import *
 from allen_tool import *
 from transformers import AutoTokenizer
 import spacy
+import nltk
 import torch
 from torch.utils.data import DataLoader
 import pickle
@@ -85,9 +86,9 @@ class ModelDataLoader:
         LABELS = fields['labels'][1]
         labels_list = [example[2].labels for example in examples]
         # max_depth = max([len(l) for l in labels_list])
-        max_depth = 5
+
         for i in range(len(labels_list)):
-            pad_depth = max_depth - len(labels_list[i])
+            pad_depth = MAX_DEPTH - len(labels_list[i])
             num_words = len(labels_list[i][0])
             # print(num_words, pad_depth)
             labels_list[i] = labels_list[i] + [[0] * num_words] * pad_depth
@@ -158,7 +159,7 @@ class ModelDataLoader:
         """
 
         examples = []  # list[example]
-        example_ds = []  # list[example_d]
+        l_example_d = []  # list[example_d]
         ilabels_for_each_ex = []  # a list of a list of ilabels, list[list[in]]
         orig_sents = []
 
@@ -206,7 +207,7 @@ class ModelDataLoader:
                     'meta_data': orig_sent
                 }
                 if len(sent_plus.split()) <= 100:
-                    example_ds.append(example_d)
+                    l_example_d.append(example_d)
                 ilabels_for_each_ex = []
                 prev_line = line
 
@@ -216,13 +217,13 @@ class ModelDataLoader:
         # so far, we haven't assumed any spacy derived data nanalysis
         # if spacy is allowed, the example_d can carry more info.
         if spacy_model != None:
-            sents = [example_d['meta_data'] for example_d in example_ds]
+            sents = [example_d['meta_data'] for example_d in l_example_d]
             for sent_index, spacy_tokens in enumerate(
                     spacy_model.pipe(sents, batch_size=10000)):
                 spacy_tokens = ModelDataLoader.remerge_sent(spacy_tokens)
                 assert len(sents[sent_index].split()) == len(
                     spacy_tokens)
-                example_d = example_ds[sent_index]
+                example_d = l_example_d[sent_index]
 
                 pos, pos_indices, pos_words = \
                     ModelDataLoader.pos_mask(spacy_tokens)
@@ -237,7 +238,7 @@ class ModelDataLoader:
                 example_d['verb'] = verb_mask
 
         # use of tt.Example is deprecated
-        for example_d in example_ds:
+        for example_d in l_example_d:
             example = tt.data.Example.fromdict(example_d, fields)
             examples.append(example)
         return examples, orig_sents
@@ -254,7 +255,7 @@ class ModelDataLoader:
             self.params_d["model_str"],
             do_lower_case=do_lower_case,
             use_fast=True,
-            data_dir='data/pretrained_cache',
+            data_dir='../data/pretrained_cache',
             add_special_tokens=False,
             additional_special_tokens=UNUSED_TOKENS)
 
@@ -305,11 +306,14 @@ class ModelDataLoader:
         if 'predict' in self.params_d["mode"]:
             # no caching used in predict mode
             if predict_sentences == None:  # predict
-                if self.params_d["inp"] != None:
-                    predict_fp = open(self.params_d["inp"], 'r')
+                if self.params_d["inp"]:
+                    predict_fp = self.params_d["inp"]
+                elif self.params_d["predict_fp"]:
+                    predict_fp = self.params_d["predict_fp"]
                 else:
-                    predict_fp = open(self.params_d["predict_fp"], 'r')
-                predict_lines = predict_fp.readlines()
+                    assert False
+                with open(predict_fp, "r") as f:
+                    predict_lines = f.readlines()
                 fullstops = []
                 predict_sentences = []
                 for line in predict_lines:
@@ -330,7 +334,8 @@ class ModelDataLoader:
                         tokenized_line + UNUSED_TOKENS_STR)
                     predict_sentences.append('\n')
 
-            # this use of get_examples() is wrong
+            # openie 6 is wrong here. Uses wrong arguments for
+            # process_data() which is get_examples() for us.
             # get_examples()
             # returns: examples, orig_sents
             predict_examples, orig_sents = \
@@ -364,7 +369,8 @@ class ModelDataLoader:
             else:
                 train_examples = pickle.load(open(cached_train_fp, 'rb'))
 
-            if not os.path.exists(cached_dev_fp) or self.params_d["build_cache"]:
+            if not os.path.exists(cached_dev_fp) or\
+                    self.params_d["build_cache"]:
                 dev_examples, _ = self.get_examples(dev_fp,
                                                     fields,
                                                     auto_tokenizer,
@@ -374,7 +380,8 @@ class ModelDataLoader:
             else:
                 dev_examples = pickle.load(open(cached_dev_fp, 'rb'))
 
-            if not os.path.exists(cached_test_fp) or self.params_d["build_cache"]:
+            if not os.path.exists(cached_test_fp) or\
+                    self.params_d["build_cache"]:
                 test_examples, _ = self.get_examples(test_fp,
                                                      fields,
                                                      auto_tokenizer,
@@ -387,8 +394,10 @@ class ModelDataLoader:
             META_DATA.build_vocab(
                 tt.data.Dataset(train_examples,
                                 fields=fields.values()),
-                tt.data.Dataset(dev_examples, fields=fields.values()),
-                tt.data.Dataset(test_examples, fields=fields.values()))
+                tt.data.Dataset(dev_examples,
+                                fields=fields.values()),
+                tt.data.Dataset(test_examples,
+                                fields=fields.values()))
 
             train_dataset = [(len(example.text), idx, example, fields) for
                              idx, example in enumerate(train_examples)]

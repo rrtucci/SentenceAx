@@ -55,7 +55,13 @@ def sort_lines(lines):
 
 # comment this out if sorting of parameter names in not desired
 lines = sort_lines(lines)
-# print("rted", lines)
+
+def is_float(str0):
+    try:
+        x = float(str0)
+        return True
+    except ValueError:
+        return False
 
 distinct_params = []
 with open("openie6-hparams.txt", mode="w") as f:
@@ -71,7 +77,7 @@ with open("openie6-hparams.txt", mode="w") as f:
                     value = value[:-1]
                     ending = "\n}"
                 key = '"' + key + '"'
-                if not value.isdigit():
+                if not is_float(value):
                     value = '"' + value + '"'
 
                 f.write("    " + key + ": " + value + ending)

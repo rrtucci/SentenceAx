@@ -312,10 +312,10 @@ class ModelDataLoader:
             # no caching used in predict mode
             if predict_sentences == None:  # predict
                 if self.params_d["inp"] != None:
-                    predict_f = open(self.params_d["inp"], 'r')
+                    predict_fp = open(self.params_d["inp"], 'r')
                 else:
-                    predict_f = open(self.params_d["predict_fp"], 'r')
-                predict_lines = predict_f.readlines()
+                    predict_fp = open(self.params_d["predict_fp"], 'r')
+                predict_lines = predict_fp.readlines()
                 fullstops = []
                 predict_sentences = []
                 for line in predict_lines:

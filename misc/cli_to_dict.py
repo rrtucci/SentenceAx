@@ -1,3 +1,12 @@
+"""
+
+The input file "openie6-hparams0.txt" was prepared by hand by editing the
+README file of the Openie6 repo. This script takes this input file and
+writes the output file "openie6-hparams.txt". The output file replaces cli (
+command line interface) notation by python dictionary notation.
+
+
+"""
 from collections import OrderedDict
 # cli= command line interface
 

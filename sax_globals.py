@@ -284,7 +284,19 @@ elif TASK == "custom1":
         "write_allennlp": None,
         "write_async": None
     }
-
+    # these params appear in Openie6 but not in its README
+    additional_dict = {
+        "build_cache": None,
+        "dev_fp": None,
+        "predict_fp": None,
+        "split_fp": None,
+        "test_fp": None,
+        "train_fp": None,
+        "type": None,
+        "write_allennlp": None
+    }
+    # combine dictionaries
+    PARAMS_D = {**PARAMS_D_LONG, **additional_dict}
     # eliminate params that are None, in case they are reset to
     # default values by pytorch lightning.
     PARAMS_D = {key: value for key, value in PARAMS_D_LONG.items()

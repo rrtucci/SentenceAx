@@ -160,7 +160,7 @@ class ModelDataLoader:
         examples = []  # list[example]
         example_ds = []  # list[example_d]
         ilabels_for_each_ex = []  # a list of a list of ilabels, list[list[in]]
-        original_sents = []
+        orig_sents = []
 
         if type(inp_fp) == type([]):
             inp_lines = None
@@ -183,8 +183,8 @@ class ModelDataLoader:
                     input_ids += ids  # same as input_ids.extend(ids)
                 input_ids.append(EOS_TOKEN_ID)
 
-                original_sent = sent_plus.split('[unused1]')[0].strip()
-                original_sents.append(original_sent)
+                orig_sent = sent_plus.split('[unused1]')[0].strip()
+                orig_sents.append(orig_sent)
 
             elif line and '[used' not in line:  # it's a line of tags
                 ilabels = [tag_to_ilabel[tag] for tag in line.split()]
@@ -203,7 +203,7 @@ class ModelDataLoader:
                     'text': input_ids,
                     'labels': ilabels_for_each_ex[:MAX_EXTRACTION_LENGTH],
                     'word_starts': word_starts,
-                    'meta_data': original_sent
+                    'meta_data': orig_sent
                 }
                 if len(sent_plus.split()) <= 100:
                     example_ds.append(example_d)
@@ -240,7 +240,7 @@ class ModelDataLoader:
         for example_d in example_ds:
             example = tt.data.Example.fromdict(example_d, fields)
             examples.append(example)
-        return examples, original_sents
+        return examples, orig_sents
 
     def get_ttt_datasets(self, predict_sentences=None):
         # formerly process_data()
@@ -258,11 +258,7 @@ class ModelDataLoader:
             add_special_tokens=False,
             additional_special_tokens=UNUSED_TOKENS)
 
-        spacy_model = spacy.load("en_core_web_sm")
-        # spacy usage:
-        # doc = spacy_model("This is a text")
-        # spacy_model.pipe()
-        # spacy_model usually abbreviated as nlp
+
         pad_id = auto_tokenizer.convert_tokens_to_ids(
             auto_tokenizer.pad_token)
 
@@ -305,15 +301,15 @@ class ModelDataLoader:
         cached_dev_fp = f'{dev_fp}.{model_str}.pkl'
         cached_test_fp = f'{test_fp}.{model_str}.pkl'
 
-        original_sents = []
+        orig_sents = []
         if 'predict' in self.params_d["mode"]:
             # no caching used in predict mode
             if predict_sentences == None:  # predict
                 if self.params_d["inp"] != None:
-                    predict_f = open(self.params_d["inp"], 'r')
+                    predict_fp = open(self.params_d["inp"], 'r')
                 else:
-                    predict_f = open(self.params_d["predict_fp"], 'r')
-                predict_lines = predict_f.readlines()
+                    predict_fp = open(self.params_d["predict_fp"], 'r')
+                predict_lines = predict_fp.readlines()
                 fullstops = []
                 predict_sentences = []
                 for line in predict_lines:
@@ -327,7 +323,7 @@ class ModelDataLoader:
                     # Why use both nltk and spacy to word tokenize
                     # get_ttt_datasets() uses nltk.word_tokenize()
                     # get_examples() uses spacy_model.pipe(sents...)
-                    # get_examples() uses transformers.AutoTokenizer
+
 
                     tokenized_line = ' '.join(nltk.word_tokenize(line))
                     predict_sentences.append(
@@ -336,8 +332,8 @@ class ModelDataLoader:
 
             # this use of get_examples() is wrong
             # get_examples()
-            # returns: examples, original_sents
-            predict_examples, original_sents = \
+            # returns: examples, orig_sents
+            predict_examples, orig_sents = \
                 self.get_examples(predict_fp,
                                   fields,
                                   auto_tokenizer,
@@ -352,6 +348,11 @@ class ModelDataLoader:
             train_dataset, dev_dataset, test_dataset = \
                 predict_dataset, predict_dataset, predict_dataset
         else:
+            spacy_model = spacy.load("en_core_web_sm")
+            # spacy usage:
+            # doc = spacy_model("This is a text")
+            # spacy_model.pipe()
+            # spacy_model usually abbreviated as nlp
             if not os.path.exists(
                     cached_train_fp) or self.params_d["build_cache"]:
                 train_examples, _ = self.get_examples(train_fp,
@@ -398,11 +399,11 @@ class ModelDataLoader:
             train_dataset.sort()  # to simulate bucket sort (along with pad_data)
 
         return train_dataset, dev_dataset, test_dataset, \
-            META_DATA.vocab, original_sents
+            META_DATA.vocab, orig_sents
 
     def get_ttt_dataloaders(self, type, predict_sentences=None):
         train_dataset, val_dataset, test_dataset, \
-            meta_data_vocab, original_sents = self.get_ttt_datasets(
+            meta_data_vocab, orig_sents = self.get_ttt_datasets(
             predict_sentences)
         # this method calls DataLoader
 

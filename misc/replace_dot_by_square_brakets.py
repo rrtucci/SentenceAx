@@ -1,3 +1,9 @@
+"""
+
+For a given set S of files, this script replaces inside every file in S,
+terms like "params_d.word" by "params_d["word"]".
+
+"""
 import os
 from copy import copy
 
@@ -35,17 +41,16 @@ word_d =\
     "wreg": (1, ),
 }
 
-additional_words=\
-[
-"write_allennlp",
-"split_fp",
-"train_fp",
-"dev_fp",
-"test_fp",
-"predict_fp",
-"build_cache",
-"type"
-]
+additional_dict = {
+    "build_cache": None,
+    "dev_fp": None,
+    "predict_fp": None,
+    "split_fp": None,
+    "test_fp": None,
+    "train_fp": None,
+    "type": None,
+    "write_allennlp": None
+}
 
 def replace_in_file(file_path):
     with open(file_path, mode='r', encoding="utf-8") as file:
@@ -60,7 +65,8 @@ def replace_in_file(file_path):
             # important:
             # must make changes in reverse alphabetical order
             # so replace "model" before "mode"
-            words = sorted(list(word_d.keys()) + additional_words,
+            words = sorted(list(word_d.keys()) +
+                           list(additional_dict.keys()),
                            reverse=True)
             for word in words:
                 new_line = new_line.replace('params_d.' + word,

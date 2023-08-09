@@ -12,7 +12,7 @@ def contains_extraction(extr, list_extr):
     return False
 
 
-class CarbExMetric():  # formerly metric.Carb
+class ExMetric():  # formerly metric.Carb
     def __init__(self, hparams, mapping=None):
         self.dev_benchmark = Benchmark('carb/data/gold/dev.tsv')
         self.test_benchmark = Benchmark('carb/data/gold/test.tsv')

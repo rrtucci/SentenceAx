@@ -46,13 +46,13 @@ import shutil
 from glob import glob
 from time import time
 from Model import *
-from ModelDataLoader import *
+from DLoader import *
 from sax_globals import *
 from sax_utils import *
 import tqdm
 
 
-class ModelConductor:  # formerly run.py
+class MConductor:  # formerly run.py
     def __init__(self, params_d, task):
         self.params_d = params_d
         self.task = task
@@ -151,7 +151,7 @@ class ModelConductor:  # formerly run.py
         self.model = Model()
         logger = self.get_logger('train')
         trainer = self.get_trainer(logger)
-        mdl = ModelDataLoader(self.params_d)
+        mdl = DLoader(self.params_d)
         trainer.fit(self.model,
                     train_dataloader=mdl.get_ttt_dataloaders("train"),
                     val_dataloaders=mdl.get_ttt_dataloaders("val"))
@@ -165,7 +165,7 @@ class ModelConductor:  # formerly run.py
         self.model = Model()
         logger = self.get_logger('resume')
         trainer = self.get_trainer(logger, checkpoint_path)
-        mdl = ModelDataLoader(self.params_d)
+        mdl = DLoader(self.params_d)
         trainer.fit(self.model,
                     train_dataloader=mdl.get_ttt_dataloaders("train"),
                     val_dataloaders=mdl.get_ttt_dataloaders("val"))
@@ -195,7 +195,7 @@ class ModelConductor:  # formerly run.py
             trainer = Trainer(logger=logger,
                               gpus=self.params_d["gpus"],
                               resume_from_checkpoint=checkpoint_path)
-            mdl = ModelDataLoader(self.params_d)
+            mdl = DLoader(self.params_d)
             trainer.test(self.model,
                          test_dataloaders=mdl.get_ttt_dataloaders("test"))
             result = self.model.results
@@ -233,7 +233,7 @@ class ModelConductor:  # formerly run.py
                           resume_from_checkpoint=checkpoint_path)
         start_time = time()
         self.model.all_sentences = all_sentences
-        mdl = ModelDataLoader(self.params_d)
+        mdl = DLoader(self.params_d)
         trainer.test(self.model,
                      test_dataloaders=mdl.get_ttt_dataloaders("test"))
         end_time = time()
@@ -252,7 +252,7 @@ class ModelConductor:  # formerly run.py
             self.params_d["checkpoint"] = self.params_d["conj_model"]
             self.params_d["mode"]l_str = 'bert-base-cased'
             self.params_d["mode"] = 'predict'
-            mdl = ModelDataLoader(self.params_d)
+            mdl = DLoader(self.params_d)
             model = self.predict(None,
                                  meta_data_vocab,
                                  None,
@@ -323,7 +323,7 @@ class ModelConductor:  # formerly run.py
         self.params_d["task"] = 'oie'
         self.params_d["checkpoint"] = self.params_d["oie_model"]
         self.params_d["mode"]l_str = 'bert-base-cased'
-        mdl = ModelDataLoader(self.params_d)
+        mdl = DLoader(self.params_d)
         _, _, split_test_dataset, meta_data_vocab, _ = \
             mdl.get_ttt_datasets(predict_sentences=sentences)
         split_test_dataloader = DataLoader(

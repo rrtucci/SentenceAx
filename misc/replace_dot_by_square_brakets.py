@@ -7,9 +7,9 @@ terms like "params_d.word" by "params_d["word"]".
 import os
 from copy import copy
 
-file_paths = ["ModelDataLoader.py",
+file_paths = ["DLoader.py",
               "ModelDataLoader_old.py",
-              "ModelConductor.py"]
+              "MConductor.py"]
 
 word_d =\
 {

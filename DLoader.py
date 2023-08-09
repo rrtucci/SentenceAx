@@ -17,7 +17,7 @@ import torchtext as tt
 import nltk
 
 
-class ModelDataLoader:
+class DLoader:
     """
     Classes Example and Field from tt were used in the Openie6 code,
     but they are now deprecated, so they are not used Mappa Mundi. Here is
@@ -90,7 +90,43 @@ class ModelDataLoader:
         verb_mask.append(0)
         verb_mask.append(0)
         verb_mask.append(0)
-        return verb_mask, verb_indices,
+        return verb_mask, verb_indices, verb_words
+
+    @staticmethod
+    def get_padded_list(li_word, pad_id):
+        # padding a 1 dim array
+        max_word_len = -1
+        for word in li_word:
+            if len(word) > max_word_len:
+                max_word_len = len(word)
+        padded_li_word = []
+        for word in li_word:
+            num_pad_id = max_word_len - len(word)
+            padded_word = word.copy() + [pad_id] * num_pad_id
+            padded_li_word.append(padded_word)
+        return padded_li_word
+
+    @staticmethod
+    def get_padded_list_list(ll_word,
+                             pad_id0,
+                             pad_id1,
+                             max_outer_dim):
+        # padding a 2 dim array
+
+        max_l_word_len = -1
+        for l_word in ll_word:
+            if len(l_word) > max_l_word_len:
+                max_l_word_len = len(l_word)
+
+        # padding outer dimension
+        assert len(ll_word) <= max_outer_dim
+        padded_ll_word = deepcopy(ll_word)
+        for i in range(len(ll_word), max_outer_dim):
+            padded_ll_word.append([pad_id0] * max_l_word_len)
+        # padding inner dimension
+        for i in range(len(ll_word)):
+            padded_ll_word[i] = ll_word[i].copy + [pad_id1] * max_l_word_len
+        return padded_ll_word
 
     def pad_data(self, l_example_d):
         # data_in = l_example_d
@@ -110,16 +146,17 @@ class ModelDataLoader:
 
         l_sent_plus_ids = [example_d['sent_plus_ids'] for example_d in
                            l_example_d]
-        padded_l_sent_plus_ids = get_padded_list(l_sent_plus_ids, pad_id)
+        padded_l_sent_plus_ids = DLoader.get_padded_list(l_sent_plus_ids,
+                                                         pad_id)
 
         ll_ilabels = [example_d['l_ilabels'] for example_d in l_example_d]
-        padded_ll_ilabels = get_padded_list_list(ll_ilabels,
+        padded_ll_ilabels = DLoader.get_padded_list_list(ll_ilabels,
                                                  pad_id0=0,
                                                  pad_id1=-100,
                                                  max_outer_dim=MAX_DEPTH)
 
         l_word_starts = [example_d['word_starts'] for example_d in l_example_d]
-        padded_l_word_starts = get_padded_list(l_word_starts, 0)
+        padded_l_word_starts = DLoader.get_padded_list(l_word_starts, 0)
 
         # meta_data not padded
         l_meta_data = [example_d['meta_data'] for
@@ -146,7 +183,7 @@ class ModelDataLoader:
         # data_out is a dictionary
         return data_out
 
-    def get_examples(self, inp_fp, tag_to_ilabel):
+    def get_examples(self, inp_fp):
         # formerly _process_data()
         """
         this reads a file of the form
@@ -167,7 +204,7 @@ class ModelDataLoader:
         each original sentence and its tag sequences constitute a new example
         """
 
-        examples = []  # list[example]
+        # examples = []  # list[example]
         l_example_d = []  # list[example_d]
         ilabels_for_each_ex = []  # a list of a list of ilabels, list[list[in]]
         orig_sents = []
@@ -175,7 +212,8 @@ class ModelDataLoader:
         if type(inp_fp) == type([]):
             inp_lines = None
         else:
-            inp_lines = open(inp_fp, 'r').readlines()
+            with(inp_fp, "r") as f:
+                inp_lines = f.readlines()
 
         prev_line = ""
         for line in inp_lines:
@@ -198,7 +236,7 @@ class ModelDataLoader:
                 orig_sents.append(orig_sent)
 
             elif line and '[used' not in line:  # it's a line of tags
-                ilabels = [tag_to_ilabel[tag] for tag in line.split()]
+                ilabels = [TAG_TO_ILABEL[tag] for tag in line.split()]
                 # take away last 3 ids for unused tokens
                 ilabels = ilabels[:len(word_starts)]
                 ilabels_for_each_ex.append(ilabels)
@@ -230,18 +268,18 @@ class ModelDataLoader:
             sents = [example_d['meta_data'] for example_d in l_example_d]
             for sent_index, spacy_tokens in enumerate(
                     self.spacy_model.pipe(sents, batch_size=10000)):
-                spacy_tokens = ModelDataLoader.remerge_sent(spacy_tokens)
+                spacy_tokens = DLoader.remerge_sent(spacy_tokens)
                 assert len(sents[sent_index].split()) == len(
                     spacy_tokens)
                 example_d = l_example_d[sent_index]
 
                 pos_mask, pos_indices, pos_words = \
-                    ModelDataLoader.pos_mask(spacy_tokens)
+                    DLoader.pos_mask(spacy_tokens)
                 example_d['pos_mask'] = pos_mask
                 example_d['pos_indices'] = pos_indices
 
                 verb_mask, verb_indices, verb_words = \
-                    ModelDataLoader.verb_mask(spacy_tokens)
+                    DLoader.verb_mask(spacy_tokens)
                 example_d['verb_mask'] = verb_mask
                 if len(verb_indices) != 0:
                     example_d['verb_indices'] = verb_indices
@@ -265,6 +303,7 @@ class ModelDataLoader:
         #     example = tt.data.Example.fromdict(example_d, fields)
         #     examples.append(example)
         # return examples, orig_sents
+
         return l_example_d, orig_sents
 
     def get_ttt_datasets(self, predict_sentences=None):
@@ -273,44 +312,6 @@ class ModelDataLoader:
         train_fp = self.params_d["train_fp"]
         dev_fp = self.params_d["dev_fp"]
         test_fp = self.params_d["test_fp"]
-
-        pad_id = self.auto_tokenizer.convert_tokens_to_ids(
-            self.auto_tokenizer.pad_token)
-
-        TEXT = tt.data.Field(use_vocab=False, batch_first=True,
-                             pad_token=pad_id)
-        WORD_STARTS = tt.data.Field(use_vocab=False, batch_first=True,
-                                    pad_token=0)
-        POS = tt.data.Field(use_vocab=False, batch_first=True, pad_token=0)
-        POS_INDEX = tt.data.Field(use_vocab=False, batch_first=True,
-                                  pad_token=0)
-        VERB = tt.data.Field(use_vocab=False, batch_first=True,
-                             pad_token=0)
-        VERB_INDEX = tt.data.Field(use_vocab=False, batch_first=True,
-                                   pad_token=0)
-        META_DATA = tt.data.Field(sequential=False)
-        VERB_WORDS = tt.data.Field(sequential=False)
-        POS_WORDS = tt.data.Field(sequential=False)
-        LABELS = tt.data.NestedField(
-            tt.data.Field(use_vocab=False, batch_first=True, pad_token=-100),
-            use_vocab=False)
-
-        fields = {'text': ('text', TEXT),
-                  'labels': ('labels', LABELS),
-                  'word_starts': ('word_starts', WORD_STARTS),
-                  'meta_data': ('meta_data', META_DATA)}
-        if 'predict' not in self.params_d["mode"]:
-            fields['pos'] = ('pos', POS)
-            fields['pos_index'] = ('pos_index', POS_INDEX)
-            fields['verb'] = ('verb', VERB)
-            fields['verb_index'] = ('verb_index', VERB_INDEX)
-
-        if self.params_d["task"] == "ex":
-            tag_to_ilabel = EXTAG_TO_ILABEL
-        elif self.params_d["task"] == "cc":
-            tag_to_ilabel = CCTAG_TO_ILABEL
-        else:
-            assert False
 
         model_str = self.params_d["model_str"].replace("/", "_")
         cached_train_fp = f'{train_fp}.{model_str}.pkl'
@@ -322,11 +323,12 @@ class ModelDataLoader:
             # no caching used in predict mode
             if predict_sentences == None:  # predict
                 if self.params_d["inp"] != None:
-                    predict_fp = open(self.params_d["inp"], 'r')
+                    predict_fp = self.params_d["inp"]
                 else:
-                    predict_fp = open(self.params_d["predict_fp"], 'r')
-                predict_lines = predict_fp.readlines()
-                fullstops = []
+                    predict_fp = self.params_d["predict_fp"]
+                with open(predict_fp, "r") as f:
+                    predict_lines = f.readlines()
+
                 predict_sentences = []
                 for line in predict_lines:
                     # Normalize the quotes - similar to that in training data
@@ -340,9 +342,9 @@ class ModelDataLoader:
                     # get_ttt_datasets() uses nltk.word_tokenize()
                     # get_examples() uses spacy_model.pipe(sents...)
 
-                    tokenized_line = ' '.join(nltk.word_tokenize(line))
+                    words = ' '.join(nltk.word_tokenize(line))
                     predict_sentences.append(
-                        tokenized_line + UNUSED_TOKENS_STR)
+                        words + UNUSED_TOKENS_STR)
                     predict_sentences.append('\n')
 
             # openie 6 is wrong here. Uses wrong arguments for
@@ -350,9 +352,7 @@ class ModelDataLoader:
             # get_examples()
             # returns: examples, orig_sents
             predict_examples, orig_sents = \
-                self.get_examples(predict_fp,
-                                  tag_to_ilabel,
-                                  spacy_model=None)
+                self.get_examples(predict_fp)
             META_DATA.build_vocab(
                 tt.data.Dataset(predict_examples, fields=fields.values()))
 
@@ -361,7 +361,7 @@ class ModelDataLoader:
                 for idx, example in enumerate(predict_examples)]
             train_dataset, dev_dataset, test_dataset = \
                 predict_dataset, predict_dataset, predict_dataset
-        else:
+        else: # 'predict' not in self.params_d["mode"]
             spacy_model = spacy.load("en_core_web_sm")
             # spacy usage:
             # doc = spacy_model("This is a text")

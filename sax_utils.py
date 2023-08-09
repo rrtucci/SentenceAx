@@ -102,39 +102,6 @@ def none_dd(di):
     # dd = default dictionary
     return defaultdict(lambda: None, di)
 
-def get_padded_list(li_word, pad_id):
-    # padding a 1 dim array
-    max_word_len = -1
-    for word in li_word:
-        if len(word) > max_word_len:
-            max_word_len = len(word)
-    padded_li_word = []
-    for word in li_word:
-        num_pad_id = max_word_len - len(word)
-        padded_word = word.copy() + [pad_id] * num_pad_id
-        padded_li_word.append(padded_word)
-    return padded_li_word
-
-def get_padded_list_list(ll_word,
-                         pad_id0,
-                         pad_id1,
-                         max_outer_dim):
-    # padding a 2 dim array
-
-    max_l_word_len = -1
-    for l_word in ll_word:
-        if len(l_word) > max_l_word_len:
-            max_l_word_len = len(l_word)
-
-    #padding outer dimension
-    assert len(ll_word) <= max_outer_dim
-    padded_ll_word = deepcopy(ll_word)
-    for i in range(len(ll_word), max_outer_dim):
-        padded_ll_word.append([pad_id0]*max_l_word_len)
-    # padding inner dimension
-    for i in range(len(ll_word)):
-         padded_ll_word[i] = ll_word[i].copy + [pad_id1]*max_l_word_len
-    return padded_ll_word
 
 
 if __name__ == "__main__":

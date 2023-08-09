@@ -1,6 +1,6 @@
 from sax_globals import *
 from Extraction_sax import *
-from ExMetricFromCarb import *
+from ExMetric import *
 from CCMetric import *
 from CCTree import *
 
@@ -113,7 +113,7 @@ class Model(pl.LightningModule):
 
         self.loss = nn.CrossEntropyLoss()
 
-        self._metric = CarbExMetric(params_d) \
+        self._metric = ExMetric(params_d) \
             if params_d["task"] == "ex" else CCMetric()
 
         self.constraints_d = dict()

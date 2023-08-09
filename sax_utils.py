@@ -1,4 +1,7 @@
 from collections import defaultdict
+import random
+import numpy as np
+import torch
 
 class ClassFromDict(dict):
     """
@@ -31,7 +34,15 @@ def none_dd(di):
     # dd = default dictionary
     return defaultdict(lambda: None, di)
 
-
+def set_seed(seed):
+    # Be warned that even with all these seeds,
+    # complete reproducibility cannot be guaranteed
+    random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    np.random.seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    return
 
 if __name__ == "__main__":
     def main():

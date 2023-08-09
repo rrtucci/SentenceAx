@@ -1,9 +1,3 @@
-from sax_globals import *
-from Extraction_sax import *
-from ExMetric import *
-from CCMetric import *
-from CCTree import *
-
 """
 
 import lightning.pytorch as pl
@@ -28,11 +22,12 @@ class LitModel(pl.LightningModule):
     def configure_optimizers(self):
         return torch.optim.Adam(self.parameters(), lr=0.02)
 """
-from sax_globals import *
+from Extraction_sax import *
+from ExMetric import *
+from CCMetric import *
+from CCTree import *
 
 import os
-import random
-import numpy as np
 import copy
 from collections import OrderedDict
 import logging
@@ -40,7 +35,6 @@ import regex as re
 
 import torch
 import torch.nn.functional as F
-from torchtext import data
 from torch import nn
 from torch.optim import Adam
 import pytorch_lightning as pl
@@ -57,17 +51,6 @@ logging.getLogger(
 logging.getLogger(
     'transformers.modeling_utils').setLevel(logging.ERROR)
 logging.getLogger().setLevel(logging.ERROR)
-
-
-def set_seed(seed):
-    # Be warned that even with all these seeds,
-    # complete reproducibility cannot be guaranteed
-    random.seed(seed)
-    torch.manual_seed(seed)
-    torch.cuda.manual_seed(seed)
-    np.random.seed(seed)
-    torch.cuda.manual_seed_all(seed)
-    return
 
 
 class Model(pl.LightningModule):

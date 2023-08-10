@@ -22,26 +22,19 @@ class DSet(Dataset):
         self.num_words =  len(padded_data["l_sent_plus_ids"][0])
         self.depth = len(padded_data["ll_ilabels"])
 
-        x = padded_data["l_sent_plus_ids"]
+
+        x = []
+        num_xtypes = -1
+        for name, li in padded_data.items():
+            if name != "ll_ilabels":
+                num_xtypes +=1
+                x.append(li)
+        self.num_xtypes = num_xtypes
         x = np.array(x)
         self.x = torch.from_numpy(x)
 
-        y = []
-        self.ytype_names = []
-        ytype_id = -1
-        for name, li in padded_data.items():
-            if name != "l_sent_plus_ids":
-                ytype_id += 1
-                if name != "ll_ilabels":
-                    self.ytype_names.append(name)
-                    y.append(li)
-                else:
-                    for k, li in enumerate(padded_data["ll_ilabels"]):
-                        self.ytype_names.append(name + "_" + str(k))
-                        y.append(li)
-        self.num_ytypes = ytype_id + 1
+        y = padded_data["ll_ilabels"]
         y = np.array(y)
-        np.transpose(y)
         self.y = torch.from_numpy(y)
 
         def __getitem__(self, example_id):

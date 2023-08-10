@@ -4,18 +4,17 @@ from transformers import AutoTokenizer
 import spacy
 import torch
 from torch.utils.data import DataLoader
-from torch.nn.utils.rnn import pad_sequence
 
 import pickle
 import os
 # use of
 # tt.data.Field,
 # tt.data.Example
-# tt.Dataset
 # are deprecated
+# and Dataset signature has changed
 import torchtext as tt
 import nltk
-
+from copy import deepcopy
 
 class DLoader:
     """
@@ -26,9 +25,9 @@ class DLoader:
     https://colab.research.google.com/github/pytorch/text/blob/master/examples/legacy_tutorial/migration_tutorial.ipynb#scrollTo=kBV-Wvlo07ye
     """
 
-    def __init__(self, params_d):
+    def __init__(self):
 
-        self.params_d = params_d
+        self.params_d = PARAMS_D
         do_lower_case = 'uncased' in self.params_d["model_str"]
         self.auto_tokenizer = AutoTokenizer.from_pretrained(
             self.params_d["model_str"],
@@ -166,7 +165,7 @@ class DLoader:
         padded_ll_ilabels = torch.tensor(padded_ll_ilabels)
         padded_l_word_starts = torch.tensor(padded_l_word_starts)
 
-        data_out = {'l_sent_plus_ids': padded_l_sent_plus_ids,
+        padded_data = {'l_sent_plus_ids': padded_l_sent_plus_ids,
                        'll_ilabels': padded_ll_ilabels,
                        'l_word_starts': padded_l_word_starts,
                        'l_meta_data': l_meta_data}
@@ -176,12 +175,12 @@ class DLoader:
             for i in range(len(names)):
                 l = [example_d[names[i]] for example_d in
                      l_example_d]
-                padded_l = get_padded_list(l, pad_id=0)
-                data_out[names[i]] = torch.tensor(padded_l)
+                padded_l = DLoader.get_padded_list(l, pad_id=0)
+                padded_data[names[i]] = torch.tensor(padded_l)
 
-        # data_in was a list of dictionaries
-        # data_out is a dictionary
-        return data_out
+        # input data=l_example_d was a list of dictionaries
+        # padded_data is a dictionary
+        return padded_data
 
     def get_examples(self, inp_fp):
         # formerly _process_data()

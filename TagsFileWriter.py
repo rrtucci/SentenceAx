@@ -72,7 +72,7 @@ class TagsFileWriter:
             for j in range(0, len(sentence_indices_list[i])):
                 assert len(sentence_indices_list[i][j]) == len(
                     outputs[idx1]['meta_data'][
-                        idx2].strip().split()), ipdb.set_trace()
+                        idx2].strip().split())
                 sentence = outputs[idx1]['meta_data'][
                                idx2].strip() + ' [unused1] [unused2] [unused3]'
                 assert sentence == sentences[idx3]

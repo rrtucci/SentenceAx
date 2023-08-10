@@ -55,20 +55,18 @@ logging.getLogger().setLevel(logging.ERROR)
 
 class Model(pl.LightningModule):
 
-    def __init__(self,
-                 params_d=PARAMS_D,
-                 meta_data_vocab=META_DATA_VOCAB):
+    def __init__(self, meta_data_vocab=META_DATA_VOCAB):
         super(Model, self).__init__()
-        self.params_d = params_d
+        self.params_d = PARAMS_D
         self.meta_data_vocab = meta_data_vocab
 
         self.base_model = AutoModel.from_pretrained(
-            params_d["model_str"], cache_dir=CACHE_DIR)
+            self.params_d["model_str"], cache_dir=CACHE_DIR)
         self._hidden_size = self.base_model.config.hidden_size
 
-        if params_d["iterative_layers"] != 0:
+        if self.params_d["iterative_layers"] != 0:
             num_layers = len(self.base_model.encoder.layer)
-            mid = num_layers - params_d["iterative_layers"]
+            mid = num_layers - self.params_d["iterative_layers"]
             self.base_model.encoder.layer = \
                 self.base_model.encoder.layer[0:mid]
             self.iterative_transformer = \
@@ -96,8 +94,8 @@ class Model(pl.LightningModule):
 
         self.loss = nn.CrossEntropyLoss()
 
-        self._metric = ExMetric(params_d) \
-            if params_d["task"] == "ex" else CCMetric()
+        self._metric = ExMetric(self.params_d) \
+            if self.params_d["task"] == "ex" else CCMetric()
 
         self.constraints_d = dict()
 

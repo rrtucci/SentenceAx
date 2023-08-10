@@ -76,9 +76,13 @@ else:
 assert MODE in ["predict", "train_test", "splitpredict",
                 "resume", "test"]
 
-## Running Model
+if "PARAMS_D" in globals():
+    # define `PARAMS_D` in jupyter notebook before running any
+    # subroutines that use it. The file `custom_params_d.txt` gives
+    # some pointers on how to define a custom params_d.
 
-if TASK == "ex" and MODE == "splitpredict":
+## Running Model
+elif TASK == "ex" and MODE == "splitpredict":
     PARAMS_D = none_dd({
         "conj_model": "models/conj_model/epoch=28_eval_acc=0.854.ckpt",
         "gpus": 1,

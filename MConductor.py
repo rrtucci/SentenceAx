@@ -53,20 +53,20 @@ import tqdm
 
 
 class MConductor:  # formerly run.py
-    def __init__(self, params_d, task):
-        self.params_d = params_d
-        self.task = task
-        assert task in ["ex", "cc"]
+    def __init__(self):
+        self.params_d = PARAMS_D
+        self.task = TASK
+        assert self.task in ["ex", "cc"]
         self.model = None
         self.saved = False
         self.save_dir = "data/save"
         self.has_cuda = torch.cuda.is_available()
 
-        if task == 'cc':
+        if self.task == 'cc':
             self.train_fp = 'data/openie-data/ptb-train.labels'
             self.dev_fp = 'data/openie-data/ptb-dev.labels'
             self.test_fp = 'data/openie-data/ptb-test.labels'
-        elif task == 'ex':
+        elif self.task == 'ex':
             self.train_fp = 'data/openie-data/openie4_labels'
             self.dev_fp = 'data/carb-data/dev.txt'
             self.test_fp = 'data/carb-data/test.txt'

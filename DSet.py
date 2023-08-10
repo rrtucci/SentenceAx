@@ -1,9 +1,11 @@
 import torch
 import numpy as np
 from torch.utils.data import Dataset
+from DPadder import *
+
 
 class DSet(Dataset):
-    def __init__(self, padded_data):
+    def __init__(self, example_ds, spacy_model, sent_pad_id):
         """
         In Openie6, the `torchteyt.data.Dataset` class is a normal class
         `Dataset(examples, fields)` is abstract class but in newer versions
@@ -17,6 +19,9 @@ class DSet(Dataset):
         #                'll_ilabels': padded_ll_ilabels,
         #                'l_word_starts': padded_l_word_starts,
         #                'l_meta_data': l_meta_data}
+
+        padder = DPadder(spacy_model, sent_pad_id)
+        padded_data = padder.pad_data(example_ds)
 
         self.num_examples = len(padded_data["l_sent_plus_ids"])
         self.num_words =  len(padded_data["l_sent_plus_ids"][0])

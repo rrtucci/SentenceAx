@@ -161,9 +161,9 @@ class DLoader:
         l_meta_data = [example_d['meta_data'] for
                        example_d in l_example_d]
 
-        padded_l_sent_plus_ids = torch.tensor(padded_l_sent_plus_ids)
-        padded_ll_ilabels = torch.tensor(padded_ll_ilabels)
-        padded_l_word_starts = torch.tensor(padded_l_word_starts)
+        # padded_l_sent_plus_ids = torch.tensor(padded_l_sent_plus_ids)
+        # padded_ll_ilabels = torch.tensor(padded_ll_ilabels)
+        # padded_l_word_starts = torch.tensor(padded_l_word_starts)
 
         padded_data = {'l_sent_plus_ids': padded_l_sent_plus_ids,
                        'll_ilabels': padded_ll_ilabels,
@@ -176,7 +176,7 @@ class DLoader:
                 l = [example_d[names[i]] for example_d in
                      l_example_d]
                 padded_l = DLoader.get_padded_list(l, pad_id=0)
-                padded_data[names[i]] = torch.tensor(padded_l)
+                # padded_data[names[i]] = torch.tensor(padded_l)
 
         # input data=l_example_d was a list of dictionaries
         # padded_data is a dictionary

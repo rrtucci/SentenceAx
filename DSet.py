@@ -5,7 +5,7 @@ from torch.utils.data import Dataset
 class DSet(Dataset):
     def __init__(self, padded_data):
         """
-        In Openie6, the `torchtext.data.Dataset` class is a normal class
+        In Openie6, the `torchteyt.data.Dataset` class is a normal class
         `Dataset(examples, fields)` is abstract class but in newer versions
         it is an abstract class.
         Ref:
@@ -19,27 +19,30 @@ class DSet(Dataset):
         #                'l_meta_data': l_meta_data}
 
         self.num_examples = len(padded_data["l_sent_plus_ids"])
+        self.num_words =  len(padded_data["l_sent_plus_ids"][0])
         self.depth = len(padded_data["ll_ilabels"])
 
-        self.y = padded_data["l_sent_plus_ids"]
+        x = padded_data["l_sent_plus_ids"]
+        x = np.array(x)
+        self.x = torch.from_numpy(x)
 
-        x = []
-        self.feature_names = []
-        feature_id = -1
+        y = []
+        self.ytype_names = []
+        ytype_id = -1
         for name, li in padded_data.items():
             if name != "l_sent_plus_ids":
-                feature_id += 1
+                ytype_id += 1
                 if name != "ll_ilabels":
-                    self.feature_names.append(name)
-                    x.append(li)
+                    self.ytype_names.append(name)
+                    y.append(li)
                 else:
                     for k, li in enumerate(padded_data["ll_ilabels"]):
-                        self.feature_names.append(name + "_" + str(k))
-                        x.append(li)
-        self.num_features = feature_id
-        x = np.array(x)
-        np.transpose(x)
-        self.x = torch.from_numpy(x)
+                        self.ytype_names.append(name + "_" + str(k))
+                        y.append(li)
+        self.num_ytypes = ytype_id + 1
+        y = np.array(y)
+        np.transpose(y)
+        self.y = torch.from_numpy(y)
 
         def __getitem__(self, example_id):
             return self.x[example_id], self.y[example_id]

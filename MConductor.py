@@ -71,6 +71,22 @@ class MConductor:  # formerly run.py
             self.dev_fp = 'data/carb-data/dev.txt'
             self.test_fp = 'data/carb-data/test.txt'
 
+        do_lower_case = 'uncased' in self.params_d["model_str"]
+        self.auto_tokenizer = AutoTokenizer.from_pretrained(
+            self.params_d["model_str"],
+            do_lower_case=do_lower_case,
+            use_fast=True,
+            data_dir='data/pretrained_cache',
+            add_special_tokens=False,
+            additional_special_tokens=UNUSED_TOKENS)
+
+        # encode == convert_tokens_to_ids
+        # replaces vocab.stoi (string to integer)
+        self.encode = auto_tokenizer.encode
+        # replaces vocab.itos (integer to string)
+        self.decode = auto_tokenizer.decode 
+        self.sent_pad_id = self.encode(auto_tokenizer.pad_token)
+
     def set_checkpoint_callback(self):
         if self.saved:
             self.checkpoint_callback = ModelCheckpoint(
@@ -148,10 +164,10 @@ class MConductor:  # formerly run.py
 
     def train(self):
         self.set_checkpoint_callback()
-        self.model = Model()
+        self.model = Model(self.auto_tokenizer)
         logger = self.get_logger('train')
         trainer = self.get_trainer(logger)
-        mdl = DLoader(self.params_d)
+        mdl = DLoader(self.auto_tokenizer)
         trainer.fit(self.model,
                     train_dataloader=mdl.get_ttt_dataloaders("train"),
                     val_dataloaders=mdl.get_ttt_dataloaders("val"))
@@ -162,10 +178,10 @@ class MConductor:  # formerly run.py
         self.set_checkpoint_callback()
         checkpoint_path = self.get_checkpoint_path()
         self.update_params_d(checkpoint_path, **final_changes_params_d)
-        self.model = Model()
+        self.model = Model(self.auto_tokenizer)
         logger = self.get_logger('resume')
         trainer = self.get_trainer(logger, checkpoint_path)
-        mdl = DLoader(self.params_d)
+        mdl = DLoader(self.auto_tokenizer)
         trainer.fit(self.model,
                     train_dataloader=mdl.get_ttt_dataloaders("train"),
                     val_dataloaders=mdl.get_ttt_dataloaders("val"))
@@ -182,7 +198,7 @@ class MConductor:  # formerly run.py
             self.update_params_d(checkpoint_path,
                                  **final_changes_params_d)
 
-        self.model = Model()
+        self.model = Model(self.auto_tokenizer)
         if mapping != None:
             self.model._metric.mapping = mapping
         if conj_word_mapping != None:
@@ -195,7 +211,7 @@ class MConductor:  # formerly run.py
             trainer = Trainer(logger=logger,
                               gpus=self.params_d["gpus"],
                               resume_from_checkpoint=checkpoint_path)
-            mdl = DLoader(self.params_d)
+            mdl = Dloader(self.auto_tokenizer)
             trainer.test(self.model,
                          test_dataloaders=mdl.get_ttt_dataloaders("test"))
             result = self.model.results
@@ -210,9 +226,10 @@ class MConductor:  # formerly run.py
                 **final_changes_params_d):
         self.set_checkpoint_callback()
 
-        # def predict(params_d, checkpoint_callback, meta_data_vocab,
+        # def predict(checkpoint_callback,
         #             train_dataloader,
-        #             val_dataloader, test_dataloader, all_sentences, mapping=None,
+        #             val_dataloader, test_dataloader, all_sentences,
+        #             mapping=None,
         #             conj_word_mapping=None):
         if self.params_d["task"] == 'conj':
             self.params_d["checkpoint"] = self.params_d["conj_model"]
@@ -222,7 +239,7 @@ class MConductor:  # formerly run.py
         checkpoint_path = self.get_checkpoint_path()
         self.update_params_d(checkpoint_path, **final_changes_params_d)
 
-        self.model = Model()
+        self.model = Model(self.auto_tokenizer)
 
         if mapping != None:
             self.model._metric.mapping = mapping
@@ -233,7 +250,7 @@ class MConductor:  # formerly run.py
                           resume_from_checkpoint=checkpoint_path)
         start_time = time()
         self.model.all_sentences = all_sentences
-        mdl = DLoader(self.params_d)
+        mdl = Dloader(self.auto_tokenizer)
         trainer.test(self.model,
                      test_dataloaders=mdl.get_ttt_dataloaders("test"))
         end_time = time()
@@ -242,7 +259,7 @@ class MConductor:  # formerly run.py
     def splitpredict(self):
         self.set_checkpoint_callback()
 
-        # def splitpredict(params_d, checkpoint_callback, meta_data_vocab,
+        # def splitpredict(params_d, checkpoint_callback,
         #                  train_dataloader, val_dataloader, test_dataloader,
         #                  all_sentences):
         mapping, conj_word_mapping = {}, {}
@@ -250,13 +267,12 @@ class MConductor:  # formerly run.py
         if self.params_d["split_fp"] == '':
             self.params_d["task"] = 'conj'
             self.params_d["checkpoint"] = self.params_d["conj_model"]
-            self.params_d["mode"]l_str = 'bert-base-cased'
+            self.params_d["model_str"] = 'bert-base-cased'
             self.params_d["mode"] = 'predict'
-            mdl = DLoader(self.params_d)
-            model = self.predict(None,
-                                 meta_data_vocab,
-                                 None,
-                                 None,
+            mdl = Dloader(self.auto_tokenizer)
+            model = self.predict(
+                                 mapping=None,
+                                 conj_word_mapping= None,
                                  mdl.get_ttt_dataloaders("test"),
                                  all_sentences)
             conj_predictions = model.all_cc_predictions
@@ -322,19 +338,18 @@ class MConductor:  # formerly run.py
 
         self.params_d["task"] = 'oie'
         self.params_d["checkpoint"] = self.params_d["oie_model"]
-        self.params_d["mode"]l_str = 'bert-base-cased'
-        mdl = DLoader(self.params_d)
-        _, _, split_test_dataset, meta_data_vocab, _ = \
+        self.params_d["model_str"] = 'bert-base-cased'
+        mdl = Dloader(self.auto_tokenizer)
+        _, _, split_test_dataset= \
             mdl.get_ttt_datasets(predict_sentences=sentences)
         split_test_dataloader = DataLoader(
             split_test_dataset,
             batch_size=self.params_d["batch_size"],
-            collate_fn=mdl.pad_data,
+            # collate_fn=mdl.pad_data,
             num_workers=1)
 
-        model = self.predict(self.params_d,
+        model = self.predict(
                              None,
-                             meta_data_vocab,
                              None,
                              None,
                              split_test_dataloader,

@@ -20,7 +20,6 @@ EXTAGS_TEST_FP = "data/extags_test.txt"
 BOS_TOKEN_ID = 101 # bos = begin of sentence
 EOS_TOKEN_ID = 102 # eos = end of sentence
 
-META_DATA_VOCAB = None
 CACHE_DIR = 'data/pretrained_cache'
 NUM_LABELS = 6
 MAX_EXTRACTION_LENGTH = 5
@@ -77,6 +76,7 @@ assert MODE in ["predict", "train_test", "splitpredict",
                 "resume", "test"]
 
 if "PARAMS_D" in globals():
+
     # define `PARAMS_D` in jupyter notebook before running any
     # subroutines that use it. The file `custom_params_d.txt` gives
     # some pointers on how to define a custom params_d.

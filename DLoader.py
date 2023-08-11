@@ -8,11 +8,12 @@ from torch.utils.data import DataLoader
 import pickle
 import os
 # use of
-# tt.data.Field,
+# tt.data.Field, Field.build_vocab
 # tt.data.Example
 # are deprecated
-# and Dataset signature has changed
+# and tt.data.Dataset signature has changed
 import torchtext as tt
+
 import nltk
 from copy import deepcopy
 from DSet import *
@@ -26,22 +27,11 @@ class DLoader:
     https://colab.research.google.com/github/pytorch/text/blob/master/examples/legacy_tutorial/migration_tutorial.ipynb#scrollTo=kBV-Wvlo07ye
     """
 
-    def __init__(self):
+    def __init__(self, auto_tokenizer):
 
         self.params_d = PARAMS_D
-        do_lower_case = 'uncased' in self.params_d["model_str"]
-        self.auto_tokenizer = AutoTokenizer.from_pretrained(
-            self.params_d["model_str"],
-            do_lower_case=do_lower_case,
-            use_fast=True,
-            data_dir='data/pretrained_cache',
-            add_special_tokens=False,
-            additional_special_tokens=UNUSED_TOKENS)
-
+        self.auto_tokenizer = auto_tokenizer
         self.spacy_model = None
-
-        self.sent_pad_id = self.auto_tokenizer.convert_tokens_to_ids(
-            self.auto_tokenizer.pad_token)
 
     @staticmethod
     def remerge_sent(tokens):
@@ -164,7 +154,7 @@ class DLoader:
                     'sent_plus_ids': sent_plus_ids,
                     'l_ilabels': ilabels_for_each_ex[:MAX_EXTRACTION_LENGTH],
                     'word_starts': word_starts,
-                    'meta_data': orig_sent
+                    'orig_sent': orig_sent
                 }
                 if len(sent_plus.split()) <= 100:
                     l_example_d.append(example_d)
@@ -177,7 +167,7 @@ class DLoader:
         # so far, we haven't assumed any spacy derived data nanalysis
         # if spacy is allowed, the example_d can carry more info.
         if self.spacy_model:
-            sents = [example_d['meta_data'] for example_d in l_example_d]
+            sents = [example_d['orig_sent'] for example_d in l_example_d]
             for sent_index, spacy_tokens in enumerate(
                     self.spacy_model.pipe(sents, batch_size=10000)):
                 spacy_tokens = DLoader.remerge_sent(spacy_tokens)
@@ -202,7 +192,7 @@ class DLoader:
         #     'sent_plus_ids': sent_plus_ids,
         #     'l_ilabels': ilabels_for_each_ex[:MAX_EXTRACTION_LENGTH],
         #     'word_starts': word_starts,
-        #     'meta_data': orig_sent,
+        #     'orig_sent': orig_sent,
         #     # if spacy_model:
         #     'pos_mask': pos_mask,
         #     'pos_indices': pos_indices,
@@ -210,7 +200,7 @@ class DLoader:
         #     'verb_indices': verb_indices
         # }
 
-        # use of tt.Example is deprecated
+        # use of tt.data.Example is deprecated
         # for example_d in l_example_d:
         #     example = tt.data.Example.fromdict(example_d, fields)
         #     examples.append(example)
@@ -265,8 +255,7 @@ class DLoader:
             # returns: examples, orig_sents
             predict_example_ds, orig_sents = \
                 self.get_example_ds(predict_fp)
-            META_DATA.build_vocab(
-                tt.data.Dataset(predict_example_ds, fields=fields.values()))
+            #vocab = build_vocab(predict_example_ds)
 
             predict_dataset = DSet(predict_example_ds,
                                    self.spacy_model,
@@ -300,10 +289,8 @@ class DLoader:
             else:
                 test_example_ds = pickle.load(open(cached_test_fp, 'rb'))
 
-            META_DATA.build_vocab(
-                DSet(train_example_ds),
-                DSet(dev_example_ds),
-                DSet(test_example_ds))
+            # vocab = self.build_vocab(
+            #     train_example_ds + dev_example_ds + test_example_ds)
 
             train_dataset = DSet(train_example_ds,
                                    self.spacy_model,
@@ -316,14 +303,12 @@ class DLoader:
                                    self.sent_pad_id)
             train_dataset.sort()  # to simulate bucket sort (along with pad_data)
 
-        return train_dataset, dev_dataset, test_dataset, \
-            META_DATA.vocab, orig_sents
+        return train_dataset, dev_dataset, test_dataset # , vocab, orig_sents
 
     def get_ttt_dataloaders(self, type, predict_sentences=None):
 
-        train_dataset, val_dataset, test_dataset, \
-            meta_data_vocab, orig_sents = self.get_ttt_datasets(
-            predict_sentences)
+        train_dataset, val_dataset, test_dataset = \
+            self.get_ttt_datasets(predict_sentences)
         # this method calls DataLoader
 
         if type == "train":

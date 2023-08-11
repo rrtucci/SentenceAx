@@ -55,10 +55,10 @@ logging.getLogger().setLevel(logging.ERROR)
 
 class Model(pl.LightningModule):
 
-    def __init__(self, meta_data_vocab=META_DATA_VOCAB):
+    def __init__(self, auto_tokenizer):
         super(Model, self).__init__()
         self.params_d = PARAMS_D
-        self.meta_data_vocab = meta_data_vocab
+        self.auto_tokenizer = auto_tokenizer
 
         self.base_model = AutoModel.from_pretrained(
             self.params_d["model_str"], cache_dir=CACHE_DIR)
@@ -414,7 +414,7 @@ class Model(pl.LightningModule):
             else:
                 for output_d in output_d_list:
                     if type(output_d['meta_data'][0]) != type(""):
-                        output_d['meta_data'] = [self.meta_data_vocab.itos[m]
+                        output_d['meta_data'] = [self.auto_tokenizer.decode[m]
                                                for m in output_d['meta_data']]
                     self._metric(output_d['predictions'],
                                  output_d['ground_truth'],
@@ -431,7 +431,7 @@ class Model(pl.LightningModule):
             else:
                 for output_d in output_d_list:
                     if type(output_d['meta_data'][0]) != type(""):
-                        output_d['meta_data'] = [self.meta_data_vocab.itos[m]
+                        output_d['meta_data'] = [self.auto_tokenizer.decode[m]
                                                for m in output_d['meta_data']]
                     self._metric(output_d['predictions'], output_d['meta_data'],
                                  output_d['scores'])
@@ -534,7 +534,7 @@ class Model(pl.LightningModule):
         output_d['scores'] = output_d['scores'].cpu()
         output_d['ground_truth'] = output_d['ground_truth'].cpu()
         output_d['meta_data'] = output_d['meta_data'].cpu()
-        output_d['meta_data'] = [self.meta_data_vocab.itos[m] for m
+        output_d['meta_data'] = [self.auto_tokenizer.decode[m] for m
                                in output_d['meta_data']]
         if task == "ex":
             predictions = output_d['predictions']

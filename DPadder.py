@@ -1,12 +1,14 @@
 from copy import deepcopy
 from sax_globals import *
-
+# from torchtext.data.utils import get_tokenizer
+# from torchtext.vocab import build_vocab_from_iterator
 
 class DPadder:
 
-    def __init__(self, spacy_model, sent_pad_id):
-        self.spacy_model = spacy_model
+    def __init__(self, sent_pad_id, spacy_model):
+
         self.sent_pad_id = sent_pad_id
+        self.spacy_model = spacy_model
 
     @staticmethod
     def get_padded_list(li_word, pad_id):
@@ -44,13 +46,37 @@ class DPadder:
             padded_ll_word[i] = ll_word[i].copy + [pad_id1] * max_l_word_len
         return padded_ll_word
 
+    # def build_vocab(self, example_ds):
+    #     """
+    #
+    #     A vocabulary (vocab) is a function that turns
+    #     word lists to int lists
+    #
+    #     vocab(['here', 'is', 'an', 'example'])
+    #     >>> [475, 21, 30, 5297]
+    #     """
+    #
+    #     # tokenizer = get_tokenizer("basic_english")
+    #     tokenizer = self.auto_tokenizer
+    #     def yield_tokens(example_ds):
+    #         for example_d in example_ds:
+    #             orig_sent = example_d["orig_sent"]
+    #             yield tokenizer(orig_sent)
+    #
+    #     vocab = build_vocab_from_iterator(yield_tokens(example_ds),
+    #                                       specials=["<unk>"])
+    #     vocab.set_default_index(vocab["<unk>"])
+    #
+    #     return vocab
+
+
     def pad_data(self, l_example_d):
         # data_in = l_example_d
         # example_d = {
         #     'sent_plus_ids': sent_plus_ids,
         #     'l_ilabels': ilabels_for_each_ex[:MAX_EXTRACTION_LENGTH],
         #     'word_starts': word_starts,
-        #     'meta_data': orig_sent,
+        #     'orig_sent': orig_sent,
         #     # if spacy_model:
         #     'pos_mask': pos_mask,
         #     'pos_indices': pos_indices,
@@ -73,8 +99,8 @@ class DPadder:
         l_word_starts = [example_d['word_starts'] for example_d in l_example_d]
         padded_l_word_starts = DPadder.get_padded_list(l_word_starts, 0)
 
-        # meta_data not padded
-        l_meta_data = [example_d['meta_data'] for
+
+        l_orig_sent = [example_d['orig_sent'] for
                        example_d in l_example_d]
 
         # padded_l_sent_plus_ids = torch.tensor(padded_l_sent_plus_ids)
@@ -84,7 +110,7 @@ class DPadder:
         padded_data = {'l_sent_plus_ids': padded_l_sent_plus_ids,
                        'll_ilabels': padded_ll_ilabels,
                        'l_word_starts': padded_l_word_starts,
-                       'l_meta_data': l_meta_data}
+                       'l_orig_sent': l_orig_sent}
 
         if self.spacy_model:
             names = ["pos_mask", "pos_indices", "verb_mask", "verb_indices"]

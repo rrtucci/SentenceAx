@@ -96,16 +96,10 @@ class CCNode:  # formerly Coordination
 
     def omits_unbreakable_words(self):
 
-        # 15 words in alphabetical order
-        unbreakable_words =\
-            ['addition', 'aggregate', 'amount', 'among', 'average',
-             'between', 'center', 'equidistant', 'gross', 'mean',
-             'median', 'middle', 'sum', 'total', 'value']
-
         unbreakable_locs = []
         words = self.get_simple_sent()
         for i, word in enumerate(words):
-            if word.lower() in unbreakable_words:
+            if word.lower() in UNBREAKABLE_WORDS:
                 unbreakable_locs.append(i)
                 
         unspanned_locs = self.get_unspanned_locs()

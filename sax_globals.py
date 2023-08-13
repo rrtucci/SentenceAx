@@ -68,6 +68,12 @@ LIGHT_VERBS = [
     "try", "used", "were", "was"
 ]
 
+# 15 words in alphabetical order
+UNBREAKABLE_WORDS = \
+    ['addition', 'aggregate', 'amount', 'among', 'average',
+     'between', 'center', 'equidistant', 'gross', 'mean',
+     'median', 'middle', 'sum', 'total', 'value']
+
 # I use "ex" instead of "oie" for task
 # I use "cc" instead of "conj" for task
 

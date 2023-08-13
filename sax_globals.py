@@ -98,6 +98,7 @@ assert MODE in ["predict", "train_test", "splitpredict",
                 "resume", "test"]
 
 if "PARAMS_D" in globals():
+    print("PARAM_D is already defined")
 
     # define `PARAMS_D` in jupyter notebook before running any
     # subroutines that use it. The file `custom_params_d.txt` gives

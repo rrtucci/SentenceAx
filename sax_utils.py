@@ -2,6 +2,8 @@ from collections import defaultdict
 import random
 import numpy as np
 import torch
+import nltk
+from sax_globals import *
 
 class ClassFromDict(dict):
     """
@@ -22,13 +24,36 @@ def update_dict(dict, new_dict, add_new_keys=True):
                 dict[key] = new_dict[key]
 
 
-def get_words(ztz):
-    # get_words("") = []
-    if ztz:
-        li = ztz.strip().split()
+def get_words(ztz, algo=1):
+    """
+    get_words("") = []
+
+    Parameters
+    ----------
+    ztz
+
+    Returns
+    -------
+
+    """
+    if algo==1:
+        return nltk.word_tokenize(ztz)
+    elif algo==2:
+        if ztz:
+            li = ztz.strip().split()
+            li0 = []
+            for word in li:
+                if word[-1] in PUNCT_MARKS and \
+                        word[-1] not in QUOTES:
+                    li0.append(word[:-1])
+                    li0.append(word[-1])
+                else:
+                    li0.append(word)
+            return li0
+        else:
+            return []
     else:
-        li = []
-    return li
+        assert False
 
 def none_dd(di):
     # dd = default dictionary
@@ -43,6 +68,7 @@ def set_seed(seed):
     np.random.seed(seed)
     torch.cuda.manual_seed_all(seed)
     return
+
 
 if __name__ == "__main__":
     def main():

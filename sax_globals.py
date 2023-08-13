@@ -27,6 +27,14 @@ UNUSED_TOKENS = ["[unused1]", "[unused2]", "[unused3]"]
 UNUSED_TOKENS_STR = " " + " ".join(UNUSED_TOKENS)
 # NUM_EMBEDDINGS = 100
 
+QUOTES = "\"\'" #2
+BRACKETS = "(){}[]<>" #8
+SEPARATORS = ",:;&-" #5
+ARITHMETICAL = "*|\/@#$%^+=~_" #13
+ENDING = ".?!" #3
+PUNCT_MARKS = QUOTES + BRACKETS + SEPARATORS + ARITHMETICAL + ENDING
+
+
 EXTAG_TO_ILABEL = {'NONE': 0, 'ARG1': 1, 'REL': 2, 'ARG2': 3,
                    'LOC': 4, 'TIME': 4, 'TYPE': 5, 'ARGS': 3}
 

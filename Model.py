@@ -94,7 +94,7 @@ class Model(pl.LightningModule):
 
         self.loss = nn.CrossEntropyLoss()
 
-        self._metric = ExMetric(self.params_d) \
+        self.metric = ExMetric(self.params_d) \
             if self.params_d["task"] == "ex" else CCMetric()
 
         self.constraints_d = dict()
@@ -136,6 +136,8 @@ class Model(pl.LightningModule):
             optimizer = AdamW(opt_params, lr=1e-3)
         elif self.params_d["optimizer"] == 'adam':
             optimizer = Adam(opt_params, lr=1e-3)
+        else:
+            assert False
 
         if self.params_d["multi_opt"] and \
                 self.params_d["constraints"] != None:
@@ -416,10 +418,10 @@ class Model(pl.LightningModule):
                     if type(output_d['meta_data'][0]) != type(""):
                         output_d['meta_data'] = [self.auto_tokenizer.decode[m]
                                                for m in output_d['meta_data']]
-                    self._metric(output_d['predictions'],
+                    self.metric(output_d['predictions'],
                                  output_d['ground_truth'],
                                  meta_data=output_d['meta_data'])
-                metrics = self._metric.get_metric(reset=True, mode=mode)
+                metrics = self.metric.get_metric(reset=True, mode=mode)
 
             val_acc, val_auc = metrics['F1_exact'], 0
             result = {"eval_f1": val_acc, "eval_p": metrics['P_exact'],
@@ -433,9 +435,9 @@ class Model(pl.LightningModule):
                     if type(output_d['meta_data'][0]) != type(""):
                         output_d['meta_data'] = [self.auto_tokenizer.decode[m]
                                                for m in output_d['meta_data']]
-                    self._metric(output_d['predictions'], output_d['meta_data'],
+                    self.metric(output_d['predictions'], output_d['meta_data'],
                                  output_d['scores'])
-                metrics = self._metric.get_metric(reset=True, mode=mode)
+                metrics = self.metric.get_metric(reset=True, mode=mode)
 
             result = {"eval_f1": metrics['carb_f1'],
                       "eval_auc": metrics['carb_auc'],
@@ -516,8 +518,10 @@ class Model(pl.LightningModule):
             arg2 = (arg2 + ' ' + loc_time + ' ' + args).strip()
         sentence_str = ' '.join(sentence).strip()
 
-        extraction = Extraction_sax(rel=rel,
-                                    sent=sentence_str,
+        extraction = Extraction_sax(sentence_str,
+                                    arg1,
+                                    rel,
+                                    arg2,
                                     confidence=score)
         extraction.add_arg1(arg1)
         extraction.add_arg2(arg2)
@@ -547,11 +551,11 @@ class Model(pl.LightningModule):
                 words = sentence_str.split() + \
                         ['[unused1]', '[unused2]', '[unused3]']
                 orig_sentence = sentence_str.split('[unused1]')[0].strip()
-                if self._metric.mapping:
-                    if self._metric.mapping[
+                if self.metric.mapping:
+                    if self.metric.mapping[
                         orig_sentence] not in all_predictions:
                         all_predictions[
-                            self._metric.mapping[orig_sentence]] = []
+                            self.metric.mapping[orig_sentence]] = []
                 else:
                     if orig_sentence not in all_predictions:
                         all_predictions[orig_sentence] = []
@@ -563,11 +567,11 @@ class Model(pl.LightningModule):
                         extraction, words, scores[i][j].item())
                     if pro_extraction.arg1_pair[1] != '' and \
                             pro_extraction.rel_pair[1] != '':
-                        if self._metric.mapping:
+                        if self.metric.mapping:
                             if not pro_extraction.get_str() in \
                                    all_predictions[
-                                    self._metric.mapping[orig_sentence]]:
-                                all_predictions[self._metric.mapping[
+                                    self.metric.mapping[orig_sentence]]:
+                                all_predictions[self.metric.mapping[
                                     orig_sentence]].append(pro_extraction)
                         else:
                             if not pro_extraction.get_str() in \
@@ -618,13 +622,13 @@ class Model(pl.LightningModule):
                     depth_predictions = predictions[idx][depth][:len(
                         words)].tolist()
                     sentence_predictions.append(depth_predictions)
-                pred_ccnodes = metric.get_ccnodes(sentence_predictions)
+                pred_ccnodes = self.metric.get_ccnodes(sentence_predictions)
 
                 words = sentence.split()
                 sentence_str = sentence + '\n'
-                tree = CCTree(ccsent, predictions_for_each_depth)
+                tree = CCTree(simple_sent, depth_predictions)
                 split_sentences, conj_words, sentence_indices_list = \
-                    tree.get_simple_sentences()
+                    tree.get_simple_sents()
                 all_sentence_indices.append(sentence_indices_list)
                 all_conjunct_words.append(conj_words)
                 total1 += len(split_sentences)

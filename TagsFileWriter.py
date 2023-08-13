@@ -32,7 +32,7 @@ class TagsFileWriter:
         nlp = spacy.load("en_core_web_sm")
 
         self.spacy_tokens = ""
-        self.simple_to_complex_sents = None  # analogous to conj_mapping
+        self.simple_to_complex_sents = None  # formerly conj_mapping
         self.set_simple_to_complex_sents_dict()
 
     def get_sentences(self):

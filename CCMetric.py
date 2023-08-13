@@ -1,14 +1,14 @@
-from CCScorer import *
+from CCReportCard import *
 import os
 import pickle
 
 
 class CCMetric():
     def __init__(self, dump_dir=None):
-        self.ccscorer_whole = CCScorer("whole")
-        self.ccscorer_outer = CCScorer("outer")
-        self.ccscorer_inner = CCScorer("inner")
-        self.ccscorer_exact = CCScorer("exact")
+        self.sc_whole = CCReportCard("whole")
+        self.sc_outer = CCReportCard("outer")
+        self.sc_inner = CCReportCard("inner")
+        self.sc_exact = CCReportCard("exact")
         self.n_complete = 0
         self.n_sentence = 0
         self.dump_dir = dump_dir
@@ -21,8 +21,8 @@ class CCMetric():
                 os.remove(dump_dir + '/gt_it_ccnodes.pkl')
 
     def __call__(self, predictions, ground_truth, meta_data=None,
-                 ccnodes=False):
-        # ccnodes == True when we give it the complete ccnodes
+                 ccnodes=None):
+        # ccnodes != None when we give it the complete ccnodes
         # happens when we want to evaluate on the original system outputs
         for i in range(len(predictions)):
             if not ccnodes:
@@ -33,10 +33,10 @@ class CCMetric():
                 pred_ccnodes = predictions[i]
                 true_ccnodes = ground_truth[i]
 
-            self.ccscorer_whole.append(pred_ccnodes, true_ccnodes)
-            self.ccscorer_outer.append(pred_ccnodes, true_ccnodes)
-            self.ccscorer_inner.append(pred_ccnodes, true_ccnodes)
-            self.ccscorer_exact.append(pred_ccnodes, true_ccnodes)
+            self.sc_whole.append(pred_ccnodes, true_ccnodes)
+            self.sc_outer.append(pred_ccnodes, true_ccnodes)
+            self.sc_inner.append(pred_ccnodes, true_ccnodes)
+            self.sc_exact.append(pred_ccnodes, true_ccnodes)
 
             if self.dump_dir:
                 pickle.dump(tokens, open(self.dump_dir + '/tokens.pkl', 'ab'))
@@ -47,18 +47,18 @@ class CCMetric():
         return
 
     def reset(self):
-        self.ccscorer_whole.reset()
-        self.ccscorer_outer.reset()
-        self.ccscorer_inner.reset()
-        self.ccscorer_exact.reset()
+        self.sc_whole.reset()
+        self.sc_outer.reset()
+        self.sc_inner.reset()
+        self.sc_exact.reset()
         self.n_complete = 0
         self.n_sentence = 0
 
     def get_metric(self, reset: bool = False, mode=None):
-        ccscorers = [("whole", self.ccscorer_whole),
-                    ("outer", self.ccscorer_outer),
-                    ("inner", self.ccscorer_inner),
-                    ("exact", self.ccscorer_exact)]
+        ccscorers = [("whole", self.sc_whole),
+                    ("outer", self.sc_outer),
+                    ("inner", self.sc_inner),
+                    ("exact", self.sc_exact)]
 
         all_metrics = dict()
         all_metrics['P_exact'] = ccscorers[3][1].overall.precision
@@ -73,13 +73,13 @@ class CCMetric():
 
     def get_overall_score(self, metric='exact'):
         if metric == 'whole':
-            ccscorer = self.ccscorer_whole
+            ccscorer = self.sc_whole
         elif metric == 'outer':
-            ccscorer = self.ccscorer_outer
+            ccscorer = self.sc_outer
         elif metric == 'inner':
-            ccscorer = self.ccscorer_inner
+            ccscorer = self.sc_inner
         elif metric == 'exact':
-            ccscorer = self.ccscorer_exact
+            ccscorer = self.sc_exact
         else:
             raise ValueError('invalid metric: {}'.format(metric))
         return ccscorer.overall.f1_score

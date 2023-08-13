@@ -20,10 +20,11 @@ class CCTree:
         self.child_ccloc_to_par_cclocs = {}
         self.set_tree_structure()
 
-    def get_ccnode_from_ccloc(self, ccloc):
+    @staticmethod
+    def get_ccnode_from_ccloc(ccloc, ccnodes):
         unique_k = -1
         one_hot = []
-        for k, ccnode in enumerate(self.ccnodes):
+        for k, ccnode in enumerate(ccnodes):
             if ccnode.ccloc == ccloc:
                 one_hot.append(1)
                 unique_k = k
@@ -256,7 +257,8 @@ class CCTree:
         while len(self.root_cclocs) > 0:
 
             root_ccloc = self.root_cclocs.pop(0)
-            root_ccnode = self.get_ccnode_from_ccloc(root_ccloc)
+            root_ccnode = CCTree.get_ccnode_from_ccloc(root_ccloc,
+                                                       self.ccnodes)
             root_count -= 1
             eqlevel_ccnodes.append(root_ccnode)
 

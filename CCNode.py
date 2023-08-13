@@ -55,6 +55,31 @@ class CCNode:  # formerly Coordination
         assert self.ccloc in spanned_locs
         for loc in self.seplocs:
             assert loc in spanned_locs
+            
+    def get_span_pair(self, index, check=False):
+        """
+        formerly get_pair()
+        
+        Parameters
+        ----------
+        index
+        check
+
+        Returns
+        -------
+
+        """
+        span_pair = None
+        for i in range(1, len(self.spans)):
+            if index < self.spans[i][0]:
+                span_pair = (self.spans[i - 1], self.spans[i])
+                assert index >= span_pair[0][1]  and \
+                       index < span_pair[1][0]
+                break
+        if check and span_pair is None:
+            raise LookupError(
+                "Could not find any span_pair for index={}".format(index))
+        return span_pair
 
 
     def is_parent(self, child):
@@ -94,6 +119,18 @@ class CCNode:  # formerly Coordination
 
 
     def omits_unbreakable_words(self, orig_words):
+        """
+        formerly remove_unbreakable_conjuncts()
+
+
+        Parameters
+        ----------
+        orig_words
+
+        Returns
+        -------
+
+        """
 
         unbreakable_locs = []
         spanned_locs = self.get_spanned_locs()

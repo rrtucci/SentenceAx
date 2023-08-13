@@ -41,18 +41,32 @@ EXTAG_TO_ILABEL = {'NONE': 0, 'ARG1': 1, 'REL': 2, 'ARG2': 3,
 CCTAG_TO_ILABEL = {'NONE': 0, 'CP': 1, 'CP_START': 2,
                    'CC': 3, 'SEP': 4, 'OTHERS': 5, }
 
+# LIGHT_VERBS = [
+#     "take", "have", "give", "do", "make", "has", "have",
+#     "be", "is", "were", "are", "was", "had", "being",
+#     "began", "am", "following", "having", "do",
+#     "does", "did", "started", "been", "became",
+#     "left", "help", "helped", "get", "keep",
+#     "think", "got", "gets", "include", "suggest",
+#     "used", "see", "consider", "means", "try",
+#     "start", "included", "lets", "say", "continued",
+#     "go", "includes", "becomes", "begins", "keeps",
+#     "begin", "starts", "said", "stop", "begin",
+#     "start", "continue", "say"]
+
+# in alphabetical order, eliminated repeats begin(2), do(2), say(2), start(2)
 LIGHT_VERBS = [
-    "take", "have", "give", "do", "make", "has", "have",
-    "be", "is", "were", "are", "was", "had", "being",
-    "began", "am", "following", "having", "do",
-    "does", "did", "started", "been", "became",
-    "left", "help", "helped", "get", "keep",
-    "think", "got", "gets", "include", "suggest",
-    "used", "see", "consider", "means", "try",
-    "start", "included", "lets", "say", "continued",
-    "go", "includes", "becomes", "begins", "keeps",
-    "begin", "starts", "said", "stop", "begin",
-    "start", "continue", "say"]
+    "am", "are", "be", "became", "becomes", "begin",
+    "began", "begins", "being", "continue",
+    "continued", "consider", "do", "does", "did", "following",
+    "get", "gets", "give", "go", "got", "had",
+    "have", "have", "having", "help", "helped",
+    "include", "included", "includes", "include", "is",
+    "kept", "keep", "keeps", "left", "lets", "make", "means",
+    "said", "say", "see", "start", "started",
+    "starts", "stop", "suggest", "take", "think",
+    "try", "used", "were", "was"
+]
 
 # I use "ex" instead of "oie" for task
 # I use "cc" instead of "conj" for task

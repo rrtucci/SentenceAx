@@ -3,7 +3,7 @@ from CCTree import *
 
 class CCScores:
     """
-    formerly class Record
+    formerly metric.Record
     Refs:
     See my book Bayesuvius, chapter "ROC curves
 
@@ -51,7 +51,7 @@ class CCScores:
 
 class CCReportCard:
     """
-    formerly class Counter
+    formerly metric.Counter
     `student` formerly `criteria`
 
     """

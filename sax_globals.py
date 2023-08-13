@@ -104,7 +104,7 @@ assert MODE in ["predict", "train_test", "splitpredict",
                 "resume", "test"]
 
 if "PARAMS_D" in globals():
-    print("PARAM_D is already defined")
+    print("PARAM_D was defined prior to runing sax_globals.py")
 
     # define `PARAMS_D` in jupyter notebook before running any
     # subroutines that use it. The file `custom_params_d.txt` gives

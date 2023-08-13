@@ -1,7 +1,19 @@
 import difflib
 
 
-def count_sub_reps(sub, full):  # formerly seq_in_seq
+def count_sub_reps(sub, full):
+    """
+    formerly data_processing.seq_in_seq()
+
+    Parameters
+    ----------
+    sub
+    full
+
+    Returns
+    -------
+
+    """
     # rep = repetitions
     # ["apple", "banana", "cherry"].count("cherry") # output 1
     # 'dog is in dog house'.count('dog') # output 2
@@ -12,7 +24,12 @@ def count_sub_reps(sub, full):  # formerly seq_in_seq
     return " ".join(full).count(" ".join(sub))
 
 
-def sub_exists(sub, full, start_loc):  # formerly starts_with
+def sub_exists(sub, full, start_loc):
+    """
+    formerly data_processing.starts_with()
+
+
+    """
     return all(sub[i] == full[start_loc + i] for i in range(0, len(sub)))
 
 

@@ -35,6 +35,17 @@ class DLoader:
 
     @staticmethod
     def remerge_sent(tokens):
+        """
+        formerly data.remerge_sent()
+
+        Parameters
+        ----------
+        tokens
+
+        Returns
+        -------
+
+        """
         # merges spacy tokens which are not separated by white-space
         # does this recursively until no further changes
         changed = True
@@ -54,6 +65,17 @@ class DLoader:
 
     @staticmethod
     def pos_mask(tokens):
+        """
+        formerly data.pos_tags()
+
+        Parameters
+        ----------
+        tokens
+
+        Returns
+        -------
+
+        """
         pos_mask = []
         pos_indices = []
         pos_words = []
@@ -71,6 +93,17 @@ class DLoader:
 
     @staticmethod
     def verb_mask(tokens):
+        """
+        formerly data.verb_tags()
+
+        Parameters
+        ----------
+        tokens
+
+        Returns
+        -------
+
+        """
         verb_mask, verb_indices, verb_words = [], [], []
         for token_index, token in enumerate(tokens):
             if token.pos_ in ['VERB'] and \
@@ -86,8 +119,10 @@ class DLoader:
         return verb_mask, verb_indices, verb_words
 
     def get_example_ds(self, inp_fp):
-        # formerly _process_data()
         """
+        formerly data._process_data()
+
+
         this reads a file of the form
 
         Hercule Poirot is a fictional Belgian detective , created by Agatha Christie . [unused1] [unused2] [unused3]
@@ -209,7 +244,18 @@ class DLoader:
         return l_example_d, orig_sents
 
     def get_ttt_datasets(self, predict_sentences=None):
-        # formerly process_data()
+        """
+        formerly data.process_data()
+
+        Parameters
+        ----------
+        predict_sentences
+
+        Returns
+        -------
+
+        """
+
 
         train_fp = self.params_d["train_fp"]
         dev_fp = self.params_d["dev_fp"]
@@ -306,6 +352,17 @@ class DLoader:
         return train_dataset, dev_dataset, test_dataset # , vocab, orig_sents
 
     def get_ttt_dataloaders(self, type, predict_sentences=None):
+        """
+
+        Parameters
+        ----------
+        type
+        predict_sentences
+
+        Returns
+        -------
+
+        """
 
         train_dataset, val_dataset, test_dataset = \
             self.get_ttt_datasets(predict_sentences)

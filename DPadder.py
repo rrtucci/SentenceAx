@@ -71,6 +71,21 @@ class DPadder:
 
 
     def pad_data(self, l_example_d):
+        """
+        formerly data.pad_data()
+
+
+
+        Parameters
+        ----------
+        l_example_d
+
+        Returns
+        -------
+
+        """
+
+
         # data_in = l_example_d
         # example_d = {
         #     'sent_plus_ids': sent_plus_ids,
@@ -96,7 +111,8 @@ class DPadder:
             pad_id1=-100,
             max_outer_dim=MAX_DEPTH)
 
-        l_word_starts = [example_d['word_starts'] for example_d in l_example_d]
+        l_word_starts = \
+            [example_d['word_starts'] for example_d in l_example_d]
         padded_l_word_starts = DPadder.get_padded_list(l_word_starts, 0)
 
 

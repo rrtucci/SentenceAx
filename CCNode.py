@@ -1,12 +1,14 @@
 from sax_utils import *
 
-class CCNode:  # formerly Coordination
+class CCNode:
     """
+    formerly metric.Coordination
+
     loc = location of a word in orig_sent
     cc = coordinating conjunction.
     cc are FANBOYS = for , and, nor, but, or, yet, so
 
-    ccnode is formerly coordination
+    CCNode is formerly metric.Coordination
     span is formerly a conjunct
 
     """
@@ -58,7 +60,7 @@ class CCNode:  # formerly Coordination
             
     def get_span_pair(self, index, check=False):
         """
-        formerly get_pair()
+        formerly metric.Coordination.get_pair()
         
         Parameters
         ----------
@@ -120,7 +122,7 @@ class CCNode:  # formerly Coordination
 
     def omits_unbreakable_words(self, orig_words):
         """
-        formerly remove_unbreakable_conjuncts()
+        formerly data.remove_unbreakable_conjuncts()
 
 
         Parameters

@@ -21,6 +21,9 @@ class Extraction_sax():
                  arg2="",
                  confidence=None):
         """
+        formerly data_processing.py
+
+
         assume only one: arg1, rel, arg2, time_arg, loc_arg
         assume args list is empty
         """
@@ -82,7 +85,15 @@ class Extraction_sax():
             self.sent_extags[m.b: m.b + m.size] = \
                 [extag_name] * m.size
 
-    def set_extags_of_arg2(self):  # formerly label_arg2()
+    def set_extags_of_arg2(self):
+        """
+        formerly data_processing.label_arg2()
+
+
+        Returns
+        -------
+
+        """
 
         li_2lt = self.arg2_pair[1] + self.loc_arg_pair[1] + \
                  self.time_arg_pair[1]
@@ -116,6 +127,18 @@ class Extraction_sax():
         self.arg2_extagged = True
 
     def set_extags_of_arg1_or_rel(self, arg_name):
+        """
+        formerly data_processing.label_arg(),
+
+
+        Parameters
+        ----------
+        arg_name
+
+        Returns
+        -------
+
+        """
         if arg_name == "arg1":
             arg_words = self.arg1_pair[1]
         elif arg_name == "rel":
@@ -175,6 +198,13 @@ class Extraction_sax():
 
 
     def set_extags_of_IS_OF_FROM(self):
+        """
+        formerly data_processing.label_is_of_relations()
+
+        Returns
+        -------
+
+        """
         # sent can have implicit "is", "of", "from"
         # inserted in by hand and indicated by "[is]", "[of]" , "[from]"
         # Note that this is different from explicit "is", "of", "from"
@@ -201,6 +231,14 @@ class Extraction_sax():
 
 
     def set_extags_of_repeated_arg1(self):
+        """
+        formerly data_processing.label_multiple_arg1()
+
+
+        Returns
+        -------
+
+        """
         rel_is_extagged = self.base_extag_is_assigned["REL"]
         arg1_is_extagged = self.base_extag_is_assigned["ARG1"]
 
@@ -232,6 +270,14 @@ class Extraction_sax():
                 assert False
 
     def set_extags_of_repeated_rel(self):
+        """
+        formerly data_processing.label_multiple_rel()
+
+
+        Returns
+        -------
+
+        """
         arg1_is_extagged = self.base_extag_is_assigned["ARG1"]
         arg2_is_extagged = self.base_extag_is_assigned["ARG2"]
         rel_is_extagged = self.base_extag_is_assigned["REL"]
@@ -296,6 +342,21 @@ class Extraction_sax():
                             ['REL'] * len(rel_words)
 
     def set_extags_of_loc_or_time(self, arg_name):
+        """
+        formerly data_processing.label_time(),
+        formerly data_processing.label_loc()
+
+
+
+
+        Parameters
+        ----------
+        arg_name
+
+        Returns
+        -------
+
+        """
         if arg_name == "time":
             pair = self.time_arg_pair
         elif arg_name == "loc":

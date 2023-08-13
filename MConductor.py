@@ -52,8 +52,17 @@ from sax_utils import *
 import tqdm
 
 
-class MConductor:  # formerly run.py
+class MConductor:
+    """
+    formerly run.py
+
+
+    """
     def __init__(self):
+        """
+
+
+        """
         self.params_d = PARAMS_D
         self.task = TASK
         assert self.task in ["ex", "cc"]
@@ -88,6 +97,12 @@ class MConductor:  # formerly run.py
         self.sent_pad_id = self.encode(auto_tokenizer.pad_token)
 
     def set_checkpoint_callback(self):
+        """
+
+        Returns
+        -------
+
+        """
         if self.saved:
             self.checkpoint_callback = ModelCheckpoint(
                 filepath=self.save_dir + '/{epoch:02d}_{eval_acc:.3f}',
@@ -101,14 +116,38 @@ class MConductor:  # formerly run.py
             self.checkpoint_callback = None
 
     def get_all_checkpoint_paths(self):
+        """
+
+        Returns
+        -------
+
+        """
         return glob(self.save_dir + '/*.ckpt')
 
     def get_checkpoint_path(self):
+        """
+        formerly run.get_checkpoint_path()
+
+        Returns
+        -------
+
+        """
         all_paths = glob(self.save_dir + '/*.ckpt')
         assert len(all_paths) == 1
         return all_paths[0]
 
     def get_logger(self, mode):
+        """
+        formerly run.get_logger()
+
+        Parameters
+        ----------
+        mode
+
+        Returns
+        -------
+
+        """
         log_dir = self.params_d["save"] + '/logs/'
         if os.path.exists(log_dir + f'{mode}'):
             mode_logs = list(glob(log_dir + f'/{mode}_*'))
@@ -124,6 +163,17 @@ class MConductor:  # formerly run.py
         return logger
 
     def get_trainer(self, logger, checkpoint_path=None):
+        """
+
+        Parameters
+        ----------
+        logger
+        checkpoint_path
+
+        Returns
+        -------
+
+        """
         # trainer = Trainer(
         #     accumulate_grad_batches = int(params_d.accumulate_grad_batches),
         #     checkpoint_callback = self.checkpoint_callback,
@@ -149,8 +199,21 @@ class MConductor:  # formerly run.py
             **self.params_d)
         return trainer
 
-    def update_params_d(self, checkpoint_path,
+    def update_params_d(self,
+                        checkpoint_path,
                         **final_changes_params_d):
+        """
+
+
+        Parameters
+        ----------
+        checkpoint_path
+        final_changes_params_d
+
+        Returns
+        -------
+
+        """
         if self.has_cuda:
             loaded_params_d = torch.load(checkpoint_path)['params_d']
         else:
@@ -163,6 +226,13 @@ class MConductor:  # formerly run.py
             update_dict(self.params_d, final_changes_params_d)
 
     def train(self):
+        """
+        formerly run.train()
+
+        Returns
+        -------
+
+        """
         self.set_checkpoint_callback()
         self.model = Model(self.auto_tokenizer)
         logger = self.get_logger('train')
@@ -175,6 +245,18 @@ class MConductor:  # formerly run.py
                     self.params_d["save"] + f'/logs/train')
 
     def resume(self, **final_changes_params_d):
+        """
+        formerly run.resume()
+
+
+        Parameters
+        ----------
+        final_changes_params_d
+
+        Returns
+        -------
+
+        """
         self.set_checkpoint_callback()
         checkpoint_path = self.get_checkpoint_path()
         self.update_params_d(checkpoint_path, **final_changes_params_d)
@@ -188,9 +270,28 @@ class MConductor:  # formerly run.py
         shutil.move(self.params_d["save"] + f'/logs/resume.part',
                     self.params_d["save"] + f'/logs/resume')
 
-    def test(self, train,
-             mapping=None, conj_word_mapping=None,
+    def test(self,
+             train,
+             mapping=None,
+             conj_word_mapping=None,
              **final_changes_params_d):
+        """
+        formerly run.test()
+
+
+        Parameters
+        ----------
+        train
+        mapping
+        conj_word_mapping
+        final_changes_params_d
+
+        Returns
+        -------
+
+        """
+
+
         self.set_checkpoint_callback()
         all_checkpoint_paths = self.get_all_checkpoint_paths()
         checkpoint_path = all_checkpoint_paths[0]
@@ -222,8 +323,23 @@ class MConductor:  # formerly run.py
                     self.params_d["save"] + f'/logs/test')
 
     def predict(self,
-                mapping=None, conj_word_mapping=None,
+                mapping=None,
+                conj_word_mapping=None,
                 **final_changes_params_d):
+        """
+        formerly run.predict()
+
+        Parameters
+        ----------
+        mapping
+        conj_word_mapping
+        final_changes_params_d
+
+        Returns
+        -------
+
+        """
+
         self.set_checkpoint_callback()
 
         # def predict(checkpoint_callback,
@@ -257,6 +373,14 @@ class MConductor:  # formerly run.py
         print(f'Total Time taken = {(end_time - start_time) / 60:2f} minutes')
 
     def splitpredict(self):
+        """
+        formerly run.splitpredict()
+
+
+        Returns
+        -------
+
+        """
         self.set_checkpoint_callback()
 
         # def splitpredict(params_d, checkpoint_callback,

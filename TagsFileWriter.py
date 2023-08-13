@@ -11,12 +11,18 @@ from math import floor
 
 class TagsFileWriter:
 
-    def __init__(self, allen_fp):
+    def __init__(self, allen_fp, ttt_fractions = (.6, .2, .2)):
+        """
+        formerly data.data_processing()
 
-
+        Parameters
+        ----------
+        allen_fp
+        """
         # ttt = train, tune, test
+        self.ttt_fractions = ttt_fractions
         assert abs(sum(self.ttt_fractions) - 1) < 1e-8
-        self.ttt_fractions = (.6, .2, .2)
+
 
         self.ztz_to_extractions = read_allen_file(allen_fp)
 
@@ -51,10 +57,23 @@ class TagsFileWriter:
         num_train_sents += num_extra_sents
         return num_train_sents, num_tune_sents, num_test_sents
 
-    def get_extags(hparams, model, sentences,
+    def get_extags(self, model, sentences,
                    orig_sentences, sentence_indices_list):
-        label_dict = {0: 'NONE', 1: 'ARG1', 2: 'REL', 3: 'ARG2', 4: 'ARG2',
-                      5: 'NONE'}
+        """
+        formerly run.get_labels()
+
+        Parameters
+        ----------
+        model
+        sentences
+        orig_sentences
+        sentence_indices_list
+
+        Returns
+        -------
+
+        """
+
         lines = []
         outputs = model.outputs
         idx1, idx2, idx3 = 0, 0, 0
@@ -74,7 +93,7 @@ class TagsFileWriter:
                     outputs[idx1]['meta_data'][
                         idx2].strip().split())
                 sentence = outputs[idx1]['meta_data'][
-                               idx2].strip() + ' [unused1] [unused2] [unused3]'
+                               idx2].strip() + UNUSED_TOKENS_STR
                 assert sentence == sentences[idx3]
                 orig_sentence = orig_sentences[i]
                 predictions = outputs[idx1]['predictions'][idx2]
@@ -94,7 +113,8 @@ class TagsFileWriter:
                     if 1 not in prediction and 2 not in prediction:
                         continue
 
-                    str_labels = ' '.join([label_dict[x] for x in labels])
+                    str_labels = \
+                        ' '.join([EXTAG_TO_ILABEL[x] for x in labels])
                     lines.append(str_labels)
 
                 idx3 += 1
@@ -106,7 +126,16 @@ class TagsFileWriter:
         lines.append('\n')
         return lines
 
+
+
     def set_simple_to_complex_sents_dict(self):
+        """
+        formerly data_processing.load_conj_mapping()
+
+        Returns
+        -------
+
+        """
         simple_to_complex_sents = {}
         content = open(EXT_SAMPLES_PATH).read()
         complex_ztz = ''
@@ -169,59 +198,4 @@ class TagsFileWriter:
                       extags_test_fp]:
             self.write_extags_file(fpath)
 
-
-    def get_extags(self, model, sentences,
-                   orig_sentences, sentence_indices_list):
-        label_dict = {0: 'NONE', 1: 'ARG1', 2: 'REL', 3: 'ARG2', 4: 'ARG2',
-                      5: 'NONE'}
-        lines = []
-        outputs = model.outputs
-        idx1, idx2, idx3 = 0, 0, 0
-        count = 0
-        prev_orig_sentence = ''
-
-        for i in range(0, len(sentence_indices_list)):
-            if len(sentence_indices_list[i]) == 0:
-                sentence = orig_sentences[i].split('[unused1]')[
-                    0].strip().split()
-                sentence_indices_list[i].append(list(range(len(sentence))))
-
-            lines.append(
-                '\n' + orig_sentences[i].split('[unused1]')[0].strip())
-            for j in range(0, len(sentence_indices_list[i])):
-                assert len(sentence_indices_list[i][j]) == len(
-                    outputs[idx1]['meta_data'][
-                        idx2].strip().split())
-                sentence = outputs[idx1]['meta_data'][
-                               idx2].strip() + ' [unused1] [unused2] [unused3]'
-                assert sentence == sentences[idx3]
-                orig_sentence = orig_sentences[i]
-                predictions = outputs[idx1]['predictions'][idx2]
-
-                all_extractions, all_str_labels, len_exts = [], [], []
-                for prediction in predictions:
-                    if prediction.sum().item() == 0:
-                        break
-
-                    labels = [0] * len(orig_sentence.strip().split())
-                    prediction = prediction[:len(sentence.split())].tolist()
-                    for idx, value in enumerate(
-                            sorted(sentence_indices_list[i][j])):
-                        labels[value] = prediction[idx]
-
-                    labels = labels[:-3]
-                    if 1 not in prediction and 2 not in prediction:
-                        continue
-
-                    str_labels = ' '.join([label_dict[x] for x in labels])
-                    lines.append(str_labels)
-
-                idx3 += 1
-                idx2 += 1
-                if idx2 == len(outputs[idx1]['meta_data']):
-                    idx2 = 0
-                    idx1 += 1
-
-        lines.append('\n')
-        return lines
 

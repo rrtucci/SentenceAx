@@ -50,7 +50,7 @@ class CCNode:  # formerly Coordination
             assert last_b <= a
             last_b = a
 
-    def check(self):
+    def check_all(self):
         self.check_spans()
         spanned_locs = self.get_spanned_locs()
         assert self.ccloc in spanned_locs

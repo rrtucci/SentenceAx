@@ -113,7 +113,7 @@ class CCTree:
                     continue
         self.fix_ccnodes()
         for ccnode in self.ccnodes:
-            ccnode.check()
+            ccnode.check_all()
 
     def set_tree_structure(self):
         """

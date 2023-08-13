@@ -1,9 +1,15 @@
-from sax_utils import *
+"""
 
-# hparams = hyperparamters,
-# fp = file path
-# params_d = pamameters dictionary
 
+hparams = hyperparamters,
+fp = file path
+params_d = pamameters dictionary
+
+
+"""
+from sax_utils import none_dd
+
+# global paths
 EXT_SAMPLES_FP = "data/ext_samples.txt"
 # file paths for training, tuning and testing cctags (cc=conjunction)
 CCTAGS_TRAIN_FP = "data/cctags_train.txt"
@@ -21,6 +27,9 @@ BOS_TOKEN_ID = 101 # bos = begin of sentence
 EOS_TOKEN_ID = 102 # eos = end of sentence
 
 CACHE_DIR = 'data/pretrained_cache'
+
+
+
 NUM_LABELS = 6
 MAX_EXTRACTION_LENGTH = 5
 UNUSED_TOKENS = ["[unused1]", "[unused2]", "[unused3]"]

@@ -47,15 +47,14 @@ from glob import glob
 from time import time
 from Model import *
 from DLoader import *
-from sax_globals import *
 from sax_utils import *
-import tqdm
-
 
 class MConductor:
     """
     formerly run.py
 
+    Refs:
+    https://spacy.io/usage/spacy-101/
 
     """
     def __init__(self):
@@ -91,10 +90,10 @@ class MConductor:
 
         # encode == convert_tokens_to_ids
         # replaces vocab.stoi (string to integer)
-        self.encode = auto_tokenizer.encode
+        self.encode = self.auto_tokenizer.encode
         # replaces vocab.itos (integer to string)
-        self.decode = auto_tokenizer.decode 
-        self.sent_pad_id = self.encode(auto_tokenizer.pad_token)
+        self.decode = self.auto_tokenizer.decode
+        self.sent_pad_id = self.encode(self.auto_tokenizer.pad_token)
 
     def set_checkpoint_callback(self):
         """

@@ -14,7 +14,7 @@ def write_allen_line(ex):
 
 def read_allen_line(line):
     tab_sep_vals = line.strip().split('\t')
-    in_ztz = tab_sep_vals[0]
+    in_sent = tab_sep_vals[0]
     confidence = float(tab_sep_vals[2])
     # if len(tab_sep_vals) == 4:
     #     num_extractions = int(tab_sep_vals[3])
@@ -32,47 +32,47 @@ def read_allen_line(line):
         # print("vcbgh", part)
         part = ' '.join(part.strip(begin_tag).strip(end_tag).strip().split())
         parts.append(part)
-    ext = Extraction_sax(in_ztz, parts[0], parts[1], parts[2], confidence)
+    ext = Extraction_sax(in_sent, parts[0], parts[1], parts[2], confidence)
 
     return ext
 
 def get_num_sents_in_allen_file(allen_fp):
     with open(allen_fp, 'r', encoding='utf-8') as f:
         lines = f.readlines()
-    prev_in_ztz = ''
+    prev_in_sent = ''
     num_sents = 1
     for line in lines:
         ex = read_allen_line(line)
-        if ex.sent != prev_in_ztz:
+        if ex.sent != prev_in_sent:
             num_sents += 1
-        prev_in_ztz = ex.sent
+        prev_in_sent = ex.sent
     return num_sents
 
 def read_allen_file(allen_fp):
     with open(allen_fp, 'r', encoding='utf-8') as f:
         lines = f.readlines()
     lines = [unidecode(line) for line in lines]
-    ztz_to_extractions = OrderedDict()
+    sent_to_extractions = OrderedDict()
     extractions = []
-    prev_in_ztz = ''
+    prev_in_sent = ''
     for line in lines:
         # print("bnhk", line)
         ex = read_allen_line(line)
         extractions.append(ex)
         # print("ooyp1", ex.sent)
-        # print("ooyp2", prev_in_ztz)
-        # print("ooyp3", ex.sent == prev_in_ztz)
-        if ex.sent != prev_in_ztz:
-            if prev_in_ztz:
-                ztz_to_extractions[prev_in_ztz] = extractions[:-1]
-                # print("llkml", prev_in_ztz, extractions)
-                prev_in_ztz = ex.sent
+        # print("ooyp2", prev_in_sent)
+        # print("ooyp3", ex.sent == prev_in_sent)
+        if ex.sent != prev_in_sent:
+            if prev_in_sent:
+                sent_to_extractions[prev_in_sent] = extractions[:-1]
+                # print("llkml", prev_in_sent, extractions)
+                prev_in_sent = ex.sent
                 extractions = [ex]
             else:
-                prev_in_ztz = ex.sent
+                prev_in_sent = ex.sent
 
-    # print("zlpd", ztz_to_extractions)
-    return ztz_to_extractions
+    # print("zlpd", sent_to_extractions)
+    return sent_to_extractions
 
 
 if __name__ == "__main__":
@@ -91,11 +91,11 @@ if __name__ == "__main__":
 
     def main2():
         in_path = "data/imojie-data/train/oie4_extractions.tsv"
-        ztz_to_extractions = read_allen_file(in_path)
-        # print("llkp", list(ztz_to_extractions.keys())[0:2])
-        for ztz in list(ztz_to_extractions.keys())[0:5]:
-            extractions = ztz_to_extractions[ztz]
-            print(ztz)
+        sent_to_extractions = read_allen_file(in_path)
+        # print("llkp", list(sent_to_extractions.keys())[0:2])
+        for sent in list(sent_to_extractions.keys())[0:5]:
+            extractions = sent_to_extractions[sent]
+            print(sent)
             for k, ex in enumerate(extractions):
                 print(str(k+1) + ".")
                 print("arg1=", ex.arg1)

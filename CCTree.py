@@ -284,6 +284,7 @@ class CCTree:
 
         return simple_sents, spanned_words, li_spanned_locs
 
+
     # def get_shifted_ccnodes(self, arr):  # post_process()
     #     new_ccnodes = []
     #     # arr is 1 dim numpy array

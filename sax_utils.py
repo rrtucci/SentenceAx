@@ -24,23 +24,23 @@ def update_dict(dict, new_dict, add_new_keys=True):
                 dict[key] = new_dict[key]
 
 
-def get_words(ztz, algo=1):
+def get_words(sent, algo=1):
     """
     get_words("") = []
 
     Parameters
     ----------
-    ztz
+    sent
 
     Returns
     -------
 
     """
     if algo==1:
-        return nltk.word_tokenize(ztz)
+        return nltk.word_tokenize(sent)
     elif algo==2:
-        if ztz:
-            li = ztz.strip().split()
+        if sent:
+            li = sent.strip().split()
             li0 = []
             for word in li:
                 if word[-1] in PUNCT_MARKS and \

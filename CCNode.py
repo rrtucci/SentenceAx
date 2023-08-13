@@ -29,7 +29,6 @@ class CCNode:  # formerly Coordination
 
         Parameters
         ----------
-        orig_sent
         ccloc:
             location of coordinating conjunctions
         seplocs:
@@ -94,10 +93,11 @@ class CCNode:  # formerly Coordination
         return unspanned_locs
 
 
-    def omits_unbreakable_words(self):
+    def omits_unbreakable_words(self, orig_words):
 
         unbreakable_locs = []
-        words = self.get_simple_sent()
+        spanned_locs = self.get_spanned_locs()
+        words = [orig_words[loc] for loc in spanned_locs]
         for i, word in enumerate(words):
             if word.lower() in UNBREAKABLE_WORDS:
                 unbreakable_locs.append(i)

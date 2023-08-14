@@ -10,7 +10,7 @@ Blagoja ` Billy ' Celeski is an Australian footballer who plays as a midfielder 
 Blagoja ` Billy ' Celeski is an Australian footballer who plays as a midfielder for the Newcastle Jets .	have	the Newcastle Jets	midfielder
 
 
-* extractions, tab separated vauues (imojie-data\test\carb\extractions.tsv)
+* extractions, tab separated values (imojie-data\test\carb\extractions.tsv)
 negotiations with the third bank .	said	A spokesman	HealthVest has paid two of the three banks it owed interest to in October and is in negotiations with the third bank
 A spokesman said HealthVest has paid two of the three banks it owed interest to in October and is in negotiations with the third bank .	has paid	HealthVest	two of the three banks	it owed interest to	T: in October	C: A spokesman said
 A spokesman said HealthVest has paid two of the three banks it owed interest to in October and is in negotiations with the third bank .	is in	HealthVest	negotiations	with the third bank	C: A spokesman said

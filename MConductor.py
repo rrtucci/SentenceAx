@@ -364,7 +364,7 @@ class MConductor:
                           resume_from_checkpoint=checkpoint_path)
         start_time = time()
         self.model.all_sentences = all_sentences
-        mdl = Dloader(self.auto_tokenizer)
+        mdl = DLoader(self.auto_tokenizer)
         trainer.test(self.model,
                      test_dataloaders=mdl.get_ttt_dataloaders("test"))
         end_time = time()
@@ -461,7 +461,7 @@ class MConductor:
         self.params_d["task"] = 'oie'
         self.params_d["checkpoint"] = self.params_d["oie_model"]
         self.params_d["model_str"] = 'bert-base-cased'
-        mdl = Dloader(self.auto_tokenizer)
+        mdl = DLoader(self.auto_tokenizer)
         _, _, split_test_dataset= \
             mdl.get_ttt_datasets(predict_sentences=sentences)
         split_test_dataloader = DataLoader(

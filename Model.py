@@ -76,15 +76,15 @@ class Model(pl.LightningModule):
 
         self.base_model = AutoModel.from_pretrained(
             self.params_d["model_str"], cache_dir=CACHE_DIR)
-        self._hidden_size = self.base_model.config.hidden_size
+        self.hidden_size = self.base_model.config.hidden_size
 
         if self.params_d["iterative_layers"] != 0:
             num_layers = len(self.base_model.encoder.layer)
-            mid = num_layers - self.params_d["iterative_layers"]
+            rest = num_layers - self.params_d["iterative_layers"]
             self.base_model.encoder.layer = \
-                self.base_model.encoder.layer[0:mid]
+                self.base_model.encoder.layer[0:rest]
             self.iterative_transformer = \
-                self.base_model.encoder.layer[mid:num_layers]
+                self.base_model.encoder.layer[rest:num_layers]
 
         else:
             self.iterative_transformer = []
@@ -100,8 +100,8 @@ class Model(pl.LightningModule):
             
         """
         self.label_embeddings = nn.Embedding(100,
-                                             self._hidden_size)
-        self.merge_layer = nn.Linear(self._hidden_size,
+                                             self.hidden_size)
+        self.merge_layer = nn.Linear(self.hidden_size,
                                      self.labelling_dim)
         self.labelling_layer = nn.Linear(self.labelling_dim,
                                          self.num_labels)
@@ -171,7 +171,7 @@ class Model(pl.LightningModule):
         # remember: labels = li_li_li_label
         # first (outer) list over batch events
         # second list over extractions
-        # third (inner) list over number of ilabels in a line
+        # third (inner) list over number of labels in a line
         batch_size, depth, labels_length = batch_d["labels"].shape
         if mode != 'train':
             depth = MAX_DEPTH
@@ -240,7 +240,7 @@ class Model(pl.LightningModule):
                 # remember: labels = li_li_li_label
                 # first (outer) list over batch events
                 # second list over extractions
-                # third (inner) list over number of ilabels in a line
+                # third (inner) list over number of labels in a line
                 padding_labels = (batch_d["labels"][:, 0, :] != -100).float()
 
                 sro_label_predictions = \
@@ -594,7 +594,7 @@ class Model(pl.LightningModule):
                                     pro_extraction)
             all_pred = []
             all_pred_allennlp = []
-            for example_id, sentence in enumerate(all_predictions):
+            for sample_id, sentence in enumerate(all_predictions):
                 predicted_extractions = all_predictions[sentence]
                 # write only the results in text file
                 # if 'predict' in self.params_d["mode"]:
@@ -618,7 +618,7 @@ class Model(pl.LightningModule):
                 all_pred_allennlp.append(sentence_str_allennlp)
             self.all_ex_predictions.extend(all_pred)
         if task == 'conj':
-            example_id, correct = 0, True
+            sample_id, correct = 0, True
             total1, total2 = 0, 0
             predictions = output_d['predictions']
             gt = output_d['ground_truth']
@@ -628,7 +628,7 @@ class Model(pl.LightningModule):
             all_conjunct_words = []
             all_sentence_indices = []
             for idx in range(len(meta_data)):
-                example_id += 1
+                sample_id += 1
                 sentence = meta_data[idx]
                 words = sentence.split()
                 sentence_predictions, sentence_gt = [], []

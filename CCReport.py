@@ -1,7 +1,7 @@
 import numpy as np
 from CCTree import *
 
-class CCScores:
+class CCScorer:
     """
     formerly metric.Record
     Refs:
@@ -49,19 +49,23 @@ class CCScores:
         return np.nan
 
 
-class CCReportCard:
+class CCReport:
     """
-    formerly metric.Counter
-    `student` formerly `criteria`
+    CCScorer formerly metric.Record
+    CCReport formerly metric.Counter
+    `category` formerly `criteria` in ["whole", "outer", "inner", "exact"]
 
     """
-    def __init__(self, student):
-        assert student in ["whole", "outer", "inner", "exact"]
-        self.student = student
-        self.subject_to_scores = {}
+    def __init__(self, category):
+        assert category in ["whole", "outer", "inner", "exact"]
+        self.category = category
+        self.overall_scorer = None
+        self.depth_scorer = None
 
     def reset(self):
-        self.subject_to_scores.clear()
+        self.overall_scorer = None
+        self.depth_scorer = None
+
 
     def append(self, pred_ccnodes, true_ccnodes):
         for ccloc in sorted([ccnode.ccloc for ccnode in true_ccnodes]):
@@ -71,35 +75,33 @@ class CCReportCard:
                 pred_spans = pred_ccnode.spans
                 true_spans = true_ccnode.spans
                 depth = true_ccnode.depth
-                is_correct = False # R.Tucci: I added this line
-                if self.student == "whole":
+                if self.category == "whole":
                     is_correct = (pred_spans[0][0] == true_spans[0][0]
                         and pred_spans[-1][1] == true_spans[-1][1])
-                elif self.student == "outer":
+                elif self.category == "outer":
                     is_correct = (pred_spans[0] == true_spans[0]
                         and pred_spans[-1] == true_spans[-1])
-                elif self.student == "inner":
+                elif self.category == "inner":
                     pred_pair = pred_ccnode.get_pair(ccloc, check=True)
                     true_pair = true_ccnode.get_pair(ccloc, check=True)
                     is_correct = (pred_pair == true_pair)
-                elif self.student == "exact":
+                elif self.category == "exact":
                     is_correct = pred_spans == true_spans
-                self.subject_to_scores["overall"].N1L1 += 1
-                self.subject_to_scores[depth].N1L1 += 1
-                if is_correct:
-                    self.subject_to_scores["overall"].N1L1_t += 1
-                    self.subject_to_scores[depth].N1L1_t += 1
                 else:
-                    self.subject_to_scores["overall"].N1L1_f += 1
-                    self.subject_to_scores[depth].N1L1_f += 1
+                    assert False
+                self.overall_scorer.N1L1 += 1
+                self.depth_scorer.N1L1 += 1
+                if is_correct:
+                    self.overall_scorer.N1L1_t += 1
+                    self.depth_scorer.N1L1_t += 1
+                else:
+                    self.overall_scorer.N1L1_f += 1
+                    self.depth_scorer.N1L1_f += 1
             if pred_ccnode is not None and true_ccnode is None:
-                self.subject_to_scores["overall"].N1L0 += 1
+                self.overall_scorer.N1L0 += 1
             if pred_ccnode is None and true_ccnode is not None:
                 depth = true_ccnode.label
-                self.subject_to_scores["overall"].N0L1 += 1
-                self.subject_to_scores[depth].N0L1 += 1
+                self.overall_scorer.N0L1 += 1
+                self.depth_scorer.N0L1 += 1
             if pred_ccnode is None and true_ccnode is None:
-                self.subject_to_scores["overall"].N0L0 += 1
-
-    def overall(self):
-        return self.subject_to_scores["overall"]
+                self.overall_scorer.N0L0 += 1

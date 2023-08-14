@@ -169,8 +169,8 @@ class CCTree:
             if not self.child_ccloc_to_par_cclocs[ccloc]:
                 self.root_cclocs.append(ccloc)
 
-    def refresh_li_eqlevel_spanned_locs(self,
-                                        li_eqlevel_spanned_locs,
+    def refresh_ll_eqlevel_spanned_loc(self,
+                                        ll_eqlevel_spanned_loc,
                                         # eqlevel_cclocs,
                                         eqlevel_ccnodes,
                                         extra_locs):
@@ -182,7 +182,7 @@ class CCTree:
         doesn't return anything but changes  sentences
 
         conj = ccloc, conjunct = spans, coord = ccnode
-        sentences = li_eqlevel_spanned_locs
+        sentences = ll_eqlevel_spanned_loc
         sentence = eqlevel_spanned_locs
         conj_same_level = eqlevel_cclocs
         conj_coords = swaps
@@ -202,13 +202,13 @@ class CCTree:
 
         """
         for ccnode in eqlevel_ccnodes:
-            if len(li_eqlevel_spanned_locs) == 0:
+            if len(ll_eqlevel_spanned_loc) == 0:
                 spanned_locs = ccnode.get_spanned_locs(extra_locs)
-                li_eqlevel_spanned_locs.append(spanned_locs)
+                ll_eqlevel_spanned_loc.append(spanned_locs)
             else:
                 to_be_added_loc_lists = []
                 to_be_removed_loc_lists = []
-                for spanned_locs in li_eqlevel_spanned_locs:
+                for spanned_locs in ll_eqlevel_spanned_loc:
                     if ccnode.spans[0][0] in spanned_locs:
                         spanned_locs.sort()
                         min = ccnode.spans[0][0]
@@ -226,11 +226,11 @@ class CCTree:
                         to_be_removed_loc_lists.append(spanned_locs)
 
                 for loc_list in to_be_removed_loc_lists:
-                    li_eqlevel_spanned_locs.remove(loc_list)
+                    ll_eqlevel_spanned_loc.remove(loc_list)
                 for loc_list in to_be_added_loc_lists:
-                    li_eqlevel_spanned_locs.append(loc_list)
+                    ll_eqlevel_spanned_loc.append(loc_list)
 
-        return li_eqlevel_spanned_locs
+        return ll_eqlevel_spanned_loc
 
     def get_simple_sents(self):
         """
@@ -271,7 +271,7 @@ class CCTree:
 
             if root_count == 0:
                 li_spanned_locs = \
-                    self.refresh_li_eqlevel_spanned_locs(
+                    self.refresh_ll_eqlevel_spanned_loc(
                         li_spanned_locs,
                         eqlevel_ccnodes,
                         self.extra_locs)

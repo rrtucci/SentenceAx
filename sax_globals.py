@@ -11,6 +11,7 @@ from sax_utils import none_dd
 
 # global paths
 EXT_SAMPLES_FP = "data/ext_samples.txt"
+
 # file paths for training, tuning and testing cctags (cc=conjunction)
 CCTAGS_TRAIN_FP = "data/cctags_train.txt"
 # dev=development=validation=tuning
@@ -23,13 +24,13 @@ EXTAGS_TRAIN_FP = "data/extags_train.txt"
 # dev=development=validation=tuning
 EXTAGS_TUNE_FP = "data/extags_tune.txt"
 EXTAGS_TEST_FP = "data/extags_test.txt"
-BOS_TOKEN_ID = 101 # bos = begin of sentence
-EOS_TOKEN_ID = 102 # eos = end of sentence
+
 
 CACHE_DIR = 'data/pretrained_cache'
 
 
-
+BOS_TOKEN_ID = 101 # bos = begin of sentence
+EOS_TOKEN_ID = 102 # eos = end of sentence
 NUM_LABELS = 6
 MAX_EXTRACTION_LENGTH = 5
 UNUSED_TOKENS = ["[unused1]", "[unused2]", "[unused3]"]
@@ -44,13 +45,15 @@ ENDING = ".?!" #3
 PUNCT_MARKS = QUOTES + BRACKETS + SEPARATORS + ARITHMETICAL + ENDING
 
 
-EXTAG_TO_ILABEL = {'NONE': 0, 'ARG1': 1, 'REL': 2, 'ARG2': 3,
+EXTAG_TO_LABEL = {'NONE': 0, 'ARG1': 1, 'REL': 2, 'ARG2': 3,
                    'LOC': 4, 'TIME': 4, 'TYPE': 5, 'ARGS': 3}
-BASE_EXTAGS = EXTAG_TO_ILABEL.keys()
+BASE_EXTAGS = EXTAG_TO_LABEL.keys()
+LABEL_TO_EXTAG={0: 'NONE', 1: 'ARG1', 2: 'REL', 3: 'ARG2',
+                 4: 'ARG2', 5: 'NONE'}
 
-CCTAG_TO_ILABEL = {'NONE': 0, 'CP': 1, 'CP_START': 2,
-                   'CC': 3, 'SEP': 4, 'OTHERS': 5, }
-BASE_CCTAGS = CCTAG_TO_ILABEL.keys()
+CCTAG_TO_LABEL = {'NONE': 0, 'CP': 1, 'CP_START': 2,
+                   'CC': 3, 'SEP': 4, 'OTHERS': 5}
+BASE_CCTAGS = CCTAG_TO_LABEL.keys()
 
 # LIGHT_VERBS = [
 #     "take", "have", "give", "do", "make", "has", "have",
@@ -103,10 +106,10 @@ MODE = globals()["MODE"]
 print('you\'ve entered MODE= "' + MODE + '"')
 
 if TASK == "ex":
-    TAG_TO_ILABEL = EXTAG_TO_ILABEL
+    TAG_TO_LABEL = EXTAG_TO_LABEL
     MAX_DEPTH = MAX_EXTRACTION_LENGTH
 elif TASK == "cc":
-    TAG_TO_ILABEL = CCTAG_TO_ILABEL
+    TAG_TO_LABEL = CCTAG_TO_LABEL
     MAX_DEPTH = 3
 else:
     assert False

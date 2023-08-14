@@ -25,7 +25,7 @@ class DPadder:
         return padded_li_word
 
     @staticmethod
-    def get_padded_list_list(ll_word,
+    def get_padded_ll_word(ll_word,
                              pad_id0,
                              pad_id1,
                              max_outer_dim):
@@ -70,7 +70,7 @@ class DPadder:
     #     return vocab
 
 
-    def pad_data(self, l_example_d):
+    def pad_data(self, l_sample_d):
         """
         formerly data.pad_data()
 
@@ -78,7 +78,7 @@ class DPadder:
 
         Parameters
         ----------
-        l_example_d
+        ld_example
 
         Returns
         -------
@@ -86,10 +86,10 @@ class DPadder:
         """
 
 
-        # data_in = l_example_d
+        # data_in = ld_example
         # example_d = {
-        #     'sent_plus_ids': sent_plus_ids,
-        #     'l_ilabels': ilabels_for_each_ex[:MAX_EXTRACTION_LENGTH],
+        #     'sentL_ids': sentL_ids,
+        #     'll_label': labels_for_each_ex[:MAX_EXTRACTION_LENGTH],
         #     'word_starts': word_starts,
         #     'orig_sent': orig_sent,
         #     # if spacy_model:
@@ -99,43 +99,43 @@ class DPadder:
         #     'verb_indices': verb_indices
         # }
 
-        l_sent_plus_ids = [example_d['sent_plus_ids'] for example_d in
-                           l_example_d]
-        padded_l_sent_plus_ids = DPadder.get_padded_list(l_sent_plus_ids,
+        ll_sentL_id = [sample_d['sentL_ids'] for sample_d in
+                           ld_sample]
+        padded_ll_sentL_id = DPadder.get_padded_list(ll_sentL_id,
                                                          self.sent_pad_id)
 
-        ll_ilabels = [example_d['l_ilabels'] for example_d in l_example_d]
-        padded_ll_ilabels = DPadder.get_padded_list_list(
-            ll_ilabels,
+        lll_label = [sample_d['ll_label'] for sample_d in l_sample_d]
+        padded_ll_labels = DPadder.get_padded_list_list(
+            lll_label,
             pad_id0=0,
             pad_id1=-100,
             max_outer_dim=MAX_DEPTH)
 
-        l_word_starts = \
-            [example_d['word_starts'] for example_d in l_example_d]
-        padded_l_word_starts = DPadder.get_padded_list(l_word_starts, 0)
+        ll_word_start = \
+            [sample_d['word_starts'] for sample_d in ld_sample]
+        padded_ll_word_start = DPadder.get_padded_list(ll_word_start, 0)
 
 
-        l_orig_sent = [example_d['orig_sent'] for
-                       example_d in l_example_d]
+        l_orig_sent = [sample_d['orig_sent'] for
+                       sample_d in ld_sample]
 
-        # padded_l_sent_plus_ids = torch.tensor(padded_l_sent_plus_ids)
-        # padded_ll_ilabels = torch.tensor(padded_ll_ilabels)
-        # padded_l_word_starts = torch.tensor(padded_l_word_starts)
+        # padded_ll_sentL_id = torch.tensor(padded_ll_sentL_id)
+        # padded_lll_label = torch.tensor(padded_lll_label)
+        # padded_ll_word_start = torch.tensor(padded_ll_word_start)
 
-        padded_data = {'l_sent_plus_ids': padded_l_sent_plus_ids,
-                       'll_ilabels': padded_ll_ilabels,
-                       'l_word_starts': padded_l_word_starts,
+        padded_data = {'ll_sentL_id': padded_ll_sentL_id,
+                       'lll_label': padded_lll_label,
+                       'll_word_start': padded_ll_word_start,
                        'l_orig_sent': l_orig_sent}
 
         if self.spacy_model:
             names = ["pos_mask", "pos_indices", "verb_mask", "verb_indices"]
             for i in range(len(names)):
-                l = [example_d[names[i]] for example_d in
-                     l_example_d]
+                l = [sample_d[names[i]] for sample_d in
+                     ld_sample]
                 padded_l = DPadder.get_padded_list(l, pad_id=0)
                 # padded_data[names[i]] = torch.tensor(padded_l)
 
-        # input data=l_example_d was a list of dictionaries
+        # input data=ld_example was a list of dictionaries
         # padded_data is a dictionary
         return padded_data

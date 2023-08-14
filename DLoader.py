@@ -118,7 +118,7 @@ class DLoader:
         verb_mask.append(0)
         return verb_mask, verb_indices, verb_words
 
-    def get_example_ds(self, inp_fp):
+    def get_sample_ds(self, inp_fp):
         """
         formerly data._process_data()
 
@@ -142,8 +142,8 @@ class DLoader:
         """
 
         # example_ds = []  # list[example_d]
-        l_example_d = []  # list[example_d]
-        ilabels_for_each_ex = []  # a list of a list of ilabels, list[list[in]]
+        ld_sample = []  # list[example_d]
+        labels_for_each_ex = []  # a list of a list of labels, list[list[in]]
         orig_sents = []
 
         if type(inp_fp) == type([]):
@@ -156,44 +156,44 @@ class DLoader:
         for line in inp_lines:
             line = line.strip()
             if '[used' in line:  # it's the  beginning of an example
-                sent_plus = line
+                sentL = line
                 encoding = self.auto_tokenizer.batch_encode_plus(
-                    sent_plus.split())
-                sent_plus_ids = [BOS_TOKEN_ID]
+                    sentL.split())
+                sentL_ids = [BOS_TOKEN_ID]
                 word_starts = []
                 for ids in encoding['input_ids']:
                     # special spacy tokens like \x9c have zero length
                     if len(ids) == 0:
                         ids = [100]
-                    word_starts.append(len(sent_plus_ids))
-                    sent_plus_ids += ids  # same as sent_plus_ids.extend(ids)
-                sent_plus_ids.append(EOS_TOKEN_ID)
+                    word_starts.append(len(sentL_ids))
+                    sentL_ids += ids  # same as sentL_ids.extend(ids)
+                sentL_ids.append(EOS_TOKEN_ID)
 
-                orig_sent = sent_plus.split('[unused1]')[0].strip()
+                orig_sent = sentL.split('[unused1]')[0].strip()
                 orig_sents.append(orig_sent)
 
             elif line and '[used' not in line:  # it's a line of tags
-                ilabels = [TAG_TO_ILABEL[tag] for tag in line.split()]
+                labels = [TAG_TO_LABEL[tag] for tag in line.split()]
                 # take away last 3 ids for unused tokens
-                ilabels = ilabels[:len(word_starts)]
-                ilabels_for_each_ex.append(ilabels)
+                labels = labels[:len(word_starts)]
+                labels_for_each_ex.append(labels)
                 prev_line = line
             # last line of file or empty line after example
             # line is either "" or None
             elif len(prev_line) != 0 and not line:
-                if len(ilabels_for_each_ex) == 0:
-                    ilabels_for_each_ex = [[0]]
+                if len(labels_for_each_ex) == 0:
+                    labels_for_each_ex = [[0]]
                 # note that if li=[2,3]
                 # then li[:100] = [2,3]
-                example_d = {
-                    'sent_plus_ids': sent_plus_ids,
-                    'l_ilabels': ilabels_for_each_ex[:MAX_EXTRACTION_LENGTH],
+                sample_d = {
+                    'sentL_ids': sentL_ids,
+                    'l_labels': labels_for_each_ex[:MAX_EXTRACTION_LENGTH],
                     'word_starts': word_starts,
                     'orig_sent': orig_sent
                 }
-                if len(sent_plus.split()) <= 100:
-                    l_example_d.append(example_d)
-                ilabels_for_each_ex = []
+                if len(sentL.split()) <= 100:
+                    ld_sample.append(sample_d)
+                labels_for_each_ex = []
                 prev_line = line
 
             else:
@@ -202,30 +202,30 @@ class DLoader:
         # so far, we haven't assumed any spacy derived data nanalysis
         # if spacy is allowed, the example_d can carry more info.
         if self.spacy_model:
-            sents = [example_d['orig_sent'] for example_d in l_example_d]
+            sents = [sample_d['orig_sent'] for sample_d in ld_sample]
             for sent_index, spacy_tokens in enumerate(
                     self.spacy_model.pipe(sents, batch_size=10000)):
                 spacy_tokens = DLoader.remerge_sent(spacy_tokens)
                 assert len(sents[sent_index].split()) == len(
                     spacy_tokens)
-                example_d = l_example_d[sent_index]
+                sample_d = ld_sample[sent_index]
 
                 pos_mask, pos_indices, pos_words = \
                     DLoader.pos_mask(spacy_tokens)
-                example_d['pos_mask'] = pos_mask
-                example_d['pos_indices'] = pos_indices
+                sample_d['pos_mask'] = pos_mask
+                sample_d['pos_indices'] = pos_indices
 
                 verb_mask, verb_indices, verb_words = \
                     DLoader.verb_mask(spacy_tokens)
-                example_d['verb_mask'] = verb_mask
+                sample_d['verb_mask'] = verb_mask
                 if len(verb_indices) != 0:
-                    example_d['verb_indices'] = verb_indices
+                    sample_d['verb_indices'] = verb_indices
                 else:
-                    example_d['verb_indices'] = [0]
+                    sample_d['verb_indices'] = [0]
 
         # example_d = {
-        #     'sent_plus_ids': sent_plus_ids,
-        #     'l_ilabels': ilabels_for_each_ex[:MAX_EXTRACTION_LENGTH],
+        #     'sentL_ids': sentL_ids,
+        #     'll_label': labels_for_each_ex[:MAX_EXTRACTION_LENGTH],
         #     'word_starts': word_starts,
         #     'orig_sent': orig_sent,
         #     # if spacy_model:
@@ -236,12 +236,12 @@ class DLoader:
         # }
 
         # use of tt.data.Example is deprecated
-        # for example_d in l_example_d:
+        # for example_d in ld_example:
         #     example = tt.data.Example.fromdict(example_d, fields)
         #     examples.append(example)
         # return examples, orig_sents
 
-        return l_example_d, orig_sents
+        return ld_sample, orig_sents
 
     def get_ttt_datasets(self, predict_sentences=None):
         """
@@ -299,11 +299,11 @@ class DLoader:
             # process_data() which is get_examples() for us.
             # get_examples()
             # returns: examples, orig_sents
-            predict_example_ds, orig_sents = \
-                self.get_example_ds(predict_fp)
+            predict_sample_ds, orig_sents = \
+                self.get_sample_ds(predict_fp)
             #vocab = build_vocab(predict_example_ds)
 
-            predict_dataset = DSet(predict_example_ds,
+            predict_dataset = DSet(predict_sample_ds,
                                    self.spacy_model,
                                    self.sent_pad_id)
             train_dataset, dev_dataset, test_dataset = \
@@ -316,35 +316,35 @@ class DLoader:
             # spacy_model usually abbreviated as nlp
             if not os.path.exists(
                     cached_train_fp) or self.params_d["build_cache"]:
-                train_example_ds, _ = self.get_example_ds(train_fp)
-                pickle.dump(train_example_ds, open(cached_train_fp, 'wb'))
+                train_sample_ds, _ = self.get_sample_ds(train_fp)
+                pickle.dump(train_sample_ds, open(cached_train_fp, 'wb'))
             else:
-                train_example_ds = pickle.load(open(cached_train_fp, 'rb'))
+                train_sample_ds = pickle.load(open(cached_train_fp, 'rb'))
 
             if not os.path.exists(cached_dev_fp) or \
                     self.params_d["build_cache"]:
-                dev_example_ds, _ = self.get_example_ds(dev_fp)
-                pickle.dump(dev_example_ds, open(cached_dev_fp, 'wb'))
+                dev_sample_ds, _ = self.get_sample_ds(dev_fp)
+                pickle.dump(dev_sample_ds, open(cached_dev_fp, 'wb'))
             else:
-                dev_example_ds = pickle.load(open(cached_dev_fp, 'rb'))
+                dev_sample_ds = pickle.load(open(cached_dev_fp, 'rb'))
 
             if not os.path.exists(cached_test_fp) or\
                     self.params_d["build_cache"]:
-                test_example_ds, _ = self.get_example_ds(test_fp)
-                pickle.dump(test_example_ds, open(cached_test_fp, 'wb'))
+                test_sample_ds, _ = self.get_sample_ds(test_fp)
+                pickle.dump(test_sample_ds, open(cached_test_fp, 'wb'))
             else:
-                test_example_ds = pickle.load(open(cached_test_fp, 'rb'))
+                test_sample_ds = pickle.load(open(cached_test_fp, 'rb'))
 
             # vocab = self.build_vocab(
             #     train_example_ds + dev_example_ds + test_example_ds)
 
-            train_dataset = DSet(train_example_ds,
+            train_dataset = DSet(train_sample_ds,
                                    self.spacy_model,
                                    self.sent_pad_id)
-            dev_dataset = DSet(dev_example_ds,
+            dev_dataset = DSet(dev_sample_ds,
                                    self.spacy_model,
                                    self.sent_pad_id)
-            test_dataset = DSet(test_example_ds,
+            test_dataset = DSet(test_sample_ds,
                                    self.spacy_model,
                                    self.sent_pad_id)
             train_dataset.sort()  # to simulate bucket sort (along with pad_data)

@@ -4,6 +4,7 @@ import numpy as np
 import torch
 import nltk
 from sax_globals import *
+from math import floor
 
 class ClassFromDict(dict):
     """
@@ -68,6 +69,17 @@ def set_seed(seed):
     np.random.seed(seed)
     torch.cuda.manual_seed_all(seed)
     return
+
+
+def get_num_ttt_sents(num_sents, ttt_fractions):
+    assert abs(sum(ttt_fractions) - 1) < 1e-8
+    num_train_sents = floor(ttt_fractions[0] * num_sents)
+    num_tune_sents = floor(ttt_fractions[1] * num_sents)
+    num_test_sents = floor(ttt_fractions[2] * num_sents)
+    num_extra_sents = num_sents - num_train_sents - \
+                      num_tune_sents - num_test_sents
+    num_train_sents += num_extra_sents
+    return num_train_sents, num_tune_sents, num_test_sents
 
 
 if __name__ == "__main__":

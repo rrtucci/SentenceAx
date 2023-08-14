@@ -1,41 +1,3 @@
-"""
-
-Torch lightning
-
-Dataset stores the samples and their corresponding labels, and DataLoader
-wraps an iterable around the Dataset to enable easy access to the samples.
-
-DataLoader is located in torch.utils.data
-
-loader = torch.utils.dataloader(dset)
-for input, target in loader:
-     output = model(input)
-     loss = loss_fn(output, target)
-     loss.backward()
-     optimizer.step()
-
-Often, batch refers to the output of loader, but not in SentenceAx
-for batch_index, batch in enumerate(loader):
-    input, target = batch
-
-
-batch_d={
-    "labels"= np.array of ints, shape=(batch_size, depth, labels_length)
-
-    "meta_data"= any
-
-    "pos_index"= int
-
-    "text"= str
-
-    "verb"= list[int], a list of 0, 1, 1 if word in text is a verb and 0 if not
-
-    "verb_index"= list[int], locations of verbs  in text
-
-    "word_starts"=
-}
-
-"""
 from pytorch_lightning import Trainer
 from pytorch_lightning.logging import TensorBoardLogger
 from pytorch_lightning.callbacks import ModelCheckpoint
@@ -52,6 +14,43 @@ from sax_utils import *
 class MConductor:
     """
     formerly run.py
+    
+    
+    Torch lightning
+    
+    Dataset stores the samples and their corresponding labels, and DataLoader
+    wraps an iterable around the Dataset to enable easy access to the samples.
+    
+    DataLoader is located in torch.utils.data
+    
+    loader = torch.utils.dataloader(dset)
+    for input, target in loader:
+         output = model(input)
+         loss = loss_fn(output, target)
+         loss.backward()
+         optimizer.step()
+    
+    Often, batch refers to the output of loader, but not in SentenceAx
+    for batch_index, batch in enumerate(loader):
+        input, target = batch
+    
+    
+    batch_d={
+        "labels": np.array of ints, shape:(batch_size, depth, labels_length)
+    
+        "meta_data": any
+    
+        "pos_index": int
+    
+        "text": str
+    
+        "verb_mask": list[int], a list of 0, 1, 1 if word in text is a verb and 0 if not
+    
+        "verb_locs": list[int], locations of verbs  in text
+    
+        "word_starts":
+    }
+
 
     Refs:
     https://spacy.io/usage/spacy-101/

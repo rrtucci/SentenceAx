@@ -3,16 +3,24 @@ from sax_utils import *
 from extraction_utils import *
 
 
-# important
-# carb has its own Extraction class at
-# carb_subset.oie_readers.extraction
-# call ours Extraction_sax
-#sax = sentence ax
-
-
-# extag = extraction tag
-# pred=predicate same as rel=relation
 class Extraction_sax():
+    """
+    formerly data_processing.py
+    
+    important
+    carb has its own Extraction class at
+    carb_subset.oie_readers.extraction
+    call ours Extraction_sax
+    sax = sentence ax
+    
+    
+    extag = extraction tag
+    pred=predicate same as rel=relation
+    
+    
+    assume only one: arg1, rel, arg2, time_arg, loc_arg
+    assume args list is empty
+    """
     def __init__(self,
                  ex_sent,  # extracted sentence, without
                  # unused tokens but may have [is], [of], [from] tokens
@@ -20,13 +28,7 @@ class Extraction_sax():
                  rel="",
                  arg2="",
                  confidence=None):
-        """
-        formerly data_processing.py
-
-
-        assume only one: arg1, rel, arg2, time_arg, loc_arg
-        assume args list is empty
-        """
+ 
 
         self.confidence = confidence
         sent = ex_sent + UNUSED_TOKENS_STR
@@ -37,10 +39,9 @@ class Extraction_sax():
         self.time_arg_pair = ("", [])
         self.loc_arg_pair = ("", [])
 
-        self.base_extags = ["NONE", "ARG1", "REL", "ARG2", "TIME", "LOC"]
         self.sent_extags = ["NONE"] * len(self.sent_pair[1])
         self.base_extag_is_assigned = {extag_name: False
-                                       for extag_name in self.base_extags}
+                                       for extag_name in BASE_EXTAGS}
 
     def add_arg1(self, arg1):
         self.arg1_pair = (arg1, get_words(arg1))
@@ -67,18 +68,18 @@ class Extraction_sax():
         return " ".join(li)
 
     def set_is_extagged_flag_to_true(self, extag_name):
-        assert extag_name in self.base_extags
+        assert extag_name in BASE_EXTAGS
         self.base_extag_is_assigned[extag_name] = True
 
     def set_extags_of_2_matches(self, matches, extag_name):
-        assert extag_name in self.base_extags
+        assert extag_name in BASE_EXTAGS
         assert has_2_matches(matches)
         m0 = matches[0]
         self.sent_extags[m0.b: m0.b + m0.size] = [extag_name] * m0.size
         self.set_is_extagged_flag_to_true(extag_name)
 
     def set_extags_of_gt_2_matches(self, matches, extag_name):
-        assert extag_name in self.base_extags
+        assert extag_name in BASE_EXTAGS
         assert has_gt_2_matches(matches)
         self.set_is_extagged_flag_to_true(extag_name)
         for m in matches:

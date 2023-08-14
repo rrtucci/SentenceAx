@@ -54,6 +54,20 @@ logging.getLogger().setLevel(logging.ERROR)
 
 
 class Model(pl.LightningModule):
+    """
+
+
+    output_d = {
+        "meta_data":
+        "ground_truth":
+        "loss":
+        "predictions":
+        "scores":
+    }
+
+
+
+    """
 
     def __init__(self, auto_tokenizer):
         super(Model, self).__init__()

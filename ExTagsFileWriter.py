@@ -1,103 +1,139 @@
-from allen_tool import *
+from AllenTool import *
 from math import floor
 
-
 class ExTagsFileWriter:
+    """
+    * extags (openie-data\openie4_labels)
+    Hercule Poirot is a fictional Belgian detective , created by Agatha Christie . [unused1] [unused2] [unused3]
+    ARG1 ARG1 REL ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 NONE NONE NONE NONE
+    NONE NONE NONE ARG1 ARG1 ARG1 ARG1 NONE REL ARG2 ARG2 ARG2 NONE NONE NONE NONE
+
+    l_output_d = {
+        "meta_data":
+        "ground_truth":
+        "loss":
+        "predictions":
+        "scores":
+    }
+
+
+    """
 
     def __init__(self,
-                 allen_fp):
+                 source,
+                 allen_fp=None,
+                 l_output_d=None):
         """
-        formerly data.data_processing()
 
 
         Parameters
         ----------
         allen_fp
-        ttt_fractions
+        l_output_d
+        source
         """
-        self.allen_fp = allen_fp
-
-        self.sent_to_extractions = read_allen_file(allen_fp)
+        self.source = source
+        assert source in ["allen", "predictions"]
+        one_hot = (bool(allen_fp), bool(l_output_d))
+        assert one_hot[0] + one_hot[1] == 1
+        
+        self.allen_fp = None
+        self.l_output_d = None
+        self.sent_to_extractions = None
+        if source == "allen":
+            self.allen_fp = allen_fp
+            self.sent_to_extractions = read_allen_file(allen_fp)
+        elif source == "predictions":
+            self.l_output_d = l_output_d
 
     def get_sentences(self):
+        assert self.source == "allen"
         return self.sent_to_extractions.keys()
 
     def get_num_sents(self):
+        assert self.source == "allen"
         return len(self.sent_to_extractions.keys())
 
-    def get_extags(self, model, sentences,
-                   orig_sentences, sentence_indices_list):
+    def write_extags_file_from_predictions(self,
+                                           out_fp,
+                                           sentences,
+                                           orig_sentences,
+                                           l_sent_spanned_locs):
         """
         formerly run.get_labels()
+        EXTAG_TO_ILABEL = {'NONE': 0, 'ARG1': 1, 'REL': 2, 'ARG2': 3,
+                   'LOC': 4, 'TIME': 4, 'TYPE': 5, 'ARGS': 3}
 
         Parameters
         ----------
         model
         sentences
         orig_sentences
-        sentence_indices_list
+        l_sent_spanned_locs
 
         Returns
         -------
 
         """
+        assert self.source == "predictions"
 
         lines = []
-        outputs = model.outputs
         idx1, idx2, idx3 = 0, 0, 0
         count = 0
         prev_orig_sentence = ''
 
-        for i in range(0, len(sentence_indices_list)):
-            if len(sentence_indices_list[i]) == 0:
+        for i in range(0, len(l_sent_spanned_locs)):
+            if len(l_sent_spanned_locs[i]) == 0:
                 sentence = orig_sentences[i].split('[unused1]')[
                     0].strip().split()
-                sentence_indices_list[i].append(list(range(len(sentence))))
+                l_sent_spanned_locs[i].append(list(range(len(sentence))))
 
             lines.append(
                 '\n' + orig_sentences[i].split('[unused1]')[0].strip())
-            for j in range(0, len(sentence_indices_list[i])):
-                assert len(sentence_indices_list[i][j]) == len(
-                    outputs[idx1]['meta_data'][
-                        idx2].strip().split())
-                sentence = outputs[idx1]['meta_data'][
+            for j in range(0, len(l_sent_spanned_locs[i])):
+                assert len(l_sent_spanned_locs[i][j]) == len(
+                    self.l_output_d[idx1]['meta_data'][idx2].
+                    strip().split())
+                sentence = self.l_output_d[idx1]['meta_data'][
                                idx2].strip() + UNUSED_TOKENS_STR
                 assert sentence == sentences[idx3]
                 orig_sentence = orig_sentences[i]
-                predictions = outputs[idx1]['predictions'][idx2]
+                predictions = self.l_output_d[idx1]['predictions'][idx2]
 
-                all_extractions, all_str_labels, len_exts = [], [], []
+                all_extractions = []
+                all_str_extags = []
+                len_exts = []
                 for prediction in predictions:
                     if prediction.sum().item() == 0:
                         break
 
-                    labels = [0] * len(orig_sentence.strip().split())
+                    extags = [0] * len(orig_sentence.strip().split())
                     prediction = prediction[:len(sentence.split())].tolist()
                     for idx, value in enumerate(
-                            sorted(sentence_indices_list[i][j])):
-                        labels[value] = prediction[idx]
+                            sorted(l_sent_spanned_locs[i][j])):
+                        extags[value] = prediction[idx]
 
-                    labels = labels[:-3]
+                    extags = extags[:-3]
                     if 1 not in prediction and 2 not in prediction:
                         continue
 
-                    str_labels = \
-                        ' '.join([EXTAG_TO_ILABEL[x] for x in labels])
-                    lines.append(str_labels)
+                    str_ilabels = \
+                        ' '.join([EXTAG_TO_ILABEL[x] for x in extags])
+                    lines.append(str_ilabels)
 
                 idx3 += 1
                 idx2 += 1
-                if idx2 == len(outputs[idx1]['meta_data']):
+                if idx2 == len(self.l_output_d[idx1]['meta_data']):
                     idx2 = 0
                     idx1 += 1
 
         lines.append('\n')
         return lines
 
-    def write_extags_file(self,
-                          out_fp,
-                          sent_id_range):
-
+    def write_extags_file_from_allen_file(self,
+                                          out_fp,
+                                          sent_id_range):
+        assert self.source == "allen"
         num_sents = self.get_num_sents()
         assert 0 <= sent_id_range[0] <= sent_id_range[1] <= num_sents - 1
 
@@ -146,20 +182,11 @@ class ExTagsFileWriter:
         -------
 
         """
-        assert abs(sum(ttt_fractions) - 1) < 1e-8
-
-        def get_num_ttt_sents():
-            num_sents = self.get_num_sents()
-            num_train_sents = floor(ttt_fractions[0] * num_sents)
-            num_tune_sents = floor(ttt_fractions[1] * num_sents)
-            num_test_sents = floor(ttt_fractions[2] * num_sents)
-            num_extra_sents = num_sents - num_train_sents - \
-                              num_tune_sents - num_test_sents
-            num_train_sents += num_extra_sents
-            return num_train_sents, num_tune_sents, num_test_sents
-
+        assert self.source == "allen"
+        num_sents = self.get_num_sents()
         num_train_sents, num_tune_sents, num_test_sents = \
-            get_num_ttt_sents()
+            get_num_ttt_sents(num_sents, ttt_fractions)
+
         train_range = range(0, num_train_sents)
         tune_range = range(
             num_train_sents,
@@ -172,6 +199,6 @@ class ExTagsFileWriter:
         tune_fp = out_dir + "/extags_tune.txt"
         test_fp = out_dir + "/extags_test.txt"
 
-        self.write_extags_file(train_fp, train_range)
-        self.write_extags_file(tune_fp, tune_range)
-        self.write_extags_file(test_fp, test_range)
+        self.write_extags_file_from_allen_file(train_fp, train_range)
+        self.write_extags_file_from_allen_file(tune_fp, tune_range)
+        self.write_extags_file_from_allen_file(test_fp, test_range)

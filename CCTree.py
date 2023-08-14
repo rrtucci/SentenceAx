@@ -30,11 +30,13 @@ class CCTree:
                 unique_k = k
             else:
                 one_hot.append(0)
-        assert any(one_hot), str(ccloc) + " is not a location of a cc."
-        one_hot[unique_k] = 0
-        assert not any(one_hot), "more than one ccnode with cc at " + \
-                                 str(ccloc)
-        return self.ccnodes[unique_k]
+        if sum(one_hot)==0:
+            print(str(ccloc) + " is not a location of a cc.")
+            assert False
+        if sum(one_hot)>1:
+            print("more than one ccnode with cc at " + str(ccloc))
+            assert False
+        return ccnodes[unique_k]
 
     def fix_ccnodes(self):
         words = get_words(self.orig_sent)

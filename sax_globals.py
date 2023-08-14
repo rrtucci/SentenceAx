@@ -46,9 +46,11 @@ PUNCT_MARKS = QUOTES + BRACKETS + SEPARATORS + ARITHMETICAL + ENDING
 
 EXTAG_TO_ILABEL = {'NONE': 0, 'ARG1': 1, 'REL': 2, 'ARG2': 3,
                    'LOC': 4, 'TIME': 4, 'TYPE': 5, 'ARGS': 3}
+BASE_EXTAGS = EXTAG_TO_ILABEL.keys()
 
 CCTAG_TO_ILABEL = {'NONE': 0, 'CP': 1, 'CP_START': 2,
                    'CC': 3, 'SEP': 4, 'OTHERS': 5, }
+BASE_CCTAGS = CCTAG_TO_ILABEL.keys()
 
 # LIGHT_VERBS = [
 #     "take", "have", "give", "do", "make", "has", "have",

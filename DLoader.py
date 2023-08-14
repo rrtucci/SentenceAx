@@ -1,5 +1,5 @@
 from sax_globals import *
-from allen_tool import *
+from AllenTool import *
 from transformers import AutoTokenizer
 import spacy
 import torch

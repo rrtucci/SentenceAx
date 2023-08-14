@@ -29,14 +29,6 @@ EXTAGS_TEST_FP = "data/extags_test.txt"
 CACHE_DIR = 'data/pretrained_cache'
 
 
-BOS_TOKEN_ID = 101 # bos = begin of sentence
-EOS_TOKEN_ID = 102 # eos = end of sentence
-NUM_LABELS = 6
-MAX_EXTRACTION_LENGTH = 5
-UNUSED_TOKENS = ["[unused1]", "[unused2]", "[unused3]"]
-UNUSED_TOKENS_STR = " " + " ".join(UNUSED_TOKENS)
-# NUM_EMBEDDINGS = 100
-
 QUOTES = "\"\'" #2
 BRACKETS = "(){}[]<>" #8
 SEPARATORS = ",:;&-" #5
@@ -44,7 +36,17 @@ ARITHMETICAL = "*|\/@#$%^+=~_" #13
 ENDING = ".?!" #3
 PUNCT_MARKS = QUOTES + BRACKETS + SEPARATORS + ARITHMETICAL + ENDING
 
+UNUSED_TOKENS = ["[unused1]", "[unused2]", "[unused3]"]
+UNUSED_TOKENS_STR = " " + " ".join(UNUSED_TOKENS)
 
+DROPOUT = 0.0
+NUM_EMBEDDINGS = 100
+MAX_EXTRACTION_LENGTH = 5
+
+BOS_LABEL = 101 # bos = begin of sentence
+EOS_LABEL = 102 # eos = end of sentence
+NUM_LABELS = 6
+LABELLING_DIM = 300
 EXTAG_TO_LABEL = {'NONE': 0, 'ARG1': 1, 'REL': 2, 'ARG2': 3,
                    'LOC': 4, 'TIME': 4, 'TYPE': 5, 'ARGS': 3}
 BASE_EXTAGS = EXTAG_TO_LABEL.keys()

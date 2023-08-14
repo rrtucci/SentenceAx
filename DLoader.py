@@ -159,7 +159,7 @@ class DLoader:
                 sentL = line
                 encoding = self.auto_tokenizer.batch_encode_plus(
                     sentL.split())
-                sentL_ids = [BOS_TOKEN_ID]
+                sentL_ids = [BOS_LABEL]
                 word_starts = []
                 for ids in encoding['input_ids']:
                     # special spacy tokens like \x9c have zero length
@@ -167,7 +167,7 @@ class DLoader:
                         ids = [100]
                     word_starts.append(len(sentL_ids))
                     sentL_ids += ids  # same as sentL_ids.extend(ids)
-                sentL_ids.append(EOS_TOKEN_ID)
+                sentL_ids.append(EOS_LABEL)
 
                 orig_sent = sentL.split('[unused1]')[0].strip()
                 orig_sents.append(orig_sent)

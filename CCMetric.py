@@ -4,6 +4,11 @@ import pickle
 
 
 class CCMetric():
+    """
+    formerly metric.py
+
+
+    """
     def __init__(self, dump_dir=None):
         self.report_whole = CCReport("whole")
         self.report_outer = CCReport("outer")

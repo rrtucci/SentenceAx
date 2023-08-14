@@ -36,7 +36,7 @@ class MConductor:
     
     
     batch_d={
-        "labels": np.array of ints, shape:(batch_size, depth, labels_length)
+        "lll_label": np.array of ints, shape:(batch_size, depth, labels_length)
     
         "meta_data": any
     
@@ -353,7 +353,7 @@ class MConductor:
         checkpoint_path = self.get_checkpoint_path()
         self.update_params_d(checkpoint_path, **final_changes_params_d)
 
-        self.model = Model(self.auto_tokenizer)
+        self.model = Model(self.params_d, self.auto_tokenizer)
 
         if mapping != None:
             self.model._metric.mapping = mapping

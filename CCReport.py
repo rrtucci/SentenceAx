@@ -51,6 +51,9 @@ class CCScorer:
 
 class CCReport:
     """
+    formerly  metric.Counter
+
+
     CCScorer formerly metric.Record
     CCReport formerly metric.Counter
     `category` formerly `criteria` in ["whole", "outer", "inner", "exact"]

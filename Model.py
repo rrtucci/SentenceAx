@@ -1,27 +1,3 @@
-"""
-
-import lightning.pytorch as pl
-import torch.nn as nn
-import torch.nn.functional as F
-
-
-class LitModel(pl.LightningModule):
-    def __init__(self):
-        super().__init__()
-        self.l1 = nn.Linear(28 * 28, 10)
-
-    def forward(self, x):
-        return torch.relu(self.l1(x.view(x.size(0), -1)))
-
-    def training_step(self, batch, batch_idx):
-        x, y = batch
-        y_hat = self(x)
-        loss = F.cross_entropy(y_hat, y)
-        return loss
-
-    def configure_optimizers(self):
-        return torch.optim.Adam(self.parameters(), lr=0.02)
-"""
 from Extraction_sax import *
 from ExMetric import *
 from CCMetric import *
@@ -55,7 +31,25 @@ logging.getLogger().setLevel(logging.ERROR)
 
 class Model(pl.LightningModule):
     """
+    import lightning.pytorch as pl
+    import torch.nn as nn
+    import torch.nn.functional as F
+    class LitModel(pl.LightningModule):
+        def __init__(self):
+            super().__init__()
+            self.l1 = nn.Linear(28 * 28, 10)
 
+        def forward(self, x):
+            return torch.relu(self.l1(x.view(x.size(0), -1)))
+
+        def training_step(self, batch, batch_idx):
+            x, y = batch
+            y_hat = self(x)
+            loss = F.cross_entropy(y_hat, y)
+            return loss
+
+        def configure_optimizers(self):
+            return torch.optim.Adam(self.parameters(), lr=0.02)
 
     output_d = {
         "meta_data":
@@ -69,29 +63,29 @@ class Model(pl.LightningModule):
 
     """
 
-    def __init__(self, auto_tokenizer):
-        super(Model, self).__init__()
-        self.params_d = PARAMS_D
+    def __init__(self, prams_d, auto_tokenizer):
+        super().__init__(self)
+        self.params_d = prams_d
         self.auto_tokenizer = auto_tokenizer
 
         self.base_model = AutoModel.from_pretrained(
             self.params_d["model_str"], cache_dir=CACHE_DIR)
         self.hidden_size = self.base_model.config.hidden_size
 
-        if self.params_d["iterative_layers"] != 0:
+        if self.params_d["iterative_layers"] >0:
             num_layers = len(self.base_model.encoder.layer)
-            rest = num_layers - self.params_d["iterative_layers"]
+            num_encoder_layers = \
+                num_layers - self.params_d["iterative_layers"]
             self.base_model.encoder.layer = \
-                self.base_model.encoder.layer[0:rest]
+                self.base_model.encoder.layer[0:num_encoder_layers]
             self.iterative_transformer = \
-                self.base_model.encoder.layer[rest:num_layers]
+                self.base_model.encoder.layer[num_encoder_layers:num_layers]
 
         else:
             self.iterative_transformer = []
 
-        self.num_labels = NUM_LABELS
-        self.labelling_dim = self.params_d["labelling_dim"]
-        self.dropout = nn.Dropout(p=self.params_d["dropout"])
+
+        self.dropout = nn.Dropout(p=DROPOUT) #0.0
 
         """
         nn.Embedding(num_embeddings, embedding_size)
@@ -99,12 +93,12 @@ class Model(pl.LightningModule):
         embedding_dim (int) – the size of each embedding vector
             
         """
-        self.label_embeddings = nn.Embedding(100,
+        self.label_embeddings = nn.Embedding(NUM_EMBEDDINGS, #100
                                              self.hidden_size)
         self.merge_layer = nn.Linear(self.hidden_size,
-                                     self.labelling_dim)
-        self.labelling_layer = nn.Linear(self.labelling_dim,
-                                         self.num_labels)
+                                     LABELLING_DIM) #300
+        self.labelling_layer = nn.Linear(LABELLING_DIM, #300
+                                         NUM_LABELS)#6
 
         self.loss = nn.CrossEntropyLoss()
 
@@ -120,7 +114,7 @@ class Model(pl.LightningModule):
 
     def configure_optimizers(self):
         # self.named_parameters() is Iterator[Tuple[str, Parameter]]
-        all_params = list(self.named_parameters())
+        all_param_pairs = list(self.named_parameters())
         # opt= optimizer
         # p = parameter
         opt_p_names = ["bias", "gamma", "beta"]
@@ -131,30 +125,40 @@ class Model(pl.LightningModule):
         def p_not_in_overlap_of_lists(p, li1, li2):
             return not any(p in li1 for p in li2)
 
-        opt_params = [
-            {"params": [p for p_names, p in all_params if
-                        p_not_in_overlap_of_lists(p, p_names, opt_p_names) and
-                        'base_model' in p_names],
+        def cond0(pair):
+            p_names, p =  pair
+            return p_not_in_overlap_of_lists(p, p_names, opt_p_names) and\
+                'base_model' in p_names
+
+        def cond1(pair):
+            p_names, p = pair
+            return p_in_overlap_of_lists(p, p_names, opt_p_names) and\
+                        'base_model' in p_names
+
+        def cond2(pair):
+            p_names, p = pair
+            return 'base_model' not in p_names
+
+        opt_param_d = [
+            {"params": [pair[1] for pair in all_param_pairs if cond0(pair)],
              "weight_decay_rate": 0.01,
              'lr': self.params_d["lr"]},
-            {"params": [p for p_names, p in all_params if
-                        p_in_overlap_of_lists(p, p_names, opt_p_names) and
-                        'base_model' in p_names],
+            {"params": [pair[1] for pair in all_param_pairs if cond1(pair)]
              "weight_decay_rate": 0.0,
              'lr': self.params_d["lr"]},
-            {"params": [p for p_names, p in all_params if
-                        'base_model' not in p_names],
+            {"params": [pair[1] for pair in all_param_pairs if cond2(pair)],
              'lr': self.params_d["lr"]}
         ]
+
         if self.params_d["optimizer"] == 'adamW':
-            optimizer = AdamW(opt_params, lr=1e-3)
+            optimizer = AdamW(opt_param_d, lr=1e-3)
         elif self.params_d["optimizer"] == 'adam':
-            optimizer = Adam(opt_params, lr=1e-3)
+            optimizer = Adam(opt_param_d, lr=1e-3)
         else:
             assert False
 
         if self.params_d["multi_opt"] and \
-                self.params_d["constraints"] != None:
+                self.params_d["constraints"]:
             num_optimizers = len(self.params_d["constraints"].split('_'))
             return [optimizer] * num_optimizers
         else:
@@ -162,22 +166,40 @@ class Model(pl.LightningModule):
 
     def forward(self, batch_d, mode='train', batch_idx=-1,
                 constraints=None, cweights=None):
-        # signature of parent method:  def forward(self, *args, **kwargs):
-        if self.params_d["wreg"] != 0 and \
+        """
+        signature of parent method:  def forward(self, *args, **kwargs)
+        
+        wreg = weight regulator (default =0)
+        loss = loss + wreg*weight_diff
+        
+        Parameters
+        ----------
+        batch_d
+        mode
+        batch_idx
+        constraints
+        cweights
+
+        Returns
+        -------
+
+        """   
+        if self.params_d["wreg"] and \
                 not hasattr(self, 'init_params_d'):
             self.init_params_d = copy.deepcopy(
                 dict(self.named_parameters()))
 
-        # remember: labels = li_li_li_label
-        # first (outer) list over batch events
+        # lll_labels is formerly (in openie6, labels)
+        # first (outer) list over batch/sample of events
         # second list over extractions
         # third (inner) list over number of labels in a line
-        batch_size, depth, labels_length = batch_d["labels"].shape
+        # after padding and adding the 3 unused tokens
+        batch_size, depth, labels_length = batch_d["lll_label"].shape
         if mode != 'train':
             depth = MAX_DEPTH
 
         hidden_states, _ = self.base_model(batch_d["text"])
-        output_d = dict()
+        output_d = {}
         all_depth_scores = []
 
         d = 0
@@ -224,15 +246,15 @@ class Model(pl.LightningModule):
         loss, lstm_loss = 0, 0
         all_depth_predictions, all_depth_confidences = [], []
         batch_size, num_words, _ = word_scores.shape
-        batch_d["labels"] = batch_d["labels"].long()
+        batch_d["lll_label"] = batch_d["lll_label"].long()
         for d, word_scores in enumerate(all_depth_scores):
             if mode == 'train':
-                # batch_labels_d = batch_d["labels"][:, d, :]
+                # batch_labels_d = batch_d["lll_label"][:, d, :]
                 # mask = torch.ones(batch_d["word_starts"].shape).int(). \
                 #     type_as(hidden_states)
                 loss += self.loss(
                     word_scores.reshape(batch_size * num_words, -1),
-                    batch_d["labels"][:, d, :].reshape(-1))
+                    batch_d["lll_label"][:, d, :].reshape(-1))
             else:
                 word_log_probs = torch.log_softmax(word_scores, dim=2)
                 max_log_probs, predictions = \
@@ -241,7 +263,7 @@ class Model(pl.LightningModule):
                 # first (outer) list over batch events
                 # second list over extractions
                 # third (inner) list over number of labels in a line
-                padding_labels = (batch_d["labels"][:, 0, :] != -100).float()
+                padding_labels = (batch_d["lll_label"][:, 0, :] != -100).float()
 
                 sro_label_predictions = \
                     (predictions != 0).float() * padding_labels
@@ -288,7 +310,7 @@ class Model(pl.LightningModule):
                 all_depth_scores.fill_(0)
 
                 # for checking test set
-                # labels = copy.copy(batch_d["labels"])
+                # labels = copy.copy(batch_d["lll_label"])
                 # labels[labels == -100] = 0
                 labels = copy.copy(all_depth_predictions)
 
@@ -398,7 +420,7 @@ class Model(pl.LightningModule):
 
         output0_d = {"predictions": output_d['predictions'],
                    "scores": output_d['scores'],
-                   "ground_truth": batch_d["labels"],
+                   "ground_truth": batch_d["lll_label"],
                    "meta_data": batch_d["meta_data"]}
         output0_d = OrderedDict(output0_d)
 
@@ -415,10 +437,10 @@ class Model(pl.LightningModule):
     def test_step(self, batch_d, batch_idx):
         return self.validation_step(batch_d, batch_idx)
 
-    def evaluation_end(self, output_d_list, mode):
+    def evaluation_end(self, ld_output, mode):
         result = None
         if self.params_d["mode"] == 'test':
-            for output_index, output_d in enumerate(output_d_list):
+            for output_index, output_d in enumerate(ld_output):
                 output_d['predictions'] = output_d['predictions'].cpu()
                 output_d['scores'] = output_d['scores'].cpu()
                 output_d['scores'] = (output_d['scores'] * 100).round() / 100
@@ -428,7 +450,7 @@ class Model(pl.LightningModule):
             if 'predict' in self.params_d["mode"]:
                 metrics = {'P_exact': 0, 'R_exact': 0, 'F1_exact': 0}
             else:
-                for output_d in output_d_list:
+                for output_d in ld_output:
                     if type(output_d['meta_data'][0]) != type(""):
                         output_d['meta_data'] = [self.auto_tokenizer.decode[m]
                                                for m in output_d['meta_data']]
@@ -445,7 +467,7 @@ class Model(pl.LightningModule):
             if 'predict' in self.params_d["mode"]:
                 metrics = {'carb_f1': 0, 'carb_auc': 0, 'carb_lastf1': 0}
             else:
-                for output_d in output_d_list:
+                for output_d in ld_output:
                     if type(output_d['meta_data'][0]) != type(""):
                         output_d['meta_data'] = [self.auto_tokenizer.decode[m]
                                                for m in output_d['meta_data']]
@@ -467,8 +489,8 @@ class Model(pl.LightningModule):
         #     self.constraints_d = dict()
         return result
 
-    def validation_epoch_end(self, output_d_list):
-        eval_results = self.evaluation_end(output_d_list, 'dev')
+    def validation_epoch_end(self, ld_output):
+        eval_results = self.evaluation_end(ld_output, 'dev')
         result = {}
         if eval_results != None:
             result = {"log": eval_results,
@@ -476,9 +498,9 @@ class Model(pl.LightningModule):
 
         return result
 
-    def test_epoch_end(self, output_d_list):
-        eval_results = self.evaluation_end(output_d_list, 'test')
-        self.output_d_list = output_d_list
+    def test_epoch_end(self, ld_output):
+        eval_results = self.evaluation_end(ld_output, 'test')
+        self.ld_output = ld_output
         result = {"log": eval_results,
                   "progress_bar": eval_results,
                   "test_acc": eval_results['eval_f1']}

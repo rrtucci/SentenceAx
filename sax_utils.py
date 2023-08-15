@@ -5,6 +5,7 @@ import torch
 import nltk
 from sax_globals import *
 from math import floor
+from copy import copy
 
 class ClassFromDict(dict):
     """
@@ -15,15 +16,11 @@ class ClassFromDict(dict):
     __setattr__ = dict.__setitem__
     __delattr__ = dict.__delitem__
 
-def update_dict(dict, new_dict, add_new_keys=True):
-    for key in dict:
-        if key in new_dict: # overlapping keys
-            dict[key] = new_dict[key]
-    if add_new_keys:
-        for key in new_dict:
-            if key not in dict: # new keys not in dict yet
-                dict[key] = new_dict[key]
-
+def merge_dicts(dominant_d, default_d):
+    new_dict = copy(default_d)
+    for key in dominant_d:
+        new_dict[key] = dominant_d[key]
+    return new_dict
 
 def get_words(sent, algo=1):
     """

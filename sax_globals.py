@@ -7,7 +7,7 @@ params_d = pamameters dictionary
 
 
 """
-from sax_utils import none_dd
+from sax_utils import none_dd, merge_dicts
 
 # global paths
 EXT_SAMPLES_FP = "data/ext_samples.txt"
@@ -119,8 +119,11 @@ else:
 assert MODE in ["predict", "train_test", "splitpredict",
                 "resume", "test"]
 
+# Do not define capitalized global and PARAMS_D key for the same
+# parameter. Define one or the other but not both
+
 if "PARAMS_D" in globals():
-    print("PARAM_D was defined prior to runing sax_globals.py")
+    print("PARAM_D was defined prior to running sax_globals.py")
 
     # define `PARAMS_D` in jupyter notebook before running any
     # subroutines that use it. The file `custom_params_d.txt` gives
@@ -128,7 +131,7 @@ if "PARAMS_D" in globals():
 
 ## Running Model
 elif TASK == "ex" and MODE == "splitpredict":
-    PARAMS_D = none_dd({
+    PARAMS_D = {
         "conj_model": "models/conj_model/epoch=28_eval_acc=0.854.ckpt",
         "gpus": 1,
         "inp": "sentences.txt",
@@ -139,14 +142,14 @@ elif TASK == "ex" and MODE == "splitpredict":
         "rescore_model": "models/rescore_model",
         "rescoring": True,
         "task": "ex"
-    })
+    }
 
 ## Training Model
 
 ### Warmup Model
 # Training:
 elif TASK == "ex" and MODE == "train_test":
-    PARAMS_D = none_dd({
+    PARAMS_D = {
         "batch_size": 24,
         "epochs": 30,
         "gpus": 1,
@@ -157,22 +160,22 @@ elif TASK == "ex" and MODE == "train_test":
         "optimizer": "adamW",
         "save": "models/warmup_oie_model",
         "task": "ex"
-    })
+    }
     
 # Testing:
 elif TASK == "ex" and MODE == "test":
-    PARAMS_D = none_dd({
+    PARAMS_D = {
         "batch_size": 24,
         "gpus": 1,
         "mode": "test",
         "model_str": "bert-base-cased",
         "save": "models/warmup_oie_model",
         "task": "ex"
-    })
+    }
 
 # Predicting
 elif TASK == "ex" and MODE == "predict":
-    PARAMS_D = none_dd({
+    PARAMS_D = {
         "gpus": 1,
         "inp": "sentences.txt",
         "mode": "predict",
@@ -180,7 +183,7 @@ elif TASK == "ex" and MODE == "predict":
         "out": "predictions.txt",
         "save": "models/warmup_oie_model",
         "task": "ex"
-    })
+    }
 
 ### Constrained Model
 # Training
@@ -188,7 +191,7 @@ elif TASK == "ex" and MODE == "resume":
     # error in openie6 paper
     #         "lr": 5e-6, and "lr: 2e-5
     
-    PARAMS_D = none_dd({
+    PARAMS_D = {
         "accumulate_grad_batches": 2,
         "batch_size": 16,
         "checkpoint": "models/warmup_oie_model/epoch=13_eval_acc=0.544.ckpt",
@@ -208,21 +211,21 @@ elif TASK == "ex" and MODE == "resume":
         "task": "ex",
         "val_check_interval": 0.1,
         "wreg": 1
-    })
+    }
 # Testing
 elif TASK == "ex" and MODE == "test":
-    PARAMS_D = none_dd({
+    PARAMS_D = {
         "batch_size": 16,
         "gpus": 1,
         "mode": "test",
         "model_str": "bert-base-cased",
         "save": "models/oie_model",
         "task": "ex"
-    })
+    }
 
 # Predicting
 elif TASK == "ex" and MODE == "predict":
-    PARAMS_D = none_dd({
+    PARAMS_D = {
         "gpus": 1,
         "inp": "sentences.txt",
         "mode": "predict",
@@ -230,11 +233,11 @@ elif TASK == "ex" and MODE == "predict":
         "out": "predictions.txt",
         "save": "models/oie_model",
         "task": "ex"
-    })
+    }
 
 ### Running CCNode Analysis
 elif TASK == "cc" and MODE == "train_test":
-    PARAMS_D = none_dd({
+    PARAMS_D = {
         "batch_size": 32,
         "epochs": 40,
         "gpus": 1,
@@ -245,13 +248,13 @@ elif TASK == "cc" and MODE == "train_test":
         "optimizer": "adamW",
         "save": "models/conj_model",
         "task": "cc"
-    })
+    }
 
 ### Final Model
 
 # Running
 elif TASK == "ex" and MODE == "splipredict":
-    PARAMS_D = none_dd({
+    PARAMS_D = {
         "conj_model": "models/conj_model/epoch=28_eval_acc=0.854.ckpt",
         "gpus": 1,
         "inp": "carb/data/carb_sentences.txt",
@@ -262,5 +265,25 @@ elif TASK == "ex" and MODE == "splipredict":
         "rescore_model": "models/rescore_model",
         "rescoring": True,
         "task": "ex"
-    })
+    }
+else:
+    assert False
 
+
+DEFAULT_PARAMS_D=\
+{
+    "batch_size": 32,
+    "checkpoint": "",
+    "cweights": 1,
+    "dropout": 0.0,
+    "gpus": 1,
+    "iterative_layers": 2,
+    "lr": 2E-5,
+    "model_str": "bert-base-cased",
+    "num_extractions": 5,
+    "optimizer": "adamW",
+    "save_k": 1,
+    "val_check_interval": 1.0,
+    "wreg": 0
+}
+PARAMS_D = merge_dicts(PARAMS_D, DEFAULT_PARAMS_D)

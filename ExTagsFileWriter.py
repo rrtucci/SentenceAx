@@ -55,19 +55,20 @@ class ExTagsFileWriter:
         """
 
         lines = []
-        sample_id, ex_id, word_id = 0, 0, 0
+        sample_id =0
+        ex_id = 0
+        word_id = 0
 
         for i in range(0, len(ll_sent_loc)):
             if len(ll_sent_loc[i]) == 0:
-                words = l_sentL[i].split('[unused1]')[0].strip().split()
+                words = get_words(l_sentL[i].split('[unused1]')[0])
                 ll_sent_loc[i].append(list(range(len(words))))
 
             lines.append(
                 '\n' + l_sentL[i].split('[unused1]')[0].strip())
             for j in range(0, len(ll_sent_loc[i])):
                 assert len(ll_sent_loc[i][j]) == len(
-                    ld_output[sample_id]['meta_data'][ex_id].
-                    strip().split())
+                    get_words(ld_output[sample_id]['meta_data'][ex_id]))
                 sentL = ld_output[sample_id]['meta_data'][
                                ex_id].strip() + UNUSED_TOKENS_STR
                 assert sentL == l_sentL[i]
@@ -80,7 +81,7 @@ class ExTagsFileWriter:
                     if pred_labels.sum().item() == 0:
                         break
 
-                    labels = [0] * len(sentL.strip().split())
+                    labels = [0] * len(get_words(sentL))
                     pred_labels = pred_labels[:len(sentL.split())].tolist()
                     for k, loc in enumerate(
                             sorted(ll_sent_loc[i][j])):

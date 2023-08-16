@@ -22,9 +22,15 @@ def merge_dicts(dominant_d, default_d):
         new_dict[key] = dominant_d[key]
     return new_dict
 
-def get_words(sent, algo=1):
+def get_words(sent, algo="ss"):
     """
-    get_words("") = []
+    note: get_words("") = []
+
+    Openie6 and SentenceAx start off from an Allen file (AF). We will
+    assume that in an AF, the sentences have punctuation marks like commas
+    and periods with blank space before and after. Hence, using `get_words(
+    )` with the "ss" algo will be sufficient for most purposes.
+
 
     Parameters
     ----------
@@ -34,9 +40,9 @@ def get_words(sent, algo=1):
     -------
 
     """
-    if algo==1:
-        return nltk.word_tokenize(sent)
-    elif algo==2:
+    if algo == "ss":
+        return sent.strip().split()
+    elif algo=="ss+":
         if sent:
             li = sent.strip().split()
             li0 = []
@@ -50,6 +56,8 @@ def get_words(sent, algo=1):
             return li0
         else:
             return []
+    elif algo=="nltk":
+        return nltk.word_tokenize(sent)
     else:
         assert False
 

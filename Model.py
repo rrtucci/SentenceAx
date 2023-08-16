@@ -4,7 +4,7 @@ from CCMetric import *
 from CCTree import *
 
 import os
-import copy
+from copy import copy, deepcopy
 from collections import OrderedDict
 import logging
 import regex as re
@@ -42,7 +42,7 @@ class Model(pl.LightningModule):
         def forward(self, x):
             return torch.relu(self.l1(x.view(x.size(0), -1)))
 
-        def training_step(self, batch, batch_idx):
+        def training_step(self, batch, batch_id):
             x, y = batch
             y_hat = self(x)
             loss = F.cross_entropy(y_hat, y)
@@ -59,7 +59,8 @@ class Model(pl.LightningModule):
         "scores":
     }
 
-
+    This class has an abstract class as its parent. Uninherited methods
+    start with an underscore.
 
     """
 
@@ -72,7 +73,7 @@ class Model(pl.LightningModule):
             self.params_d["model_str"], cache_dir=CACHE_DIR)
         self.hidden_size = self.base_model.config.hidden_size
 
-        if self.params_d["iterative_layers"] >0:
+        if self.params_d["iterative_layers"] > 0:
             num_layers = len(self.base_model.encoder.layer)
             num_encoder_layers = \
                 num_layers - self.params_d["iterative_layers"]
@@ -84,8 +85,7 @@ class Model(pl.LightningModule):
         else:
             self.iterative_transformer = []
 
-
-        self.dropout = nn.Dropout(p=DROPOUT) #0.0
+        self.dropout = nn.Dropout(p=DROPOUT)  # 0.0
 
         """
         nn.Embedding(num_embeddings, embedding_size)
@@ -93,26 +93,34 @@ class Model(pl.LightningModule):
         embedding_dim (int) – the size of each embedding vector
             
         """
-        self.label_embeddings = nn.Embedding(NUM_EMBEDDINGS, #100
+        self.label_embeddings = nn.Embedding(NUM_EMBEDDINGS,  # 100
                                              self.hidden_size)
         self.merge_layer = nn.Linear(self.hidden_size,
-                                     LABELLING_DIM) #300
-        self.labelling_layer = nn.Linear(LABELLING_DIM, #300
-                                         NUM_LABELS)#6
+                                     LABELLING_DIM)  # 300
+        self.labelling_layer = nn.Linear(LABELLING_DIM,  # 300
+                                         NUM_LABELS)  # 6
 
         self.loss = nn.CrossEntropyLoss()
 
         self.metric = ExMetric(self.params_d) \
             if self.params_d["task"] == "ex" else CCMetric()
 
-        self.constraints_d = dict()
+        self.constraints_str_d = dict()
 
-        self.all_cc_predictions = []
-        self.all_cc_sent_locs = []
-        self.all_cc_words = []
-        self.all_ex_predictions = []
+        # Never used!
+        # self.all_cc_predictions = []
+        # self.all_cc_sent_locs = []
+        # self.all_cc_words = []
+        # self.all_ex_predictions = []
 
     def configure_optimizers(self):
+        """
+        inherited method
+
+        Returns
+        -------
+
+        """
         # self.named_parameters() is Iterator[Tuple[str, Parameter]]
         all_param_pairs = list(self.named_parameters())
         # opt= optimizer
@@ -126,14 +134,14 @@ class Model(pl.LightningModule):
             return not any(p in li1 for p in li2)
 
         def cond0(pair):
-            p_names, p =  pair
-            return p_not_in_overlap_of_lists(p, p_names, opt_p_names) and\
+            p_names, p = pair
+            return p_not_in_overlap_of_lists(p, p_names, opt_p_names) and \
                 'base_model' in p_names
 
         def cond1(pair):
             p_names, p = pair
-            return p_in_overlap_of_lists(p, p_names, opt_p_names) and\
-                        'base_model' in p_names
+            return p_in_overlap_of_lists(p, p_names, opt_p_names) and \
+                'base_model' in p_names
 
         def cond2(pair):
             p_names, p = pair
@@ -143,7 +151,7 @@ class Model(pl.LightningModule):
             {"params": [pair[1] for pair in all_param_pairs if cond0(pair)],
              "weight_decay_rate": 0.01,
              'lr': self.params_d["lr"]},
-            {"params": [pair[1] for pair in all_param_pairs if cond1(pair)]
+            {"params": [pair[1] for pair in all_param_pairs if cond1(pair)],
              "weight_decay_rate": 0.0,
              'lr': self.params_d["lr"]},
             {"params": [pair[1] for pair in all_param_pairs if cond2(pair)],
@@ -158,15 +166,38 @@ class Model(pl.LightningModule):
             assert False
 
         if self.params_d["multi_opt"] and \
-                self.params_d["constraints"]:
-            num_optimizers = len(self.params_d["constraints"].split('_'))
+                self.params_d["constraints_str"]:
+            num_optimizers = len(self.params_d["constraints_str"].split('_'))
             return [optimizer] * num_optimizers
         else:
             return [optimizer]
 
-    def forward(self, batch_d, mode='train', batch_idx=-1,
-                constraints=None, cweights=None):
+    def get_progress_bar_dict(self):
         """
+        inherited method
+
+        tqdm derives from the Arabic word taqaddum which can mean "progress"
+        and is an abbreviation for "I love you so much" in Spanish (te
+        quiero demasiado).
+
+        Returns
+        -------
+
+        """
+        running_train_loss = self.trainer.running_loss.mean()
+        avg_training_loss = running_train_loss.cpu().item() if \
+            running_train_loss is not None else float('NaN')
+        if type(self.trainer.checkpoint_callback.kth_value) != type(0.0):
+            best = self.trainer.checkpoint_callback.kth_value.item()
+        else:
+            best = self.trainer.checkpoint_callback.kth_value
+        tqdm = {'loss': '{:.3f}'.format(avg_training_loss), 'best': best}
+        return tqdm
+
+    def forward(self, batch_d, mode='train', batch_id=-1,
+                constraints_str=None, cweights_str=None):
+        """
+        inherited method
         signature of parent method:  def forward(self, *args, **kwargs)
         
         wreg = weight regulator (default =0)
@@ -176,20 +207,20 @@ class Model(pl.LightningModule):
         ----------
         batch_d
         mode
-        batch_idx
-        constraints
-        cweights
+        batch_id
+        constraints_str
+        cweights_str
 
         Returns
         -------
 
-        """   
+        """
         if self.params_d["wreg"] and \
                 not hasattr(self, 'init_params_d'):
-            self.init_params_d = copy.deepcopy(
+            self.init_params_d = deepcopy(
                 dict(self.named_parameters()))
 
-        # lll_labels is formerly (in openie6, labels)
+        # lll_label is formerly (in openie6, labels)
         # first (outer) list over batch/sample of events
         # second list over extractions
         # third (inner) list over number of labels in a line
@@ -198,9 +229,12 @@ class Model(pl.LightningModule):
         if mode != 'train':
             depth = MAX_DEPTH
 
+        # `loss` is not used in this function anymore
+        # loss, lstm_loss = 0, 0
         hidden_states, _ = self.base_model(batch_d["text"])
         output_d = {}
-        all_depth_scores = []
+        l_word_scores = []
+        word_scores = []
 
         d = 0
         while True:
@@ -215,11 +249,11 @@ class Model(pl.LightningModule):
             if d != 0:
                 greedy_labels = torch.argmax(word_scores, dim=-1)
                 label_embeddings = self.label_embeddings(greedy_labels)
-                word_hidden_states = word_hidden_states + label_embeddings
+                word_hidden_states += label_embeddings
 
             word_hidden_states = self.merge_layer(word_hidden_states)
             word_scores = self.labelling_layer(word_hidden_states)
-            all_depth_scores.append(word_scores)
+            l_word_scores.append(word_scores)
 
             d += 1
             if d >= depth:
@@ -233,25 +267,41 @@ class Model(pl.LightningModule):
                         break
                 if not valid_ext:
                     break
-        return self.fill_forward_output_d(
-            batch_d, mode,
-            constraints, cweights,
-            all_depth_scores, word_scores, output_d)
+        # outsource everything after do loop to a new function
+        return self._fill_output_d_loss(
+            mode, output_d,
+            batch_d, l_word_scores,
+            constraints_str, cweights_str)
 
-    def fill_forward_output_d(
-            self, batch_d, mode,
-            constraints, cweights,
-            all_depth_scores, word_scores, output_d):
+    def _fill_output_d_loss(
+            self, mode, output_d,
+            batch_d, l_word_scores,
+            constraints_str, cweights_str):
+        """
+        not inherited method. used in forward() method
 
-        loss, lstm_loss = 0, 0
-        all_depth_predictions, all_depth_confidences = [], []
+        Parameters
+        ----------
+        mode
+        output_d
+        batch_d
+        l_word_scores
+        constraints_str
+        cweights_str
+
+        Returns
+        -------
+
+        """
+
+        word_scores = l_word_scores[-1]
+        loss = 0
+        l_predictions = []
+        l_confidences = []
         batch_size, num_words, _ = word_scores.shape
         batch_d["lll_label"] = batch_d["lll_label"].long()
-        for d, word_scores in enumerate(all_depth_scores):
+        for d, word_scores in enumerate(l_word_scores):
             if mode == 'train':
-                # batch_labels_d = batch_d["lll_label"][:, d, :]
-                # mask = torch.ones(batch_d["word_starts"].shape).int(). \
-                #     type_as(hidden_states)
                 loss += self.loss(
                     word_scores.reshape(batch_size * num_words, -1),
                     batch_d["lll_label"][:, d, :].reshape(-1))
@@ -259,11 +309,12 @@ class Model(pl.LightningModule):
                 word_log_probs = torch.log_softmax(word_scores, dim=2)
                 max_log_probs, predictions = \
                     torch.max(word_log_probs, dim=2)
-                # remember: labels = li_li_li_label
+                # remember: lll_label was formerly labels
                 # first (outer) list over batch events
                 # second list over extractions
                 # third (inner) list over number of labels in a line
-                padding_labels = (batch_d["lll_label"][:, 0, :] != -100).float()
+                padding_labels = (
+                        batch_d["lll_label"][:, 0, :] != -100).float()
 
                 sro_label_predictions = \
                     (predictions != 0).float() * padding_labels
@@ -273,18 +324,18 @@ class Model(pl.LightningModule):
                 confidences = torch.exp(
                     torch.sum(log_probs_norm_ext_len, dim=1))
 
-                all_depth_predictions.append(predictions.unsqueeze(1))
-                all_depth_confidences.append(confidences.unsqueeze(1))
+                l_predictions.append(predictions.unsqueeze(1))
+                l_confidences.append(confidences.unsqueeze(1))
 
         if mode == 'train':
-            if constraints != '':
-                all_depth_scores = torch.cat([d.unsqueeze(1) for
-                                              d in all_depth_scores], dim=1)
-                all_depth_scores = torch.softmax(all_depth_scores, dim=-1)
+            if constraints_str:
+                l_word_scores = torch.cat([ws.unsqueeze(1) for
+                                           ws in l_word_scores], dim=1)
+                l_word_scores = torch.softmax(l_word_scores, dim=-1)
 
-                const_loss = self.constrained_loss(
-                    all_depth_scores, batch_d,
-                    constraints, cweights) / batch_size
+                const_loss = self._constrained_loss(
+                    l_word_scores, batch_d,
+                    constraints_str, cweights_str) / batch_size
                 loss = const_loss
 
             if self.params_d["wreg"] != 0:
@@ -295,250 +346,384 @@ class Model(pl.LightningModule):
                                               - self.init_params_d[name])
                 loss = loss + self.params_d["wreg"] * weight_diff
         else:  # not train
+            # if A and B are of shape (3, 4):
+            # torch.cat([A, B], dim=0) will be of shape (6, 4)
+            # torch.stack([A, B], dim=0) will be of shape (2, 3, 4)
+            l_predictions = torch.cat(l_predictions, dim=1)
+            l_confidences = torch.cat(l_confidences, dim=1)
 
-            all_depth_predictions = torch.cat(all_depth_predictions, dim=1)
-            all_depth_confidences = torch.cat(all_depth_confidences, dim=1)
+            output_d['l_predictions'] = l_predictions
+            output_d['l_confidences'] = l_confidences
 
-            output_d['predictions'] = all_depth_predictions
-            output_d['scores'] = all_depth_confidences
-
-            if constraints != '' and \
+            if constraints_str and \
                     'predict' not in self.params_d["mode"] and \
                     self.params_d["batch_size"] != 1:
-                all_depth_scores = torch.cat([d.unsqueeze(1) for
-                                              d in all_depth_scores], dim=1)
-                all_depth_scores.fill_(0)
+                l_word_scores = torch.cat([d.unsqueeze(1) for
+                                           d in l_word_scores], dim=1)
+                l_word_scores.fill_(0)
 
                 # for checking test set
-                # labels = copy.copy(batch_d["lll_label"])
+                # labels = copy(batch_d["lll_label"])
                 # labels[labels == -100] = 0
-                labels = copy.copy(all_depth_predictions)
+                labels = copy(l_predictions)
 
                 labels = labels.unsqueeze(-1)
                 labels_depth = labels.shape[1]
-                all_depth_scores = all_depth_scores[:, :labels_depth, :, :]
-                all_depth_scores.scatter_(3, labels.long(), 1)
+                l_word_scores = l_word_scores[:, :labels_depth, :, :]
+                l_word_scores.scatter_(3, labels.long(), 1)
 
-                constraints, cweights = 'posm_hvc_hvr_hve', '1_1_1_1'
-                constraints_list, cweights_list = \
-                    constraints.split('_'), cweights.split('_')
-                if len(constraints_list) != len(cweights_list):
-                    cweights_list = [cweights] * len(constraints_list)
+                constraints_str = 'posm_hvc_hvr_hve'
+                cweights_str = '1_1_1_1'
+                l_constraint = constraints_str.split('_')
+                l_cweight = cweights_str.split('_')
+                if len(l_constraint) != len(l_cweight):
+                    l_cweight = [cweights_str] * len(l_constraint)
 
                 for constraint, weight in \
-                        zip(constraints_list, cweights_list):
-                    const_loss = self.constrained_loss(all_depth_scores,
-                                                       batch_d, constraint,
-                                                       float(weight))
-                    if constraint not in self.constraints_d:
-                        self.constraints_d[constraint] = []
-                    self.constraints_d[constraint].append(const_loss)
+                        zip(l_constraint, l_cweight):
+                    const_loss = self._constrained_loss(l_word_scores,
+                                                        batch_d, constraint,
+                                                        float(weight))
+                    if constraint not in self.constraints_str_d:
+                        self.constraints_str_d[constraint] = []
+                    self.constraints_str_d[constraint].append(const_loss)
 
         output_d['loss'] = loss
         return output_d
 
-    def constrained_loss(self, all_depth_scores, batch_d,
-                         constraints, cweights):
-        batch_size, depth, num_words, labels = all_depth_scores.shape
+    def _constrained_loss(self, l_word_scores, batch_d,
+                          constraints_str, cweights_str):
+        """
+        formerly model.constrained_loss()
+        not inherited method
+
+        Parameters
+        ----------
+        l_word_scores
+        batch_d
+        constraints_str
+        cweights_str
+
+        Returns
+        -------
+
+        """
+        batch_size, depth, num_words, num_labels = l_word_scores.shape
         hinge_loss = 0
         bat = batch_d["verb_index"].unsqueeze(1).unsqueeze(3). \
-            repeat(1, depth, 1, labels)
-        verb_scores = torch.gather(all_depth_scores, 2, bat)
+            repeat(1, depth, 1, num_labels)
+        verb_scores = torch.gather(l_word_scores, 2, bat)
         verb_rel_scores = verb_scores[:, :, :, 2]
         # (batch_size, depth, num_words)
         verb_rel_scores = verb_rel_scores * (batch_d["verb_index"] != 0). \
             unsqueeze(1).float()
 
         # every head-verb must be included in a relation
-        if 'hvc' in constraints:
+        if 'hvc' in constraints_str:
             column_loss = torch.abs(1 - torch.sum(verb_rel_scores, dim=1))
             column_loss = column_loss[batch_d["verb_index"] != 0]
-            hinge_loss += cweights * column_loss.sum()
+            hinge_loss += cweights_str * column_loss.sum()
 
         # extractions must have at least k-relations with
         # a head verb in them
-        if 'hvr' in constraints:
+        if 'hvr' in constraints_str:
             row_rel_loss = F.relu(batch_d["verb"].sum(dim=1).float() -
                                   torch.max(verb_rel_scores, dim=2)[0].sum(
                                       dim=1))
-            hinge_loss += cweights * row_rel_loss.sum()
+            hinge_loss += cweights_str * row_rel_loss.sum()
 
         # one relation cannot contain more than one head verb
-        if 'hve' in constraints:
+        if 'hve' in constraints_str:
             ex_loss = F.relu(torch.sum(verb_rel_scores, dim=2) - 1)
-            hinge_loss += cweights * ex_loss.sum()
+            hinge_loss += cweights_str * ex_loss.sum()
 
-        if 'posm' in constraints:
+        if 'posm' in constraints_str:
             bat = batch_d["pos_index"].unsqueeze(1).unsqueeze(3). \
-                repeat(1, depth, 1, labels)
-            pos_scores = torch.gather(all_depth_scores, 2, bat)
+                repeat(1, depth, 1, num_labels)
+            pos_scores = torch.gather(l_word_scores, 2, bat)
             pos_nnone_scores = \
                 torch.max(pos_scores[:, :, :, 1:], dim=-1)[0]
             column_loss = (1 - torch.max(pos_nnone_scores, dim=1)[0]) * \
                           (batch_d["pos_index"] != 0).float()
-            hinge_loss += cweights * column_loss.sum()
+            hinge_loss += cweights_str * column_loss.sum()
 
         return hinge_loss
 
-    def get_progress_bar_dict(self):
-        running_train_loss = self.trainer.running_loss.mean()
-        avg_training_loss = running_train_loss.cpu().item() if \
-            running_train_loss is not None else float('NaN')
-        if type(self.trainer.checkpoint_callback.kth_value) != type(0.0):
-            best = self.trainer.checkpoint_callback.kth_value.item()
-        else:
-            best = self.trainer.checkpoint_callback.kth_value
-        tqdm = {'loss': '{:.3f}'.format(avg_training_loss), 'best': best}
-        return tqdm
+    def training_step(self, batch_d, batch_id, optimizer_id=-1):
+        """
+        inherited method
 
-    def training_step(self, batch_d, batch_idx, optimizer_idx=-1):
+        Parameters
+        ----------
+        batch_d
+        batch_id
+        optimizer_id
+
+        Returns
+        -------
+
+        """
         if self.params_d["multi_opt"]:
-            constraints = self.params_d["constraints"].split('_')[
-                optimizer_idx]
-            cweights = float(
-                self.params_d["cweights"].split('_')[optimizer_idx])
+            constraints_str = self.params_d["constraints_str"].split('_')[
+                optimizer_id]
+            cweights_str = float(
+                self.params_d["cweights_str"].split('_')[optimizer_id])
         else:
-            constraints = self.params_d["constraints"]
-            cweights = float(self.params_d["cweights"])
+            constraints_str = self.params_d["constraints_str"]
+            cweights_str = float(self.params_d["cweights_str"])
 
         output_d = self.forward(batch_d, mode='train',
-                                   batch_idx=batch_idx,
-                                   constraints=constraints,
-                                   cweights=cweights)
-
-        tqdm_dict = {"train_loss": output_d['loss']}
-        output0_d = OrderedDict({"loss": output_d['loss'], "log": tqdm_dict})
+                                batch_id=batch_id,
+                                constraints_str=constraints_str,
+                                cweights_str=cweights_str)
+        tqdm_d = {"train_loss": output_d['loss']}
+        output0_d = OrderedDict({"loss": output_d['loss'], "log": tqdm_d})
 
         return output0_d
 
-    def validation_step(self, batch_d, batch_idx):
+    def validation_step(self, batch_d, batch_id):
+        """
+        inherited method
+
+        Parameters
+        ----------
+        batch_d
+        batch_id
+
+        Returns
+        -------
+
+        """
         output_d = self.forward(
             batch_d,
             mode='val',
-            constraints=self.params_d["constraints"],
-            cweights=self.params_d["cweights"])
+            constraints_str=self.params_d["constraints_str"],
+            cweights_str=self.params_d["cweights_str"])
 
-        output0_d = {"predictions": output_d['predictions'],
-                   "scores": output_d['scores'],
-                   "ground_truth": batch_d["lll_label"],
-                   "meta_data": batch_d["meta_data"]}
+        output0_d = {"l_predictions": output_d['l_predictions'],
+                     "l_confidences": output_d['l_confidences'],
+                     "ground_truth": batch_d["lll_label"],
+                     "meta_data": batch_d["meta_data"]}
         output0_d = OrderedDict(output0_d)
 
         if self.params_d["mode"] != 'test':
             if self.params_d["write_async"]:
-                t = Thread(target=self.write_to_file,
-                           args=(output0_d, batch_idx, self.params_d["task"]))
+                t = Thread(target=self._write_output,
+                           args=(output0_d, batch_id, self.params_d["task"]))
                 t.start()
             else:
-                self.write_to_file(output0_d, batch_idx, self.params_d["task"])
+                self._write_output(output0_d, batch_id, self.params_d["task"])
 
         return output0_d
 
-    def test_step(self, batch_d, batch_idx):
-        return self.validation_step(batch_d, batch_idx)
+    def test_step(self, batch_d, batch_id):
+        """
+        inherited method
 
-    def evaluation_end(self, ld_output, mode):
-        result = None
+        Parameters
+        ----------
+        batch_d
+        batch_id
+
+        Returns
+        -------
+
+        """
+        return self.validation_step(batch_d, batch_id)
+
+    def _eval_metrics_at_epoch_end(self,
+                                   ld_output,
+                                   mode):
+        """
+        formerly model.evaluation_end()
+        not inherited method, used in *_epoch_end methods
+        note that both `mode` and self.params_d["mode"] are used
+
+        Parameters
+        ----------
+        ld_output
+        mode
+
+        Returns
+        -------
+
+        """
+        eval_results_d = None
         if self.params_d["mode"] == 'test':
             for output_index, output_d in enumerate(ld_output):
-                output_d['predictions'] = output_d['predictions'].cpu()
-                output_d['scores'] = output_d['scores'].cpu()
-                output_d['scores'] = (output_d['scores'] * 100).round() / 100
+                output_d['l_predictions'] = output_d['l_predictions'].cpu()
+                output_d['l_confidences'] = output_d['l_confidences'].cpu()
+                output_d['l_confidences'] = \
+                    (output_d['l_confidences'] * 100).round() / 100
                 output_d['ground_truth'] = output_d['ground_truth'].cpu()
                 output_d['meta_data'] = output_d['meta_data'].cpu()
-        if self.params_d["task"] == 'conj':
+        if self.params_d["task"] == "cc":
             if 'predict' in self.params_d["mode"]:
-                metrics = {'P_exact': 0, 'R_exact': 0, 'F1_exact': 0}
+                metrics_d = {'P_exact': 0, 'R_exact': 0, 'F1_exact': 0}
             else:
                 for output_d in ld_output:
-                    if type(output_d['meta_data'][0]) != type(""):
+                    if type(output_d['meta_data'][0]) != str:
                         output_d['meta_data'] = [self.auto_tokenizer.decode[m]
-                                               for m in output_d['meta_data']]
-                    self.metric(output_d['predictions'],
-                                 output_d['ground_truth'],
-                                 meta_data=output_d['meta_data'])
-                metrics = self.metric.get_metric(reset=True, mode=mode)
+                                                 for m in
+                                                 output_d['meta_data']]
+                    self.metric(output_d['l_predictions'],
+                                output_d['ground_truth'],
+                                meta_data=output_d['meta_data'])
+                metrics_d = self.metric.get_metric(reset=True, mode=mode)
 
-            val_acc, val_auc = metrics['F1_exact'], 0
-            result = {"eval_f1": val_acc, "eval_p": metrics['P_exact'],
-                      "eval_r": metrics['R_exact']}
+            val_acc = metrics_d['F1_exact']
+            eval_results_d = {"eval_f1": val_acc,
+                              "eval_p": metrics_d['P_exact'],
+                              "eval_r": metrics_d['R_exact']}
 
         elif self.params_d["task"] == "ex":
             if 'predict' in self.params_d["mode"]:
-                metrics = {'carb_f1': 0, 'carb_auc': 0, 'carb_lastf1': 0}
+                metrics_d = {'carb_f1': 0, 'carb_auc': 0, 'carb_lastf1': 0}
             else:
                 for output_d in ld_output:
-                    if type(output_d['meta_data'][0]) != type(""):
+                    if type(output_d['meta_data'][0]) != str:
                         output_d['meta_data'] = [self.auto_tokenizer.decode[m]
-                                               for m in output_d['meta_data']]
-                    self.metric(output_d['predictions'], output_d['meta_data'],
-                                 output_d['scores'])
-                metrics = self.metric.get_metric(reset=True, mode=mode)
+                                                 for m in
+                                                 output_d['meta_data']]
+                    self.metric(output_d['l_predictions'],
+                                output_d['meta_data'],
+                                output_d['l_confidences'])
+                metrics_d = self.metric.get_metric(reset=True, mode=mode)
 
-            result = {"eval_f1": metrics['carb_f1'],
-                      "eval_auc": metrics['carb_auc'],
-                      "eval_lastf1": metrics['carb_lastf1']}
+            eval_results_d = {"eval_f1": metrics_d['carb_f1'],
+                              "eval_auc": metrics_d['carb_auc'],
+                              "eval_lastf1": metrics_d['carb_lastf1']}
 
-        print('\nResults: ' + str(result))
+        print('\nResults: ' + str(eval_results_d))
         # For computing the constraint violations
-        # if hasattr(self, 'constraints_d') and \
-        # self.params_d["constraints"] != '':
-        #     for key in self.constraints_d:
-        #         self.constraints_d[key] = sum(self.constraints_d[key]).item()
-        #     print('\nViolations: ', self.constraints_d)
-        #     self.constraints_d = dict()
-        return result
+        # if hasattr(self, 'constraints_str_d') and \
+        # self.params_d["constraints_str"] != '':
+        #     for key in self.constraints_str_d:
+        #         self.constraints_str_d[key] = sum(self.constraints_str_d[key]).item()
+        #     print('\nViolations: ', self.constraints_str_d)
+        #     self.constraints_str_d = dict()
+        return eval_results_d
 
     def validation_epoch_end(self, ld_output):
-        eval_results = self.evaluation_end(ld_output, 'dev')
-        result = {}
-        if eval_results != None:
-            result = {"log": eval_results,
-                      "eval_acc": eval_results['eval_f1']}
+        """
+        inherited method
 
-        return result
+        Parameters
+        ----------
+        ld_output
+
+        Returns
+        -------
+
+        """
+        eval_results_d = \
+            self._eval_metrics_at_epoch_end(ld_output, 'dev')
+        result_d = {}
+        if eval_results_d != None:
+            result_d = {"log": eval_results_d,
+                        "eval_acc": eval_results_d['eval_f1']}
+
+        return result_d
 
     def test_epoch_end(self, ld_output):
-        eval_results = self.evaluation_end(ld_output, 'test')
-        self.ld_output = ld_output
-        result = {"log": eval_results,
-                  "progress_bar": eval_results,
-                  "test_acc": eval_results['eval_f1']}
-        self.results = eval_results
+        """
+        inherited method
+
+        Parameters
+        ----------
+        ld_output
+
+        Returns
+        -------
+
+        """
+        eval_results_d = \
+            self._eval_metrics_at_epoch_end(ld_output, 'test')
+        # self.ld_output = ld_output # never used
+        results_d = {"log": eval_results_d,
+                     "progress_bar": eval_results_d,
+                     "test_acc": eval_results_d['eval_f1']}
+        # self.results = d_eval_results # never used!
         if self.params_d["write_async"]:
             while not sem.acquire(blocking=True):
                 pass
             sem.release()
-        return result
+        return results_d
 
-    # obligatory definitions - pass actual through fit
     def train_dataloader(self):
+        """
+        inherited abstract method
+
+        Returns
+        -------
+
+        """
         return None
 
     def val_dataloader(self):
+        """
+        inherited abstract method
+
+        Returns
+        -------
+
+        """
         return None
 
-    def process_extraction(self, extraction, sentence, score):
-        # rel, arg1, arg2, loc, time = [], [], [], [], []
-        rel, arg1, arg2, loc_time, args = [], [], [], [], []
-        tag_mode = 'none'
-        rel_case = 0
-        for i, token in enumerate(sentence):
-            if '[unused' in token:
-                if extraction[i].item() == 2:
-                    rel_case = int(
-                        re.search('\[unused(.*)\]', token).group(1))
-                continue
-            if extraction[i] == 1:
-                arg1.append(token)
-            if extraction[i] == 2:
-                rel.append(token)
-            if extraction[i] == 3:
-                arg2.append(token)
-            if extraction[i] == 4:
-                loc_time.append(token)
+    def _get_extraction(self, ex_labels, words, score):
+        """
+        formerly model.process_extraction()
 
-        rel = ' '.join(rel).strip()
+        LABEL_TO_EXTAG={
+            0: 'NONE',
+            1: 'ARG1',
+            2: 'REL',
+            3: 'ARG2',
+            4: 'ARG2',
+            5: 'NONE'
+        }
+
+
+        Parameters
+        ----------
+        ex_labels:
+        words
+        score
+
+        Returns
+        -------
+
+        """
+        ex_labels = ex_labels.to_list() # change from torch tensor to list
+
+        l_rel =[]
+        l_arg1=[]
+        l_arg2=[]
+        # l_loc_time=[]
+        # l_args = []
+        rel_case = 0
+        for i, word in enumerate(words):
+            if '[unused' in word:
+                if ex_labels[i] == 2: # REL
+                    rel_case = int(
+                        re.search('\[unused(.*)\]', word).group(1)
+                    ) # this returns either 1, 2 or 3
+                continue
+            if ex_labels[i] == 0: # NONE
+                pass
+            elif ex_labels[i] == 1: # ARG1
+                l_arg1.append(word)
+            elif ex_labels[i] == 2: # REL
+                l_rel.append(word)
+            elif ex_labels[i] == 3: # ARG2
+                l_arg2.append(word)
+            elif ex_labels[i] == 4: # ARG2
+                # l_loc_time.append(word)
+                l_arg2.append(word)
+            else:
+                assert False
+
+        rel = ' '.join(l_rel).strip()
         if rel_case == 1:
             rel = 'is ' + rel
         elif rel_case == 2:
@@ -546,88 +731,101 @@ class Model(pl.LightningModule):
         elif rel_case == 3:
             rel = 'is ' + rel + ' from'
 
-        arg1 = ' '.join(arg1).strip()
-        arg2 = ' '.join(arg2).strip()
-        args = ' '.join(args).strip()
-        loc_time = ' '.join(loc_time).strip()
-        if not self.params_d["no_lt"]:
-            arg2 = (arg2 + ' ' + loc_time + ' ' + args).strip()
-        sentence_str = ' '.join(sentence).strip()
+        arg1 = ' '.join(l_arg1).strip()
+        arg2 = ' '.join(l_arg2).strip()
+
+        # args = ' '.join(l_args).strip()
+        # loc_time = ' '.join(l_loc_time).strip()
+        # if not self.params_d["no_lt"]: # no_lt = no loc time
+        #     arg2 = (arg2 + ' ' + loc_time + ' ' + args).strip()
+
+        sentence_str = ' '.join(words).strip()
 
         extraction = Extraction_sax(sentence_str,
                                     arg1,
                                     rel,
                                     arg2,
                                     confidence=score)
-        extraction.add_arg1(arg1)
-        extraction.add_arg2(arg2)
 
         return extraction
 
-    def write_to_file(self, output_d, batch_idx, task):
+    def _write_output(self, output_d, batch_id, task):
+        """
+        formerly model.write_to_file()
+
+        Parameters
+        ----------
+        output_d
+        batch_id
+        task
+
+        Returns
+        -------
+
+        """
         if self.params_d["write_async"]:
             while not sem.acquire(blocking=True):
                 # print("No Semaphore available")
                 pass
             # print('Got semaphore')
-        output_d['predictions'] = output_d['predictions'].cpu()
-        output_d['scores'] = output_d['scores'].cpu()
+        output_d['l_predictions'] = output_d['l_predictions'].cpu()
+        output_d['l_confidences'] = output_d['l_confidences'].cpu()
         output_d['ground_truth'] = output_d['ground_truth'].cpu()
         output_d['meta_data'] = output_d['meta_data'].cpu()
+        # note, right hand side depends on output_d['meta_data']
         output_d['meta_data'] = [self.auto_tokenizer.decode[m] for m
-                               in output_d['meta_data']]
+                                 in output_d['meta_data']]
         if task == "ex":
-            predictions = output_d['predictions']
+            l_predictions = output_d['l_predictions']
             sentences = output_d['meta_data']
-            scores = output_d['scores']
-            num_sentences, extractions, max_sentence_len = predictions.shape
-            assert num_sentences == len(sentences)
-            all_predictions = {}
-            for i, sentence_str in enumerate(sentences):
-                words = sentence_str.split() + \
-                        ['[unused1]', '[unused2]', '[unused3]']
-                orig_sentence = sentence_str.split('[unused1]')[0].strip()
+            scores = output_d['l_confidences']
+            num_sents, ex_depth, max_sent_len =\
+                l_predictions.shape
+            assert num_sents == len(sentences)
+            predictions_d = {}
+            for i, sentence in enumerate(sentences):
+                words = sentence.split() + UNUSED_TOKENS
+                orig_sentence = sentence.split('[unused1]')[0].strip()
                 if self.metric.mapping:
-                    if self.metric.mapping[
-                        orig_sentence] not in all_predictions:
-                        all_predictions[
+                    if self.metric.mapping[orig_sentence] not in predictions_d:
+                        predictions_d[
                             self.metric.mapping[orig_sentence]] = []
                 else:
-                    if orig_sentence not in all_predictions:
-                        all_predictions[orig_sentence] = []
-                for j in range(extractions):
-                    extraction = predictions[i][j][:len(words)]
+                    if orig_sentence not in predictions_d:
+                        predictions_d[orig_sentence] = []
+                for j in range(ex_depth):
+                    extraction = l_predictions[i][j][:len(words)]
                     if sum(extraction) == 0:  # extractions completed
                         break
-                    pro_extraction = self.process_extraction(
+                    pro_extraction = self._get_extraction(
                         extraction, words, scores[i][j].item())
                     if pro_extraction.arg1_pair[1] != '' and \
                             pro_extraction.rel_pair[1] != '':
                         if self.metric.mapping:
                             if not pro_extraction.get_str() in \
-                                   all_predictions[
-                                    self.metric.mapping[orig_sentence]]:
-                                all_predictions[self.metric.mapping[
+                                   predictions_d[
+                                       self.metric.mapping[orig_sentence]]:
+                                predictions_d[self.metric.mapping[
                                     orig_sentence]].append(pro_extraction)
                         else:
                             if not pro_extraction.get_str() in \
-                                   all_predictions[orig_sentence]:
-                                all_predictions[orig_sentence].append(
+                                   predictions_d[orig_sentence]:
+                                predictions_d[orig_sentence].append(
                                     pro_extraction)
             all_pred = []
             all_pred_allennlp = []
-            for sample_id, sentence in enumerate(all_predictions):
-                predicted_extractions = all_predictions[sentence]
+            for sample_id, sentence in enumerate(predictions_d):
+                predicted_extractions = predictions_d[sentence]
                 # write only the results in text file
                 # if 'predict' in self.params_d["mode"]:
-                sentence_str = f'{sentence}\n'
+                sentence = f'{sentence}\n'
                 for extraction in predicted_extractions:
                     if self.params_d["type"] == 'sentences':
                         ext_str = extraction.get_str() + '\n'
                     else:
                         ext_str = extraction.get_str() + '\n'
-                    sentence_str += ext_str
-                all_pred.append(sentence_str)
+                    sentence += ext_str
+                all_pred.append(sentence)
                 sentence_str_allennlp = ''
                 for extraction in predicted_extractions:
                     arg1 = extraction.arg1
@@ -639,29 +837,29 @@ class Model(pl.LightningModule):
                     sentence_str_allennlp.strip('\n')
                 all_pred_allennlp.append(sentence_str_allennlp)
             self.all_ex_predictions.extend(all_pred)
-        if task == 'conj':
+        if task == "cc":
             sample_id, correct = 0, True
             total1, total2 = 0, 0
-            predictions = output_d['predictions']
+            l_predictions = output_d['l_predictions']
             gt = output_d['ground_truth']
             meta_data = output_d['meta_data']
-            total_depth = predictions.shape[1]
+            total_depth = l_predictions.shape[1]
             all_pred = []
             all_conjunct_words = []
             all_sentence_indices = []
-            for idx in range(len(meta_data)):
+            for id in range(len(meta_data)):
                 sample_id += 1
-                sentence = meta_data[idx]
+                sentence = meta_data[id]
                 words = sentence.split()
                 sentence_predictions, sentence_gt = [], []
                 for depth in range(total_depth):
-                    depth_predictions = predictions[idx][depth][:len(
+                    depth_predictions = l_predictions[id][depth][:len(
                         words)].tolist()
                     sentence_predictions.append(depth_predictions)
                 pred_ccnodes = self.metric.get_ccnodes(sentence_predictions)
 
                 words = sentence.split()
-                sentence_str = sentence + '\n'
+                sentence = sentence + '\n'
                 tree = CCTree(simple_sent, depth_predictions)
                 split_sentences, conj_words, sentence_indices_list = \
                     tree.get_simple_sents()
@@ -669,9 +867,9 @@ class Model(pl.LightningModule):
                 all_conjunct_words.append(conj_words)
                 total1 += len(split_sentences)
                 total2 += 1 if len(split_sentences) > 0 else 0
-                sentence_str += '\n'.join(split_sentences) + '\n'
+                sentence += '\n'.join(split_sentences) + '\n'
 
-                all_pred.append(sentence_str)
+                all_pred.append(sentence)
             self.all_cc_words.extend(all_conjunct_words)
             self.all_cc_predictions.extend(all_pred)
             self.all_cc_sent_locs.extend(all_sentence_indices)
@@ -681,18 +879,18 @@ class Model(pl.LightningModule):
                 os.makedirs(directory)
             out_fp = f'{self.params_d["out"]}.{self.params_d["task"]}'
             # print('Predictions written to ', out_fp)
-            if batch_idx == 0:
+            if batch_id == 0:
                 predictions_f = open(out_fp, 'w')
             else:
                 predictions_f = open(out_fp, 'a')
             predictions_f.write('\n'.join(all_pred) + '\n')
             predictions_f.close()
         if task == "ex" and self.params_d["write_allennlp"]:
-            if batch_idx == 0:
+            if batch_id == 0:
                 predictions_f_allennlp = open(
                     f'{self.params_d["out"]}.allennlp',
                     'w')
-                self.predictions_f_allennlp = predictions_f_allennlp.name
+                predictions_f_allennlp = predictions_f_allennlp.name
             else:
                 predictions_f_allennlp = open(
                     f'{self.params_d["out"]}.allennlp',

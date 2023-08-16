@@ -48,8 +48,7 @@ class AllenTool:
             begin_tag, end_tag = '<' + str0 + '>', '</' + str0+ '>'
             part = re.findall(begin_tag + '.*' + end_tag, tab_sep_vals[1])[0]
             # print("vcbgh", part)
-            part = ' '.join(part.strip(begin_tag).strip(end_tag).
-                            strip().split())
+            part = ' '.join(get_words(part.strip(begin_tag).strip(end_tag)))
             parts.append(part)
         ex = Extraction_sax(in_sent, parts[0], parts[1], parts[2], confidence)
     

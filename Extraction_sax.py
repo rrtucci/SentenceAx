@@ -31,6 +31,7 @@ class Extraction_sax():
  
 
         self.confidence = confidence
+        self.ex_sent = ex_sent
         sentL = ex_sent + UNUSED_TOKENS_STR #sentL = sentence long
         self.sentL_pair = (sentL, get_words(ex_sent) + UNUSED_TOKENS)
         self.arg1_pair = (arg1, get_words(arg1))
@@ -377,3 +378,71 @@ class Extraction_sax():
         self.set_extags_of_repeated_rel()
         self.set_extags_of_loc_or_time("loc")
         self.set_extags_of_loc_or_time("time")
+
+    @staticmethod
+    def convert_to_sax_extraction(carb_ext):
+        """
+        class Extraction:
+        def __init__(self, pred, head_pred_index, sent,
+             confidence, question_dist = '', index = -1):
+        self.pred = pred
+        self.head_pred_index = head_pred_index
+        self.sent = sent
+        self.args = []
+        self.confidence = confidence
+        self.matched = []
+        self.questions = {}
+        # self.indsForQuestions = defaultdict(lambda: set())
+        self.is_mwp = False
+        self.question_dist = question_dist
+        self.index = index
+    
+        def addArg(self, arg, question = None):
+        self.args.append(arg)
+        if question:
+            self.questions[question] = self.questions.get(question,[]) + [Argument(arg)]
+    
+        class Argument:
+        def __init__(self, arg):
+            self.words = [x for x in arg[0].strip().split(' ') if x]
+            self.posTags = map(itemgetter(1), nltk.pos_tag(self.words))
+            self.indices = arg[1]
+            self.feats = {}
+    
+        Parameters
+        ----------
+        carb_ext
+    
+        Returns
+        -------
+    
+        """
+        arg1 = ' '.join(carb_ext.args[0].words)
+        arg2 = ""
+        for k, arg in enumerate(carb_ext.args):
+            if k>0:
+                arg2 += ' '.join(arg.words)
+        ex_sent = carb_ext.sent.split("[unused1]")[0].stip()
+    
+        return Extraction_sax(ex_sent=carb_ext.sent,
+                                 arg1=arg1,
+                                 rel=carb_ext.rel,
+                                 arg2=arg2,
+                                 confidence=carb_ext.confidence)
+    
+    
+    def convert_to_carb_extraction(self):
+        """
+        openie6.model.write_to_files
+
+        Returns
+        -------
+
+        """
+        carb_ext = Extraction(pred=self.rel_pair[0],
+                              head_pred_index=None,
+                              sent=self.ex_sent + UNUSED_TOKENS_STR,
+                              confidence=self.confidence)
+        carb_ext.addArg(self.arg1_pair[0])
+        carb_ext.addArg(self.arg2_pair[0])
+        return carb_ext

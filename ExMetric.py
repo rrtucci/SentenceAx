@@ -4,10 +4,22 @@ import re
 from carb_subset.oie_readers.extraction import Extraction
 
 
-def contains_extraction(extr, list_extr):
-    str = ' '.join(extr.args) + ' ' + extr.pred
-    for extraction in list_extr:
-        if str == ' '.join(extraction.args) + ' ' + extraction.pred:
+def contains_extraction(ex, l_ex):
+    """
+
+    Parameters
+    ----------
+    ex: Extraction
+        This is a carb class, not Extraction_sax
+    l_ex: list[Extraction]
+
+    Returns
+    -------
+
+    """
+    ex_str = ' '.join(ex.args) + ' ' + ex.pred
+    for ex0 in l_ex:
+        if ex_str == ' '.join(ex0.args) + ' ' + ex0.pred:
             return True
     return False
 

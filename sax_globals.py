@@ -132,12 +132,12 @@ if "PARAMS_D" in globals():
 ## Running Model
 elif TASK == "ex" and MODE == "splitpredict":
     PARAMS_D = {
-        "conj_model": "models/conj_model/epoch=28_eval_acc=0.854.ckpt",
+        "cc_model": "models/cc_model/epoch=28_eval_acc=0.854.ckpt",
         "gpus": 1,
         "inp": "sentences.txt",
         "mode": "splitpredict",
         "num_extractions": 5,
-        "oie_model": "models/oie_model/epoch=14_eval_acc=0.551_v0.ckpt",
+        "ex_model": "models/ex_model/epoch=14_eval_acc=0.551_v0.ckpt",
         "out": "predictions.txt",
         "rescore_model": "models/rescore_model",
         "rescoring": True,
@@ -158,7 +158,7 @@ elif TASK == "ex" and MODE == "train_test":
         "mode": "train_test",
         "model_str": "bert-base-cased",
         "optimizer": "adamW",
-        "save": "models/warmup_oie_model",
+        "save": "models/warmup_ex_model",
         "task": "ex"
     }
     
@@ -169,7 +169,7 @@ elif TASK == "ex" and MODE == "test":
         "gpus": 1,
         "mode": "test",
         "model_str": "bert-base-cased",
-        "save": "models/warmup_oie_model",
+        "save": "models/warmup_ex_model",
         "task": "ex"
     }
 
@@ -181,7 +181,7 @@ elif TASK == "ex" and MODE == "predict":
         "mode": "predict",
         "model_str": "bert-base-cased",
         "out": "predictions.txt",
-        "save": "models/warmup_oie_model",
+        "save": "models/warmup_ex_model",
         "task": "ex"
     }
 
@@ -194,7 +194,7 @@ elif TASK == "ex" and MODE == "resume":
     PARAMS_D = {
         "accumulate_grad_batches": 2,
         "batch_size": 16,
-        "checkpoint": "models/warmup_oie_model/epoch=13_eval_acc=0.544.ckpt",
+        "checkpoint": "models/warmup_ex_model/epoch=13_eval_acc=0.544.ckpt",
         "constraints": "posm_hvc_hvr_hve",
         "cweights": "3_3_3_3",
         "epochs": 16,
@@ -206,7 +206,7 @@ elif TASK == "ex" and MODE == "resume":
         "model_str": "bert-base-cased",
         "multi_opt": True,
         "optimizer": "adam",
-        "save": "models/oie_model",
+        "save": "models/ex_model",
         "save_k": 3,
         "task": "ex",
         "val_check_interval": 0.1,
@@ -219,7 +219,7 @@ elif TASK == "ex" and MODE == "test":
         "gpus": 1,
         "mode": "test",
         "model_str": "bert-base-cased",
-        "save": "models/oie_model",
+        "save": "models/ex_model",
         "task": "ex"
     }
 
@@ -231,7 +231,7 @@ elif TASK == "ex" and MODE == "predict":
         "mode": "predict",
         "model_str": "bert-base-cased",
         "out": "predictions.txt",
-        "save": "models/oie_model",
+        "save": "models/ex_model",
         "task": "ex"
     }
 
@@ -246,7 +246,7 @@ elif TASK == "cc" and MODE == "train_test":
         "mode": "train_test",
         "model_str": "bert-large-cased",
         "optimizer": "adamW",
-        "save": "models/conj_model",
+        "save": "models/cc_model",
         "task": "cc"
     }
 
@@ -255,12 +255,12 @@ elif TASK == "cc" and MODE == "train_test":
 # Running
 elif TASK == "ex" and MODE == "splipredict":
     PARAMS_D = {
-        "conj_model": "models/conj_model/epoch=28_eval_acc=0.854.ckpt",
+        "cc_model": "models/cc_model/epoch=28_eval_acc=0.854.ckpt",
         "gpus": 1,
         "inp": "carb/data/carb_sentences.txt",
         "mode": "splitpredict",
         "num_extractions": 5,
-        "oie_model": "models/oie_model/epoch=14_eval_acc=0.551_v0.ckpt",
+        "ex_model": "models/ex_model/epoch=14_eval_acc=0.551_v0.ckpt",
         "out": "models/results/final",
         "rescore_model": "models/rescore_model",
         "rescoring": True,

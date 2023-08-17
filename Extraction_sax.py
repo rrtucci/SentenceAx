@@ -20,27 +20,33 @@ class Extraction_sax():
     
     assume only one: arg1, rel, arg2, time_arg, loc_arg
     assume args list is empty
+    
+    `orig_sent` will represent the original sentence. commas and periods 
+    will be assumed to be isolated (i.e., with blank space before and after)
+    
+    orig_sentL = orig_sent + UNUSED_TOKEN_STR is the long version of orig_sent
+    
+    `ex_sent' will represent an extracted sentence (simple sentence). It 
+    does not contain unused tokens but may contain "is", "of", "from". which 
+    do not appear in orig_sent.
     """
+
     def __init__(self,
-                 ex_sent,  # extracted sentence, without
-                 # unused tokens but may have [is], [of], [from] tokens
+                 orig_sentL,
                  arg1="",
                  rel="",
                  arg2="",
                  confidence=None):
- 
 
         self.confidence = confidence
-        self.ex_sent = ex_sent
-        sentL = ex_sent + UNUSED_TOKENS_STR #sentL = sentence long
-        self.sentL_pair = (sentL, get_words(ex_sent) + UNUSED_TOKENS)
+        self.orig_sentL_pair = (orig_sentL, get_words(orig_sentL))
         self.arg1_pair = (arg1, get_words(arg1))
         self.rel_pair = (rel, get_words(rel))
         self.arg2_pair = (arg2, get_words(arg2))
         self.time_arg_pair = ("", [])
         self.loc_arg_pair = ("", [])
 
-        self.sent_extags = ["NONE"] * len(self.sentL_pair[1])
+        self.sent_extags = ["NONE"] * len(self.orig_orig_sentL_pair[1])
         self.base_extag_is_assigned = {extag_name: False
                                        for extag_name in BASE_EXTAGS}
 
@@ -114,14 +120,14 @@ class Extraction_sax():
 
         if len(self.arg2_pair[1]) != 0:
             for li in with_2_lists:
-                if count_sub_reps(li, self.sentL_pair[1]) == 1:
-                    matches = get_matches(li, self.sentL_pair[1])
+                if count_sub_reps(li, self.orig_sentL_pair[1]) == 1:
+                    matches = get_matches(li, self.orig_sentL_pair[1])
                     self.set_extags_of_2_matches(matches, "ARG2")
                     return
         else:  # len(self.arg2_pair[1]) == 0
             for li in without_2_lists:
-                if count_sub_reps(li, self.sentL_pair[1]) == 1:
-                    matches = get_matches(li, self.sentL_pair[1])
+                if count_sub_reps(li, self.orig_sentL_pair[1]) == 1:
+                    matches = get_matches(li, self.orig_sentL_pair[1])
                     self.set_extags_of_2_matches(matches, "ARG2")
                     return
         # if everything else fails, still
@@ -147,14 +153,14 @@ class Extraction_sax():
             arg_words = self.rel_pair[1]
         else:
             assert False
-        if count_sub_reps(arg_words, self.sentL_pair[1]) == 1:
-            matches = get_matches(arg_words, self.sentL_pair[1])
+        if count_sub_reps(arg_words, self.orig_sentL_pair[1]) == 1:
+            matches = get_matches(arg_words, self.orig_sentL_pair[1])
             self.set_extags_of_2_matches(matches, arg_name.upper())
 
-        elif count_sub_reps(arg_words, self.sentL_pair[1]) == 0:
+        elif count_sub_reps(arg_words, self.orig_sentL_pair[1]) == 0:
             # sub doesn't fit in one piece into full
             # but still possible it exists in fractured form
-            matches = get_matches(arg_words, self.sentL_pair[1])
+            matches = get_matches(arg_words, self.orig_sentL_pair[1])
             if has_gt_2_matches(matches):
                 self.set_extags_of_gt_2_matches(matches, arg_name.upper())
 
@@ -175,29 +181,28 @@ class Extraction_sax():
         # and self.rel_pair[0][-1] is anything
         # that doesn't start with "["
         if count_sub_reps(self.rel_pair[1][1:last_rel_loc],
-                          self.sentL_pair[1]) == 1:
+                          self.orig_sentL_pair[1]) == 1:
             matches = get_matches(
-                self.rel_pair[1][1:last_rel_loc], self.sentL_pair[1])
+                self.rel_pair[1][1:last_rel_loc], self.orig_sentL_pair[1])
             self.set_extags_of_2_matches(matches, "REL")
-            assert self.sentL_pair[1][unused_loc] == unused_str
+            assert self.orig_sentL_pair[1][unused_loc] == unused_str
             self.sent_extags[unused_loc] = 'REL'
         elif len(self.rel_pair[1]) > 2 and \
                 count_sub_reps(self.rel_pair[1][1:last_rel_loc],
-                               self.sentL_pair[1]) == 0:
+                               self.orig_sentL_pair[1]) == 0:
             matches = get_matches(
-                self.rel_pair[1][1:last_rel_loc], self.sentL_pair[1])
+                self.rel_pair[1][1:last_rel_loc], self.orig_sentL_pair[1])
             # sub doesn't fit in one piece into full
             # but still possible it exists in fractured form
             if has_gt_2_matches(matches):
                 self.set_extags_of_gt_2_matches(matches, "REL")
-                assert self.sentL_pair[1][unused_loc] == unused_str
+                assert self.orig_sentL_pair[1][unused_loc] == unused_str
                 # if sent starts with "[is]" and ends with
                 # anything, "[of]", or "[from]"
                 # then switch the extag at sent positions of
                 # [unused1], [unused2], [unused3]
                 # from NONE to REL
                 self.sent_extags[unused_loc] = 'REL'
-
 
     def set_extags_of_IS_OF_FROM(self):
         """
@@ -215,7 +220,7 @@ class Extraction_sax():
             # IS
             if self.rel_pair[0] == '[is]':
                 self.set_is_extagged_flag_to_true("REL")
-                assert self.sentL_pair[1][-3] == '[unused1]'
+                assert self.orig_sentL_pair[1][-3] == '[unused1]'
                 self.sent_extags[-3] = 'REL'
             # IS-OF
             elif self.rel_pair[1][0] == '[is]' and \
@@ -226,11 +231,10 @@ class Extraction_sax():
                     self.rel_pair[1][-1] == '[from]':
                 self.set_extags_for_unused_num(3)
             # IS
-            elif self.rel_pair[1][0] == '[is]' and\
+            elif self.rel_pair[1][0] == '[is]' and \
                     len(self.rel_pair[1]) > 1:
                 assert self.rel_pair[1][-1].startswith('[') == ""
                 self.set_extags_for_unused_num(1)
-
 
     def set_extags_of_repeated_arg1(self):
         """
@@ -246,11 +250,11 @@ class Extraction_sax():
 
         if rel_is_extagged and \
                 (not arg1_is_extagged) and \
-                count_sub_reps(self.arg1_pair[1], self.sentL_pair[1]) > 1:
+                count_sub_reps(self.arg1_pair[1], self.orig_sentL_pair[1]) > 1:
             start_locs = [start_loc for start_loc in
-                          range(len(self.sentL_pair[1])) if
+                          range(len(self.orig_sentL_pair[1])) if
                           sub_exists(self.arg1_pair[1],
-                                     self.sentL_pair[1], start_loc)]
+                                     self.orig_sentL_pair[1], start_loc)]
             assert len(start_locs) > 1
 
             if 'REL' in self.sent_extags:
@@ -261,14 +265,15 @@ class Extraction_sax():
                 cost_fun = lambda x: abs(rel_loc - x)
                 loc0, cost0 = \
                     find_xlist_item_that_minimizes_cost_fun(xlist, cost_fun)
-                assert self.arg1_pair[1] == self.sentL_pair[1][
-                       loc0: loc0 + len(self.arg1_pair[1])]
+                assert self.arg1_pair[1] == self.orig_sentL_pair[1][
+                                            loc0: loc0 + len(
+                                                self.arg1_pair[1])]
                 self.set_is_extagged_flag_to_true("ARG1")
                 # only extag the first occurrence of arg1
                 self.sent_extags[
                 loc0: loc0 + len(self.arg1_pair[1])] = \
                     ['ARG1'] * len(self.arg1_pair[1])
-            else: # 'REL" is not in extags
+            else:  # 'REL" is not in extags
                 assert False
 
     def set_extags_of_repeated_rel(self):
@@ -288,25 +293,27 @@ class Extraction_sax():
                 (not rel_is_extagged) and \
                 len(self.rel_pair[1]) > 0:
             rel_words = []
-            if count_sub_reps(self.rel_pair[1], self.sentL_pair[1]) > 1:
+            if count_sub_reps(self.rel_pair[1], self.orig_sentL_pair[1]) > 1:
                 rel_words = self.rel_pair[1]
             elif self.rel_pair[1][0] == '[is]' and \
                     count_sub_reps(self.rel_pair[1][1:],
-                                   self.sentL_pair[1]) > 1:
+                                   self.orig_sentL_pair[1]) > 1:
                 rel_words = self.rel_pair[1][1:]
             elif self.rel_pair[1][0] == '[is]' and \
                     self.rel_pair[1][-1].startswith('[') and \
                     count_sub_reps(self.rel_pair[1][1:-1],
-                                   self.sentL_pair[1]) > 1:
+                                   self.orig_sentL_pair[1]) > 1:
                 rel_words = self.rel_pair[1][1:-1]
 
             if rel_words:
-                start_locs =\
-                    [start_loc for start_loc in range(len(self.sentL_pair[1]))
-                     if sub_exists(rel_words, self.sentL_pair[1], start_loc)]
+                start_locs = \
+                    [start_loc for start_loc in
+                     range(len(self.orig_sentL_pair[1]))
+                     if
+                     sub_exists(rel_words, self.orig_sentL_pair[1], start_loc)]
                 assert len(start_locs) > 1
                 arg2_condition = self.arg2_pair[0] == "" or \
-                       'ARG2' in self.sent_extags
+                                 'ARG2' in self.sent_extags
                 if 'ARG1' in self.sent_extags and arg2_condition:
                     arg1_loc = self.sent_extags.index('ARG1')
 
@@ -318,26 +325,26 @@ class Extraction_sax():
                                                                     cost_fun)
 
                         assert rel_words == \
-                               self.sentL_pair[1][
+                               self.orig_sentL_pair[1][
                                loc0: loc0 + len(rel_words)]
                         self.set_is_extagged_flag_to_true("REL")
                         self.sent_extags[loc0: loc0 + len(rel_words)] = \
                             ['REL'] * len(rel_words)
 
-                    else: # self.arg2_pair[0] non-empty
+                    else:  # self.arg2_pair[0] non-empty
                         arg2_loc = self.sent_extags.index('ARG2')
                         xlist = start_locs
                         # this cost function has as minimum
                         # abs(arg1_loc - arg2_loc). This minimum is achieved
                         # by any x in the interval [arg1_loc, arg2_loc]
-                        cost_fun =\
+                        cost_fun = \
                             lambda x: abs(arg1_loc - x) + abs(arg2_loc - x)
                         loc0, cost0 = \
                             find_xlist_item_that_minimizes_cost_fun(xlist,
                                                                     cost_fun)
 
                         assert rel_words == \
-                               self.sentL_pair[1][
+                               self.orig_sentL_pair[1][
                                loc0: loc0 + len(rel_words)]
                         self.set_is_extagged_flag_to_true('REL')
                         self.sent_extags[loc0: loc0 + len(rel_words)] = \
@@ -365,7 +372,7 @@ class Extraction_sax():
             pair = self.loc_arg_pair
         else:
             assert False
-        matches = get_matches(pair[1], self.sentL_pair[1])
+        matches = get_matches(pair[1], self.orig_sentL_pair[1])
         if has_2_matches(matches):
             self.set_extags_of_2_matches(matches, arg_name.upper())
 
@@ -420,17 +427,15 @@ class Extraction_sax():
         arg1 = ' '.join(carb_ext.args[0].words)
         arg2 = ""
         for k, arg in enumerate(carb_ext.args):
-            if k>0:
+            if k > 0:
                 arg2 += ' '.join(arg.words)
-        ex_sent = carb_ext.sent.split("[unused1]")[0].stip()
-    
-        return Extraction_sax(ex_sent=carb_ext.sent,
-                                 arg1=arg1,
-                                 rel=carb_ext.rel,
-                                 arg2=arg2,
-                                 confidence=carb_ext.confidence)
-    
-    
+
+        return Extraction_sax(orig_sentL=carb_ext.sent,
+                              arg1=arg1,
+                              rel=carb_ext.rel,
+                              arg2=arg2,
+                              confidence=carb_ext.confidence)
+
     def convert_to_carb_extraction(self):
         """
         openie6.model.write_to_files
@@ -441,7 +446,7 @@ class Extraction_sax():
         """
         carb_ext = Extraction(pred=self.rel_pair[0],
                               head_pred_index=None,
-                              sent=self.ex_sent + UNUSED_TOKENS_STR,
+                              sent=self.orig_sentL_pair[0],
                               confidence=self.confidence)
         carb_ext.addArg(self.arg1_pair[0])
         carb_ext.addArg(self.arg2_pair[0])

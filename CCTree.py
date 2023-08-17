@@ -232,7 +232,7 @@ class CCTree:
 
         return ll_eqlevel_spanned_loc
 
-    def get_simple_sents(self):
+    def get_ex_sents(self):
         """
         formerly data.coords_to_sentences()
 
@@ -278,13 +278,13 @@ class CCTree:
                 root_count = new_child_count
                 new_child_count = 0
                 eqlevel_ccnodes = []
-        simple_sents = []
+        ex_sents = []
         for spanned_locs in li_spanned_locs:
-            simple_sent = \
+            ex_sent = \
                 ' '.join([orig_words[i] for i in sorted(spanned_locs)])
-            simple_sents.append(simple_sent)
+            ex_sents.append(ex_sent)
 
-        return simple_sents, spanned_words, li_spanned_locs
+        return ex_sents, spanned_words, li_spanned_locs
 
 
     # def get_shifted_ccnodes(self, arr):  # post_process()

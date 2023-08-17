@@ -297,7 +297,7 @@ class Model(pl.LightningModule):
         word_scores = l_word_scores[-1]
         loss = 0
         l_predictions = []
-        l_confidences = []
+        ll_score = []
         batch_size, num_words, _ = word_scores.shape
         batch_d["lll_label"] = batch_d["lll_label"].long()
         for d, word_scores in enumerate(l_word_scores):
@@ -325,7 +325,7 @@ class Model(pl.LightningModule):
                     torch.sum(log_probs_norm_ext_len, dim=1))
 
                 l_predictions.append(predictions.unsqueeze(1))
-                l_confidences.append(confidences.unsqueeze(1))
+                ll_score.append(confidences.unsqueeze(1))
 
         if mode == 'train':
             if constraints_str:
@@ -350,10 +350,10 @@ class Model(pl.LightningModule):
             # torch.cat([A, B], dim=0) will be of shape (6, 4)
             # torch.stack([A, B], dim=0) will be of shape (2, 3, 4)
             l_predictions = torch.cat(l_predictions, dim=1)
-            l_confidences = torch.cat(l_confidences, dim=1)
+            ll_score = torch.cat(ll_score, dim=1)
 
-            output_d['l_predictions'] = l_predictions
-            output_d['l_confidences'] = l_confidences
+            output_d["lll_prediction"] = l_predictions
+            output_d['ll_score'] = ll_score
 
             if constraints_str and \
                     'predict' not in self.params_d["mode"] and \
@@ -500,8 +500,8 @@ class Model(pl.LightningModule):
             constraints_str=self.params_d["constraints_str"],
             cweights_str=self.params_d["cweights_str"])
 
-        output0_d = {"l_predictions": output_d['l_predictions'],
-                     "l_confidences": output_d['l_confidences'],
+        output0_d = {"l_predictions": output_d["lll_prediction"],
+                     "ll_score": output_d['ll_score'],
                      "ground_truth": batch_d["lll_label"],
                      "meta_data": batch_d["meta_data"]}
         output0_d = OrderedDict(output0_d)
@@ -551,10 +551,10 @@ class Model(pl.LightningModule):
         eval_results_d = None
         if self.params_d["mode"] == 'test':
             for output_index, output_d in enumerate(ld_output):
-                output_d['l_predictions'] = output_d['l_predictions'].cpu()
-                output_d['l_confidences'] = output_d['l_confidences'].cpu()
-                output_d['l_confidences'] = \
-                    (output_d['l_confidences'] * 100).round() / 100
+                output_d["lll_prediction"] = output_d["lll_prediction"].cpu()
+                output_d['ll_score'] = output_d['ll_score'].cpu()
+                output_d['ll_score'] = \
+                    (output_d['ll_score'] * 100).round() / 100
                 output_d['ground_truth'] = output_d['ground_truth'].cpu()
                 output_d['meta_data'] = output_d['meta_data'].cpu()
         if self.params_d["task"] == "cc":
@@ -566,7 +566,7 @@ class Model(pl.LightningModule):
                         output_d['meta_data'] = [self.auto_tokenizer.decode[m]
                                                  for m in
                                                  output_d['meta_data']]
-                    self.metric(output_d['l_predictions'],
+                    self.metric(output_d["lll_prediction"],
                                 output_d['ground_truth'],
                                 meta_data=output_d['meta_data'])
                 metrics_d = self.metric.get_metric(reset=True, mode=mode)
@@ -585,9 +585,9 @@ class Model(pl.LightningModule):
                         output_d['meta_data'] = [self.auto_tokenizer.decode[m]
                                                  for m in
                                                  output_d['meta_data']]
-                    self.metric(output_d['l_predictions'],
+                    self.metric(output_d["lll_prediction"],
                                 output_d['meta_data'],
-                                output_d['l_confidences'])
+                                output_d['ll_score'])
                 metrics_d = self.metric.get_metric(reset=True, mode=mode)
 
             eval_results_d = {"eval_f1": metrics_d['carb_f1'],
@@ -670,7 +670,7 @@ class Model(pl.LightningModule):
         """
         return None
 
-    def _get_extraction(self, ex_labels, words, score):
+    def _get_extraction(self, ex_labels, orig_sentL, score):
         """
         formerly model.process_extraction()
 
@@ -687,7 +687,7 @@ class Model(pl.LightningModule):
         Parameters
         ----------
         ex_labels:
-        words
+        orig_sentL
         score
 
         Returns
@@ -702,7 +702,7 @@ class Model(pl.LightningModule):
         # l_loc_time=[]
         # l_args = []
         rel_case = 0
-        for i, word in enumerate(words):
+        for i, word in enumerate(get_words(orig_sentL)):
             if '[unused' in word:
                 if ex_labels[i] == 2: # REL
                     rel_case = int(
@@ -739,9 +739,9 @@ class Model(pl.LightningModule):
         # if not self.params_d["no_lt"]: # no_lt = no loc time
         #     arg2 = (arg2 + ' ' + loc_time + ' ' + args).strip()
 
-        sentence_str = ' '.join(words).strip()
+        ex_sent = " ".join([arg1, rel, arg2])
 
-        extraction = Extraction_sax(sentence_str,
+        extraction = Extraction_sax(ex_sent,
                                     arg1,
                                     rel,
                                     arg2,
@@ -763,76 +763,77 @@ class Model(pl.LightningModule):
         -------
 
         """
+        orig_sent_to_ex_sent = self.metric.mapping
+
         if self.params_d["write_async"]:
             while not sem.acquire(blocking=True):
                 # print("No Semaphore available")
                 pass
             # print('Got semaphore')
-        output_d['l_predictions'] = output_d['l_predictions'].cpu()
-        output_d['l_confidences'] = output_d['l_confidences'].cpu()
+        output_d["lll_prediction"] = output_d["lll_prediction"].cpu()
+        output_d['ll_score'] = output_d['ll_score'].cpu()
         output_d['ground_truth'] = output_d['ground_truth'].cpu()
         output_d['meta_data'] = output_d['meta_data'].cpu()
         # note, right hand side depends on output_d['meta_data']
         output_d['meta_data'] = [self.auto_tokenizer.decode[m] for m
                                  in output_d['meta_data']]
         if task == "ex":
-            l_predictions = output_d['l_predictions']
-            sentences = output_d['meta_data']
-            scores = output_d['l_confidences']
+            lll_prediction = output_d["lll_prediction"]
+            l_orig_sentL = output_d['meta_data']
+            ll_score = output_d['ll_score']
             num_sents, ex_depth, max_sent_len =\
-                l_predictions.shape
-            assert num_sents == len(sentences)
-            predictions_d = {}
-            for i, sentence in enumerate(sentences):
-                words = sentence.split() + UNUSED_TOKENS
-                orig_sentence = sentence.split('[unused1]')[0].strip()
-                if self.metric.mapping:
-                    if self.metric.mapping[orig_sentence] not in predictions_d:
-                        predictions_d[
-                            self.metric.mapping[orig_sentence]] = []
+                lll_prediction.shape
+            assert num_sents == len(l_orig_sentL)
+            pred_d = {}
+            for i, orig_sentL in enumerate(l_orig_sentL):
+                wordsL = orig_sentL.split() + UNUSED_TOKENS
+                orig_sent = orig_sentL.split('[unused1]')[0].strip()
+                if orig_sent_to_ex_sent:
+                    if orig_sent_to_ex_sent[orig_sent] not in pred_d:
+                        pred_d[ orig_sent_to_ex_sent[orig_sent]] = []
                 else:
-                    if orig_sentence not in predictions_d:
-                        predictions_d[orig_sentence] = []
+                    if orig_sent not in pred_d:
+                        pred_d[orig_sent] = []
                 for j in range(ex_depth):
-                    extraction = l_predictions[i][j][:len(words)]
-                    if sum(extraction) == 0:  # extractions completed
+                    ex_labels = lll_prediction[i][j][:len(wordsL)]
+                    if sum(ex_labels) == 0:  # extractions completed
                         break
-                    pro_extraction = self._get_extraction(
-                        extraction, words, scores[i][j].item())
-                    if pro_extraction.arg1_pair[1] != '' and \
-                            pro_extraction.rel_pair[1] != '':
-                        if self.metric.mapping:
-                            if not pro_extraction.get_str() in \
-                                   predictions_d[
-                                       self.metric.mapping[orig_sentence]]:
-                                predictions_d[self.metric.mapping[
-                                    orig_sentence]].append(pro_extraction)
+                    sax_extraction = self._get_extraction(
+                        ex_labels, wordsL, ll_score[i][j].item())
+                    if sax_extraction.arg1_pair[0] and \
+                            sax_extraction.rel_pair[0]:
+                        if orig_sent_to_ex_sent:
+                            if not sax_extraction.get_str() in \
+                                   pred_d[
+                                       orig_sent_to_ex_sent[orig_sent]]:
+                                pred_d[orig_sent_to_ex_sent[
+                                    orig_sent]].append(sax_extraction)
                         else:
-                            if not pro_extraction.get_str() in \
-                                   predictions_d[orig_sentence]:
-                                predictions_d[orig_sentence].append(
-                                    pro_extraction)
+                            if not sax_extraction.get_str() in \
+                                   pred_d[orig_sent]:
+                                pred_d[orig_sent].append(
+                                    sax_extraction)
             all_pred = []
             all_pred_allennlp = []
-            for sample_id, sentence in enumerate(predictions_d):
-                predicted_extractions = predictions_d[sentence]
+            for sample_id, orig_sentL in enumerate(pred_d):
+                predicted_extractions = pred_d[orig_sentL]
                 # write only the results in text file
                 # if 'predict' in self.params_d["mode"]:
-                sentence = f'{sentence}\n'
-                for extraction in predicted_extractions:
+                orig_sentL = f'{orig_sentL}\n'
+                for ex_labels in predicted_extractions:
                     if self.params_d["type"] == 'sentences':
-                        ext_str = extraction.get_str() + '\n'
+                        ext_str = ex_labels.get_str() + '\n'
                     else:
-                        ext_str = extraction.get_str() + '\n'
-                    sentence += ext_str
-                all_pred.append(sentence)
+                        ext_str = ex_labels.get_str() + '\n'
+                    orig_sentL += ext_str
+                all_pred.append(orig_sentL)
                 sentence_str_allennlp = ''
-                for extraction in predicted_extractions:
-                    arg1 = extraction.arg1
+                for ex_labels in predicted_extractions:
+                    arg1 = ex_labels.arg1
                     ext_str = \
-                        f'{sentence}\t<arg1> {extraction.arg1} </arg1> ' \
-                        f'<rel> {extraction.pred} </rel> ' \
-                        f'<arg2> {arg1} </arg2>\t{extraction.confidence}\n'
+                        f'{orig_sentL}\t<arg1> {ex_labels.arg1} </arg1> ' \
+                        f'<rel> {ex_labels.pred} </rel> ' \
+                        f'<arg2> {arg1} </arg2>\t{ex_labels.confidence}\n'
                     sentence_str_allennlp += ext_str
                     sentence_str_allennlp.strip('\n')
                 all_pred_allennlp.append(sentence_str_allennlp)
@@ -840,36 +841,36 @@ class Model(pl.LightningModule):
         if task == "cc":
             sample_id, correct = 0, True
             total1, total2 = 0, 0
-            l_predictions = output_d['l_predictions']
+            lll_prediction = output_d[lll_prediction]
             gt = output_d['ground_truth']
             meta_data = output_d['meta_data']
-            total_depth = l_predictions.shape[1]
+            total_depth = lll_prediction.shape[1]
             all_pred = []
             all_conjunct_words = []
             all_sentence_indices = []
             for id in range(len(meta_data)):
                 sample_id += 1
-                sentence = meta_data[id]
-                words = sentence.split()
+                orig_sentL = meta_data[id]
+                wordsL = orig_sentL.split()
                 sentence_predictions, sentence_gt = [], []
                 for depth in range(total_depth):
-                    depth_predictions = l_predictions[id][depth][:len(
-                        words)].tolist()
+                    depth_predictions = lll_prediction[id][depth][:len(
+                        wordsL)].tolist()
                     sentence_predictions.append(depth_predictions)
                 pred_ccnodes = self.metric.get_ccnodes(sentence_predictions)
 
-                words = sentence.split()
-                sentence = sentence + '\n'
-                tree = CCTree(simple_sent, depth_predictions)
+                wordsL = orig_sentL.split()
+                orig_sentL = orig_sentL + '\n'
+                tree = CCTree(ex_sent, depth_predictions)
                 split_sentences, conj_words, sentence_indices_list = \
-                    tree.get_simple_sents()
+                    tree.get_ex_sents()
                 all_sentence_indices.append(sentence_indices_list)
                 all_conjunct_words.append(conj_words)
                 total1 += len(split_sentences)
                 total2 += 1 if len(split_sentences) > 0 else 0
-                sentence += '\n'.join(split_sentences) + '\n'
+                orig_sentL += '\n'.join(split_sentences) + '\n'
 
-                all_pred.append(sentence)
+                all_pred.append(orig_sentL)
             self.all_cc_words.extend(all_conjunct_words)
             self.all_cc_predictions.extend(all_pred)
             self.all_cc_sent_locs.extend(all_sentence_indices)

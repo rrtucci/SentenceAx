@@ -147,7 +147,7 @@ class CCNode:
                 return True
         return False
 
-    def get_simple_sent(self, orig_words):
+    def get_ex_sent(self, orig_words):
         spanned_locs = self.get_spanned_locs()
         words = []
         for i in spanned_locs:

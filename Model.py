@@ -694,30 +694,30 @@ class Model(pl.LightningModule):
         -------
 
         """
-        ex_labels = ex_labels.to_list() # change from torch tensor to list
+        ex_labels = ex_labels.to_list()  # change from torch tensor to list
 
-        l_rel =[]
-        l_arg1=[]
-        l_arg2=[]
+        l_rel = []
+        l_arg1 = []
+        l_arg2 = []
         # l_loc_time=[]
         # l_args = []
         rel_case = 0
         for i, word in enumerate(get_words(orig_sentL)):
             if '[unused' in word:
-                if ex_labels[i] == 2: # REL
+                if ex_labels[i] == 2:  # REL
                     rel_case = int(
                         re.search('\[unused(.*)\]', word).group(1)
-                    ) # this returns either 1, 2 or 3
+                    )  # this returns either 1, 2 or 3
                 continue
-            if ex_labels[i] == 0: # NONE
+            if ex_labels[i] == 0:  # NONE
                 pass
-            elif ex_labels[i] == 1: # ARG1
+            elif ex_labels[i] == 1:  # ARG1
                 l_arg1.append(word)
-            elif ex_labels[i] == 2: # REL
+            elif ex_labels[i] == 2:  # REL
                 l_rel.append(word)
-            elif ex_labels[i] == 3: # ARG2
+            elif ex_labels[i] == 3:  # ARG2
                 l_arg2.append(word)
-            elif ex_labels[i] == 4: # ARG2
+            elif ex_labels[i] == 4:  # ARG2
                 # l_loc_time.append(word)
                 l_arg2.append(word)
             else:
@@ -739,15 +739,113 @@ class Model(pl.LightningModule):
         # if not self.params_d["no_lt"]: # no_lt = no loc time
         #     arg2 = (arg2 + ' ' + loc_time + ' ' + args).strip()
 
-        ex_sent = " ".join([arg1, rel, arg2])
-
-        extraction = Extraction_sax(ex_sent,
+        extraction = Extraction_sax(orig_sentL,
                                     arg1,
                                     rel,
                                     arg2,
                                     confidence=score)
 
         return extraction
+
+    def _write_if_task_ex(self, output_d):
+        orig_sent_to_ex_sent = self.metric.mapping
+
+        lll_prediction = output_d["lll_prediction"]
+        l_orig_sentL = output_d['meta_data']
+        ll_score = output_d['ll_score']
+        num_sents, ex_depth, max_sent_len = \
+            lll_prediction.shape
+        assert num_sents == len(l_orig_sentL)
+        true_ex_sent_to_l_pred_ex = {}
+        for i, orig_sentL in enumerate(l_orig_sentL):
+            orig_sent = orig_sentL.split('[unused1]')[0].strip()
+            if orig_sent_to_ex_sent:
+                true_ex_sent = orig_sent_to_ex_sent[orig_sent]
+                if true_ex_sent not in true_ex_sent_to_l_pred_ex:
+                    true_ex_sent_to_l_pred_ex[true_ex_sent] = []
+            else:
+                if orig_sent not in true_ex_sent_to_l_pred_ex:
+                    true_ex_sent_to_l_pred_ex[orig_sent] = []
+            for j in range(ex_depth):
+                ex_labels = \
+                    lll_prediction[i][j][:len(get_words(orig_sentL))]
+                if sum(ex_labels) == 0:  # extractions completed
+                    break
+                ex = self._get_extraction(
+                    ex_labels, orig_sentL, ll_score[i][j].item())
+                if ex.arg1_pair[0] and ex.rel_pair[0]:
+                    if orig_sent_to_ex_sent:
+                        true_ex_sent = orig_sent_to_ex_sent[orig_sent]
+                        if ex.is_not_in(
+                                true_ex_sent_to_l_pred_ex[true_ex_sent]):
+                            true_ex_sent_to_l_pred_ex[true_ex_sent]. \
+                                append(ex)
+                    else:  # no orig_sent_to_ex_sent
+                        if ex.is_not_in(
+                                true_ex_sent_to_l_pred_ex[orig_sent]):
+                            true_ex_sent_to_l_pred_ex[orig_sent].append(ex)
+        all_pred = []
+        allen_lines = []
+        for sample_id, orig_sentL in enumerate(true_ex_sent_to_l_pred_ex):
+            l_pred_ex = true_ex_sent_to_l_pred_ex[orig_sentL]
+            # write only the results in text file
+            # if 'predict' in self.params_d["mode"]:
+            orig_sentL = f'{orig_sentL}\n'
+            for pred_ex in l_pred_ex:
+                # if self.params_d["type"] == 'sentences':
+                orig_sentL += pred_ex.get_str() + '\n'
+            all_pred.append(orig_sentL)
+            allen_line = ''
+            for pred_ex in l_pred_ex:
+                arg1 = pred_ex.arg1_pair[0]
+                rel = pred_ex.rel_pair[0]
+                arg2 = pred_ex.arg2_pair[0]
+                ext_str = \
+                    f'{orig_sentL}\t<arg1> {arg1} </arg1> ' \
+                    f'<rel> {rel} </rel> ' \
+                    f'<arg2> {arg2} </arg2>\t{pred_ex.confidence}\n'
+                allen_line += ext_str
+                allen_line.strip('\n')
+            allen_lines.append(allen_line)
+        self.all_ex_predictions.extend(all_pred)
+
+    def _write_if_task_cc(self, output_d):
+
+        sample_id, correct = 0, True
+        total1, total2 = 0, 0
+        lll_prediction = output_d["lll_prediction"]
+        gt = output_d['ground_truth']
+        meta_data = output_d['meta_data']
+        total_depth = lll_prediction.shape[1]
+        all_pred = []
+        all_conjunct_words = []
+        all_sentence_indices = []
+        for id in range(len(meta_data)):
+            sample_id += 1
+            orig_sentL = meta_data[id]
+            wordsL = orig_sentL.split()
+            sentence_predictions, sentence_gt = [], []
+            for depth in range(total_depth):
+                depth_predictions = lll_prediction[id][depth][:len(
+                    wordsL)].tolist()
+                sentence_predictions.append(depth_predictions)
+            pred_ccnodes = self.metric.get_ccnodes(sentence_predictions)
+
+            wordsL = orig_sentL.split()
+            orig_sentL = orig_sentL + '\n'
+            tree = CCTree(ex_sent, depth_predictions)
+            split_sentences, conj_words, sentence_indices_list = \
+                tree.get_ex_sents()
+            all_sentence_indices.append(sentence_indices_list)
+            all_conjunct_words.append(conj_words)
+            total1 += len(split_sentences)
+            total2 += 1 if len(split_sentences) > 0 else 0
+            orig_sentL += '\n'.join(split_sentences) + '\n'
+
+            all_pred.append(orig_sentL)
+        self.all_cc_words.extend(all_conjunct_words)
+        self.all_cc_predictions.extend(all_pred)
+        self.all_cc_sent_locs.extend(all_sentence_indices)
 
     def _write_output(self, output_d, batch_id, task):
         """
@@ -763,8 +861,6 @@ class Model(pl.LightningModule):
         -------
 
         """
-        orig_sent_to_ex_sent = self.metric.mapping
-
         if self.params_d["write_async"]:
             while not sem.acquire(blocking=True):
                 # print("No Semaphore available")
@@ -778,102 +874,11 @@ class Model(pl.LightningModule):
         output_d['meta_data'] = [self.auto_tokenizer.decode[m] for m
                                  in output_d['meta_data']]
         if task == "ex":
-            lll_prediction = output_d["lll_prediction"]
-            l_orig_sentL = output_d['meta_data']
-            ll_score = output_d['ll_score']
-            num_sents, ex_depth, max_sent_len =\
-                lll_prediction.shape
-            assert num_sents == len(l_orig_sentL)
-            pred_d = {}
-            for i, orig_sentL in enumerate(l_orig_sentL):
-                wordsL = orig_sentL.split() + UNUSED_TOKENS
-                orig_sent = orig_sentL.split('[unused1]')[0].strip()
-                if orig_sent_to_ex_sent:
-                    if orig_sent_to_ex_sent[orig_sent] not in pred_d:
-                        pred_d[ orig_sent_to_ex_sent[orig_sent]] = []
-                else:
-                    if orig_sent not in pred_d:
-                        pred_d[orig_sent] = []
-                for j in range(ex_depth):
-                    ex_labels = lll_prediction[i][j][:len(wordsL)]
-                    if sum(ex_labels) == 0:  # extractions completed
-                        break
-                    sax_extraction = self._get_extraction(
-                        ex_labels, wordsL, ll_score[i][j].item())
-                    if sax_extraction.arg1_pair[0] and \
-                            sax_extraction.rel_pair[0]:
-                        if orig_sent_to_ex_sent:
-                            if not sax_extraction.get_str() in \
-                                   pred_d[
-                                       orig_sent_to_ex_sent[orig_sent]]:
-                                pred_d[orig_sent_to_ex_sent[
-                                    orig_sent]].append(sax_extraction)
-                        else:
-                            if not sax_extraction.get_str() in \
-                                   pred_d[orig_sent]:
-                                pred_d[orig_sent].append(
-                                    sax_extraction)
-            all_pred = []
-            all_pred_allennlp = []
-            for sample_id, orig_sentL in enumerate(pred_d):
-                predicted_extractions = pred_d[orig_sentL]
-                # write only the results in text file
-                # if 'predict' in self.params_d["mode"]:
-                orig_sentL = f'{orig_sentL}\n'
-                for ex_labels in predicted_extractions:
-                    if self.params_d["type"] == 'sentences':
-                        ext_str = ex_labels.get_str() + '\n'
-                    else:
-                        ext_str = ex_labels.get_str() + '\n'
-                    orig_sentL += ext_str
-                all_pred.append(orig_sentL)
-                sentence_str_allennlp = ''
-                for ex_labels in predicted_extractions:
-                    arg1 = ex_labels.arg1
-                    ext_str = \
-                        f'{orig_sentL}\t<arg1> {ex_labels.arg1} </arg1> ' \
-                        f'<rel> {ex_labels.pred} </rel> ' \
-                        f'<arg2> {arg1} </arg2>\t{ex_labels.confidence}\n'
-                    sentence_str_allennlp += ext_str
-                    sentence_str_allennlp.strip('\n')
-                all_pred_allennlp.append(sentence_str_allennlp)
-            self.all_ex_predictions.extend(all_pred)
-        if task == "cc":
-            sample_id, correct = 0, True
-            total1, total2 = 0, 0
-            lll_prediction = output_d[lll_prediction]
-            gt = output_d['ground_truth']
-            meta_data = output_d['meta_data']
-            total_depth = lll_prediction.shape[1]
-            all_pred = []
-            all_conjunct_words = []
-            all_sentence_indices = []
-            for id in range(len(meta_data)):
-                sample_id += 1
-                orig_sentL = meta_data[id]
-                wordsL = orig_sentL.split()
-                sentence_predictions, sentence_gt = [], []
-                for depth in range(total_depth):
-                    depth_predictions = lll_prediction[id][depth][:len(
-                        wordsL)].tolist()
-                    sentence_predictions.append(depth_predictions)
-                pred_ccnodes = self.metric.get_ccnodes(sentence_predictions)
-
-                wordsL = orig_sentL.split()
-                orig_sentL = orig_sentL + '\n'
-                tree = CCTree(ex_sent, depth_predictions)
-                split_sentences, conj_words, sentence_indices_list = \
-                    tree.get_ex_sents()
-                all_sentence_indices.append(sentence_indices_list)
-                all_conjunct_words.append(conj_words)
-                total1 += len(split_sentences)
-                total2 += 1 if len(split_sentences) > 0 else 0
-                orig_sentL += '\n'.join(split_sentences) + '\n'
-
-                all_pred.append(orig_sentL)
-            self.all_cc_words.extend(all_conjunct_words)
-            self.all_cc_predictions.extend(all_pred)
-            self.all_cc_sent_locs.extend(all_sentence_indices)
+            self._write_if_task_ex(output_d)
+        elif task == "cc":
+            self._write_if_task_cc(output_d)
+        else:
+            assert False
         if self.params_d["out"] != None:
             directory = os.path.dirname(self.params_d["out"])
             if directory != '' and not os.path.exists(directory):
@@ -896,7 +901,7 @@ class Model(pl.LightningModule):
                 predictions_f_allennlp = open(
                     f'{self.params_d["out"]}.allennlp',
                     'a')
-            predictions_f_allennlp.write(''.join(all_pred_allennlp))
+            predictions_f_allennlp.write(''.join(allen_lines))
             predictions_f_allennlp.close()
         if self.params_d["write_async"]:
             sem.release()

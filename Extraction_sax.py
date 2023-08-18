@@ -29,6 +29,7 @@ class Extraction_sax():
     `ex_sent' will represent an extracted sentence (simple sentence). It 
     does not contain unused tokens but may contain "is", "of", "from". which 
     do not appear in orig_sent.
+    ex_sent = arg1 + rel + arg2
     """
 
     def __init__(self,
@@ -73,6 +74,15 @@ class Extraction_sax():
               self.time_arg_pair[1]]
         li = [x for x in li if x]
         return " ".join(li)
+
+    def is_in(self, l_ex):
+        for ex in l_ex:
+            if ex.get_str() == self.get_str():
+                return True
+        return False
+
+    def is_not_in(self, l_ex):
+        return not self.is_in(l_ex)
 
     def set_is_extagged_flag_to_true(self, extag_name):
         assert extag_name in BASE_EXTAGS

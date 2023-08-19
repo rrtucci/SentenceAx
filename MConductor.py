@@ -10,6 +10,8 @@ from time import time
 from Model import *
 from DLoader import *
 from sax_utils import *
+from sax_globals import *
+
 
 class MConductor:
     """
@@ -56,43 +58,48 @@ class MConductor:
     https://spacy.io/usage/spacy-101/
 
     """
-    def __init__(self):
+
+    def __init__(self, pred_fname):
         """
 
 
         """
+        self.pred_fname = pred_fname
         self.params_d = PARAMS_D
-        self.task = TASK
-        assert self.task in ["ex", "cc"]
         self.model = None
         self.saved = False
-        self.save_dir = "data/save"
         self.has_cuda = torch.cuda.is_available()
 
-        if self.task == 'cc':
-            self.train_fp = 'data/openie-data/ptb-train.labels'
-            self.dev_fp = 'data/openie-data/ptb-dev.labels'
-            self.test_fp = 'data/openie-data/ptb-test.labels'
-        elif self.task == 'ex':
-            self.train_fp = 'data/openie-data/openie4_labels'
-            self.dev_fp = 'data/carb-data/dev.txt'
-            self.test_fp = 'data/carb-data/test.txt'
+        if TASK == 'cc':
+            self.train_fp = CCTAGS_TRAIN_FP
+            self.dev_fp = CCTAGS_TUNE_FP
+            self.test_fp = CCTAGS_TEST_FP
+        elif TASK == 'ex':
+            self.train_fp = EXTAGS_TRAIN_FP
+            self.dev_fp = EXTAGS_TUNE_FP
+            self.test_fp = EXTAGS_TEST_FP
 
-        do_lower_case = 'uncased' in self.params_d["model_str"]
+        do_lower_case = ('uncased' in self.params_d["model_str"])
         self.auto_tokenizer = AutoTokenizer.from_pretrained(
             self.params_d["model_str"],
             do_lower_case=do_lower_case,
             use_fast=True,
-            data_dir='data/pretrained_cache',
+            data_dir=CACHE_DIR,
             add_special_tokens=False,
             additional_special_tokens=UNUSED_TOKENS)
 
-        # encode == convert_tokens_to_ids
-        # replaces vocab.stoi (string to integer)
+        # encode() (a.k.a. convert_tokens_to_ids())
+        # replaces vocab.stoi() (stoi=string to integer)
         self.encode = self.auto_tokenizer.encode
-        # replaces vocab.itos (integer to string)
+        # decode()
+        # replaces vocab.itos() (itos=integer to string)
         self.decode = self.auto_tokenizer.decode
         self.sent_pad_id = self.encode(self.auto_tokenizer.pad_token)
+
+        self.dloader = DLoader(self.auto_tokenizer,
+                               self.train_fp,
+                               self.dev_fp,
+                               self.test_fp)
 
     def set_checkpoint_callback(self):
         """
@@ -101,28 +108,17 @@ class MConductor:
         -------
 
         """
-        if self.saved:
-            self.checkpoint_callback = ModelCheckpoint(
-                filepath=self.save_dir + '/{epoch:02d}_{eval_acc:.3f}',
-                verbose=True,
-                monitor='eval_acc',
-                mode='max',
-                save_top_k=self.params_d["save_k"] if not self.params_d[
-                    "debug"] else 0,
-                period=0)
-        else:
-            self.checkpoint_callback = None
+        self.checkpoint_callback = ModelCheckpoint(
+            filepath=WEIGHTS_DIR + '/{epoch:02d}_{eval_acc:.3f}',
+            verbose=True,
+            monitor='eval_acc',
+            mode='max',
+            save_top_k=self.params_d["save_k"] \
+                if not self.params_d["debug"] else 0,
+            period=0)
+
 
     def get_all_checkpoint_paths(self):
-        """
-
-        Returns
-        -------
-
-        """
-        return glob(self.save_dir + '/*.ckpt')
-
-    def get_checkpoint_path(self):
         """
         formerly run.get_checkpoint_path()
 
@@ -130,34 +126,52 @@ class MConductor:
         -------
 
         """
-        all_paths = glob(self.save_dir + '/*.ckpt')
-        assert len(all_paths) == 1
-        return all_paths[0]
+        if self.params_d["checkpoint"]:
+            return [self.params_d["checkpoint"]]
 
-    def get_logger(self, mode):
+        else:
+            return glob(WEIGHTS_DIR + '/*.ckpt')
+
+    def get_checkpoint_path(self):
         """
-        formerly run.get_logger()
-
-        Parameters
-        ----------
-        mode
 
         Returns
         -------
 
         """
-        log_dir = self.params_d["save"] + '/logs/'
-        if os.path.exists(log_dir + f'{mode}'):
-            mode_logs = list(glob(log_dir + f'/{mode}_*'))
-            new_mode_index = len(mode_logs) + 1
-            print('Moving old log to...')
-            print(shutil.move(self.params_d["save"] + f'/logs/{mode}',
-                              self.params_d[
-                                  "save"] + f'/logs/{mode}_{new_mode_index}'))
+        all_paths = self.get_all_checkpoint_paths()
+        assert len(all_paths) == 1
+        return all_paths[0]
+
+    def get_logger(self):
+        """
+        formerly run.get_logger()
+
+        Parameters
+        ----------
+
+        Returns
+        -------
+
+        """
+        if TASK == "ex":
+            log_dir = WEIGHTS_DIR + '/ex_logs/'
+        elif TASK == "cc":
+            log_dir = WEIGHTS_DIR + '/cc_logs/'
+        else:
+            assert False
+        # the current log file will have no number prefix,
+        # stored ones will.
+        if os.path.exists(log_dir + f'{MODE}'):
+            num_numbered_logs = len(list(glob(log_dir + f'/{MODE}_*')))
+            new_id = num_numbered_logs + 1
+            print('Retiring current log file by changing its name')
+            print(shutil.move(log_dir + f'{MODE}',
+                              log_dir+ f'{MODE}_{new_id}'))
         logger = TensorBoardLogger(
-            save_dir=self.params_d["save"],
-            name='logs',
-            version=mode + '.part')
+            save_dir=WEIGHTS_DIR,
+            name= TASK + '_logs',
+            version=MODE + '.part')
         return logger
 
     def get_trainer(self, logger, checkpoint_path=None):
@@ -201,6 +215,7 @@ class MConductor:
                         checkpoint_path,
                         **final_changes_params_d):
         """
+        formerly data.override_params()
 
 
         Parameters
@@ -219,9 +234,9 @@ class MConductor:
                 checkpoint_path,
                 map_location=torch.device('cpu'))['params_d']
 
-        update_dict(self.params_d, loaded_params_d)
+        self.update_params_d(self.params_d, loaded_params_d)
         if final_changes_params_d:
-            update_dict(self.params_d, final_changes_params_d)
+            self.update_params_d(self.params_d, final_changes_params_d)
 
     def train(self):
         """
@@ -235,12 +250,12 @@ class MConductor:
         self.model = Model(self.auto_tokenizer)
         logger = self.get_logger('train')
         trainer = self.get_trainer(logger)
-        mdl = DLoader(self.auto_tokenizer)
-        trainer.fit(self.model,
-                    train_dataloader=mdl.get_ttt_dataloaders("train"),
-                    val_dataloaders=mdl.get_ttt_dataloaders("val"))
-        shutil.move(self.params_d["save"] + f'/logs/train.part',
-                    self.params_d["save"] + f'/logs/train')
+        trainer.fit(
+            self.model,
+            train_dataloader=self.dloader.get_ttt_dataloaders("train"),
+            val_dataloaders=self.dloader.get_ttt_dataloaders("val"))
+        shutil.move(WEIGHTS_DIR + f'/logs/train.part',
+                    WEIGHTS_DIR + f'/logs/train')
 
     def resume(self, **final_changes_params_d):
         """
@@ -261,12 +276,12 @@ class MConductor:
         self.model = Model(self.auto_tokenizer)
         logger = self.get_logger('resume')
         trainer = self.get_trainer(logger, checkpoint_path)
-        mdl = DLoader(self.auto_tokenizer)
-        trainer.fit(self.model,
-                    train_dataloader=mdl.get_ttt_dataloaders("train"),
-                    val_dataloaders=mdl.get_ttt_dataloaders("val"))
-        shutil.move(self.params_d["save"] + f'/logs/resume.part',
-                    self.params_d["save"] + f'/logs/resume')
+        trainer.fit(
+            self.model,
+            train_dataloader=self.dloader.get_ttt_dataloaders("train"),
+            val_dataloaders=self.dloader.get_ttt_dataloaders("val"))
+        shutil.move(WEIGHTS_DIR + f'/logs/resume.part',
+                    WEIGHTS_DIR + f'/logs/resume')
 
     def test(self,
              train,
@@ -289,7 +304,6 @@ class MConductor:
 
         """
 
-
         self.set_checkpoint_callback()
         all_checkpoint_paths = self.get_all_checkpoint_paths()
         checkpoint_path = all_checkpoint_paths[0]
@@ -298,27 +312,27 @@ class MConductor:
                                  **final_changes_params_d)
 
         self.model = Model(self.auto_tokenizer)
-        if mapping != None:
+        if mapping:
             self.model._metric.mapping = mapping
-        if conj_word_mapping != None:
+        if conj_word_mapping:
             self.model._metric.conj_word_mapping = conj_word_mapping
 
         logger = self.get_logger('test')
-        test_f = open(self.params_d["save"] + '/logs/test.txt', 'w')
+        test_f = open(WEIGHTS_DIR + '/logs/test.txt', 'w')
 
         for checkpoint_path in all_checkpoint_paths:
             trainer = Trainer(logger=logger,
                               gpus=self.params_d["gpus"],
                               resume_from_checkpoint=checkpoint_path)
-            mdl = Dloader(self.auto_tokenizer)
-            trainer.test(self.model,
-                         test_dataloaders=mdl.get_ttt_dataloaders("test"))
+            trainer.test(
+                self.model,
+                test_dataloaders=self.dloader.get_ttt_dataloaders("test"))
             result = self.model.results
             test_f.write(f'{checkpoint_path}\t{result}\n')
             test_f.flush()
         test_f.close()
-        shutil.move(self.params_d["save"] + f'/logs/test.part',
-                    self.params_d["save"] + f'/logs/test')
+        shutil.move(WEIGHTS_DIR + f'/logs/test.part',
+                    WEIGHTS_DIR + f'/logs/test')
 
     def predict(self,
                 mapping=None,
@@ -345,9 +359,9 @@ class MConductor:
         #             val_dataloader, test_dataloader, all_sentences,
         #             mapping=None,
         #             conj_word_mapping=None):
-        if self.params_d["task"] == 'conj':
+        if self.params_d["task"] == 'cc':
             self.params_d["checkpoint"] = self.params_d["conj_model"]
-        if self.params_d["task"] == 'oie':
+        if self.params_d["task"] == 'ex':
             self.params_d["checkpoint"] = self.params_d["oie_model"]
 
         checkpoint_path = self.get_checkpoint_path()
@@ -355,18 +369,18 @@ class MConductor:
 
         self.model = Model(self.params_d, self.auto_tokenizer)
 
-        if mapping != None:
+        if mapping:
             self.model._metric.mapping = mapping
-        if conj_word_mapping != None:
+        if conj_word_mapping:
             self.model._metric.conj_word_mapping = conj_word_mapping
 
         trainer = Trainer(gpus=self.params_d["gpus"], logger=None,
                           resume_from_checkpoint=checkpoint_path)
         start_time = time()
-        self.model.all_sentences = all_sentences
-        mdl = DLoader(self.auto_tokenizer)
-        trainer.test(self.model,
-                     test_dataloaders=mdl.get_ttt_dataloaders("test"))
+        # self.model.all_sentences = all_sentences
+        trainer.test(
+            self.model,
+            test_dataloaders=self.dloader.get_ttt_dataloaders("test"))
         end_time = time()
         print(f'Total Time taken = {(end_time - start_time) / 60:2f} minutes')
 
@@ -391,12 +405,10 @@ class MConductor:
             self.params_d["checkpoint"] = self.params_d["conj_model"]
             self.params_d["model_str"] = 'bert-base-cased'
             self.params_d["mode"] = 'predict'
-            mdl = Dloader(self.auto_tokenizer)
             model = self.predict(
-                                 mapping=None,
-                                 conj_word_mapping= None,
-                                 mdl.get_ttt_dataloaders("test"),
-                                 all_sentences)
+                mapping=None,
+                conj_word_mapping=None,
+                self.dloader.get_ttt_dataloaders("test"))
             conj_predictions = model.all_cc_predictions
             sentences_indices_list = model.all_cc_sent_locs
             # conj_predictions = model.predictions
@@ -461,9 +473,8 @@ class MConductor:
         self.params_d["task"] = 'oie'
         self.params_d["checkpoint"] = self.params_d["oie_model"]
         self.params_d["model_str"] = 'bert-base-cased'
-        mdl = DLoader(self.auto_tokenizer)
-        _, _, split_test_dataset= \
-            mdl.get_ttt_datasets(predict_sentences=sentences)
+        _, _, split_test_dataset = \
+            self.dloader.get_ttt_datasets(predict_sentences=sentences)
         split_test_dataloader = DataLoader(
             split_test_dataset,
             batch_size=self.params_d["batch_size"],
@@ -471,19 +482,19 @@ class MConductor:
             num_workers=1)
 
         model = self.predict(
-                             None,
-                             None,
-                             None,
-                             split_test_dataloader,
-                             mapping=mapping,
-                             conj_word_mapping=conj_word_mapping,
-                             all_sentences=all_sentences)
+            None,
+            None,
+            None,
+            split_test_dataloader,
+            mapping=mapping,
+            conj_word_mapping=conj_word_mapping )
+            #all_sentences=all_sentences)
 
         if 'labels' in self.params_d["type"]:
             label_lines = self.get_extags(model, sentences,
                                           orig_sentences,
                                           sentences_indices_list)
-            f = open(self.params_d["out"] + '.labels', 'w')
+            f = open(PREDICTIONS_DIR + '.labels.txt', 'w')
             f.write('\n'.join(label_lines))
             f.close()
 
@@ -564,9 +575,10 @@ class MConductor:
                 for no_extraction_sentence in no_extractions[line_i + 1]:
                     all_predictions.append(f'{no_extraction_sentence}\n')
 
-            if self.params_d["out"] != None:
-                print('Predictions written to ', self.params_d["out"])
-                predictions_f = open(self.params_d["out"], 'w')
+            if self.pred_fname:
+                fpath = PREDICTIONS_DIR + "/" + self.pred_fname
+                print('Predictions written to ', fpath)
+                predictions_f = open(fpath, 'w')
                 predictions_f.write('\n'.join(all_predictions) + '\n')
                 predictions_f.close()
             return

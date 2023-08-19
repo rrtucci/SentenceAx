@@ -614,7 +614,7 @@ class Model(pl.LightningModule):
         eval_results_d = \
             self._eval_metrics_at_epoch_end(ld_output, 'dev')
         result_d = {}
-        if eval_results_d != None:
+        if eval_results_d :
             result_d = {"log": eval_results_d,
                         "eval_acc": eval_results_d['eval_f1']}
 
@@ -808,7 +808,7 @@ class Model(pl.LightningModule):
         total_num_ex_sents1 = 0
         total_num_ex_sents2 = 0
         lll_prediction = output_d["lll_prediction"]
-        thruth = output_d['ground_truth']
+        # thruth = output_d['ground_truth']
         l_orig_sentL = output_d['meta_data']
         total_depth = lll_prediction.shape[1]
         l_pred_str = []
@@ -867,20 +867,16 @@ class Model(pl.LightningModule):
             l_pred_str = self._write_if_task_cc(output_d)
         else:
             assert False
-        if self.params_d["out"] != None:
-            directory = os.path.dirname(self.params_d["out"])
-            if directory and not os.path.exists(directory):
-                os.makedirs(directory)
-            fname = f'{self.params_d["out"]}.{self.params_d["task"]}'
-            if batch_id == 0:
-                fmode= 'w'
-            else:
-                fmode = 'a'
-            pred_f = open(fname, fmode)
-            pred_f.write('\n'.join(l_pred_str) + '\n')
-            pred_f.close()
+        fname = f'{PREDICTIONS_DIR}.{self.params_d["task"]}.txt'
+        if batch_id == 0:
+            fmode= 'w'
+        else:
+            fmode = 'a'
+        pred_f = open(fname, fmode)
+        pred_f.write('\n'.join(l_pred_str) + '\n')
+        pred_f.close()
         if task == "ex" and self.params_d["write_allennlp"]:
-            fname = f'{self.params_d["out"]}.allennlp'
+            fname = PREDICTIONS_DIR+ "-allen.txt"
             if batch_id == 0:
                 fmode = "w"
             else:

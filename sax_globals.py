@@ -10,24 +10,34 @@ params_d = pamameters dictionary
 from sax_utils import none_dd, merge_dicts
 
 # global paths
+
 EXT_SAMPLES_FP = "data/ext_samples.txt"
 
-# file paths for training, tuning and testing cctags (cc=conjunction)
-CCTAGS_TRAIN_FP = "data/cctags_train.txt"
-# dev=development=validation=tuning
-CCTAGS_TUNE_FP = "data/cctags_tune.txt"
-CCTAGS_TEST_FP = "data/cctags_test.txt"
+# # file paths for training, tuning and testing cctags (cc=conjunction)
+# CCTAGS_TRAIN_FP = "data/cctags_train.txt"
+# # dev=development=validation=tuning
+# CCTAGS_TUNE_FP = "data/cctags_tune.txt"
+# CCTAGS_TEST_FP = "data/cctags_test.txt"
 
-# file paths for training, tuning and testing extags (ex=extraction)
-EXTAGS_FP = "data/extags_all.txt"
-EXTAGS_TRAIN_FP = "data/extags_train.txt"
-# dev=development=validation=tuning
-EXTAGS_TUNE_FP = "data/extags_tune.txt"
-EXTAGS_TEST_FP = "data/extags_test.txt"
+CCTAGS_TRAIN_FP = 'data/openie-data/ptb-train.labels'
+CCTAGS_TUNE_FP = 'data/openie-data/ptb-dev.labels'
+CCTAGS_TEST_FP = 'data/openie-data/ptb-test.labels'
 
 
-CACHE_DIR = 'data/pretrained_cache'
+# # file paths for training, tuning and testing extags (ex=extraction)
+# EXTAGS_FP = "data/extags_all.txt"
+# EXTAGS_TRAIN_FP = "data/extags_train.txt"
+# # dev=development=validation=tuning
+# EXTAGS_TUNE_FP = "data/extags_tune.txt"
+# EXTAGS_TEST_FP = "data/extags_test.txt"
 
+EXTAGS_TRAIN_FP = 'data/openie-data/openie4_labels'
+EXTAGS_TUNE_FP = 'data/carb-data/dev.txt'
+EXTAGS_TEST_FP = 'data/carb-data/test.txt'
+
+CACHE_DIR = 'data/pretrained_cache' # used by AutoModel and AutoTokenizer
+WEIGHTS_DIR = "weights"
+PREDICTIONS_DIR = "predictions"
 
 QUOTES = "\"\'" #2
 BRACKETS = "(){}[]<>" #8
@@ -138,7 +148,7 @@ elif TASK == "ex" and MODE == "splitpredict":
         "mode": "splitpredict",
         "num_extractions": 5,
         "ex_model": "models/ex_model/epoch=14_eval_acc=0.551_v0.ckpt",
-        "out": "predictions.txt",
+        #"out": "predictions.txt",
         "rescore_model": "models/rescore_model",
         "rescoring": True,
         "task": "ex"
@@ -158,7 +168,7 @@ elif TASK == "ex" and MODE == "train_test":
         "mode": "train_test",
         "model_str": "bert-base-cased",
         "optimizer": "adamW",
-        "save": "models/warmup_ex_model",
+        # "save": "models/warmup_ex_model",
         "task": "ex"
     }
     
@@ -169,7 +179,7 @@ elif TASK == "ex" and MODE == "test":
         "gpus": 1,
         "mode": "test",
         "model_str": "bert-base-cased",
-        "save": "models/warmup_ex_model",
+        # "save": "models/warmup_ex_model",
         "task": "ex"
     }
 
@@ -180,8 +190,8 @@ elif TASK == "ex" and MODE == "predict":
         "inp": "sentences.txt",
         "mode": "predict",
         "model_str": "bert-base-cased",
-        "out": "predictions.txt",
-        "save": "models/warmup_ex_model",
+        #"out": "predictions.txt",
+        # "save": "models/warmup_ex_model",
         "task": "ex"
     }
 
@@ -206,7 +216,7 @@ elif TASK == "ex" and MODE == "resume":
         "model_str": "bert-base-cased",
         "multi_opt": True,
         "optimizer": "adam",
-        "save": "models/ex_model",
+        # "save": "models/ex_model",
         "save_k": 3,
         "task": "ex",
         "val_check_interval": 0.1,
@@ -219,7 +229,7 @@ elif TASK == "ex" and MODE == "test":
         "gpus": 1,
         "mode": "test",
         "model_str": "bert-base-cased",
-        "save": "models/ex_model",
+        # "save": "models/ex_model",
         "task": "ex"
     }
 
@@ -230,8 +240,8 @@ elif TASK == "ex" and MODE == "predict":
         "inp": "sentences.txt",
         "mode": "predict",
         "model_str": "bert-base-cased",
-        "out": "predictions.txt",
-        "save": "models/ex_model",
+        #"out": "predictions.txt",
+        # "save": "models/ex_model",
         "task": "ex"
     }
 
@@ -246,14 +256,14 @@ elif TASK == "cc" and MODE == "train_test":
         "mode": "train_test",
         "model_str": "bert-large-cased",
         "optimizer": "adamW",
-        "save": "models/cc_model",
+        # "save": "models/cc_model",
         "task": "cc"
     }
 
 ### Final Model
 
 # Running
-elif TASK == "ex" and MODE == "splipredict":
+elif TASK == "ex" and MODE == "splitpredict":
     PARAMS_D = {
         "cc_model": "models/cc_model/epoch=28_eval_acc=0.854.ckpt",
         "gpus": 1,
@@ -261,7 +271,7 @@ elif TASK == "ex" and MODE == "splipredict":
         "mode": "splitpredict",
         "num_extractions": 5,
         "ex_model": "models/ex_model/epoch=14_eval_acc=0.551_v0.ckpt",
-        "out": "models/results/final",
+        # "out": "models/results/final",
         "rescore_model": "models/rescore_model",
         "rescoring": True,
         "task": "ex"

@@ -17,7 +17,7 @@ class CCMetric():
         self.complete = 0
         self.sentence = 0
         self.dump_dir = dump_dir
-        if self.dump_dir != None:
+        if self.dump_dir :
             if os.path.exists(dump_dir + '/tokens.pkl'):
                 os.remove(dump_dir + '/tokens.pkl')
             if os.path.exists(dump_dir + '/pred_it_ccnodes.pkl'):
@@ -27,7 +27,7 @@ class CCMetric():
 
     def __call__(self, ll_pred_ccnode, ll_truth_ccnode, meta_data=None,
                  ccnodes=None):
-        # ccnodes != None when we give it the complete ccnodes
+        # ccnodes  when we give it the complete ccnodes
         # happens when we want to evaluate on the original system outputs
         for i in range(len(ll_pred_ccnode)):
             if not ccnodes:

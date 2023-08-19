@@ -27,10 +27,13 @@ class DLoader:
     https://colab.research.google.com/github/pytorch/text/blob/master/examples/legacy_tutorial/migration_tutorial.ipynb#scrollTo=kBV-Wvlo07ye
     """
 
-    def __init__(self, auto_tokenizer):
+    def __init__(self, auto_tokenizer, train_fp, dev_fp, test_fp):
 
         self.params_d = PARAMS_D
         self.auto_tokenizer = auto_tokenizer
+        self.train_fp = train_fp
+        self.dev_fp = dev_fp
+        self.test_fp = test_fp
         self.spacy_model = None
 
     @staticmethod
@@ -257,20 +260,20 @@ class DLoader:
         """
 
 
-        train_fp = self.params_d["train_fp"]
-        dev_fp = self.params_d["dev_fp"]
-        test_fp = self.params_d["test_fp"]
+        # train_fp = self.params_d["train_fp"]
+        # dev_fp = self.params_d["dev_fp"]
+        # test_fp = self.params_d["test_fp"]
 
         model_str = self.params_d["model_str"].replace("/", "_")
-        cached_train_fp = f'{train_fp}.{model_str}.pkl'
-        cached_dev_fp = f'{dev_fp}.{model_str}.pkl'
-        cached_test_fp = f'{test_fp}.{model_str}.pkl'
+        cached_train_fp = f'{self.train_fp}.{model_str}.pkl'
+        cached_dev_fp = f'{self.dev_fp}.{model_str}.pkl'
+        cached_test_fp = f'{self.test_fp}.{model_str}.pkl'
 
         orig_sents = []
         if 'predict' in self.params_d["mode"]:
             # no caching used in predict mode
-            if predict_sentences == None:  # predict
-                if self.params_d["inp"] != None:
+            if not predict_sentences:  # predict
+                if self.params_d["inp"] :
                     predict_fp = self.params_d["inp"]
                 else:
                     predict_fp = self.params_d["predict_fp"]
@@ -314,8 +317,8 @@ class DLoader:
             # doc = spacy_model("This is a text")
             # spacy_model.pipe()
             # spacy_model usually abbreviated as nlp
-            if not os.path.exists(
-                    cached_train_fp) or self.params_d["build_cache"]:
+            if not os.path.exists(cached_train_fp) or\
+                    self.params_d["build_cache"]:
                 train_sample_ds, _ = self.get_sample_ds(train_fp)
                 pickle.dump(train_sample_ds, open(cached_train_fp, 'wb'))
             else:

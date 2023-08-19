@@ -78,7 +78,7 @@ class CCTree:
 
             for i, prediction in enumerate(predictions):
                 if prediction != 1:  # CP
-                    if is_CP and ccnode != None:
+                    if is_CP and ccnode :
                         is_CP = False
                         if not ccnode.spans:
                             ccnode.spans = []
@@ -103,12 +103,12 @@ class CCTree:
                     is_CP = True
                     start_loc = i
                 if prediction == 3:  # CC
-                    if ccnode != None:
+                    if ccnode :
                         ccnode.ccloc = i
                     else:
                         # ccnode words which do not have associated spans
                         self.ccnodes[i] = None
-                if prediction == 4 and ccnode != None:  # SEP
+                if prediction == 4 and ccnode :  # SEP
                     if not ccnode.seplocs:
                         ccnode.seplocs = []
                     ccnode.seplocs.append(i)

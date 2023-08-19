@@ -58,9 +58,9 @@ class ExMetric():
             else:
                 if orig_sentence not in self.all_predictions:
                     self.all_predictions[orig_sentence] = []
-            if pos_words != None:
+            if pos_words :
                 self.all_pos_words[orig_sentence] = pos_words[i]
-            if verb_words != None:
+            if verb_words :
                 self.all_verb_words[orig_sentence] = verb_words[i]
 
             for j in range(extractions):

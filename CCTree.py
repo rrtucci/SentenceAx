@@ -5,7 +5,7 @@ from copy import deepcopy
 
 
 class CCTree:
-    def __init__(self, orig_sent, predictions_for_each_depth):
+    def __init__(self, orig_sent, ll_label):
         # orig_sent is a coordinated sentence, the full original sentence
         # before extractions
         self.orig_sent = orig_sent
@@ -13,7 +13,7 @@ class CCTree:
 
         self.ccnodes = None
         # This must be called before calling self.set_tree_structure()
-        self.set_ccnodes(predictions_for_each_depth)
+        self.set_ccnodes(ll_label)
 
         self.root_cclocs = []
         self.par_ccloc_to_child_cclocs = {}
@@ -47,13 +47,13 @@ class CCTree:
                 k = self.ccnodes.index(ccnode)
                 self.ccnodes.pop(k)
 
-    def set_ccnodes(self, predictions_for_each_depth):
+    def set_ccnodes(self, ll_label):
         """
         formerly metric.get_coords()
 
         Parameters
         ----------
-        predictions_for_each_depth
+        ll_label
 
         Returns
         -------
@@ -61,11 +61,11 @@ class CCTree:
         """
         self.ccnodes = []
 
-        for depth in range(len(predictions_for_each_depth)):
+        for depth in range(len(ll_label)):
             ccnode = None
             start_loc = -1
             is_CP = False  # CP stands for coordinating phrase
-            predictions = predictions_for_each_depth[depth]
+            predictions = ll_label[depth]
 
             # cctag_to_int = {
             #   'NONE': 0
@@ -248,7 +248,7 @@ class CCTree:
             for span in ccnode.spans:
                 spanned_words.append(' '.join(orig_words[span[0]:span[1]]))
 
-        li_spanned_locs = []
+        l_spanned_locs = []
         root_count = len(self.root_cclocs)
         new_child_count = 0
 
@@ -270,21 +270,21 @@ class CCTree:
                 new_child_count += 1
 
             if root_count == 0:
-                li_spanned_locs = \
+                l_spanned_locs = \
                     self.refresh_ll_eqlevel_spanned_loc(
-                        li_spanned_locs,
+                        l_spanned_locs,
                         eqlevel_ccnodes,
                         self.extra_locs)
                 root_count = new_child_count
                 new_child_count = 0
                 eqlevel_ccnodes = []
         ex_sents = []
-        for spanned_locs in li_spanned_locs:
+        for spanned_locs in l_spanned_locs:
             ex_sent = \
                 ' '.join([orig_words[i] for i in sorted(spanned_locs)])
             ex_sents.append(ex_sent)
 
-        return ex_sents, spanned_words, li_spanned_locs
+        return ex_sents, spanned_words, l_spanned_locs
 
 
     # def get_shifted_ccnodes(self, arr):  # post_process()

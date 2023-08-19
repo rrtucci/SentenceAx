@@ -14,8 +14,8 @@ class CCMetric():
         self.report_outer = CCReport("outer")
         self.report_inner = CCReport("inner")
         self.report_exact = CCReport("exact")
-        self.n_complete = 0
-        self.n_sentence = 0
+        self.complete = 0
+        self.sentence = 0
         self.dump_dir = dump_dir
         if self.dump_dir != None:
             if os.path.exists(dump_dir + '/tokens.pkl'):
@@ -56,25 +56,25 @@ class CCMetric():
         self.report_outer.reset()
         self.report_inner.reset()
         self.report_exact.reset()
-        self.n_complete = 0
-        self.n_sentence = 0
+        self.complete = 0
+        self.sentence = 0
 
-    def get_metric(self, reset: bool = False, mode=None):
+    def get_metric_values(self, reset: bool = False, mode=None):
         pairs = [("whole", self.report_whole),
                     ("outer", self.report_outer),
                     ("inner", self.report_inner),
                     ("exact", self.report_exact)]
 
-        all_metrics = dict()
-        all_metrics['P_exact'] = pairs[3][1].overall_scorer.precision()
-        all_metrics['R_exact'] = pairs[3][1].overall_scorer.recall()
-        all_metrics['F1_whole'] = pairs[0][1].overall_scorer.f1_score()
-        all_metrics['F1_outer'] = pairs[1][1].overall_scorer.f1_score()
-        all_metrics['F1_inner'] = pairs[1][1].overall_scorer.f1_score()
-        all_metrics['F1_exact'] = pairs[3][1].overall_scorer.f1_score()
+        l_metric_value = dict()
+        l_metric_value['P_exact'] = pairs[3][1].overall_scorer.precision()
+        l_metric_value['R_exact'] = pairs[3][1].overall_scorer.recall()
+        l_metric_value['F1_whole'] = pairs[0][1].overall_scorer.f1_score()
+        l_metric_value['F1_outer'] = pairs[1][1].overall_scorer.f1_score()
+        l_metric_value['F1_inner'] = pairs[1][1].overall_scorer.f1_score()
+        l_metric_value['F1_exact'] = pairs[3][1].overall_scorer.f1_score()
         if reset:
             self.reset()
-        return all_metrics
+        return l_metric_value
 
     def get_overall_score(self, metric='exact'):
         if metric == 'whole':

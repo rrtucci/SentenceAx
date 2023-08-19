@@ -3,14 +3,14 @@ from sax_utils import *
 from extraction_utils import *
 
 
-class Extraction_sax():
+class SAXExtraction():
     """
     formerly data_processing.py
     
     important
     carb has its own Extraction class at
     carb_subset.oie_readers.extraction
-    call ours Extraction_sax
+    call ours SAXExtraction
     sax = sentence ax
     
     
@@ -47,7 +47,7 @@ class Extraction_sax():
         self.time_arg_pair = ("", [])
         self.loc_arg_pair = ("", [])
 
-        self.sent_extags = ["NONE"] * len(self.orig_orig_sentL_pair[1])
+        self.sent_extags = ["NONE"] * len(self.orig_sentL_pair[1])
         self.base_extag_is_assigned = {extag_name: False
                                        for extag_name in BASE_EXTAGS}
 
@@ -74,10 +74,13 @@ class Extraction_sax():
               self.time_arg_pair[1]]
         li = [x for x in li if x]
         return " ".join(li)
+    
+    def __eq__(self, other):
+        return self.get_str() == other.get_str()
 
     def is_in(self, l_ex):
         for ex in l_ex:
-            if ex.get_str() == self.get_str():
+            if ex == self:
                 return True
         return False
 
@@ -440,11 +443,11 @@ class Extraction_sax():
             if k > 0:
                 arg2 += ' '.join(arg.words)
 
-        return Extraction_sax(orig_sentL=carb_ext.sent,
-                              arg1=arg1,
-                              rel=carb_ext.rel,
-                              arg2=arg2,
-                              confidence=carb_ext.confidence)
+        return SAXExtraction(orig_sentL=carb_ext.sent,
+                             arg1=arg1,
+                             rel=carb_ext.rel,
+                             arg2=arg2,
+                             confidence=carb_ext.confidence)
 
     def convert_to_carb_extraction(self):
         """

@@ -542,11 +542,11 @@ class MConductor:
 
                 # why must confidence be exponentiated?
 
-                extraction = Extraction_sax(arg1=arg1,
-                                            rel=rel,
-                                            arg2=arg2,
-                                            ex_sent=sentence,
-                                            confidence=math.exp(confidence))
+                extraction = SAXExtraction(arg1=arg1,
+                                           rel=rel,
+                                           arg2=arg2,
+                                           ex_sent=sentence,
+                                           confidence=math.exp(confidence))
                 extraction.arg1 = arg1
                 extraction.arg2 = arg2
                 if self.params_d["type"] == 'sentences':

@@ -1,4 +1,4 @@
-from Extraction_sax import *
+from SAXExtraction import *
 from ExMetric import *
 from CCMetric import *
 from CCTree import *
@@ -107,11 +107,6 @@ class Model(pl.LightningModule):
 
         self.constraints_str_d = dict()
 
-        # Never used!
-        # self.all_cc_predictions = []
-        # self.all_cc_sent_locs = []
-        # self.all_cc_words = []
-        # self.all_ex_predictions = []
 
     def configure_optimizers(self):
         """
@@ -569,7 +564,7 @@ class Model(pl.LightningModule):
                     self.metric(output_d["lll_prediction"],
                                 output_d['ground_truth'],
                                 meta_data=output_d['meta_data'])
-                metrics_d = self.metric.get_metric(reset=True, mode=mode)
+                metrics_d = self.metric.get_metric_values(reset=True, mode=mode)
 
             val_acc = metrics_d['F1_exact']
             eval_results_d = {"eval_f1": val_acc,
@@ -588,7 +583,7 @@ class Model(pl.LightningModule):
                     self.metric(output_d["lll_prediction"],
                                 output_d['meta_data'],
                                 output_d['ll_score'])
-                metrics_d = self.metric.get_metric(reset=True, mode=mode)
+                metrics_d = self.metric.get_metric_values(reset=True, mode=mode)
 
             eval_results_d = {"eval_f1": metrics_d['carb_f1'],
                               "eval_auc": metrics_d['carb_auc'],
@@ -739,11 +734,11 @@ class Model(pl.LightningModule):
         # if not self.params_d["no_lt"]: # no_lt = no loc time
         #     arg2 = (arg2 + ' ' + loc_time + ' ' + args).strip()
 
-        extraction = Extraction_sax(orig_sentL,
-                                    arg1,
-                                    rel,
-                                    arg2,
-                                    confidence=score)
+        extraction = SAXExtraction(orig_sentL,
+                                   arg1,
+                                   rel,
+                                   arg2,
+                                   confidence=score)
 
         return extraction
 
@@ -757,7 +752,7 @@ class Model(pl.LightningModule):
             lll_prediction.shape
         assert num_sents == len(l_orig_sentL)
         true_ex_sent_to_l_pred_ex = {}
-        for i, orig_sentL in enumerate(l_orig_sentL):
+        for sample_id, orig_sentL in enumerate(l_orig_sentL):
             orig_sent = orig_sentL.split('[unused1]')[0].strip()
             if orig_sent_to_ex_sent:
                 true_ex_sent = orig_sent_to_ex_sent[orig_sent]
@@ -766,13 +761,13 @@ class Model(pl.LightningModule):
             else:
                 if orig_sent not in true_ex_sent_to_l_pred_ex:
                     true_ex_sent_to_l_pred_ex[orig_sent] = []
-            for j in range(ex_depth):
-                ex_labels = \
-                    lll_prediction[i][j][:len(get_words(orig_sentL))]
+            for depth in range(ex_depth):
+                num_words = len(get_words(orig_sentL))
+                ex_labels = lll_prediction[sample_id][depth][:num_words]
                 if sum(ex_labels) == 0:  # extractions completed
                     break
                 ex = self._get_extraction(
-                    ex_labels, orig_sentL, ll_score[i][j].item())
+                    ex_labels, orig_sentL, ll_score[sample_id][depth].item())
                 if ex.arg1_pair[0] and ex.rel_pair[0]:
                     if orig_sent_to_ex_sent:
                         true_ex_sent = orig_sent_to_ex_sent[orig_sent]
@@ -784,68 +779,61 @@ class Model(pl.LightningModule):
                         if ex.is_not_in(
                                 true_ex_sent_to_l_pred_ex[orig_sent]):
                             true_ex_sent_to_l_pred_ex[orig_sent].append(ex)
-        all_pred = []
-        allen_lines = []
-        for sample_id, orig_sentL in enumerate(true_ex_sent_to_l_pred_ex):
-            l_pred_ex = true_ex_sent_to_l_pred_ex[orig_sentL]
-            # write only the results in text file
-            # if 'predict' in self.params_d["mode"]:
-            orig_sentL = f'{orig_sentL}\n'
+        l_pred_str = []
+        l_pred_allen_str = []
+        for sample_id, true_ex_sent in enumerate(true_ex_sent_to_l_pred_ex):
+            l_pred_ex = true_ex_sent_to_l_pred_ex[true_ex_sent]
+            orig_sentL = l_orig_sentL[sample_id]
+            str0 = f'{true_ex_sent}\n'
             for pred_ex in l_pred_ex:
-                # if self.params_d["type"] == 'sentences':
-                orig_sentL += pred_ex.get_str() + '\n'
-            all_pred.append(orig_sentL)
-            allen_line = ''
+                str0 += pred_ex.get_str() + '\n'
+            l_pred_str.append(str0.strip("/n"))
+            allen_str = ""
             for pred_ex in l_pred_ex:
                 arg1 = pred_ex.arg1_pair[0]
                 rel = pred_ex.rel_pair[0]
                 arg2 = pred_ex.arg2_pair[0]
-                ext_str = \
-                    f'{orig_sentL}\t<arg1> {arg1} </arg1> ' \
-                    f'<rel> {rel} </rel> ' \
-                    f'<arg2> {arg2} </arg2>\t{pred_ex.confidence}\n'
-                allen_line += ext_str
-                allen_line.strip('\n')
-            allen_lines.append(allen_line)
-        self.all_ex_predictions.extend(all_pred)
+                allen_str += f"{orig_sentL}\t"
+                allen_str += f"<arg1> {arg1} </arg1>"
+                allen_str += f"<rel> {rel} </rel>"
+                allen_str += f"<arg2> {arg2} </arg2>\t"
+                allen_str += f"{pred_ex.confidence}\n"
+            l_pred_allen_str.append(allen_str.strip("/n"))
+        return l_pred_str, l_pred_allen_str
 
     def _write_if_task_cc(self, output_d):
 
-        sample_id, correct = 0, True
-        total1, total2 = 0, 0
+        sample_id = 0
+        correct = True
+        total_num_ex_sents1 = 0
+        total_num_ex_sents2 = 0
         lll_prediction = output_d["lll_prediction"]
-        gt = output_d['ground_truth']
-        meta_data = output_d['meta_data']
+        thruth = output_d['ground_truth']
+        l_orig_sentL = output_d['meta_data']
         total_depth = lll_prediction.shape[1]
-        all_pred = []
-        all_conjunct_words = []
-        all_sentence_indices = []
-        for id in range(len(meta_data)):
+        l_pred_str = []
+        for id in range(len(l_orig_sentL)):
             sample_id += 1
-            orig_sentL = meta_data[id]
-            wordsL = orig_sentL.split()
-            sentence_predictions, sentence_gt = [], []
+            orig_sentL = l_orig_sentL[id]
+            ll_label = []
+            l_true_sent = []
             for depth in range(total_depth):
-                depth_predictions = lll_prediction[id][depth][:len(
-                    wordsL)].tolist()
-                sentence_predictions.append(depth_predictions)
-            pred_ccnodes = self.metric.get_ccnodes(sentence_predictions)
+                num_words = len(get_words(orig_sentL))
+                l_label = lll_prediction[id][depth][:num_words].tolist()
+                ll_label.append(l_label)
+            orig_sent = orig_sentL.split("[used1]")[0]
+            tree = CCTree(orig_sent, ll_label)
+            tree.set_ccnodes(ll_label)
+            pred_ccnodes = tree.ccnodes
 
-            wordsL = orig_sentL.split()
-            orig_sentL = orig_sentL + '\n'
-            tree = CCTree(ex_sent, depth_predictions)
-            split_sentences, conj_words, sentence_indices_list = \
-                tree.get_ex_sents()
-            all_sentence_indices.append(sentence_indices_list)
-            all_conjunct_words.append(conj_words)
-            total1 += len(split_sentences)
-            total2 += 1 if len(split_sentences) > 0 else 0
-            orig_sentL += '\n'.join(split_sentences) + '\n'
+            pred_str = orig_sentL + '\n'
+            ex_sents, spanned_words, l_spanned_locs = tree.get_ex_sents()
+            total_num_ex_sents1 += len(ex_sents)
+            total_num_ex_sents2 += 1 if len(ex_sents) > 0 else 0
+            pred_str += '\n'.join(ex_sents) + '\n'
 
-            all_pred.append(orig_sentL)
-        self.all_cc_words.extend(all_conjunct_words)
-        self.all_cc_predictions.extend(all_pred)
-        self.all_cc_sent_locs.extend(all_sentence_indices)
+            l_pred_str.append(pred_str)
+        return l_pred_str
 
     def _write_output(self, output_d, batch_id, task):
         """
@@ -874,34 +862,31 @@ class Model(pl.LightningModule):
         output_d['meta_data'] = [self.auto_tokenizer.decode[m] for m
                                  in output_d['meta_data']]
         if task == "ex":
-            self._write_if_task_ex(output_d)
+            l_pred_str, l_pred_allen_str = self._write_if_task_ex(output_d)
         elif task == "cc":
-            self._write_if_task_cc(output_d)
+            l_pred_str = self._write_if_task_cc(output_d)
         else:
             assert False
         if self.params_d["out"] != None:
             directory = os.path.dirname(self.params_d["out"])
-            if directory != '' and not os.path.exists(directory):
+            if directory and not os.path.exists(directory):
                 os.makedirs(directory)
-            out_fp = f'{self.params_d["out"]}.{self.params_d["task"]}'
-            # print('Predictions written to ', out_fp)
+            fname = f'{self.params_d["out"]}.{self.params_d["task"]}'
             if batch_id == 0:
-                predictions_f = open(out_fp, 'w')
+                fmode= 'w'
             else:
-                predictions_f = open(out_fp, 'a')
-            predictions_f.write('\n'.join(all_pred) + '\n')
-            predictions_f.close()
+                fmode = 'a'
+            pred_f = open(fname, fmode)
+            pred_f.write('\n'.join(l_pred_str) + '\n')
+            pred_f.close()
         if task == "ex" and self.params_d["write_allennlp"]:
+            fname = f'{self.params_d["out"]}.allennlp'
             if batch_id == 0:
-                predictions_f_allennlp = open(
-                    f'{self.params_d["out"]}.allennlp',
-                    'w')
-                predictions_f_allennlp = predictions_f_allennlp.name
+                fmode = "w"
             else:
-                predictions_f_allennlp = open(
-                    f'{self.params_d["out"]}.allennlp',
-                    'a')
-            predictions_f_allennlp.write(''.join(allen_lines))
-            predictions_f_allennlp.close()
+                fmode = "a"
+            allen_f = open(fname, fmode)
+            allen_f.write('\n'.join(l_pred_allen_str) + '\n')
+            allen_f.close()
         if self.params_d["write_async"]:
             sem.release()

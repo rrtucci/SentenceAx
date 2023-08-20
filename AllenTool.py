@@ -95,7 +95,7 @@ class AllenTool:
 
 if __name__ == "__main__":
     def main1():
-        in_path = "data/imojie-data/train/oie4_extractions.tsv"
+        in_path = "input_data/imojie-data/train/oie4_extractions.tsv"
         with open(in_path, 'r', encoding='utf-8') as f:
             lines = f.readlines()
         lines = [unidecode(line) for line in lines]
@@ -109,7 +109,7 @@ if __name__ == "__main__":
             print("arg2=", ex.arg2_pair[0])
 
     def main2():
-        in_path = "data/imojie-data/train/oie4_extractions.tsv"
+        in_path = "input_data/imojie-data/train/oie4_extractions.tsv"
         at = AllenTool(in_path)
         sent_to_extractions = at.read_allen_file()
         # print("llkp", list(sent_to_extractions.keys())[0:2])

@@ -11,31 +11,31 @@ from sax_utils import none_dd, merge_dicts
 
 # global paths
 
-EXT_SAMPLES_FP = "data/ext_samples.txt"
+EXT_SAMPLES_FP = "input_data/ext_samples.txt"
 
 # # file paths for training, tuning and testing cctags (cc=conjunction)
-# CCTAGS_TRAIN_FP = "data/cctags_train.txt"
+# CCTAGS_TRAIN_FP = "input_data/cctags_train.txt"
 # # dev=development=validation=tuning
-# CCTAGS_TUNE_FP = "data/cctags_tune.txt"
-# CCTAGS_TEST_FP = "data/cctags_test.txt"
+# CCTAGS_TUNE_FP = "input_data/cctags_tune.txt"
+# CCTAGS_TEST_FP = "input_data/cctags_test.txt"
 
-CCTAGS_TRAIN_FP = 'data/openie-data/ptb-train.labels'
-CCTAGS_TUNE_FP = 'data/openie-data/ptb-dev.labels'
-CCTAGS_TEST_FP = 'data/openie-data/ptb-test.labels'
+CCTAGS_TRAIN_FP = 'input_data/openie-data/ptb-train.labels'
+CCTAGS_TUNE_FP = 'input_data/openie-data/ptb-dev.labels'
+CCTAGS_TEST_FP = 'input_data/openie-data/ptb-test.labels'
 
 
 # # file paths for training, tuning and testing extags (ex=extraction)
-# EXTAGS_FP = "data/extags_all.txt"
-# EXTAGS_TRAIN_FP = "data/extags_train.txt"
+# EXTAGS_FP = "input_data/extags_all.txt"
+# EXTAGS_TRAIN_FP = "input_data/extags_train.txt"
 # # dev=development=validation=tuning
-# EXTAGS_TUNE_FP = "data/extags_tune.txt"
-# EXTAGS_TEST_FP = "data/extags_test.txt"
+# EXTAGS_TUNE_FP = "input_data/extags_tune.txt"
+# EXTAGS_TEST_FP = "input_data/extags_test.txt"
 
-EXTAGS_TRAIN_FP = 'data/openie-data/openie4_labels'
-EXTAGS_TUNE_FP = 'data/carb-data/dev.txt'
-EXTAGS_TEST_FP = 'data/carb-data/test.txt'
+EXTAGS_TRAIN_FP = 'input_data/openie-data/openie4_labels'
+EXTAGS_TUNE_FP = 'input_data/carb-data/dev.txt'
+EXTAGS_TEST_FP = 'input_data/carb-data/test.txt'
 
-CACHE_DIR = 'data/pretrained_cache' # used by AutoModel and AutoTokenizer
+CACHE_DIR = 'input_data/pretrained_cache' # used by AutoModel and AutoTokenizer
 WEIGHTS_DIR = "weights"
 PREDICTIONS_DIR = "predictions"
 

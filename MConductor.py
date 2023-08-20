@@ -215,7 +215,7 @@ class MConductor:
                         checkpoint_path,
                         **final_changes_params_d):
         """
-        formerly data.override_params()
+        formerly in run.test() and data.override_args()
 
 
         Parameters
@@ -228,13 +228,14 @@ class MConductor:
 
         """
         if self.has_cuda:
-            loaded_params_d = torch.load(checkpoint_path)['params_d']
-        else:
             loaded_params_d = torch.load(
-                checkpoint_path,
-                map_location=torch.device('cpu'))['params_d']
+                checkpoint_path)['params_d']
+        else:
+            mloc = torch.device('cpu')
+            loaded_params_d = torch.load(
+                checkpoint_path, map_location=mloc)['params_d']
 
-        self.update_params_d(self.params_d, loaded_params_d)
+        merge_dicts(self.params_d, loaded_params_d)
         if final_changes_params_d:
             self.update_params_d(self.params_d, final_changes_params_d)
 

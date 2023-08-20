@@ -79,6 +79,8 @@ class MConductor:
             self.dev_fp = EXTAGS_TUNE_FP
             self.test_fp = EXTAGS_TEST_FP
 
+        self.checkpoint_callback = self.get_checkpoint_callback()
+
         do_lower_case = ('uncased' in self.params_d["model_str"])
         self.auto_tokenizer = AutoTokenizer.from_pretrained(
             self.params_d["model_str"],
@@ -101,14 +103,14 @@ class MConductor:
                                self.dev_fp,
                                self.test_fp)
 
-    def set_checkpoint_callback(self):
+    def get_checkpoint_callback(self):
         """
 
         Returns
         -------
 
         """
-        self.checkpoint_callback = ModelCheckpoint(
+        return ModelCheckpoint(
             filepath=WEIGHTS_DIR + '/{epoch:02d}_{eval_acc:.3f}',
             verbose=True,
             monitor='eval_acc',
@@ -173,7 +175,8 @@ class MConductor:
             version=MODE + '.part')
         return logger
 
-    def get_trainer(self, logger, checkpoint_path=None):
+    def get_trainer(self, logger, checkpoint_path,
+                    use_minimal=False):
         """
 
         Parameters
@@ -201,13 +204,27 @@ class MConductor:
         #     train_percent_check = params_d.train_percent_check,
         #     use_tpu = params_d.use_tpu,
         #     val_check_interval = params_d.val_check_interval)
+        if MODE == "resume":
+            resume_from_cpoint = checkpoint_path
+        else:
+            resume_from_cpoint = None
 
-        trainer = Trainer(
-            checkpoint_callback=self.checkpoint_callback,
-            logger=logger,
-            resume_from_checkpoint=checkpoint_path,
-            show_progress_bar=True,
-            **self.params_d)
+        if use_minimal:
+            trainer = Trainer(
+                gpus=self.params_d["gpus"],
+                logger=logger,
+                resume_from_checkpoint=checkpoint_path)
+        else:
+            trainer = Trainer(
+                accumulate_grad_batches=\
+                    int(self.params_d["accumulate_grad_batches"]),
+                checkpoint_callback=self.checkpoint_callback,
+                logger=logger,
+                max_epochs = self.params_d["epochs"],
+                min_epochs = self.params_d["epochs"],
+                resume_from_checkpoint=resume_from_cpoint,
+                show_progress_bar=True,
+                **self.params_d)
         return trainer
 
     def update_params_d(self, checkpoint_path):
@@ -225,11 +242,11 @@ class MConductor:
         """
         if self.has_cuda:
             loaded_params_d = torch.load(
-                checkpoint_path)['params_d']
+                self.checkpoint_path)['params_d']
         else:
             mloc = torch.device('cpu')
             loaded_params_d = torch.load(
-                checkpoint_path, map_location=mloc)['params_d']
+                self.checkpoint_path, map_location=mloc)['params_d']
 
         self.params_d = merge_dicts(loaded_params_d,
                                     default_d=self.params_d)
@@ -242,7 +259,6 @@ class MConductor:
         -------
 
         """
-        self.set_checkpoint_callback()
         # train is the only mode that doesn't require update_params_d()
         self.model = Model(self.params_d, self.auto_tokenizer)
         logger = self.get_logger()
@@ -267,7 +283,6 @@ class MConductor:
         -------
 
         """
-        self.set_checkpoint_callback()
         checkpoint_path = self.get_checkpoint_path()
         self.update_params_d(checkpoint_path)
         self.model = Model(self.params_d, self.auto_tokenizer)
@@ -298,8 +313,6 @@ class MConductor:
         -------
 
         """
-
-        self.set_checkpoint_callback()
         all_checkpoint_paths = self.get_all_checkpoint_paths()
         checkpoint_path = all_checkpoint_paths[0]
         if 'train' not in MODE:
@@ -316,9 +329,9 @@ class MConductor:
         test_f = open(WEIGHTS_DIR + '/logs/test.txt', 'w')
 
         for checkpoint_path in all_checkpoint_paths:
-            trainer = Trainer(logger=logger,
-                              gpus=self.params_d["gpus"],
-                              resume_from_checkpoint=checkpoint_path)
+            trainer = self.get_trainer(logger,
+                                       checkpoint_path,
+                                       use_minimal = True)
             trainer.test(
                 self.model,
                 test_dataloaders=self.dloader.get_ttt_dataloaders("test"))
@@ -346,8 +359,6 @@ class MConductor:
 
         """
 
-        self.set_checkpoint_callback()
-
         # def predict(checkpoint_callback,
         #             train_dataloader,
         #             val_dataloader, test_dataloader, all_sentences,
@@ -367,8 +378,10 @@ class MConductor:
         if conj_word_mapping:
             self.model._metric.conj_word_mapping = conj_word_mapping
 
-        trainer = Trainer(gpus=self.params_d["gpus"], logger=None,
-                          resume_from_checkpoint=checkpoint_path)
+        logger = None
+        trainer = self.get_trainer(logger,
+                                   checkpoint_path,
+                                   use_minimal=True)
         start_time = time()
         # self.model.all_sentences = all_sentences
         trainer.test(
@@ -386,7 +399,6 @@ class MConductor:
         -------
 
         """
-        self.set_checkpoint_callback()
 
         # def splitpredict(params_d, checkpoint_callback,
         #                  train_dataloader, val_dataloader, test_dataloader,
@@ -394,10 +406,12 @@ class MConductor:
         mapping, conj_word_mapping = {}, {}
         self.params_d["write_allennlp"] = True
         if self.params_d["split_fp"] == '':
-            self.params_d["task"] = TASK = 'cc'
+            self.params_d["task"] = 'cc'
+            TASK = "cc"
             self.params_d["checkpoint"] = self.params_d["conj_model"]
             self.params_d["model_str"] = 'bert-base-cased'
-            self.params_d["mode"] = MODE='predict'
+            self.params_d["mode"] = 'predict'
+            MODE = "predict"
             model = self.predict(
                 mapping=None,
                 conj_word_mapping=None,
@@ -463,7 +477,8 @@ class MConductor:
                     else:
                         assert False
 
-        self.params_d["task"] = TASK='ex'
+        self.params_d["task"] = 'ex'
+        TASK = "ex"
         self.params_d["checkpoint"] = self.params_d["ex_model"]
         self.params_d["model_str"] = 'bert-base-cased'
         _, _, split_test_dataset = \

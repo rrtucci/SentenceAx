@@ -64,9 +64,9 @@ class Model(pl.LightningModule):
 
     """
 
-    def __init__(self, prams_d, auto_tokenizer):
+    def __init__(self, params_d, auto_tokenizer):
         super().__init__(self)
-        self.params_d = prams_d
+        self.params_d = params_d
         self.auto_tokenizer = auto_tokenizer
 
         self.base_model = AutoModel.from_pretrained(
@@ -215,7 +215,7 @@ class Model(pl.LightningModule):
             self.init_params_d = deepcopy(
                 dict(self.named_parameters()))
 
-        # lll_label is formerly (in openie6, labels)
+        # lll_label is similar to (in openie6, labels)
         # first (outer) list over batch/sample of events
         # second list over extractions
         # third (inner) list over number of labels in a line
@@ -304,7 +304,7 @@ class Model(pl.LightningModule):
                 word_log_probs = torch.log_softmax(word_scores, dim=2)
                 max_log_probs, predictions = \
                     torch.max(word_log_probs, dim=2)
-                # remember: lll_label was formerly labels
+                # remember: lll_label was similar to labels
                 # first (outer) list over batch events
                 # second list over extractions
                 # third (inner) list over number of labels in a line
@@ -389,7 +389,7 @@ class Model(pl.LightningModule):
     def _constrained_loss(self, l_word_scores, batch_d,
                           constraints_str, cweights_str):
         """
-        formerly model.constrained_loss()
+        similar to model.constrained_loss()
         not inherited method
 
         Parameters
@@ -530,7 +530,7 @@ class Model(pl.LightningModule):
                                    ld_output,
                                    mode):
         """
-        formerly model.evaluation_end()
+        similar to model.evaluation_end()
         not inherited method, used in *_epoch_end methods
         note that both `mode` and self.params_d["mode"] are used
 
@@ -667,7 +667,7 @@ class Model(pl.LightningModule):
 
     def _get_extraction(self, ex_labels, orig_sentL, score):
         """
-        formerly model.process_extraction()
+        similar to model.process_extraction()
 
         LABEL_TO_EXTAG={
             0: 'NONE',
@@ -837,7 +837,7 @@ class Model(pl.LightningModule):
 
     def _write_output(self, output_d, batch_id, task):
         """
-        formerly model.write_to_file()
+        similar to model.write_to_file()
 
         Parameters
         ----------

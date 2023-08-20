@@ -49,7 +49,7 @@ class CCTree:
 
     def set_ccnodes(self, ll_label):
         """
-        formerly metric.get_coords()
+        similar to metric.get_coords()
 
         Parameters
         ----------
@@ -120,7 +120,7 @@ class CCTree:
 
     def set_tree_structure(self):
         """
-        formerly data.get_tree(conj) where conj=coords=ccnodes.
+        similar to data.get_tree(conj) where conj=coords=ccnodes.
         Openie6 normally uses conj=ccloc, but not here.
 
 
@@ -175,7 +175,7 @@ class CCTree:
                                         eqlevel_ccnodes,
                                         extra_locs):
         """
-        formerly  data.get_sentences(sentences,
+        similar to  data.get_sentences(sentences,
                   conj_same_level,
                   conj_coords,
                   sentence_indices)
@@ -234,7 +234,7 @@ class CCTree:
 
     def get_ex_sents(self):
         """
-        formerly data.coords_to_sentences()
+        similar to data.coords_to_sentences()
 
         Returns
         -------

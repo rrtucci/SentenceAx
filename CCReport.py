@@ -3,7 +3,7 @@ from CCTree import *
 
 class CCScorer:
     """
-    formerly metric.Record
+    similar to metric.Record
     Refs:
     See my book Bayesuvius, chapter "ROC curves
 
@@ -51,12 +51,12 @@ class CCScorer:
 
 class CCReport:
     """
-    formerly  metric.Counter
+    similar to  metric.Counter
 
 
-    CCScorer formerly metric.Record
-    CCReport formerly metric.Counter
-    `category` formerly `criteria` in ["whole", "outer", "inner", "exact"]
+    CCScorer similar to metric.Record
+    CCReport similar to metric.Counter
+    `category` similar to `criteria` in ["whole", "outer", "inner", "exact"]
 
     """
     def __init__(self, category):

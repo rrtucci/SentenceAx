@@ -5,7 +5,7 @@ import pickle
 
 class CCMetric():
     """
-    formerly metric.py
+    similar to metric.py
 
 
     """

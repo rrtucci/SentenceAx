@@ -72,7 +72,7 @@ class DPadder:
 
     def pad_data(self, l_sample_d):
         """
-        formerly data.pad_data()
+        similar to data.pad_data()
 
 
 

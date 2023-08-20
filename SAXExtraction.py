@@ -5,7 +5,7 @@ from extraction_utils import *
 
 class SAXExtraction():
     """
-    formerly data_processing.py
+    similar to data_processing.py
     
     important
     carb has its own Extraction class at
@@ -108,7 +108,7 @@ class SAXExtraction():
 
     def set_extags_of_arg2(self):
         """
-        formerly data_processing.label_arg2()
+        similar to data_processing.label_arg2()
 
 
         Returns
@@ -149,7 +149,7 @@ class SAXExtraction():
 
     def set_extags_of_arg1_or_rel(self, arg_name):
         """
-        formerly data_processing.label_arg(),
+        similar to data_processing.label_arg(),
 
 
         Parameters
@@ -219,7 +219,7 @@ class SAXExtraction():
 
     def set_extags_of_IS_OF_FROM(self):
         """
-        formerly data_processing.label_is_of_relations()
+        similar to data_processing.label_is_of_relations()
 
         Returns
         -------
@@ -251,7 +251,7 @@ class SAXExtraction():
 
     def set_extags_of_repeated_arg1(self):
         """
-        formerly data_processing.label_multiple_arg1()
+        similar to data_processing.label_multiple_arg1()
 
 
         Returns
@@ -291,7 +291,7 @@ class SAXExtraction():
 
     def set_extags_of_repeated_rel(self):
         """
-        formerly data_processing.label_multiple_rel()
+        similar to data_processing.label_multiple_rel()
 
 
         Returns
@@ -365,8 +365,8 @@ class SAXExtraction():
 
     def set_extags_of_loc_or_time(self, arg_name):
         """
-        formerly data_processing.label_time(),
-        formerly data_processing.label_loc()
+        similar to data_processing.label_time(),
+        similar to data_processing.label_loc()
 
 
 

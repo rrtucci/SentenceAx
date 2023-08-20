@@ -1,6 +1,6 @@
 def set_simple_to_complex_sents_dict(self):
     """
-    formerly data_processing.load_conj_mapping()
+    similar to data_processing.load_conj_mapping()
 
     Returns
     -------

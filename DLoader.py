@@ -39,7 +39,7 @@ class DLoader:
     @staticmethod
     def remerge_sent(tokens):
         """
-        formerly data.remerge_sent()
+        similar to data.remerge_sent()
 
         Parameters
         ----------
@@ -69,7 +69,7 @@ class DLoader:
     @staticmethod
     def pos_mask(tokens):
         """
-        formerly data.pos_tags()
+        similar to data.pos_tags()
 
         Parameters
         ----------
@@ -97,7 +97,7 @@ class DLoader:
     @staticmethod
     def verb_mask(tokens):
         """
-        formerly data.verb_tags()
+        similar to data.verb_tags()
 
         Parameters
         ----------
@@ -123,7 +123,7 @@ class DLoader:
 
     def get_sample_ds(self, inp_fp):
         """
-        formerly data._process_data()
+        similar to data._process_data()
 
 
         this reads a file of the form
@@ -248,7 +248,7 @@ class DLoader:
 
     def get_ttt_datasets(self, predict_sentences=None):
         """
-        formerly data.process_data()
+        similar to data.process_data()
 
         Parameters
         ----------

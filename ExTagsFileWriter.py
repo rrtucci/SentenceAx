@@ -32,7 +32,7 @@ class ExTagsFileWriter:
                                            l_sentL, # original sentences
                                            ll_sent_loc):
         """
-        formerly run.get_labels()
+        similar to run.get_labels()
         LABEL_TO_EXTAG={0: 'NONE', 1: 'ARG1', 2: 'REL', 3: 'ARG2',
                  4: 'ARG2', 5: 'NONE'}
         output_d= {

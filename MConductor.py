@@ -15,7 +15,7 @@ from sax_globals import *
 
 class MConductor:
     """
-    formerly run.py
+    similar to run.py
     
     
     Torch lightning
@@ -117,10 +117,9 @@ class MConductor:
                 if not self.params_d["debug"] else 0,
             period=0)
 
-
     def get_all_checkpoint_paths(self):
         """
-        formerly run.get_checkpoint_path()
+        similar to run.get_checkpoint_path()
 
         Returns
         -------
@@ -145,7 +144,7 @@ class MConductor:
 
     def get_logger(self):
         """
-        formerly run.get_logger()
+        similar to run.get_logger()
 
         Parameters
         ----------
@@ -167,10 +166,10 @@ class MConductor:
             new_id = num_numbered_logs + 1
             print('Retiring current log file by changing its name')
             print(shutil.move(log_dir + f'{MODE}',
-                              log_dir+ f'{MODE}_{new_id}'))
+                              log_dir + f'{MODE}_{new_id}'))
         logger = TensorBoardLogger(
             save_dir=WEIGHTS_DIR,
-            name= TASK + '_logs',
+            name=TASK + '_logs',
             version=MODE + '.part')
         return logger
 
@@ -211,17 +210,14 @@ class MConductor:
             **self.params_d)
         return trainer
 
-    def update_params_d(self,
-                        checkpoint_path,
-                        **final_changes_params_d):
+    def update_params_d(self, checkpoint_path):
         """
-        formerly in run.test() and data.override_args()
+        similar to in run.test() and data.override_args()
 
 
         Parameters
         ----------
         checkpoint_path
-        final_changes_params_d
 
         Returns
         -------
@@ -235,21 +231,21 @@ class MConductor:
             loaded_params_d = torch.load(
                 checkpoint_path, map_location=mloc)['params_d']
 
-        merge_dicts(self.params_d, loaded_params_d)
-        if final_changes_params_d:
-            self.update_params_d(self.params_d, final_changes_params_d)
+        self.params_d = merge_dicts(loaded_params_d,
+                                    default_d=self.params_d)
 
     def train(self):
         """
-        formerly run.train()
+        similar to run.train()
 
         Returns
         -------
 
         """
         self.set_checkpoint_callback()
-        self.model = Model(self.auto_tokenizer)
-        logger = self.get_logger('train')
+        # train is the only mode that doesn't require update_params_d()
+        self.model = Model(self.params_d, self.auto_tokenizer)
+        logger = self.get_logger()
         trainer = self.get_trainer(logger)
         trainer.fit(
             self.model,
@@ -258,9 +254,9 @@ class MConductor:
         shutil.move(WEIGHTS_DIR + f'/logs/train.part',
                     WEIGHTS_DIR + f'/logs/train')
 
-    def resume(self, **final_changes_params_d):
+    def resume(self):
         """
-        formerly run.resume()
+        similar to run.resume()
 
 
         Parameters
@@ -273,9 +269,9 @@ class MConductor:
         """
         self.set_checkpoint_callback()
         checkpoint_path = self.get_checkpoint_path()
-        self.update_params_d(checkpoint_path, **final_changes_params_d)
-        self.model = Model(self.auto_tokenizer)
-        logger = self.get_logger('resume')
+        self.update_params_d(checkpoint_path)
+        self.model = Model(self.params_d, self.auto_tokenizer)
+        logger = self.get_logger()
         trainer = self.get_trainer(logger, checkpoint_path)
         trainer.fit(
             self.model,
@@ -285,12 +281,10 @@ class MConductor:
                     WEIGHTS_DIR + f'/logs/resume')
 
     def test(self,
-             train,
              mapping=None,
-             conj_word_mapping=None,
-             **final_changes_params_d):
+             conj_word_mapping=None):
         """
-        formerly run.test()
+        similar to run.test()
 
 
         Parameters
@@ -308,17 +302,17 @@ class MConductor:
         self.set_checkpoint_callback()
         all_checkpoint_paths = self.get_all_checkpoint_paths()
         checkpoint_path = all_checkpoint_paths[0]
-        if not train:
-            self.update_params_d(checkpoint_path,
-                                 **final_changes_params_d)
+        if 'train' not in MODE:
+            # train is the only mode that doesn't require update_params_d()
+            self.update_params_d(checkpoint_path)
 
-        self.model = Model(self.auto_tokenizer)
+        self.model = Model(self.params_d, self.auto_tokenizer)
         if mapping:
             self.model._metric.mapping = mapping
         if conj_word_mapping:
             self.model._metric.conj_word_mapping = conj_word_mapping
 
-        logger = self.get_logger('test')
+        logger = self.get_logger()
         test_f = open(WEIGHTS_DIR + '/logs/test.txt', 'w')
 
         for checkpoint_path in all_checkpoint_paths:
@@ -337,10 +331,9 @@ class MConductor:
 
     def predict(self,
                 mapping=None,
-                conj_word_mapping=None,
-                **final_changes_params_d):
+                conj_word_mapping=None):
         """
-        formerly run.predict()
+        similar to run.predict()
 
         Parameters
         ----------
@@ -366,8 +359,7 @@ class MConductor:
             self.params_d["checkpoint"] = self.params_d["oie_model"]
 
         checkpoint_path = self.get_checkpoint_path()
-        self.update_params_d(checkpoint_path, **final_changes_params_d)
-
+        self.update_params_d(checkpoint_path)
         self.model = Model(self.params_d, self.auto_tokenizer)
 
         if mapping:
@@ -387,7 +379,7 @@ class MConductor:
 
     def splitpredict(self):
         """
-        formerly run.splitpredict()
+        similar to run.splitpredict()
 
 
         Returns
@@ -402,10 +394,10 @@ class MConductor:
         mapping, conj_word_mapping = {}, {}
         self.params_d["write_allennlp"] = True
         if self.params_d["split_fp"] == '':
-            self.params_d["task"] = 'conj'
+            self.params_d["task"] = TASK = 'cc'
             self.params_d["checkpoint"] = self.params_d["conj_model"]
             self.params_d["model_str"] = 'bert-base-cased'
-            self.params_d["mode"] = 'predict'
+            self.params_d["mode"] = MODE='predict'
             model = self.predict(
                 mapping=None,
                 conj_word_mapping=None,
@@ -448,7 +440,7 @@ class MConductor:
                     count += len(sentence_indices)
             assert count == len(sentences) - 1
 
-        else:
+        else: # no split_fp
             with open(self.params_d["predict_fp"], 'r') as f:
                 lines = f.read()
                 lines = lines.replace("\\", "")
@@ -471,8 +463,8 @@ class MConductor:
                     else:
                         assert False
 
-        self.params_d["task"] = 'oie'
-        self.params_d["checkpoint"] = self.params_d["oie_model"]
+        self.params_d["task"] = TASK='ex'
+        self.params_d["checkpoint"] = self.params_d["ex_model"]
         self.params_d["model_str"] = 'bert-base-cased'
         _, _, split_test_dataset = \
             self.dloader.get_ttt_datasets(predict_sentences=sentences)
@@ -488,8 +480,8 @@ class MConductor:
             None,
             split_test_dataloader,
             mapping=mapping,
-            conj_word_mapping=conj_word_mapping )
-            #all_sentences=all_sentences)
+            conj_word_mapping=conj_word_mapping)
+        # all_sentences=all_sentences)
 
         if 'labels' in self.params_d["type"]:
             label_lines = self.get_extags(model, sentences,

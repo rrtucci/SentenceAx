@@ -26,7 +26,7 @@ def contains_extraction(ex, l_ex):
 
 class ExMetric():
     """
-    formerly metric.Carb
+    similar to metric.Carb
     will not change because it is part of Carb
 
 

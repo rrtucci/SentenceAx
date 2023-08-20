@@ -5,7 +5,7 @@ import pickle
 
 class CCMetric():
     """
-    similar to metric.py
+    similar to metric.Conjunction
 
 
     """
@@ -24,6 +24,8 @@ class CCMetric():
                 os.remove(dump_dir + '/pred_it_ccnodes.pkl')
             if os.path.exists(dump_dir + '/gt_it_ccnodes.pkl'):
                 os.remove(dump_dir + '/gt_it_ccnodes.pkl')
+
+        self.conj_word_mapping = None
 
     def __call__(self, ll_pred_ccnode, ll_truth_ccnode, meta_data=None,
                  ccnodes=None):

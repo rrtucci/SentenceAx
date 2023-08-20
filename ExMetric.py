@@ -40,8 +40,9 @@ class ExMetric():
         self.score = {'carb_auc': 0.0, 'carb_f1': 0.0, 'carb_sum': 0.0}
         self.hparams = hparams
         self.num_extractions = self.hparams.num_extractions
-        self.mapping = None
-        self.conj_word_mapping = None
+        self.mapping = None # orig_sent_to_ex_sent
+        # store this in CCMetric
+        # self.conj_word_mapping = None # orig_sent_to_cc_sent
 
     def __call__(self, predictions, sentences, scores, pos_words=None,
                  verb_words=None):

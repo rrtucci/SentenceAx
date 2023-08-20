@@ -867,21 +867,21 @@ class Model(pl.LightningModule):
             l_pred_str = self._write_if_task_cc(output_d)
         else:
             assert False
-        fname = f'{PREDICTIONS_DIR}.{self.params_d["task"]}.txt'
+        fpath = TASK + ".txt"
         if batch_id == 0:
             fmode= 'w'
         else:
             fmode = 'a'
-        pred_f = open(fname, fmode)
+        pred_f = open(fpath, fmode)
         pred_f.write('\n'.join(l_pred_str) + '\n')
         pred_f.close()
         if task == "ex" and self.params_d["write_allennlp"]:
-            fname = PREDICTIONS_DIR+ "-allen.txt"
+            fpath = PREDICTIONS_DIR + "/allen.txt"
             if batch_id == 0:
                 fmode = "w"
             else:
                 fmode = "a"
-            allen_f = open(fname, fmode)
+            allen_f = open(fpath, fmode)
             allen_f.write('\n'.join(l_pred_allen_str) + '\n')
             allen_f.close()
         if self.params_d["write_async"]:

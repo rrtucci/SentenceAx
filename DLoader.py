@@ -273,11 +273,12 @@ class DLoader:
         if 'predict' in self.params_d["mode"]:
             # no caching used in predict mode
             if not predict_sentences:  # predict
-                if self.params_d["inp"] :
-                    predict_fp = self.params_d["inp"]
-                else:
-                    predict_fp = self.params_d["predict_fp"]
-                with open(predict_fp, "r") as f:
+                # if self.params_d["inp_fp"] :
+                #     predict_fp = self.params_d["inp_fp"]
+                # else:
+                #     predict_fp = self.params_d["predict_fp"]
+                # will set predict_fp = INP_FP
+                with open(INP_FP, "r") as f:
                     predict_lines = f.readlines()
 
                 predict_sentences = []

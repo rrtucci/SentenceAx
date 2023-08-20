@@ -127,8 +127,8 @@ class MConductor:
         -------
 
         """
-        if self.params_d["checkpoint"]:
-            return [self.params_d["checkpoint"]]
+        if self.params_d["checkpoint_fp"]:
+            return [self.params_d["checkpoint_fp"]]
 
         else:
             return glob(WEIGHTS_DIR + '/*.ckpt')
@@ -296,8 +296,8 @@ class MConductor:
                     WEIGHTS_DIR + f'/logs/resume')
 
     def test(self,
-             mapping=None,
-             conj_word_mapping=None):
+             orig_sent_to_ex_sent=None,
+             orig_sent_to_cc_sent=None):
         """
         similar to run.test()
 
@@ -313,38 +313,40 @@ class MConductor:
         -------
 
         """
-        all_checkpoint_paths = self.get_all_checkpoint_paths()
-        checkpoint_path = all_checkpoint_paths[0]
+        checkpoint_path = self.get_checkpoint_path()
         if 'train' not in MODE:
             # train is the only mode that doesn't require update_params_d()
             self.update_params_d(checkpoint_path)
 
         self.model = Model(self.params_d, self.auto_tokenizer)
-        if mapping:
-            self.model._metric.mapping = mapping
-        if conj_word_mapping:
-            self.model._metric.conj_word_mapping = conj_word_mapping
+        if orig_sent_to_ex_sent:
+            self.model.metric.mapping = orig_sent_to_ex_sent
+        if  orig_sent_to_cc_sent:
+            self.model.metric.conj_word_mapping = orig_sent_to_cc_sent
 
         logger = self.get_logger()
         test_f = open(WEIGHTS_DIR + '/logs/test.txt', 'w')
 
-        for checkpoint_path in all_checkpoint_paths:
+        for checkpoint_path in self.get_all_checkpoint_paths():
             trainer = self.get_trainer(logger,
                                        checkpoint_path,
                                        use_minimal = True)
+            # trainer.fit() and trainer.test() are different
             trainer.test(
                 self.model,
                 test_dataloaders=self.dloader.get_ttt_dataloaders("test"))
             result = self.model.results
             test_f.write(f'{checkpoint_path}\t{result}\n')
+            # note test_f created outside loop.
+            # refresh/clear/flush test_f after each write
             test_f.flush()
         test_f.close()
         shutil.move(WEIGHTS_DIR + f'/logs/test.part',
                     WEIGHTS_DIR + f'/logs/test')
 
     def predict(self,
-                mapping=None,
-                conj_word_mapping=None):
+             orig_sent_to_ex_sent=None,
+             orig_sent_to_cc_sent=None):
         """
         similar to run.predict()
 
@@ -365,18 +367,18 @@ class MConductor:
         #             mapping=None,
         #             conj_word_mapping=None):
         if self.params_d["task"] == 'cc':
-            self.params_d["checkpoint"] = self.params_d["conj_model"]
+            self.params_d["checkpoint_fp"] = self.params_d["cc_model_fp"]
         if self.params_d["task"] == 'ex':
-            self.params_d["checkpoint"] = self.params_d["oie_model"]
+            self.params_d["checkpoint_fp"] = self.params_d["ex_model_fp"]
 
         checkpoint_path = self.get_checkpoint_path()
         self.update_params_d(checkpoint_path)
         self.model = Model(self.params_d, self.auto_tokenizer)
 
-        if mapping:
-            self.model._metric.mapping = mapping
-        if conj_word_mapping:
-            self.model._metric.conj_word_mapping = conj_word_mapping
+        if orig_sent_to_ex_sent:
+            self.model.metric.mapping = orig_sent_to_ex_sent
+        if orig_sent_to_cc_sent:
+            self.model.metric.conj_word_mapping = orig_sent_to_cc_sent
 
         logger = None
         trainer = self.get_trainer(logger,
@@ -403,19 +405,19 @@ class MConductor:
         # def splitpredict(params_d, checkpoint_callback,
         #                  train_dataloader, val_dataloader, test_dataloader,
         #                  all_sentences):
-        mapping, conj_word_mapping = {}, {}
+        orig_sent_to_ex_sent = {}
+        orig_sent_to_cc_sent = {}
         self.params_d["write_allennlp"] = True
         if self.params_d["split_fp"] == '':
             self.params_d["task"] = 'cc'
             TASK = "cc"
-            self.params_d["checkpoint"] = self.params_d["conj_model"]
+            self.params_d["checkpoint_fp"] = self.params_d["cc_model_fp"]
             self.params_d["model_str"] = 'bert-base-cased'
             self.params_d["mode"] = 'predict'
             MODE = "predict"
             model = self.predict(
-                mapping=None,
-                conj_word_mapping=None,
-                self.dloader.get_ttt_dataloaders("test"))
+                orig_sent_to_ex_sent=None,
+                orig_sent_to_cc_sent=None)
             conj_predictions = model.all_cc_predictions
             sentences_indices_list = model.all_cc_sent_locs
             # conj_predictions = model.predictions
@@ -430,16 +432,16 @@ class MConductor:
                 if len(list_sentences) == 1:
                     orig_sentences.append(
                         list_sentences[0] + ' [unused1] [unused2] [unused3]')
-                    mapping[list_sentences[0]] = list_sentences[0]
-                    conj_word_mapping[list_sentences[0]] = conj_words
+                    orig_sent_to_ex_sent[list_sentences[0]] = list_sentences[0]
+                    orig_sent_to_cc_sent[list_sentences[0]] = conj_words
                     sentences.append(
                         list_sentences[0] + ' [unused1] [unused2] [unused3]')
                 elif len(list_sentences) > 1:
                     orig_sentences.append(
                         list_sentences[0] + ' [unused1] [unused2] [unused3]')
-                    conj_word_mapping[list_sentences[0]] = conj_words
+                    orig_sent_to_cc_sent[list_sentences[0]] = conj_words
                     for sent in list_sentences[1:]:
-                        mapping[sent] = list_sentences[0]
+                        orig_sent_to_ex_sent[sent] = list_sentences[0]
                         sentences.append(
                             sent + ' [unused1] [unused2] [unused3]')
                 else:
@@ -455,7 +457,7 @@ class MConductor:
             assert count == len(sentences) - 1
 
         else: # no split_fp
-            with open(self.params_d["predict_fp"], 'r') as f:
+            with open(INP_FP, 'r') as f:
                 lines = f.read()
                 lines = lines.replace("\\", "")
 
@@ -466,20 +468,20 @@ class MConductor:
                 if len(line) > 0:
                     list_sentences = line.strip().split('\n')
                     if len(list_sentences) == 1:
-                        mapping[list_sentences[0]] = list_sentences[0]
+                        orig_sent_to_ex_sent[list_sentences[0]] = list_sentences[0]
                         sentences.append(list_sentences[0] + extra_str)
                         orig_sentences.append(list_sentences[0] + extra_str)
                     elif len(list_sentences) > 1:
                         orig_sentences.append(list_sentences[0] + extra_str)
                         for sent in list_sentences[1:]:
-                            mapping[sent] = list_sentences[0]
+                            orig_sent_to_ex_sent[sent] = list_sentences[0]
                             sentences.append(sent + extra_str)
                     else:
                         assert False
 
         self.params_d["task"] = 'ex'
         TASK = "ex"
-        self.params_d["checkpoint"] = self.params_d["ex_model"]
+        self.params_d["checkpoint_fp"] = self.params_d["ex_model_fp"]
         self.params_d["model_str"] = 'bert-base-cased'
         _, _, split_test_dataset = \
             self.dloader.get_ttt_datasets(predict_sentences=sentences)
@@ -494,15 +496,15 @@ class MConductor:
             None,
             None,
             split_test_dataloader,
-            mapping=mapping,
-            conj_word_mapping=conj_word_mapping)
+            mapping=orig_sent_to_ex_sent,
+            conj_word_mapping=orig_sent_to_cc_sent)
         # all_sentences=all_sentences)
 
         if 'labels' in self.params_d["type"]:
             label_lines = self.get_extags(model, sentences,
                                           orig_sentences,
                                           sentences_indices_list)
-            f = open(PREDICTIONS_DIR + '.labels.txt', 'w')
+            f = open(PREDICTIONS_DIR + '/ex_labels.txt', 'w')
             f.write('\n'.join(label_lines))
             f.close()
 
@@ -529,7 +531,7 @@ class MConductor:
             # testing rescoring
             inp_fp = model.predictions_f_allennlp
             rescored = self.rescore(inp_fp,
-                                    model_dir=self.params_d["rescore_model"],
+                                    model_dir=RESCORE_DIR,
                                     batch_size=256)
 
             all_predictions, sentence_str = [], ''

@@ -41,6 +41,7 @@ WEIGHTS_DIR = "weights"
 PREDICTIONS_DIR = "predictions"
 RESCORE_DIR = "rescore"
 
+
 QUOTES = "\"\'" #2
 BRACKETS = "(){}[]<>" #8
 SEPARATORS = ",:;&-" #5
@@ -122,9 +123,11 @@ print('you\'ve entered MODE= "' + MODE + '"')
 if TASK == "ex":
     TAG_TO_LABEL = EXTAG_TO_LABEL
     MAX_DEPTH = MAX_EXTRACTION_LENGTH
+    LOG_DIR = WEIGHTS_DIR + '/ex_logs'
 elif TASK == "cc":
     TAG_TO_LABEL = CCTAG_TO_LABEL
     MAX_DEPTH = 3
+    LOG_dir = WEIGHTS_DIR + '/cc_logs'
 else:
     assert False
 
@@ -145,13 +148,13 @@ if "PARAMS_D" in globals():
 elif TASK == "ex" and MODE == "splitpredict":
     PARAMS_D = {
         "cc_model_fp": WEIGHTS_DIR + 
-                    "/cc_model-epoch=28_eval_acc=0.854.ckpt",
+                    "/cc_model/epoch=28_eval_acc=0.854.ckpt",
         "gpus": 1,
         # "inp": "sentences.txt",
         "mode": "splitpredict",
         "num_extractions": 5,
         "ex_model_fp": WEIGHTS_DIR + 
-                    "/ex_model-epoch=14_eval_acc=0.551_v0.ckpt",
+                    "/ex_model/epoch=14_eval_acc=0.551_v0.ckpt",
         #"out": "predictions.txt",
         # "rescore_model": WEIGHTS_DIR + "/rescore_model",
         "rescoring": True,
@@ -279,7 +282,7 @@ elif TASK == "cc" and MODE == "train_test":
 #         "mode": "splitpredict",
 #         "num_extractions": 5,
 #         "ex_model_fp": WEIGHTS_DIR + 
-#                     "/ex_model-epoch=14_eval_acc=0.551_v0.ckpt",
+#                     "/ex_model/epoch=14_eval_acc=0.551_v0.ckpt",
 #         # "out": WEIGHTS_DIR + "/results/final",
 #         # "rescore_model": WEIGHTS_DIR + "/rescore_model",
 #         "rescoring": True,

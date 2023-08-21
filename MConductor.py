@@ -111,7 +111,8 @@ class MConductor:
 
         """
         return ModelCheckpoint(
-            filepath=WEIGHTS_DIR + '/{epoch:02d}_{eval_acc:.3f}',
+            filepath=WEIGHTS_DIR + "/" +
+                     TASK + '_model/{epoch:02d}_{eval_acc:.3f}',
             verbose=True,
             monitor='eval_acc',
             mode='max',
@@ -155,20 +156,15 @@ class MConductor:
         -------
 
         """
-        if TASK == "ex":
-            log_dir = WEIGHTS_DIR + '/ex_logs/'
-        elif TASK == "cc":
-            log_dir = WEIGHTS_DIR + '/cc_logs/'
-        else:
-            assert False
+
         # the current log file will have no number prefix,
         # stored ones will.
-        if os.path.exists(log_dir + f'{MODE}'):
-            num_numbered_logs = len(list(glob(log_dir + f'/{MODE}_*')))
+        if os.path.exists(LOG_DIR + f'/{MODE}'):
+            num_numbered_logs = len(list(glob(LOG_DIR + f'/{MODE}_*')))
             new_id = num_numbered_logs + 1
             print('Retiring current log file by changing its name')
-            print(shutil.move(log_dir + f'{MODE}',
-                              log_dir + f'{MODE}_{new_id}'))
+            print(shutil.move(LOG_DIR + f'/{MODE}',
+                              LOG_DIR + f'/{MODE}_{new_id}'))
         logger = TensorBoardLogger(
             save_dir=WEIGHTS_DIR,
             name=TASK + '_logs',

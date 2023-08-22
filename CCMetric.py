@@ -62,6 +62,7 @@ class CCMetric():
         self.sentence = 0
 
     def get_metric_values(self, reset: bool = False, mode=None):
+        # similar to metric.Conjunction.get_metric()
         pairs = [("whole", self.report_whole),
                     ("outer", self.report_outer),
                     ("inner", self.report_inner),
@@ -90,3 +91,26 @@ class CCMetric():
         else:
             raise ValueError('invalid metric: {}'.format(metric))
         return report.overall_scorer.f1_score
+
+    @staticmethod
+    def load_fix_d(fix_fp):
+        """
+        similar to data_processing.load_conj_mapping()
+        Our fix_d is similar to mapping and conj_mapping.
+        This method works equally well for ExMetric.fix_d and CCMetric.fix_d
+
+        Returns
+        -------
+
+        """
+        fix_d = {}
+        with open(fix_fp, "r") as f:
+            content = f.read()
+            fixed_sent = ''
+            for sample in content.split('\n\n'):
+                for i, line in enumerate(sample.strip('\n').split('\n')):
+                    if i == 0:
+                        fixed_sent = line
+                    else:
+                        fix_d[line] = fixed_sent
+        return fix_d

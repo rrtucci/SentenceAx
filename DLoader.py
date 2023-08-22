@@ -27,10 +27,12 @@ class DLoader:
     https://colab.research.google.com/github/pytorch/text/blob/master/examples/legacy_tutorial/migration_tutorial.ipynb#scrollTo=kBV-Wvlo07ye
     """
 
-    def __init__(self, auto_tokenizer, train_fp, dev_fp, test_fp):
+    def __init__(self, auto_tokenizer, sent_pad_id,
+                 train_fp, dev_fp, test_fp):
 
         self.params_d = PARAMS_D
         self.auto_tokenizer = auto_tokenizer
+        self.sent_pad_id = sent_pad_id
         self.train_fp = train_fp
         self.dev_fp = dev_fp
         self.test_fp = test_fp
@@ -304,7 +306,7 @@ class DLoader:
             # get_examples()
             # returns: examples, orig_sents
             predict_sample_ds, orig_sents = \
-                self.get_sample_ds(predict_fp)
+                self.get_sample_ds(INP_FP)
             #vocab = build_vocab(predict_example_ds)
 
             predict_dataset = DSet(predict_sample_ds,
@@ -320,21 +322,21 @@ class DLoader:
             # spacy_model usually abbreviated as nlp
             if not os.path.exists(cached_train_fp) or\
                     self.params_d["build_cache"]:
-                train_sample_ds, _ = self.get_sample_ds(train_fp)
+                train_sample_ds, _ = self.get_sample_ds(self.train_fp)
                 pickle.dump(train_sample_ds, open(cached_train_fp, 'wb'))
             else:
                 train_sample_ds = pickle.load(open(cached_train_fp, 'rb'))
 
             if not os.path.exists(cached_dev_fp) or \
                     self.params_d["build_cache"]:
-                dev_sample_ds, _ = self.get_sample_ds(dev_fp)
+                dev_sample_ds, _ = self.get_sample_ds(self.dev_fp)
                 pickle.dump(dev_sample_ds, open(cached_dev_fp, 'wb'))
             else:
                 dev_sample_ds = pickle.load(open(cached_dev_fp, 'rb'))
 
             if not os.path.exists(cached_test_fp) or\
                     self.params_d["build_cache"]:
-                test_sample_ds, _ = self.get_sample_ds(test_fp)
+                test_sample_ds, _ = self.get_sample_ds(self.test_fp)
                 pickle.dump(test_sample_ds, open(cached_test_fp, 'wb'))
             else:
                 test_sample_ds = pickle.load(open(cached_test_fp, 'rb'))

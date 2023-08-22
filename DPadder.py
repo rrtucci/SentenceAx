@@ -100,24 +100,24 @@ class DPadder:
         # }
 
         ll_sentL_id = [sample_d['sentL_ids'] for sample_d in
-                           ld_sample]
+                           l_sample_d]
         padded_ll_sentL_id = DPadder.get_padded_list(ll_sentL_id,
                                                          self.sent_pad_id)
 
         lll_label = [sample_d['ll_label'] for sample_d in l_sample_d]
-        padded_ll_labels = DPadder.get_padded_list_list(
+        padded_lll_label = DPadder.get_padded_list(
             lll_label,
             pad_id0=0,
             pad_id1=-100,
             max_outer_dim=MAX_DEPTH)
 
         ll_word_start = \
-            [sample_d['word_starts'] for sample_d in ld_sample]
+            [sample_d['word_starts'] for sample_d in l_sample_d]
         padded_ll_word_start = DPadder.get_padded_list(ll_word_start, 0)
 
 
         l_orig_sent = [sample_d['orig_sent'] for
-                       sample_d in ld_sample]
+                       sample_d in l_sample_d]
 
         # padded_ll_sentL_id = torch.tensor(padded_ll_sentL_id)
         # padded_lll_label = torch.tensor(padded_lll_label)
@@ -132,7 +132,7 @@ class DPadder:
             names = ["pos_mask", "pos_indices", "verb_mask", "verb_indices"]
             for i in range(len(names)):
                 l = [sample_d[names[i]] for sample_d in
-                     ld_sample]
+                     l_sample_d]
                 padded_l = DPadder.get_padded_list(l, pad_id=0)
                 # padded_data[names[i]] = torch.tensor(padded_l)
 

@@ -105,13 +105,6 @@ class Model(pl.LightningModule):
         self.metric = ExMetric(self.params_d) \
             if self.params_d["task"] == "ex" else CCMetric()
 
-        self.constraints_str_d = dict()
-
-        self.cc_ll_spanned_words = []
-        self.cc_lll_spanned_locs = []
-        self.cc_ll_pred_str = []
-        
-        self.ex_ll_pred_str = []
 
 
     def configure_optimizers(self):
@@ -747,29 +740,6 @@ class Model(pl.LightningModule):
                                    confidence=score)
 
         return extraction
-
-    @staticmethod
-    def load_fix_d(fix_fp):
-        """
-        similar to data_processing.load_conj_mapping()
-        Our fix_d is similar to mapping and conj_mapping.
-        This method works equally well for ExMetric.fix_d and CCMetric.fix_d
-
-        Returns
-        -------
-
-        """
-        fix_d = {}
-        with open(fix_fp, "r") as f:
-            content = f.read()
-            fixed_sent = ''
-            for sample in content.split('\n\n'):
-                for i, line in enumerate(sample.strip('\n').split('\n')):
-                    if i == 0:
-                        fixed_sent = line
-                    else:
-                        fix_d[line] = fixed_sent
-        return fix_d
 
     def _write_if_task_ex(self, output_d):
         fix_d = self.metric.fix_d

@@ -27,7 +27,6 @@ def contains_extraction(ex, l_ex):
 class ExMetric():
     """
     similar to metric.Carb
-    will not change because it is part of Carb
 
 
     """
@@ -92,7 +91,13 @@ class ExMetric():
 
         return
 
-    def get_metric(self, reset, mode):
+    def reset(self):
+        self.all_predictions = {}
+        self.score = {'carb_auc': 0.0, 'carb_f1': 0.0, 'carb_sum': 0.0}
+
+
+    def get_metric_values(self, reset, mode):
+        # similar to metric.Carb.get_metric()
         if self.num_extractions:
             for sentence in self.all_predictions:
                 self.all_predictions[sentence] = sorted(
@@ -125,9 +130,6 @@ class ExMetric():
             self.reset()
         return score
 
-    def reset(self):
-        self.all_predictions = {}
-        self.score = {'carb_auc': 0.0, 'carb_f1': 0.0, 'carb_sum': 0.0}
 
     def process_extraction(self, extraction, sentence, score):
         # rel, arg1, arg2, loc, time = [], [], [], [], []

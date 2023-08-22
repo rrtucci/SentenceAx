@@ -59,14 +59,13 @@ class MConductor:
 
     """
 
-    def __init__(self, pred_fname):
+    def __init__(self, pred_fname=None):
         """
 
 
         """
         self.pred_fname = pred_fname
         self.params_d = PARAMS_D
-        self.model = None
         self.saved = False
         self.has_cuda = torch.cuda.is_available()
 
@@ -102,6 +101,18 @@ class MConductor:
                                self.train_fp,
                                self.dev_fp,
                                self.test_fp)
+
+        self.constraints_str_d = dict()
+
+        self.cc_ll_spanned_words = []
+        self.cc_lll_spanned_locs = []
+        self.cc_ll_pred_str = []
+
+        self.ex_ll_pred_str = []
+
+        self.model = None
+        self.ex_fit_d = None
+        self.cc_fit_d = None
 
     def get_checkpoint_callback(self):
         """
@@ -291,9 +302,7 @@ class MConductor:
         shutil.move(WEIGHTS_DIR + f'/logs/resume.part',
                     WEIGHTS_DIR + f'/logs/resume')
 
-    def test(self,
-             fix_d=None,
-             cc_fix_d=None):
+    def test(self):
         """
         similar to run.test()
 
@@ -311,8 +320,11 @@ class MConductor:
             self.update_params_d(checkpoint_path)
 
         self.model = Model(self.params_d, self.auto_tokenizer)
-        if fix_d:
-            self.model.metric.fix_d = fix_d
+        if TASK == "ex" and self.ex_fix_d:
+            self.model.metric.fix_d = self.ex_fix_d
+        if TASK == "cc" and self.cc_fix_d:
+            self.model.metric.fix_d = self.cc_fix_d
+
 
         logger = self.get_logger()
         test_f = open(WEIGHTS_DIR + '/logs/test.txt', 'w')
@@ -334,9 +346,7 @@ class MConductor:
         shutil.move(WEIGHTS_DIR + f'/logs/test.part',
                     WEIGHTS_DIR + f'/logs/test')
 
-    def predict(self,
-                ex_fix_d=None,
-                cc_fix_d=None):
+    def predict(self):
         """
         similar to run.predict()
 
@@ -363,10 +373,10 @@ class MConductor:
         self.update_params_d(checkpoint_path)
         self.model = Model(self.params_d, self.auto_tokenizer)
 
-        if TASK == "ex" and ex_fix_d:
-            self.model.metric.fix_d = ex_fix_d
-        elif TASK == "cc" and cc_fix_d:
-            self.model.metric.fix_d = cc_fix_d
+        if TASK == "ex" and self.ex_fix_d:
+            self.model.metric.fix_d = self.ex_fix_d
+        elif TASK == "cc" and self.cc_fix_d:
+            self.model.metric.fix_d = self.cc_fix_d
 
         logger = None
         trainer = self.get_trainer(logger,
@@ -379,6 +389,185 @@ class MConductor:
             test_dataloaders=self.dloader.get_ttt_dataloaders("test"))
         end_time = time()
         print(f'Total Time taken = {(end_time - start_time) / 60:2f} minutes')
+
+    def splitpredict_do_cc_first(self):
+        self.ex_fix_d = {}
+        self.cc_fix_d = {}
+        if not INP_FP:
+            self.params_d["task"] = TASK = 'cc'
+            self.params_d["checkpoint_fp"] = self.params_d["cc_model_fp"]
+            self.params_d["model_str"] = 'bert-base-cased'
+            self.params_d["mode"] = MODE = 'predict'
+            self.predict()
+            ll_pred_str = self.cc_ll_pred_str
+            lll_spanned_locs = self.cc_lll_spanned_locs
+            assert len(ll_pred_str) == len(lll_spanned_locs)
+            ll_spanned_words = self.cc_ll_spanned_words
+
+            l_sent = []
+            l_orig_sentL = []
+            for sample_id, pred_str in enumerate(ll_pred_str):
+                l_pred_sent = pred_str.strip('\n').split('\n')
+                sent = l_sent[sample_id]
+                words = ll_spanned_words[sample_id]
+                if len(l_pred_sent) == 1:
+                    orig_sent = l_pred_sent[0]
+                    l_orig_sentL.append(
+                        orig_sent + UNUSED_TOKENS_STR)
+                    self.cc_fix_d[orig_sent] = sent
+                    self.cc_fix_d[orig_sent] = words
+                elif len(l_pred_sent) > 1:
+                    l_orig_sentL.append(
+                        l_pred_sent[0] + UNUSED_TOKENS_STR)
+                    self.cc_fix_d[l_pred_sent[0]] = sent
+                    for sent in l_pred_sent[1:]:
+                        self.ex_fix_d[sent] = l_pred_sent[0]
+                        l_orig_sentL.append(
+                            sent + UNUSED_TOKENS_STR)
+                else:
+                    assert False
+            l_orig_sentL.append('\n')
+
+            count = 0
+            for sentence_indices in lll_spanned_locs:
+                if len(sentence_indices) == 0:
+                    count += 1
+                else:
+                    count += len(sentence_indices)
+            assert count == len(l_orig_sentL) - 1
+
+        else:
+            with open(INP_FP, 'r') as f:
+                lines = f.read()
+                lines = lines.replace("\\", "")
+
+            l_orig_sentL = []
+            l_orig_sentL = []
+            for line in lines.split('\n\n'):
+                if len(line) > 0:
+                    l_pred_sent = line.strip().split('\n')
+                    if len(l_pred_sent) == 1:
+                        self.cc_fix_d[l_pred_sent[0]] = l_pred_sent[0]
+                        l_orig_sentL.append(l_pred_sent[0] + UNUSED_TOKENS_STR)
+                        l_orig_sentL.append(l_pred_sent[0] + UNUSED_TOKENS_STR)
+                    elif len(l_pred_sent) > 1:
+                        l_orig_sentL.append(l_pred_sent[0] + UNUSED_TOKENS_STR)
+                        for sent in l_pred_sent[1:]:
+                            self.cc_fix_d[sent] = l_pred_sent[0]
+                            l_orig_sentL.append(sent + UNUSED_TOKENS_STR)
+                    else:
+                        assert False
+                        
+    def splitpredict_do_ex_second(self):
+        self.params_d["write_allennlp"] = True
+        self.params_d["task"] = TASK = 'ex'
+        self.params_d["checkpoint_fp"] = self.params_d["ex_model_fp"]
+        self.params_d["model_str"] = 'bert-base-cased'
+        _, _, split_test_dataset = \
+            self.dloader.get_ttt_datasets(
+                predict_sentences=l_orig_sentL),
+            split_test_dataloader = DataLoader(split_test_dataset),
+            batch_size=self.params_d["batch_size"],
+            # collate_fn=mdl.pad_data,
+            num_workers=1)
+
+        self.predict()
+        # all_sentences=all_sentences)
+
+        if 'labels' in self.params_d["type"]:
+            label_lines = self.get_extags(self.model,
+                                          l_orig_sentL,
+                                          l_orig_sentL,
+                                          lll_spanned_locs)
+            f = open(PREDICTIONS_DIR + '/ex_labels.txt', 'w')
+            f.write('\n'.join(label_lines))
+            f.close()
+
+                        
+    def splitpredict_do_rescoring(self):
+        print()
+        print("Starting re-scoring ...")
+        print()
+
+        sentence_line_nums, prev_line_num, no_extractions = set(), 0, dict()
+        curr_line_num = 0
+        for sentence_str in self.all_predictions_oie:
+            sentence_str = sentence_str.strip('\n')
+            num_extrs = len(sentence_str.split('\n')) - 1
+            if num_extrs == 0:
+                if curr_line_num not in no_extractions:
+                    no_extractions[curr_line_num] = []
+                no_extractions[curr_line_num].append(sentence_str)
+                continue
+            curr_line_num = prev_line_num + num_extrs
+            sentence_line_nums.add(
+                curr_line_num)  # check extra empty lines,
+            # example with no extractions
+            prev_line_num = curr_line_num
+
+        # testing rescoring
+        inp_fp = self.model.predictions_f_allennlp
+        rescored = self.rescore(inp_fp,
+                                model_dir=RESCORE_DIR,
+                                batch_size=256)
+
+        all_predictions, sentence_str = [], ''
+        for line_i, line in enumerate(rescored):
+            fields = line.split('\t')
+            sentence = fields[0]
+            confidence = float(fields[2])
+
+            if line_i == 0:
+                sentence_str = f'{sentence}\n'
+                exts = []
+            if line_i in sentence_line_nums:
+                exts = sorted(exts, reverse=True,
+                              key=lambda x: float(x.split()[0][:-1]))
+                exts = exts[:self.params_d["num_extractions"]]
+                all_predictions.append(sentence_str + ''.join(exts))
+                sentence_str = f'{sentence}\n'
+                exts = []
+            if line_i in no_extractions:
+                for no_extraction_sentence in no_extractions[line_i]:
+                    all_predictions.append(f'{no_extraction_sentence}\n')
+
+            arg1 = re.findall("<arg1>.*</arg1>", fields[1])[0].strip(
+                '<arg1>').strip('</arg1>').strip()
+            rel = re.findall("<rel>.*</rel>", fields[1])[0].strip(
+                '<rel>').strip('</rel>').strip()
+            arg2 = re.findall("<arg2>.*</arg2>", fields[1])[0].strip(
+                '<arg2>').strip('</arg2>').strip()
+
+            # why must confidence be exponentiated?
+
+            extraction = SAXExtraction(orig_sentL= orig_senL,
+                                        arg1=arg1,
+                                       rel=rel,
+                                       arg2=arg2,
+                                       confidence=math.exp(confidence))
+            extraction.arg1 = arg1
+            extraction.arg2 = arg2
+            if self.params_d["type"] == 'sentences':
+                ext_str = extraction.get_str() + '\n'
+            else:
+                ext_str = extraction.get_str() + '\n'
+            exts.append(ext_str)
+
+        exts = sorted(exts, reverse=True,
+                      key=lambda x: float(x.split()[0][:-1]))
+        exts = exts[:self.params_d["num_extractions"]]
+        all_predictions.append(sentence_str + ''.join(exts))
+
+        if line_i + 1 in no_extractions:
+            for no_extraction_sentence in no_extractions[line_i + 1]:
+                all_predictions.append(f'{no_extraction_sentence}\n')
+
+        if self.pred_fname:
+            fpath = PREDICTIONS_DIR + "/" + self.pred_fname
+            print('Predictions written to ', fpath)
+            predictions_f = open(fpath, 'w')
+            predictions_f.write('\n'.join(all_predictions) + '\n')
+            predictions_f.close()
 
     def splitpredict(self):
         """
@@ -393,178 +582,11 @@ class MConductor:
         # def splitpredict(params_d, checkpoint_callback,
         #                  train_dataloader, val_dataloader, test_dataloader,
         #                  all_sentences):
-        ex_fix_d = {}
-        cc_fix_d = {}
-        self.params_d["write_allennlp"] = True
-        if not INP_FP:
-            self.params_d["task"] = TASK = 'cc'
-            self.params_d["checkpoint_fp"] = self.params_d["cc_model_fp"]
-            self.params_d["model_str"] = 'bert-base-cased'
-            self.params_d["mode"] = MODE = 'predict'
-            model = self.predict(ex_fix_d, cc_fix_d)
-            l_pred_cc_str = model.l_pred_cc_str
-            ll_sent_locs = model.ll_sent_locs
-            assert len(l_pred_cc_str) == len(ll_sent_locs)
-            l_cc_words = model.l_cc_words
 
-            l_cc_sent = []
-            l_orig_sentL = []
-            for sample_id, pred_cc_str in enumerate(l_pred_cc_str):
-                l_pred_cc_sent = pred_cc_str.strip('\n').split('\n')
-                cc_sent = l_cc_sent[sample_id]
-                cc_words = l_cc_words[sample_id]
-                if len(l_pred_cc_sent) == 1:
-                    orig_cc_sent = l_pred_cc_sent[0]
-                    l_orig_sentL.append(
-                        orig_cc_sent + UNUSED_TOKENS_STR)
-                    cc_fix_d[orig_cc_sent] = cc_sent
-                    cc_fix_d[orig_cc_sent]= cc_words
-                elif len(l_pred_cc_sent) > 1:
-                    l_orig_sentL.append(
-                        l_pred_cc_sent[0] + UNUSED_TOKENS_STR)
-                    cc_fix_d[l_pred_cc_sent[0]] = cc_sent
-                    for sent in l_pred_cc_sent[1:]:
-                        ex_fix_d[sent] = l_pred_cc_sent[0]
-                        l_orig_sentL.append(
-                            sent + UNUSED_TOKENS_STR)
-                else:
-                    assert False
-            l_orig_sentL.append('\n')
-
-            count = 0
-            for sentence_indices in ll_sent_locs:
-                if len(sentence_indices) == 0:
-                    count += 1
-                else:
-                    count += len(sentence_indices)
-            assert count == len(l_orig_sentL) - 1
-
-        else:
-            with open(INP_FP, 'r') as f:
-                lines = f.read()
-                lines = lines.replace("\\", "")
-
-            l_orig_sentL = []
-            l_orig_sentL = []
-            extra_str = " [unused1] [unused2] [unused3]"
-            for line in lines.split('\n\n'):
-                if len(line) > 0:
-                    l_pred_cc_sent = line.strip().split('\n')
-                    if len(l_pred_cc_sent) == 1:
-                        cc_fix_d[l_pred_cc_sent[0]] = l_pred_cc_sent[0]
-                        l_orig_sentL.append(l_pred_cc_sent[0] + extra_str)
-                        l_orig_sentL.append(l_pred_cc_sent[0] + extra_str)
-                    elif len(l_pred_cc_sent) > 1:
-                        l_orig_sentL.append(l_pred_cc_sent[0] + extra_str)
-                        for sent in l_pred_cc_sent[1:]:
-                            cc_fix_d[sent] = l_pred_cc_sent[0]
-                            l_orig_sentL.append(sent + extra_str)
-                    else:
-                        assert False
-
-        self.params_d["task"] = TASK = 'ex'
-        self.params_d["checkpoint_fp"] = self.params_d["ex_model_fp"]
-        self.params_d["model_str"] = 'bert-base-cased'
-        _, _, split_test_dataset = \
-            self.dloader.get_ttt_datasets(predict_sentences=l_orig_sentL)
-        split_test_dataloader = DataLoader(
-            split_test_dataset,
-            batch_size=self.params_d["batch_size"],
-            # collate_fn=mdl.pad_data,
-            num_workers=1)
-
-        model = self.predict(ex_fix_d, cc_fix_d)
-        # all_sentences=all_sentences)
-
-        if 'labels' in self.params_d["type"]:
-            label_lines = self.get_extags(model, l_orig_sentL,
-                                          l_orig_sentL,
-                                          ll_sent_locs)
-            f = open(PREDICTIONS_DIR + '/ex_labels.txt', 'w')
-            f.write('\n'.join(label_lines))
-            f.close()
-
+               
+        self.splitpredict_do_cc_first()
+        self.splitpredict_do_ex_second()
         if self.params_d["rescoring"]:
-            print()
-            print("Starting re-scoring ...")
-            print()
+            self.splitpredict_do_rescoring()
+            
 
-            sentence_line_nums, prev_line_num, no_extractions = set(), 0, dict()
-            curr_line_num = 0
-            for sentence_str in model.all_predictions_oie:
-                sentence_str = sentence_str.strip('\n')
-                num_extrs = len(sentence_str.split('\n')) - 1
-                if num_extrs == 0:
-                    if curr_line_num not in no_extractions:
-                        no_extractions[curr_line_num] = []
-                    no_extractions[curr_line_num].append(sentence_str)
-                    continue
-                curr_line_num = prev_line_num + num_extrs
-                sentence_line_nums.add(
-                    curr_line_num)  # check extra empty lines, example with no extractions
-                prev_line_num = curr_line_num
-
-            # testing rescoring
-            inp_fp = model.predictions_f_allennlp
-            rescored = self.rescore(inp_fp,
-                                    model_dir=RESCORE_DIR,
-                                    batch_size=256)
-
-            all_predictions, sentence_str = [], ''
-            for line_i, line in enumerate(rescored):
-                fields = line.split('\t')
-                sentence = fields[0]
-                confidence = float(fields[2])
-
-                if line_i == 0:
-                    sentence_str = f'{sentence}\n'
-                    exts = []
-                if line_i in sentence_line_nums:
-                    exts = sorted(exts, reverse=True,
-                                  key=lambda x: float(x.split()[0][:-1]))
-                    exts = exts[:self.params_d["num_extractions"]]
-                    all_predictions.append(sentence_str + ''.join(exts))
-                    sentence_str = f'{sentence}\n'
-                    exts = []
-                if line_i in no_extractions:
-                    for no_extraction_sentence in no_extractions[line_i]:
-                        all_predictions.append(f'{no_extraction_sentence}\n')
-
-                arg1 = re.findall("<arg1>.*</arg1>", fields[1])[0].strip(
-                    '<arg1>').strip('</arg1>').strip()
-                rel = re.findall("<rel>.*</rel>", fields[1])[0].strip(
-                    '<rel>').strip('</rel>').strip()
-                arg2 = re.findall("<arg2>.*</arg2>", fields[1])[0].strip(
-                    '<arg2>').strip('</arg2>').strip()
-
-                # why must confidence be exponentiated?
-
-                extraction = SAXExtraction(arg1=arg1,
-                                           rel=rel,
-                                           arg2=arg2,
-                                           ex_sent=sentence,
-                                           confidence=math.exp(confidence))
-                extraction.arg1 = arg1
-                extraction.arg2 = arg2
-                if self.params_d["type"] == 'sentences':
-                    ext_str = extraction.get_str() + '\n'
-                else:
-                    ext_str = extraction.get_str() + '\n'
-                exts.append(ext_str)
-
-            exts = sorted(exts, reverse=True,
-                          key=lambda x: float(x.split()[0][:-1]))
-            exts = exts[:self.params_d["num_extractions"]]
-            all_predictions.append(sentence_str + ''.join(exts))
-
-            if line_i + 1 in no_extractions:
-                for no_extraction_sentence in no_extractions[line_i + 1]:
-                    all_predictions.append(f'{no_extraction_sentence}\n')
-
-            if self.pred_fname:
-                fpath = PREDICTIONS_DIR + "/" + self.pred_fname
-                print('Predictions written to ', fpath)
-                predictions_f = open(fpath, 'w')
-                predictions_f.write('\n'.join(all_predictions) + '\n')
-                predictions_f.close()
-            return

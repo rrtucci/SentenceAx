@@ -9,6 +9,7 @@ class CCTree:
         # orig_sent is a coordinated sentence, the full original sentence
         # before extractions
         self.orig_sent = orig_sent
+        self.ll_label = ll_label
         self.extra_locs = []
 
         self.ccnodes = None
@@ -47,7 +48,7 @@ class CCTree:
                 k = self.ccnodes.index(ccnode)
                 self.ccnodes.pop(k)
 
-    def set_ccnodes(self, ll_label):
+    def set_ccnodes(self):
         """
         similar to metric.get_coords()
 
@@ -61,11 +62,11 @@ class CCTree:
         """
         self.ccnodes = []
 
-        for depth in range(len(ll_label)):
+        for depth in range(len(self.ll_label)):
             ccnode = None
             start_loc = -1
             is_CP = False  # CP stands for coordinating phrase
-            predictions = ll_label[depth]
+            predictions = self.ll_label[depth]
 
             # cctag_to_int = {
             #   'NONE': 0

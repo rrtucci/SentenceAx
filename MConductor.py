@@ -167,7 +167,7 @@ class MConductor:
                               LOG_DIR + f'/{MODE}_{new_id}'))
         logger = TensorBoardLogger(
             save_dir=WEIGHTS_DIR,
-            name=TASK + '_logs',
+            name='logs',
             version=MODE + '.part')
         return logger
 
@@ -292,18 +292,14 @@ class MConductor:
                     WEIGHTS_DIR + f'/logs/resume')
 
     def test(self,
-             orig_sent_to_ex_sent=None,
-             orig_sent_to_cc_sent=None):
+             fix_d=None,
+             cc_fix_d=None):
         """
         similar to run.test()
 
 
         Parameters
         ----------
-        train
-        mapping
-        conj_word_mapping
-        final_changes_params_d
 
         Returns
         -------
@@ -315,10 +311,8 @@ class MConductor:
             self.update_params_d(checkpoint_path)
 
         self.model = Model(self.params_d, self.auto_tokenizer)
-        if orig_sent_to_ex_sent:
-            self.model.metric.mapping = orig_sent_to_ex_sent
-        if  orig_sent_to_cc_sent:
-            self.model.metric.conj_word_mapping = orig_sent_to_cc_sent
+        if fix_d:
+            self.model.metric.fix_d = fix_d
 
         logger = self.get_logger()
         test_f = open(WEIGHTS_DIR + '/logs/test.txt', 'w')
@@ -341,16 +335,14 @@ class MConductor:
                     WEIGHTS_DIR + f'/logs/test')
 
     def predict(self,
-             orig_sent_to_ex_sent=None,
-             orig_sent_to_cc_sent=None):
+                ex_fix_d=None,
+                cc_fix_d=None):
         """
         similar to run.predict()
 
         Parameters
         ----------
-        mapping
-        conj_word_mapping
-        final_changes_params_d
+
 
         Returns
         -------
@@ -362,19 +354,19 @@ class MConductor:
         #             val_dataloader, test_dataloader, all_sentences,
         #             mapping=None,
         #             conj_word_mapping=None):
-        if self.params_d["task"] == 'cc':
+        if TASK == 'cc':
             self.params_d["checkpoint_fp"] = self.params_d["cc_model_fp"]
-        if self.params_d["task"] == 'ex':
+        if TASK == 'ex':
             self.params_d["checkpoint_fp"] = self.params_d["ex_model_fp"]
 
         checkpoint_path = self.get_checkpoint_path()
         self.update_params_d(checkpoint_path)
         self.model = Model(self.params_d, self.auto_tokenizer)
 
-        if orig_sent_to_ex_sent:
-            self.model.metric.mapping = orig_sent_to_ex_sent
-        if orig_sent_to_cc_sent:
-            self.model.metric.conj_word_mapping = orig_sent_to_cc_sent
+        if TASK == "ex" and ex_fix_d:
+            self.model.metric.fix_d = ex_fix_d
+        elif TASK == "cc" and cc_fix_d:
+            self.model.metric.fix_d = cc_fix_d
 
         logger = None
         trainer = self.get_trainer(logger,
@@ -401,105 +393,93 @@ class MConductor:
         # def splitpredict(params_d, checkpoint_callback,
         #                  train_dataloader, val_dataloader, test_dataloader,
         #                  all_sentences):
-        orig_sent_to_ex_sent = {}
-        orig_sent_to_cc_sent = {}
+        ex_fix_d = {}
+        cc_fix_d = {}
         self.params_d["write_allennlp"] = True
-        if self.params_d["split_fp"] == '':
-            self.params_d["task"] = 'cc'
-            TASK = "cc"
+        if not INP_FP:
+            self.params_d["task"] = TASK = 'cc'
             self.params_d["checkpoint_fp"] = self.params_d["cc_model_fp"]
             self.params_d["model_str"] = 'bert-base-cased'
-            self.params_d["mode"] = 'predict'
-            MODE = "predict"
-            model = self.predict(
-                orig_sent_to_ex_sent=None,
-                orig_sent_to_cc_sent=None)
-            conj_predictions = model.all_cc_predictions
-            sentences_indices_list = model.all_cc_sent_locs
-            # conj_predictions = model.predictions
-            # sentences_indices = model.all_sentence_indices
-            assert len(conj_predictions) == len(sentences_indices_list)
-            all_conj_words = model.all_cc_words
+            self.params_d["mode"] = MODE = 'predict'
+            model = self.predict(ex_fix_d, cc_fix_d)
+            l_pred_cc_str = model.l_pred_cc_str
+            ll_sent_locs = model.ll_sent_locs
+            assert len(l_pred_cc_str) == len(ll_sent_locs)
+            l_cc_words = model.l_cc_words
 
-            sentences, orig_sentences = [], []
-            for i, sentences_str in enumerate(conj_predictions):
-                list_sentences = sentences_str.strip('\n').split('\n')
-                conj_words = all_conj_words[i]
-                if len(list_sentences) == 1:
-                    orig_sentences.append(
-                        list_sentences[0] + ' [unused1] [unused2] [unused3]')
-                    orig_sent_to_ex_sent[list_sentences[0]] = list_sentences[0]
-                    orig_sent_to_cc_sent[list_sentences[0]] = conj_words
-                    sentences.append(
-                        list_sentences[0] + ' [unused1] [unused2] [unused3]')
-                elif len(list_sentences) > 1:
-                    orig_sentences.append(
-                        list_sentences[0] + ' [unused1] [unused2] [unused3]')
-                    orig_sent_to_cc_sent[list_sentences[0]] = conj_words
-                    for sent in list_sentences[1:]:
-                        orig_sent_to_ex_sent[sent] = list_sentences[0]
-                        sentences.append(
-                            sent + ' [unused1] [unused2] [unused3]')
+            l_cc_sent = []
+            l_orig_sentL = []
+            for sample_id, pred_cc_str in enumerate(l_pred_cc_str):
+                l_pred_cc_sent = pred_cc_str.strip('\n').split('\n')
+                cc_sent = l_cc_sent[sample_id]
+                cc_words = l_cc_words[sample_id]
+                if len(l_pred_cc_sent) == 1:
+                    orig_cc_sent = l_pred_cc_sent[0]
+                    l_orig_sentL.append(
+                        orig_cc_sent + UNUSED_TOKENS_STR)
+                    cc_fix_d[orig_cc_sent] = cc_sent
+                    cc_fix_d[orig_cc_sent]= cc_words
+                elif len(l_pred_cc_sent) > 1:
+                    l_orig_sentL.append(
+                        l_pred_cc_sent[0] + UNUSED_TOKENS_STR)
+                    cc_fix_d[l_pred_cc_sent[0]] = cc_sent
+                    for sent in l_pred_cc_sent[1:]:
+                        ex_fix_d[sent] = l_pred_cc_sent[0]
+                        l_orig_sentL.append(
+                            sent + UNUSED_TOKENS_STR)
                 else:
                     assert False
-            sentences.append('\n')
+            l_orig_sentL.append('\n')
 
             count = 0
-            for sentence_indices in sentences_indices_list:
+            for sentence_indices in ll_sent_locs:
                 if len(sentence_indices) == 0:
                     count += 1
                 else:
                     count += len(sentence_indices)
-            assert count == len(sentences) - 1
+            assert count == len(l_orig_sentL) - 1
 
-        else: # no split_fp
+        else:
             with open(INP_FP, 'r') as f:
                 lines = f.read()
                 lines = lines.replace("\\", "")
 
-            sentences = []
-            orig_sentences = []
+            l_orig_sentL = []
+            l_orig_sentL = []
             extra_str = " [unused1] [unused2] [unused3]"
             for line in lines.split('\n\n'):
                 if len(line) > 0:
-                    list_sentences = line.strip().split('\n')
-                    if len(list_sentences) == 1:
-                        orig_sent_to_ex_sent[list_sentences[0]] = list_sentences[0]
-                        sentences.append(list_sentences[0] + extra_str)
-                        orig_sentences.append(list_sentences[0] + extra_str)
-                    elif len(list_sentences) > 1:
-                        orig_sentences.append(list_sentences[0] + extra_str)
-                        for sent in list_sentences[1:]:
-                            orig_sent_to_ex_sent[sent] = list_sentences[0]
-                            sentences.append(sent + extra_str)
+                    l_pred_cc_sent = line.strip().split('\n')
+                    if len(l_pred_cc_sent) == 1:
+                        cc_fix_d[l_pred_cc_sent[0]] = l_pred_cc_sent[0]
+                        l_orig_sentL.append(l_pred_cc_sent[0] + extra_str)
+                        l_orig_sentL.append(l_pred_cc_sent[0] + extra_str)
+                    elif len(l_pred_cc_sent) > 1:
+                        l_orig_sentL.append(l_pred_cc_sent[0] + extra_str)
+                        for sent in l_pred_cc_sent[1:]:
+                            cc_fix_d[sent] = l_pred_cc_sent[0]
+                            l_orig_sentL.append(sent + extra_str)
                     else:
                         assert False
 
-        self.params_d["task"] = 'ex'
-        TASK = "ex"
+        self.params_d["task"] = TASK = 'ex'
         self.params_d["checkpoint_fp"] = self.params_d["ex_model_fp"]
         self.params_d["model_str"] = 'bert-base-cased'
         _, _, split_test_dataset = \
-            self.dloader.get_ttt_datasets(predict_sentences=sentences)
+            self.dloader.get_ttt_datasets(predict_sentences=l_orig_sentL)
         split_test_dataloader = DataLoader(
             split_test_dataset,
             batch_size=self.params_d["batch_size"],
             # collate_fn=mdl.pad_data,
             num_workers=1)
 
-        model = self.predict(
-            None,
-            None,
-            None,
-            split_test_dataloader,
-            mapping=orig_sent_to_ex_sent,
-            conj_word_mapping=orig_sent_to_cc_sent)
+        model = self.predict(ex_fix_d, cc_fix_d)
         # all_sentences=all_sentences)
 
         if 'labels' in self.params_d["type"]:
-            label_lines = self.get_extags(model, sentences,
-                                          orig_sentences,
-                                          sentences_indices_list)
+            label_lines = self.get_extags(model, l_orig_sentL,
+                                          l_orig_sentL,
+                                          ll_sent_locs)
             f = open(PREDICTIONS_DIR + '/ex_labels.txt', 'w')
             f.write('\n'.join(label_lines))
             f.close()

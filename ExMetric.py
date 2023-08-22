@@ -31,7 +31,7 @@ class ExMetric():
 
 
     """
-    def __init__(self, hparams, mapping=None):
+    def __init__(self, hparams, fix_d=None):
         self.dev_benchmark = Benchmark('carb/data/gold/dev.tsv')
         self.test_benchmark = Benchmark('carb/data/gold/test.tsv')
         self.matchingFunc = Matcher.binary_linient_tuple_match
@@ -40,9 +40,7 @@ class ExMetric():
         self.score = {'carb_auc': 0.0, 'carb_f1': 0.0, 'carb_sum': 0.0}
         self.hparams = hparams
         self.num_extractions = self.hparams.num_extractions
-        self.mapping = None # orig_sent_to_ex_sent
-        # store this in CCMetric
-        # self.conj_word_mapping = None # orig_sent_to_cc_sent
+        self.fix_d = fix_d
 
     def __call__(self, predictions, sentences, scores, pos_words=None,
                  verb_words=None):
@@ -53,9 +51,9 @@ class ExMetric():
             words = sentence_str.split() + ['[unused1]', '[unused2]',
                                             '[unused3]']
             orig_sentence = sentence_str.split('[unused1]')[0].strip()
-            if self.mapping:
-                if self.mapping[orig_sentence] not in self.all_predictions:
-                    self.all_predictions[self.mapping[orig_sentence]] = []
+            if self.fix_d:
+                if self.fix_d[orig_sentence] not in self.all_predictions:
+                    self.all_predictions[self.fix_d[orig_sentence]] = []
             else:
                 if orig_sentence not in self.all_predictions:
                     self.all_predictions[orig_sentence] = []
@@ -71,13 +69,13 @@ class ExMetric():
                 pro_extraction = self.process_extraction(
                     extraction, words, scores[i][j].item())
                 if pro_extraction.args[0] != '' and pro_extraction.pred != '':
-                    if self.mapping:
+                    if self.fix_d:
                         if not contains_extraction(
                                 pro_extraction,
                                 self._all_predictions[
-                                    self.mapping[orig_sentence]]):
+                                    self.fix_d[orig_sentence]]):
                             self._all_predictions[
-                                self.mapping[orig_sentence]]. \
+                                self.fix_d[orig_sentence]]. \
                                 append(pro_extraction)
                     else:
                         if not contains_extraction(
@@ -86,7 +84,7 @@ class ExMetric():
                             self._all_predictions[orig_sentence]. \
                                 append(pro_extraction)
 
-        # if self.mapping or self.conj_word_mapping:
+        # if self.fix_d or self.conj_word_mapping:
         #     for sentence in self.all_predictions:
         #         dextractions = dedup_extractions(
         #             self.all_predictions[sentence], self.conj_word_mapping[sentence])

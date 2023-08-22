@@ -9,7 +9,7 @@ class CCMetric():
 
 
     """
-    def __init__(self, dump_dir=None):
+    def __init__(self, dump_dir=None, fix_d=None):
         self.report_whole = CCReport("whole")
         self.report_outer = CCReport("outer")
         self.report_inner = CCReport("inner")
@@ -25,7 +25,7 @@ class CCMetric():
             if os.path.exists(dump_dir + '/gt_it_ccnodes.pkl'):
                 os.remove(dump_dir + '/gt_it_ccnodes.pkl')
 
-        self.conj_word_mapping = None
+        self.fix_d = fix_d
 
     def __call__(self, ll_pred_ccnode, ll_truth_ccnode, meta_data=None,
                  ccnodes=None):

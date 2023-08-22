@@ -107,6 +107,12 @@ class Model(pl.LightningModule):
 
         self.constraints_str_d = dict()
 
+        self.cc_ll_spanned_words = []
+        self.cc_lll_spanned_locs = []
+        self.cc_ll_pred_str = []
+        
+        self.ex_ll_pred_str = []
+
 
     def configure_optimizers(self):
         """
@@ -742,8 +748,31 @@ class Model(pl.LightningModule):
 
         return extraction
 
+    @staticmethod
+    def load_fix_d(fix_fp):
+        """
+        similar to data_processing.load_conj_mapping()
+        Our fix_d is similar to mapping and conj_mapping.
+        This method works equally well for ExMetric.fix_d and CCMetric.fix_d
+
+        Returns
+        -------
+
+        """
+        fix_d = {}
+        with open(fix_fp, "r") as f:
+            content = f.read()
+            fixed_sent = ''
+            for sample in content.split('\n\n'):
+                for i, line in enumerate(sample.strip('\n').split('\n')):
+                    if i == 0:
+                        fixed_sent = line
+                    else:
+                        fix_d[line] = fixed_sent
+        return fix_d
+
     def _write_if_task_ex(self, output_d):
-        orig_sent_to_ex_sent = self.metric.mapping
+        fix_d = self.metric.fix_d
 
         lll_prediction = output_d["lll_prediction"]
         l_orig_sentL = output_d['meta_data']
@@ -751,16 +780,16 @@ class Model(pl.LightningModule):
         num_sents, ex_depth, max_sent_len = \
             lll_prediction.shape
         assert num_sents == len(l_orig_sentL)
-        true_ex_sent_to_l_pred_ex = {}
+        orig_sent_to_pred_l_ex = {}
         for sample_id, orig_sentL in enumerate(l_orig_sentL):
             orig_sent = orig_sentL.split('[unused1]')[0].strip()
-            if orig_sent_to_ex_sent:
-                true_ex_sent = orig_sent_to_ex_sent[orig_sent]
-                if true_ex_sent not in true_ex_sent_to_l_pred_ex:
-                    true_ex_sent_to_l_pred_ex[true_ex_sent] = []
+            if fix_d:
+                orig_sent0 = fix_d[orig_sent]
+                if orig_sent0 not in orig_sent_to_pred_l_ex:
+                    orig_sent_to_pred_l_ex[orig_sent0] = []
             else:
-                if orig_sent not in true_ex_sent_to_l_pred_ex:
-                    true_ex_sent_to_l_pred_ex[orig_sent] = []
+                if orig_sent not in orig_sent_to_pred_l_ex:
+                    orig_sent_to_pred_l_ex[orig_sent] = []
             for depth in range(ex_depth):
                 num_words = len(get_words(orig_sentL))
                 ex_labels = lll_prediction[sample_id][depth][:num_words]
@@ -769,27 +798,27 @@ class Model(pl.LightningModule):
                 ex = self._get_extraction(
                     ex_labels, orig_sentL, ll_score[sample_id][depth].item())
                 if ex.arg1_pair[0] and ex.rel_pair[0]:
-                    if orig_sent_to_ex_sent:
-                        true_ex_sent = orig_sent_to_ex_sent[orig_sent]
+                    if fix_d:
+                        orig_sent0 = fix_d[orig_sent]
                         if ex.is_not_in(
-                                true_ex_sent_to_l_pred_ex[true_ex_sent]):
-                            true_ex_sent_to_l_pred_ex[true_ex_sent]. \
+                                orig_sent_to_pred_l_ex[orig_sent0]):
+                            orig_sent_to_pred_l_ex[orig_sent0]. \
                                 append(ex)
-                    else:  # no orig_sent_to_ex_sent
+                    else:  # no fix_d
                         if ex.is_not_in(
-                                true_ex_sent_to_l_pred_ex[orig_sent]):
-                            true_ex_sent_to_l_pred_ex[orig_sent].append(ex)
+                                orig_sent_to_pred_l_ex[orig_sent]):
+                            orig_sent_to_pred_l_ex[orig_sent].append(ex)
         l_pred_str = []
         l_pred_allen_str = []
-        for sample_id, true_ex_sent in enumerate(true_ex_sent_to_l_pred_ex):
-            l_pred_ex = true_ex_sent_to_l_pred_ex[true_ex_sent]
+        for sample_id, pred_ex_sent in enumerate(orig_sent_to_pred_l_ex):
+            pred_l_ex = orig_sent_to_pred_l_ex[pred_ex_sent]
             orig_sentL = l_orig_sentL[sample_id]
-            str0 = f'{true_ex_sent}\n'
-            for pred_ex in l_pred_ex:
+            str0 = f'{pred_ex_sent}\n'
+            for pred_ex in pred_l_ex:
                 str0 += pred_ex.get_str() + '\n'
             l_pred_str.append(str0.strip("/n"))
             allen_str = ""
-            for pred_ex in l_pred_ex:
+            for pred_ex in pred_l_ex:
                 arg1 = pred_ex.arg1_pair[0]
                 rel = pred_ex.rel_pair[0]
                 arg2 = pred_ex.arg2_pair[0]
@@ -802,6 +831,7 @@ class Model(pl.LightningModule):
         return l_pred_str, l_pred_allen_str
 
     def _write_if_task_cc(self, output_d):
+        fix_d = self.metric.fix_d
 
         sample_id = 0
         correct = True
@@ -812,27 +842,35 @@ class Model(pl.LightningModule):
         l_orig_sentL = output_d['meta_data']
         total_depth = lll_prediction.shape[1]
         l_pred_str = []
+        l_spanned_words = []
+        ll_spanned_locs = []
         for id in range(len(l_orig_sentL)):
             sample_id += 1
             orig_sentL = l_orig_sentL[id]
             ll_label = []
-            l_true_sent = []
+            l_orig_sent = []
             for depth in range(total_depth):
                 num_words = len(get_words(orig_sentL))
                 l_label = lll_prediction[id][depth][:num_words].tolist()
                 ll_label.append(l_label)
             orig_sent = orig_sentL.split("[used1]")[0]
             tree = CCTree(orig_sent, ll_label)
-            tree.set_ccnodes(ll_label)
+            tree.set_ccnodes()
             pred_ccnodes = tree.ccnodes
 
             pred_str = orig_sentL + '\n'
             ex_sents, spanned_words, l_spanned_locs = tree.get_ex_sents()
+            l_spanned_words.append(spanned_words)
+            ll_spanned_locs.append(l_spanned_locs)
             total_num_ex_sents1 += len(ex_sents)
             total_num_ex_sents2 += 1 if len(ex_sents) > 0 else 0
             pred_str += '\n'.join(ex_sents) + '\n'
 
             l_pred_str.append(pred_str)
+        self.cc_ll_spanned_words+= l_spanned_words
+        self.cc_ll_pred_str += l_pred_str
+        self.cc_lll_spanned_locs += ll_spanned_locs
+
         return l_pred_str
 
     def _write_output(self, output_d, batch_id, task):

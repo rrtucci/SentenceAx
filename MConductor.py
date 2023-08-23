@@ -253,11 +253,11 @@ class MConductor:
         """
         if self.has_cuda:
             loaded_params_d = torch.load(
-                self.checkpoint_path)['params_d']
+                self.checkpoint_path)["params_d"]
         else:
             mloc = torch.device('cpu')
             loaded_params_d = torch.load(
-                self.checkpoint_path, map_location=mloc)['params_d']
+                self.checkpoint_path, map_location=mloc)["params_d"]
 
         self.params_d = merge_dicts(loaded_params_d,
                                     default_d=self.params_d)
@@ -588,7 +588,6 @@ class MConductor:
             self.splitpredict_do_rescoring()
 
     def write_extags_file_from_predictions(self,
-                                           l_output_d,
                                            l_sentL,  # original sentences
                                            ll_sent_loc):
         """
@@ -613,6 +612,7 @@ class MConductor:
         -------
 
         """
+        l_output_d[sample_id]["meta_data"] = ll_orig_sent[sample_id][ex_id]
 
         lines = []
         sample_id = 0
@@ -628,11 +628,10 @@ class MConductor:
                 '\n' + l_sentL[i].split('[unused1]')[0].strip())
             for j in range(0, len(ll_sent_loc[i])):
                 assert len(ll_sent_loc[i][j]) == len(
-                    get_words(l_output_d[sample_id]['meta_data'][ex_id]))
-                sentL = l_output_d[sample_id]['meta_data'][
-                            ex_id].strip() + UNUSED_TOKENS_STR
+                    get_words(l_output_d[sample_id]["meta_data"][ex_id]))
+                sentL = l_output_d[sample_id]["meta_data"][ex_id].strip() + UNUSED_TOKENS_STR
                 assert sentL == l_sentL[i]
-                ll_pred_label = l_output_d[sample_id]['predictions'][
+                ll_pred_label = l_output_d[sample_id]["predictions"][
                     ex_id]
 
                 for pred_labels in ll_pred_label:
@@ -658,7 +657,7 @@ class MConductor:
 
                 word_id += 1
                 ex_id += 1
-                if ex_id == len(l_output_d[sample_id]['meta_data']):
+                if ex_id == len(l_output_d[sample_id]["meta_data"]):
                     ex_id = 0
                     sample_id += 1
 

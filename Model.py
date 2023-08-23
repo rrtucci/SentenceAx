@@ -347,7 +347,7 @@ class Model(pl.LightningModule):
             ll_score = torch.cat(ll_score, dim=1)
 
             output_d["lll_prediction"] = l_predictions
-            output_d['ll_score'] = ll_score
+            output_d["ll_score"] = ll_score
 
             if constraints_str and \
                     'predict' not in self.params_d["mode"] and \
@@ -382,7 +382,7 @@ class Model(pl.LightningModule):
                         self.constraints_str_d[constraint] = []
                     self.constraints_str_d[constraint].append(const_loss)
 
-        output_d['loss'] = loss
+        output_d["loss"] = loss
         return output_d
 
     def _constrained_loss(self, l_word_scores, batch_d,
@@ -470,8 +470,8 @@ class Model(pl.LightningModule):
                                 batch_id=batch_id,
                                 constraints_str=constraints_str,
                                 cweights_str=cweights_str)
-        tqdm_d = {"train_loss": output_d['loss']}
-        output0_d = OrderedDict({"loss": output_d['loss'], "log": tqdm_d})
+        tqdm_d = {"train_loss": output_d["loss"]}
+        output0_d = OrderedDict({"loss": output_d["loss"], "log": tqdm_d})
 
         return output0_d
 
@@ -495,7 +495,7 @@ class Model(pl.LightningModule):
             cweights_str=self.params_d["cweights_str"])
 
         output0_d = {"l_predictions": output_d["lll_prediction"],
-                     "ll_score": output_d['ll_score'],
+                     "ll_score": output_d["ll_score"],
                      "ground_truth": batch_d["lll_label"],
                      "meta_data": batch_d["meta_data"]}
         output0_d = OrderedDict(output0_d)
@@ -546,47 +546,47 @@ class Model(pl.LightningModule):
         if self.params_d["mode"] == 'test':
             for output_index, output_d in enumerate(l_output_d):
                 output_d["lll_prediction"] = output_d["lll_prediction"].cpu()
-                output_d['ll_score'] = output_d['ll_score'].cpu()
-                output_d['ll_score'] = \
-                    (output_d['ll_score'] * 100).round() / 100
-                output_d['ground_truth'] = output_d['ground_truth'].cpu()
-                output_d['meta_data'] = output_d['meta_data'].cpu()
+                output_d["ll_score"] = output_d["ll_score"].cpu()
+                output_d["ll_score"] = \
+                    (output_d["ll_score"] * 100).round() / 100
+                output_d["ground_truth"] = output_d["ground_truth"].cpu()
+                output_d["meta_data"] = output_d["meta_data"].cpu()
         if self.params_d["task"] == "cc":
             if 'predict' in self.params_d["mode"]:
                 metrics_d = {'P_exact': 0, 'R_exact': 0, 'F1_exact': 0}
             else:
                 for output_d in l_output_d:
-                    if type(output_d['meta_data'][0]) != str:
-                        output_d['meta_data'] = [self.auto_tokenizer.decode[m]
+                    if type(output_d["meta_data"][0]) != str:
+                        output_d["meta_data"] = [self.auto_tokenizer.decode[m]
                                                  for m in
-                                                 output_d['meta_data']]
+                                                 output_d["meta_data"]]
                     self.metric(output_d["lll_prediction"],
-                                output_d['ground_truth'],
-                                meta_data=output_d['meta_data'])
+                                output_d["ground_truth"],
+                                meta_data=output_d["meta_data"])
                 metrics_d = self.metric.get_metric_values(reset=True, mode=mode)
 
-            val_acc = metrics_d['F1_exact']
+            val_acc = metrics_d["F1_exact"]
             eval_results_d = {"eval_f1": val_acc,
-                              "eval_p": metrics_d['P_exact'],
-                              "eval_r": metrics_d['R_exact']}
+                              "eval_p": metrics_d["P_exact"],
+                              "eval_r": metrics_d["R_exact"]}
 
         elif self.params_d["task"] == "ex":
             if 'predict' in self.params_d["mode"]:
                 metrics_d = {'carb_f1': 0, 'carb_auc': 0, 'carb_lastf1': 0}
             else:
                 for output_d in l_output_d:
-                    if type(output_d['meta_data'][0]) != str:
-                        output_d['meta_data'] = [self.auto_tokenizer.decode[m]
+                    if type(output_d["meta_data"][0]) != str:
+                        output_d["meta_data"] = [self.auto_tokenizer.decode[m]
                                                  for m in
-                                                 output_d['meta_data']]
+                                                 output_d["meta_data"]]
                     self.metric(output_d["lll_prediction"],
-                                output_d['meta_data'],
-                                output_d['ll_score'])
+                                output_d["meta_data"],
+                                output_d["ll_score"])
                 metrics_d = self.metric.get_metric_values(reset=True, mode=mode)
 
-            eval_results_d = {"eval_f1": metrics_d['carb_f1'],
-                              "eval_auc": metrics_d['carb_auc'],
-                              "eval_lastf1": metrics_d['carb_lastf1']}
+            eval_results_d = {"eval_f1": metrics_d["carb_f1"],
+                              "eval_auc": metrics_d["carb_auc"],
+                              "eval_lastf1": metrics_d["carb_lastf1"]}
 
         print('\nResults: ' + str(eval_results_d))
         # For computing the constraint violations
@@ -615,7 +615,7 @@ class Model(pl.LightningModule):
         result_d = {}
         if eval_results_d :
             result_d = {"log": eval_results_d,
-                        "eval_acc": eval_results_d['eval_f1']}
+                        "eval_acc": eval_results_d["eval_f1"]}
 
         return result_d
 
@@ -636,7 +636,7 @@ class Model(pl.LightningModule):
         # self.l_output_d = l_output_d # never used
         results_d = {"log": eval_results_d,
                      "progress_bar": eval_results_d,
-                     "test_acc": eval_results_d['eval_f1']}
+                     "test_acc": eval_results_d["eval_f1"]}
         # self.results = d_eval_results # never used!
         if self.params_d["write_async"]:
             while not sem.acquire(blocking=True):
@@ -745,8 +745,8 @@ class Model(pl.LightningModule):
         fix_d = self.metric.fix_d
 
         lll_prediction = output_d["lll_prediction"]
-        l_orig_sentL = output_d['meta_data']
-        ll_score = output_d['ll_score']
+        l_orig_sentL = output_d["meta_data"]
+        ll_score = output_d["ll_score"]
         num_sents, ex_depth, max_sent_len = \
             lll_prediction.shape
         assert num_sents == len(l_orig_sentL)
@@ -808,8 +808,8 @@ class Model(pl.LightningModule):
         total_num_ex_sents1 = 0
         total_num_ex_sents2 = 0
         lll_prediction = output_d["lll_prediction"]
-        # thruth = output_d['ground_truth']
-        l_orig_sentL = output_d['meta_data']
+        # thruth = output_d["ground_truth"]
+        l_orig_sentL = output_d["meta_data"]
         total_depth = lll_prediction.shape[1]
         l_pred_str = []
         l_spanned_words = []
@@ -864,12 +864,12 @@ class Model(pl.LightningModule):
                 pass
             # print('Got semaphore')
         output_d["lll_prediction"] = output_d["lll_prediction"].cpu()
-        output_d['ll_score'] = output_d['ll_score'].cpu()
-        output_d['ground_truth'] = output_d['ground_truth'].cpu()
-        output_d['meta_data'] = output_d['meta_data'].cpu()
-        # note, right hand side depends on output_d['meta_data']
-        output_d['meta_data'] = [self.auto_tokenizer.decode[m] for m
-                                 in output_d['meta_data']]
+        output_d["ll_score"] = output_d["ll_score"].cpu()
+        output_d["ground_truth"] = output_d["ground_truth"].cpu()
+        output_d["meta_data"] = output_d["meta_data"].cpu()
+        # note, right hand side depends on output_d["meta_data"]
+        output_d["meta_data"] = [self.auto_tokenizer.decode[m] for m
+                                 in output_d["meta_data"]]
         if task == "ex":
             l_pred_str, l_pred_allen_str = self._write_if_task_ex(output_d)
         elif task == "cc":

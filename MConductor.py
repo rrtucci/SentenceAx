@@ -11,6 +11,7 @@ from Model import *
 from DLoader import *
 from sax_utils import *
 from sax_globals import *
+from ExTagsFileWriter import *
 
 
 class MConductor:
@@ -98,17 +99,20 @@ class MConductor:
         self.sent_pad_id = self.encode(self.auto_tokenizer.pad_token)
 
         self.dloader = DLoader(self.auto_tokenizer,
+                               self.sent_pad_id,
                                self.train_fp,
                                self.dev_fp,
                                self.test_fp)
 
         self.constraints_str_d = dict()
 
-        self.cc_ll_spanned_words = []
-        self.cc_lll_spanned_locs = []
-        self.cc_ll_pred_str = []
+        self.cc_l_spanned_words = []
+        self.cc_ll_spanned_loc = []
+        self.cc_l_pred_str = []
 
-        self.ex_ll_pred_str = []
+        self.l_pred_sentL = None
+
+        self.ex_l_pred_str = []
 
         self.model = None
         self.ex_fit_d = None
@@ -346,7 +350,7 @@ class MConductor:
         shutil.move(WEIGHTS_DIR + f'/logs/test.part',
                     WEIGHTS_DIR + f'/logs/test')
 
-    def predict(self):
+    def predict(self, pred_test_dloader=None):
         """
         similar to run.predict()
 
@@ -386,75 +390,74 @@ class MConductor:
         # self.model.all_sentences = all_sentences
         trainer.test(
             self.model,
-            test_dataloaders=self.dloader.get_ttt_dataloaders("test"))
+            test_dataloaders=self.dloader.get_ttt_dataloaders("test") if\
+            not pred_test_dloader else pred_test_dloader)
         end_time = time()
         print(f'Total Time taken = {(end_time - start_time) / 60:2f} minutes')
 
     def splitpredict_do_cc_first(self):
         self.ex_fix_d = {}
         self.cc_fix_d = {}
-        if not INP_FP:
+        if not PRED_INP_FP:
             self.params_d["task"] = TASK = 'cc'
             self.params_d["checkpoint_fp"] = self.params_d["cc_model_fp"]
             self.params_d["model_str"] = 'bert-base-cased'
             self.params_d["mode"] = MODE = 'predict'
             self.predict()
-            ll_pred_str = self.cc_ll_pred_str
-            lll_spanned_locs = self.cc_lll_spanned_locs
-            assert len(ll_pred_str) == len(lll_spanned_locs)
-            ll_spanned_words = self.cc_ll_spanned_words
+            l_pred_str = self.cc_l_pred_str
+            ll_spanned_loc = self.cc_ll_spanned_loc
+            assert len(l_pred_str) == len(ll_spanned_loc)
+            l_spanned_words = self.cc_l_spanned_words
 
             l_sent = []
             l_orig_sentL = []
-            for sample_id, pred_str in enumerate(ll_pred_str):
+            for sample_id, pred_str in enumerate(l_pred_str):
                 l_pred_sent = pred_str.strip('\n').split('\n')
-                sent = l_sent[sample_id]
-                words = ll_spanned_words[sample_id]
+                words = l_spanned_words[sample_id]
                 if len(l_pred_sent) == 1:
                     orig_sent = l_pred_sent[0]
-                    l_orig_sentL.append(
-                        orig_sent + UNUSED_TOKENS_STR)
-                    self.cc_fix_d[orig_sent] = sent
+                    l_orig_sentL.append(orig_sent + UNUSED_TOKENS_STR)
+                    self.cc_fix_d[orig_sent] = l_pred_sent[0]
                     self.cc_fix_d[orig_sent] = words
                 elif len(l_pred_sent) > 1:
                     l_orig_sentL.append(
                         l_pred_sent[0] + UNUSED_TOKENS_STR)
-                    self.cc_fix_d[l_pred_sent[0]] = sent
+                    self.cc_fix_d[l_pred_sent[0]] = words
                     for sent in l_pred_sent[1:]:
                         self.ex_fix_d[sent] = l_pred_sent[0]
-                        l_orig_sentL.append(
-                            sent + UNUSED_TOKENS_STR)
+                        l_orig_sentL.append(sent + UNUSED_TOKENS_STR)
                 else:
                     assert False
             l_orig_sentL.append('\n')
 
-            count = 0
-            for sentence_indices in lll_spanned_locs:
-                if len(sentence_indices) == 0:
-                    count += 1
-                else:
-                    count += len(sentence_indices)
-            assert count == len(l_orig_sentL) - 1
+            # count = 0
+            # for l_spanned_loc in ll_spanned_loc:
+            #     if len(l_spanned_loc) == 0:
+            #         count += 1
+            #     else:
+            #         count += len(l_spanned_loc)
+            # assert count == len(l_orig_sentL) - 1
 
         else:
-            with open(INP_FP, 'r') as f:
+            with open(PRED_INP_FP, 'r') as f:
                 lines = f.read()
                 lines = lines.replace("\\", "")
 
-            l_orig_sentL = []
+            self.l_pred_sentL = []
             l_orig_sentL = []
             for line in lines.split('\n\n'):
                 if len(line) > 0:
                     l_pred_sent = line.strip().split('\n')
                     if len(l_pred_sent) == 1:
-                        self.cc_fix_d[l_pred_sent[0]] = l_pred_sent[0]
-                        l_orig_sentL.append(l_pred_sent[0] + UNUSED_TOKENS_STR)
+                        self.ex_fix_d[l_pred_sent[0]] = l_pred_sent[0]
+                        self.l_pred_sentL.append(l_pred_sent[0] +
+                                             UNUSED_TOKENS_STR)
                         l_orig_sentL.append(l_pred_sent[0] + UNUSED_TOKENS_STR)
                     elif len(l_pred_sent) > 1:
                         l_orig_sentL.append(l_pred_sent[0] + UNUSED_TOKENS_STR)
                         for sent in l_pred_sent[1:]:
-                            self.cc_fix_d[sent] = l_pred_sent[0]
-                            l_orig_sentL.append(sent + UNUSED_TOKENS_STR)
+                            self.ex_fix_d[sent] = l_pred_sent[0]
+                            self.l_pred_sentL.append(sent + UNUSED_TOKENS_STR)
                     else:
                         assert False
                         
@@ -463,25 +466,24 @@ class MConductor:
         self.params_d["task"] = TASK = 'ex'
         self.params_d["checkpoint_fp"] = self.params_d["ex_model_fp"]
         self.params_d["model_str"] = 'bert-base-cased'
-        _, _, split_test_dataset = \
-            self.dloader.get_ttt_datasets(
-                predict_sentences=l_orig_sentL),
-            split_test_dataloader = DataLoader(split_test_dataset),
-            batch_size=self.params_d["batch_size"],
-            # collate_fn=mdl.pad_data,
-            num_workers=1)
+        train_dataset, dev_dataset, split_test_dataset = \
+            self.dloader.get_ttt_datasets(self.l_pred_sentL)
+        pred_test_dataloader = self.dloader.get_ttt_dataloaders(
+            "test", split_test_dataset)
 
-        self.predict()
-        # all_sentences=all_sentences)
+        self.predict(pred_test_dloader=pred_test_dataloader)
 
         if 'labels' in self.params_d["type"]:
             label_lines = self.get_extags(self.model,
                                           l_orig_sentL,
                                           l_orig_sentL,
-                                          lll_spanned_locs)
+                                          ll_spanned_loc)
             f = open(PREDICTIONS_DIR + '/ex_labels.txt', 'w')
             f.write('\n'.join(label_lines))
             f.close()
+            ExTagsFileWriter.write_extags_file_from_predictions(
+
+            )
 
                         
     def splitpredict_do_rescoring(self):

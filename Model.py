@@ -526,7 +526,7 @@ class Model(pl.LightningModule):
         return self.validation_step(batch_d, batch_id)
 
     def _eval_metrics_at_epoch_end(self,
-                                   ld_output,
+                                   l_output_d,
                                    mode):
         """
         similar to model.evaluation_end()
@@ -535,7 +535,7 @@ class Model(pl.LightningModule):
 
         Parameters
         ----------
-        ld_output
+        l_output_d
         mode
 
         Returns
@@ -544,7 +544,7 @@ class Model(pl.LightningModule):
         """
         eval_results_d = None
         if self.params_d["mode"] == 'test':
-            for output_index, output_d in enumerate(ld_output):
+            for output_index, output_d in enumerate(l_output_d):
                 output_d["lll_prediction"] = output_d["lll_prediction"].cpu()
                 output_d['ll_score'] = output_d['ll_score'].cpu()
                 output_d['ll_score'] = \
@@ -555,7 +555,7 @@ class Model(pl.LightningModule):
             if 'predict' in self.params_d["mode"]:
                 metrics_d = {'P_exact': 0, 'R_exact': 0, 'F1_exact': 0}
             else:
-                for output_d in ld_output:
+                for output_d in l_output_d:
                     if type(output_d['meta_data'][0]) != str:
                         output_d['meta_data'] = [self.auto_tokenizer.decode[m]
                                                  for m in
@@ -574,7 +574,7 @@ class Model(pl.LightningModule):
             if 'predict' in self.params_d["mode"]:
                 metrics_d = {'carb_f1': 0, 'carb_auc': 0, 'carb_lastf1': 0}
             else:
-                for output_d in ld_output:
+                for output_d in l_output_d:
                     if type(output_d['meta_data'][0]) != str:
                         output_d['meta_data'] = [self.auto_tokenizer.decode[m]
                                                  for m in
@@ -598,20 +598,20 @@ class Model(pl.LightningModule):
         #     self.constraints_str_d = dict()
         return eval_results_d
 
-    def validation_epoch_end(self, ld_output):
+    def validation_epoch_end(self, l_output_d):
         """
         inherited method
 
         Parameters
         ----------
-        ld_output
+        l_output_d
 
         Returns
         -------
 
         """
         eval_results_d = \
-            self._eval_metrics_at_epoch_end(ld_output, 'dev')
+            self._eval_metrics_at_epoch_end(l_output_d, 'dev')
         result_d = {}
         if eval_results_d :
             result_d = {"log": eval_results_d,
@@ -619,21 +619,21 @@ class Model(pl.LightningModule):
 
         return result_d
 
-    def test_epoch_end(self, ld_output):
+    def test_epoch_end(self, l_output_d):
         """
         inherited method
 
         Parameters
         ----------
-        ld_output
+        l_output_d
 
         Returns
         -------
 
         """
         eval_results_d = \
-            self._eval_metrics_at_epoch_end(ld_output, 'test')
-        # self.ld_output = ld_output # never used
+            self._eval_metrics_at_epoch_end(l_output_d, 'test')
+        # self.l_output_d = l_output_d # never used
         results_d = {"log": eval_results_d,
                      "progress_bar": eval_results_d,
                      "test_acc": eval_results_d['eval_f1']}
@@ -813,7 +813,7 @@ class Model(pl.LightningModule):
         total_depth = lll_prediction.shape[1]
         l_pred_str = []
         l_spanned_words = []
-        ll_spanned_locs = []
+        ll_spanned_loc = []
         for id in range(len(l_orig_sentL)):
             sample_id += 1
             orig_sentL = l_orig_sentL[id]
@@ -831,15 +831,16 @@ class Model(pl.LightningModule):
             pred_str = orig_sentL + '\n'
             ex_sents, spanned_words, l_spanned_locs = tree.get_ex_sents()
             l_spanned_words.append(spanned_words)
-            ll_spanned_locs.append(l_spanned_locs)
+            ll_spanned_loc.append(l_spanned_locs)
             total_num_ex_sents1 += len(ex_sents)
             total_num_ex_sents2 += 1 if len(ex_sents) > 0 else 0
             pred_str += '\n'.join(ex_sents) + '\n'
 
             l_pred_str.append(pred_str)
-        self.cc_ll_spanned_words+= l_spanned_words
-        self.cc_ll_pred_str += l_pred_str
-        self.cc_lll_spanned_locs += ll_spanned_locs
+        # list1 + list2 is the same as list1.extend(list2)
+        self.cc_l_spanned_words+= l_spanned_words
+        self.cc_l_pred_str += l_pred_str
+        self.cc_ll_spanned_loc += ll_spanned_loc
 
         return l_pred_str
 

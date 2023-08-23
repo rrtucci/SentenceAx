@@ -46,7 +46,7 @@ class DPadder:
             padded_ll_word[i] = ll_word[i].copy + [pad_id1] * max_l_word_len
         return padded_ll_word
 
-    # def build_vocab(self, example_ds):
+    # def build_vocab(self, l_sample_d):
     #     """
     #
     #     A vocabulary (vocab) is a function that turns
@@ -58,12 +58,12 @@ class DPadder:
     #
     #     # tokenizer = get_tokenizer("basic_english")
     #     tokenizer = self.auto_tokenizer
-    #     def yield_tokens(example_ds):
-    #         for example_d in example_ds:
+    #     def yield_tokens(l_sample_d):
+    #         for example_d in l_sample_d:
     #             orig_sent = example_d["orig_sent"]
     #             yield tokenizer(orig_sent)
     #
-    #     vocab = build_vocab_from_iterator(yield_tokens(example_ds),
+    #     vocab = build_vocab_from_iterator(yield_tokens(l_sample_d),
     #                                       specials=["<unk>"])
     #     vocab.set_default_index(vocab["<unk>"])
     #
@@ -78,7 +78,7 @@ class DPadder:
 
         Parameters
         ----------
-        ld_example
+        l_sample_d
 
         Returns
         -------
@@ -86,7 +86,7 @@ class DPadder:
         """
 
 
-        # data_in = ld_example
+        # data_in = l_sample_d
         # example_d = {
         #     'sentL_ids': sentL_ids,
         #     'll_label': labels_for_each_ex[:MAX_EXTRACTION_LENGTH],
@@ -136,6 +136,6 @@ class DPadder:
                 padded_l = DPadder.get_padded_list(l, pad_id=0)
                 # padded_data[names[i]] = torch.tensor(padded_l)
 
-        # input data=ld_example was a list of dictionaries
+        # input data=l_sample_d was a list of dictionaries
         # padded_data is a dictionary
         return padded_data

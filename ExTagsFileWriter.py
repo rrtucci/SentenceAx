@@ -19,7 +19,7 @@ class ExTagsFileWriter:
         Parameters
         ----------
         allen_fp
-        ld_output
+        l_output_d
         source
         """
         self.allen_fp = allen_fp
@@ -28,7 +28,7 @@ class ExTagsFileWriter:
         self.num_sents = len(self.sent_to_extractions)
 
     @staticmethod
-    def write_extags_file_from_predictions(ld_output,
+    def write_extags_file_from_predictions(l_output_d,
                                            l_sentL, # original sentences
                                            ll_sent_loc):
         """
@@ -68,11 +68,11 @@ class ExTagsFileWriter:
                 '\n' + l_sentL[i].split('[unused1]')[0].strip())
             for j in range(0, len(ll_sent_loc[i])):
                 assert len(ll_sent_loc[i][j]) == len(
-                    get_words(ld_output[sample_id]['meta_data'][ex_id]))
-                sentL = ld_output[sample_id]['meta_data'][
+                    get_words(l_output_d[sample_id]['meta_data'][ex_id]))
+                sentL = l_output_d[sample_id]['meta_data'][
                                ex_id].strip() + UNUSED_TOKENS_STR
                 assert sentL == l_sentL[i]
-                ll_pred_label = ld_output[sample_id]['predictions'][
+                ll_pred_label = l_output_d[sample_id]['predictions'][
                     ex_id]
 
                 for pred_labels in ll_pred_label:
@@ -98,7 +98,7 @@ class ExTagsFileWriter:
 
                 word_id += 1
                 ex_id += 1
-                if ex_id == len(ld_output[sample_id]['meta_data']):
+                if ex_id == len(l_output_d[sample_id]['meta_data']):
                     ex_id = 0
                     sample_id += 1
 

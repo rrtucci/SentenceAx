@@ -146,8 +146,8 @@ class DLoader:
         each original sentence and its tag sequences constitute a new example
         """
 
-        # example_ds = []  # list[example_d]
-        ld_sample = []  # list[example_d]
+        # l_sample_d = []  # list[example_d]
+        l_sample_d = []  # list[example_d]
         labels_for_each_ex = []  # a list of a list of labels, list[list[in]]
         orig_sents = []
 
@@ -197,7 +197,7 @@ class DLoader:
                     'orig_sent': orig_sent
                 }
                 if len(sentL.split()) <= 100:
-                    ld_sample.append(sample_d)
+                    l_sample_d.append(sample_d)
                 labels_for_each_ex = []
                 prev_line = line
 
@@ -207,13 +207,13 @@ class DLoader:
         # so far, we haven't assumed any spacy derived data nanalysis
         # if spacy is allowed, the example_d can carry more info.
         if self.spacy_model:
-            sents = [sample_d['orig_sent'] for sample_d in ld_sample]
+            sents = [sample_d['orig_sent'] for sample_d in l_sample_d]
             for sent_index, spacy_tokens in enumerate(
                     self.spacy_model.pipe(sents, batch_size=10000)):
                 spacy_tokens = DLoader.remerge_sent(spacy_tokens)
                 assert len(sents[sent_index].split()) == len(
                     spacy_tokens)
-                sample_d = ld_sample[sent_index]
+                sample_d = l_sample_d[sent_index]
 
                 pos_mask, pos_indices, pos_words = \
                     DLoader.pos_mask(spacy_tokens)
@@ -241,20 +241,20 @@ class DLoader:
         # }
 
         # use of tt.data.Example is deprecated
-        # for example_d in ld_example:
+        # for example_d in l_sample_d:
         #     example = tt.data.Example.fromdict(example_d, fields)
         #     examples.append(example)
         # return examples, orig_sents
 
-        return ld_sample, orig_sents
+        return l_sample_d, orig_sents
 
-    def get_ttt_datasets(self, predict_sentences=None):
+    def get_ttt_datasets(self, pred_inp_sents=None):
         """
         similar to data.process_data()
 
         Parameters
         ----------
-        predict_sentences
+        pred_inp_sents
 
         Returns
         -------
@@ -274,16 +274,16 @@ class DLoader:
         orig_sents = []
         if 'predict' in self.params_d["mode"]:
             # no caching used in predict mode
-            if not predict_sentences:  # predict
+            if not pred_inp_sents:  # predict
                 # if self.params_d["inp_fp"] :
                 #     predict_fp = self.params_d["inp_fp"]
                 # else:
                 #     predict_fp = self.params_d["predict_fp"]
-                # will set predict_fp = INP_FP
-                with open(INP_FP, "r") as f:
+                # will set predict_fp = PRED_INP_FP
+                with open(PRED_INP_FP, "r") as f:
                     predict_lines = f.readlines()
 
-                predict_sentences = []
+                pred_inp_sents = []
                 for line in predict_lines:
                     # Normalize the quotes - similar to that in training data
                     line = line.replace('’', '\'')
@@ -294,20 +294,20 @@ class DLoader:
 
                     # Why use both nltk and spacy to word tokenize.
                     # get_ttt_datasets() uses nltk.word_tokenize()
-                    # get_examples() uses spacy_model.pipe(sents...)
+                    # get_samples() uses spacy_model.pipe(sents...)
 
                     words = ' '.join(nltk.word_tokenize(line))
-                    predict_sentences.append(
+                    pred_inp_sents.append(
                         words + UNUSED_TOKENS_STR)
-                    predict_sentences.append('\n')
+                    pred_inp_sents.append('\n')
 
             # openie 6 is wrong here. Uses wrong arguments for
-            # process_data() which is get_examples() for us.
-            # get_examples()
+            # process_data() which is get_samples() for us.
+            # get_samples()
             # returns: examples, orig_sents
             predict_sample_ds, orig_sents = \
-                self.get_sample_ds(INP_FP)
-            #vocab = build_vocab(predict_example_ds)
+                self.get_sample_ds(PRED_INP_FP)
+            #vocab = build_vocab(predict_l_sample_d)
 
             predict_dataset = DSet(predict_sample_ds,
                                    self.spacy_model,
@@ -342,7 +342,7 @@ class DLoader:
                 test_sample_ds = pickle.load(open(cached_test_fp, 'rb'))
 
             # vocab = self.build_vocab(
-            #     train_example_ds + dev_example_ds + test_example_ds)
+            #     train_l_sample_d + dev_l_sample_d + test_l_sample_d)
 
             train_dataset = DSet(train_sample_ds,
                                    self.spacy_model,
@@ -357,13 +357,13 @@ class DLoader:
 
         return train_dataset, dev_dataset, test_dataset # , vocab, orig_sents
 
-    def get_ttt_dataloaders(self, type, predict_sentences=None):
+    def get_ttt_dataloaders(self, type, pred_inp_sents=None):
         """
 
         Parameters
         ----------
         type
-        predict_sentences
+        pred_inp_sents
 
         Returns
         -------
@@ -371,7 +371,7 @@ class DLoader:
         """
 
         train_dataset, val_dataset, test_dataset = \
-            self.get_ttt_datasets(predict_sentences)
+            self.get_ttt_datasets(pred_inp_sents)
         # this method calls DataLoader
 
         if type == "train":

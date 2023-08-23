@@ -11,7 +11,7 @@ from Model import *
 from DLoader import *
 from sax_utils import *
 from sax_globals import *
-from ExTagsFileWriter import *
+from tag_file_writers import *
 
 
 class MConductor:
@@ -473,17 +473,13 @@ class MConductor:
 
         self.predict(pred_test_dloader=pred_test_dataloader)
 
-        if 'labels' in self.params_d["type"]:
-            label_lines = self.get_extags(self.model,
-                                          l_orig_sentL,
-                                          l_orig_sentL,
-                                          ll_spanned_loc)
-            f = open(PREDICTIONS_DIR + '/ex_labels.txt', 'w')
+        label_lines = self.get_extags(self.model,
+                                      l_orig_sentL,
+                                      l_orig_sentL,
+                                      ll_spanned_loc)
+        with open(PREDICTIONS_DIR + '/ex_labels.txt', 'w') as f:
             f.write('\n'.join(label_lines))
-            f.close()
-            ExTagsFileWriter.write_extags_file_from_predictions(
-
-            )
+        MConductor.write_extags_file_from_predictions()
 
                         
     def splitpredict_do_rescoring(self):
@@ -590,5 +586,84 @@ class MConductor:
         self.splitpredict_do_ex_second()
         if self.params_d["rescoring"]:
             self.splitpredict_do_rescoring()
-            
 
+    def write_extags_file_from_predictions(self,
+                                           l_output_d,
+                                           l_sentL,  # original sentences
+                                           ll_sent_loc):
+        """
+        similar to run.get_labels()
+        LABEL_TO_EXTAG={0: 'NONE', 1: 'ARG1', 2: 'REL', 3: 'ARG2',
+                 4: 'ARG2', 5: 'NONE'}
+        output_d= {
+            "meta_data":
+            "ground_truth":
+            "loss":
+            "predictions":
+            "scores":
+        }
+
+
+        Parameters
+        ----------
+        l_sentL
+        ll_sent_loc
+
+        Returns
+        -------
+
+        """
+
+        lines = []
+        sample_id = 0
+        ex_id = 0
+        word_id = 0
+
+        for i in range(0, len(ll_sent_loc)):
+            if len(ll_sent_loc[i]) == 0:
+                words = get_words(l_sentL[i].split('[unused1]')[0])
+                ll_sent_loc[i].append(list(range(len(words))))
+
+            lines.append(
+                '\n' + l_sentL[i].split('[unused1]')[0].strip())
+            for j in range(0, len(ll_sent_loc[i])):
+                assert len(ll_sent_loc[i][j]) == len(
+                    get_words(l_output_d[sample_id]['meta_data'][ex_id]))
+                sentL = l_output_d[sample_id]['meta_data'][
+                            ex_id].strip() + UNUSED_TOKENS_STR
+                assert sentL == l_sentL[i]
+                ll_pred_label = l_output_d[sample_id]['predictions'][
+                    ex_id]
+
+                for pred_labels in ll_pred_label:
+                    # You can use x.item() to get a Python number
+                    # from a torch tensor that has one element
+                    if pred_labels.sum().item() == 0:
+                        break
+
+                    labels = [0] * len(get_words(sentL))
+                    pred_labels = pred_labels[:len(sentL.split())].tolist()
+                    for k, loc in enumerate(
+                            sorted(ll_sent_loc[i][j])):
+                        labels[loc] = pred_labels[k]
+
+                    labels = labels[:-3]
+                    # 1: arg1, 2: rel
+                    if 1 not in pred_labels and 2 not in pred_labels:
+                        continue
+
+                    str_extags = \
+                        ' '.join([LABEL_TO_EXTAG[i] for i in labels])
+                    lines.append(str_extags)
+
+                word_id += 1
+                ex_id += 1
+                if ex_id == len(l_output_d[sample_id]['meta_data']):
+                    ex_id = 0
+                    sample_id += 1
+
+        lines.append('\n')
+        assert self.pred_fname
+        with open(PREDICTIONS_DIR + "/" + self.pred_fname +
+                  "-extags.txt") as f:
+                f.writelines(lines)

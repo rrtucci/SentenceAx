@@ -91,6 +91,10 @@ additional_dict = {
     "type": None,
     "write_allennlp": None
 }
+# "type" in ["labels", "sentences"] in Openie6. Refers to
+# file type, for file to be written too
+
+
 # combine dictionaries
 PARAMS_D = {**PARAMS_D_LONG, **additional_dict}
 # eliminate params that are None, in case they are reset to

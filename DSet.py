@@ -5,7 +5,7 @@ from DPadder import *
 
 
 class DSet(Dataset):
-    def __init__(self, sample_ds, spacy_model, sent_pad_id):
+    def __init__(self, l_sample_d, spacy_model, sent_pad_id):
         """
         In Openie6, the `torchtext.data.Dataset` class is a normal class
         `Dataset(examples, fields)` is abstract class but in newer versions
@@ -21,7 +21,7 @@ class DSet(Dataset):
         #                'l_orig_sent': l_orig_sent}
 
         padder = DPadder(sent_pad_id, spacy_model)
-        padded_data = padder.pad_data(sample_ds)
+        padded_data = padder.pad_data(l_sample_d)
 
         self.num_samples = len(padded_data["ll_sentL_id"])
         self.num_words =  len(padded_data["ll_sentL_id"][0])

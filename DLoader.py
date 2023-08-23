@@ -123,7 +123,7 @@ class DLoader:
         verb_mask.append(0)
         return verb_mask, verb_indices, verb_words
 
-    def get_sample_ds(self, inp_fp):
+    def get_l_sample_d(self, inp_fp):
         """
         similar to data._process_data()
 
@@ -305,11 +305,11 @@ class DLoader:
             # process_data() which is get_samples() for us.
             # get_samples()
             # returns: examples, orig_sents
-            predict_sample_ds, orig_sents = \
-                self.get_sample_ds(PRED_INP_FP)
+            predict_l_sample_d, orig_sents = \
+                self.get_l_sample_d(PRED_INP_FP)
             #vocab = build_vocab(predict_l_sample_d)
 
-            predict_dataset = DSet(predict_sample_ds,
+            predict_dataset = DSet(predict_l_sample_d,
                                    self.spacy_model,
                                    self.sent_pad_id)
             train_dataset, dev_dataset, test_dataset = \
@@ -322,35 +322,35 @@ class DLoader:
             # spacy_model usually abbreviated as nlp
             if not os.path.exists(cached_train_fp) or\
                     self.params_d["build_cache"]:
-                train_sample_ds, _ = self.get_sample_ds(self.train_fp)
-                pickle.dump(train_sample_ds, open(cached_train_fp, 'wb'))
+                train_l_sample_d, _ = self.get_l_sample_d(self.train_fp)
+                pickle.dump(train_l_sample_d, open(cached_train_fp, 'wb'))
             else:
-                train_sample_ds = pickle.load(open(cached_train_fp, 'rb'))
+                train_l_sample_d = pickle.load(open(cached_train_fp, 'rb'))
 
             if not os.path.exists(cached_dev_fp) or \
                     self.params_d["build_cache"]:
-                dev_sample_ds, _ = self.get_sample_ds(self.dev_fp)
-                pickle.dump(dev_sample_ds, open(cached_dev_fp, 'wb'))
+                dev_l_sample_d, _ = self.get_l_sample_d(self.dev_fp)
+                pickle.dump(dev_l_sample_d, open(cached_dev_fp, 'wb'))
             else:
-                dev_sample_ds = pickle.load(open(cached_dev_fp, 'rb'))
+                dev_l_sample_d = pickle.load(open(cached_dev_fp, 'rb'))
 
             if not os.path.exists(cached_test_fp) or\
                     self.params_d["build_cache"]:
-                test_sample_ds, _ = self.get_sample_ds(self.test_fp)
-                pickle.dump(test_sample_ds, open(cached_test_fp, 'wb'))
+                test_l_sample_d, _ = self.get_l_sample_d(self.test_fp)
+                pickle.dump(test_l_sample_d, open(cached_test_fp, 'wb'))
             else:
-                test_sample_ds = pickle.load(open(cached_test_fp, 'rb'))
+                test_l_sample_d = pickle.load(open(cached_test_fp, 'rb'))
 
             # vocab = self.build_vocab(
             #     train_l_sample_d + dev_l_sample_d + test_l_sample_d)
 
-            train_dataset = DSet(train_sample_ds,
+            train_dataset = DSet(train_l_sample_d,
                                    self.spacy_model,
                                    self.sent_pad_id)
-            dev_dataset = DSet(dev_sample_ds,
+            dev_dataset = DSet(dev_l_sample_d,
                                    self.spacy_model,
                                    self.sent_pad_id)
-            test_dataset = DSet(test_sample_ds,
+            test_dataset = DSet(test_l_sample_d,
                                    self.spacy_model,
                                    self.sent_pad_id)
             train_dataset.sort()  # to simulate bucket sort (along with pad_data)

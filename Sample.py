@@ -16,7 +16,7 @@ class Sample:
                            with_unused_tokens):
         with open(path, "w") as f:
             for k, sam in enumerate(samples):
-                f.write(str(k) + "." + "\n")
+                f.write(str(k+1) + "." + "\n")
 
                 if with_unused_tokens:
                     orig_sentL = sam.orig_sent + UNUSED_TOKENS_STR

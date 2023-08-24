@@ -546,9 +546,9 @@ class MConductor:
             extraction.arg1 = arg1
             extraction.arg2 = arg2
             if self.params_d["type"] == 'sentences':
-                ext_str = extraction.get_str() + '\n'
+                ext_str = extraction.get_simple_sent() + '\n'
             else:
-                ext_str = extraction.get_str() + '\n'
+                ext_str = extraction.get_simple_sent() + '\n'
             exts.append(ext_str)
 
         exts = sorted(exts, reverse=True,

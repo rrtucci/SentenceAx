@@ -788,7 +788,7 @@ class Model(pl.LightningModule):
             orig_sentL = l_orig_sentL[sample_id]
             str0 = f'{pred_ex_sent}\n'
             for pred_ex in pred_l_ex:
-                str0 += pred_ex.get_str() + '\n'
+                str0 += pred_ex.get_simple_sent() + '\n'
             l_pred_str.append(str0.strip("/n"))
             allen_str = ""
             for pred_ex in pred_l_ex:

@@ -1,11 +1,10 @@
 from CCTagsSample import *
 from SimpSentsSample import *
 
-class CCOutput:
+class ExOutput:
     def __init__(self):
-        self.true_samples = None
-        self.
-
+        self.true_extag_samples
+        self.pred_extag_samples
 
 
         meta_data  pred_samples[sample_id].orig_sent

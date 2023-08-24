@@ -6,21 +6,18 @@ class CCTagsSample(Sample):
         Sample.__init__(self, orig_sent)
 
     def construct_from_cctree(self, cctree):
-        cctree.
-        self.max_depth = len(l_ex)
-        words = get_words(self.orig_sentL)
-        self.confidences = []
+        assert cctree.orig_sent == self.orig_sent
+        cc_sents, spanned_sents, l_spanned_locs = cctree.get_cc_sents()
+
+        self.max_depth = len(cc_sents)
         self.l_child = []
-        for ex in l_ex:
-            self.confidences.append(ex.confidence)
-            assert ex.orig_sentL == self.orig_sentL
-            ex.set_extags_of_all()
-            child = SampleChild(ex.sent_extags)
+        for cc_sent in cc_sents:
+            child = SampleChild(get_words(cc_sent))
             self.l_child.append(child)
 
 
     @staticmethod
-    def write_cctags_file(samples, path, with_scores):
+    def write_cctags_file(samples, path, with_scores=False):
         Sample.write_samples_file(samples,
                                   path,
                                   with_confidences=with_scores,

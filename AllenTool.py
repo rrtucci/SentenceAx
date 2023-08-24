@@ -81,56 +81,70 @@ class AllenTool:
     
         # print("zlpd", sent_to_extractions)
         return sent_to_extractions
+    
+    def write_simp_sents_file(self,
+                          out_fp,
+                          first_sample_id,
+                          last_sample_id):
+ 
+        assert 1<= first_sample_id <= last_sample_id <= self.num_sents
 
+        with open(out_fp, 'w') as f:
+            sample_id = 0
+            for sent, l_ex in self.sent_to_extractions.items():
+                sample_id += 1
+                if sample_id < first_sample_id or sample_id > last_sample_id:
+                    continue
+                f.write(str(sample_id) + ".\n")
+                f.write(sent + "\n")
+                for ex in l_ex:
+                    f.write(ex.get_simple_sent() + "/n")
     def write_extags_file(self,
                           out_fp,
-                          sent_id_range):
+                          first_sample_id,
+                          last_sample_id):
         """
         * extags (openie-data\openie4_labels)
+        2.
         Hercule Poirot is a fictional Belgian detective , created by Agatha Christie . [unused1] [unused2] [unused3]
         ARG1 ARG1 REL ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 NONE NONE NONE NONE
         NONE NONE NONE ARG1 ARG1 ARG1 ARG1 NONE REL ARG2 ARG2 ARG2 NONE NONE NONE NONE
-
+        
+        sample id 1-based
+        
         Parameters
         ----------
-        out_fp
-        sent_id_range
+
 
         Returns
         -------
 
         """
 
-        assert 0 <= sent_id_range[0] <= sent_id_range[1] <= self.num_sents - 1
+        assert 1<= first_sample_id <= last_sample_id <= self.num_sents
 
         with open(out_fp, 'w') as f:
-            prev_sent = ''
-            top_of_file = True
-            sent_id = -1
-            for sent, ex in self.sent_to_extractions:
-                sent_id += 1
-                if sent_id < sent_id_range[0] or sent_id >= sent_id_range[1]:
+            sample_id = 0
+            for sent, l_ex in self.sent_to_extractions.items():
+                sample_id += 1
+                if sample_id < first_sample_id or sample_id > last_sample_id:
                     continue
-                if sent != prev_sent:
-                    new_in_sent = True
-                    prev_sent = sent
-                    if top_of_file:
-                        top_of_file = False
-                    else:
-                        f.write('\n')
-                else:
-                    new_in_sent = False
-                if ex.name_is_tagged["ARG2"] and \
-                        ex.name_is_tagged["REL"] and \
-                        ex.name_is_tagged["ARG1"]:
-                    if 'REL' in ex.sent_tags and 'ARG1' in ex.sent_tags:
-                        if (not ex.arg2) or 'ARG2' in ex.sent_tags:
-                            assert len(ex.in3_tokens) == len(ex.sent_tags)
-                            if new_in_sent:
-                                f.write(' '.join(ex.in3_tokens))
-                                f.write('\n')
-                            f.write(' '.join(ex.sent_tags))
-                            f.write('\n')
+                f.write(str(sample_id) + ".\n")
+                f.write(sent + "\n")
+                for ex in l_ex:
+                    ex.set_extags()
+                    f.write(" ".join(ex.extags()))
+                # if ex.name_is_tagged["ARG1"] and \
+                #         ex.name_is_tagged["REL"] and \
+                #         ex.name_is_tagged["ARG2"]:
+                #     if 'ARG1' in ex.sent_tags and 'REL' in ex.sent_tags:
+                #         if (not ex.arg2) or 'ARG2' in ex.sent_tags:
+                #             f.write(ex.orig_sentL + "\n")
+                #             if new_in_sent:
+                #                 f.write(' '.join(ex.in3_tokens))
+                #                 f.write('\n')
+                #             f.write(' '.join(ex.sent_tags))
+                #             f.write('\n')
 
     def write_extags_ttt_files(self,
                                out_dir,
@@ -151,21 +165,23 @@ class AllenTool:
         num_train_sents, num_tune_sents, num_test_sents = \
             get_num_ttt_sents(self.num_sents, ttt_fractions)
 
-        train_range = range(0, num_train_sents)
-        tune_range = range(
-            num_train_sents,
+        train_first_last = (
+            1, 
+            num_train_sents)
+        tune_first_last = (
+            num_train_sents+1,
             num_train_sents + num_tune_sents)
-        test_range = range(
-            num_train_sents + num_tune_sents,
+        test_first_last = (
+            num_train_sents + num_tune_sents + 1,
             num_train_sents + num_tune_sents + num_test_sents)
 
         train_fp = out_dir + "/extags_train.txt"
         tune_fp = out_dir + "/extags_tune.txt"
         test_fp = out_dir + "/extags_test.txt"
 
-        self.write_extags_file(train_fp, train_range)
-        self.write_extags_file(tune_fp, tune_range)
-        self.write_extags_file(test_fp, test_range)
+        self.write_extags_file(train_fp, *train_first_last)
+        self.write_extags_file(tune_fp, *tune_first_last)
+        self.write_extags_file(test_fp, *test_first_last)
 
 
 if __name__ == "__main__":

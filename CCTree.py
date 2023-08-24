@@ -14,7 +14,7 @@ class CCTree:
 
         self.ccnodes = None
         # This must be called before calling self.set_tree_structure()
-        self.set_ccnodes(ll_label)
+        self.set_ccnodes()
 
         self.root_cclocs = []
         self.par_ccloc_to_child_cclocs = {}
@@ -244,10 +244,10 @@ class CCTree:
         # self.fix_ccnodes()  was called at the end of get_ccnodes()
 
         orig_words = get_words(self.orig_sent)
-        spanned_words = []
+        spanned_sents = []
         for ccnode in self.ccnodes:
             for span in ccnode.spans:
-                spanned_words.append(' '.join(orig_words[span[0]:span[1]]))
+                spanned_sents.append(' '.join(orig_words[span[0]:span[1]]))
 
         l_spanned_locs = []
         root_count = len(self.root_cclocs)
@@ -285,7 +285,7 @@ class CCTree:
                 ' '.join([orig_words[i] for i in sorted(spanned_locs)])
             cc_sents.append(cc_sent)
 
-        return cc_sents, spanned_words, l_spanned_locs
+        return cc_sents, spanned_sents, l_spanned_locs
 
 
     # def get_shifted_ccnodes(self, arr):  # post_process()

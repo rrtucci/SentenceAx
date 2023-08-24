@@ -19,7 +19,7 @@ class ExTagsSample(Sample):
             self.l_child.append(child)
 
     @staticmethod
-    def write_extags_file(samples, path, with_scores):
+    def write_extags_file(samples, path, with_scores=False):
         Sample.write_samples_file(samples,
                                   path,
                                   with_confidences=with_scores,

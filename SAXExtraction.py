@@ -1,6 +1,6 @@
 from sax_globals import *
 from sax_utils import *
-from extraction_utils import *
+from sax_extraction_utils import *
 
 
 class SAXExtraction():
@@ -145,7 +145,7 @@ class SAXExtraction():
                     return
         # if everything else fails, still
         # set this flag true
-        self.arg2_extagged = True
+        self.arg2_is_extagged = True
 
     def set_extags_of_arg1_or_rel(self, arg_name):
         """

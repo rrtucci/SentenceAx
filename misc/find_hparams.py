@@ -35,7 +35,7 @@ if __name__ == "__main__":
 
     main()
 
-# output for hparams.
+# output.meta_data for hparams.
 # ['hparams.accumulate_grad_batches',
 #  'hparams.batch_size',
 #  'hparams.bos_token_id',

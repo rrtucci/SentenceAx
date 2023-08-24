@@ -28,12 +28,12 @@ class MConductor:
     
     loader = torch.utils.dataloader(dset)
     for input, target in loader:
-         output = model(input)
-         loss = loss_fn(output, target)
+         output.meta_data = model(input)
+         loss = loss_fn(output.meta_data, target)
          loss.backward()
          optimizer.step()
     
-    Often, batch refers to the output of loader, but not in SentenceAx
+    Often, batch refers to the output.meta_data of loader, but not in SentenceAx
     for batch_index, batch in enumerate(loader):
         input, target = batch
     
@@ -594,13 +594,6 @@ class MConductor:
         similar to run.get_labels()
         LABEL_TO_EXTAG={0: 'NONE', 1: 'ARG1', 2: 'REL', 3: 'ARG2',
                  4: 'ARG2', 5: 'NONE'}
-        output_d= {
-            "meta_data":
-            "ground_truth":
-            "loss":
-            "predictions":
-            "scores":
-        }
 
 
         Parameters
@@ -612,7 +605,6 @@ class MConductor:
         -------
 
         """
-        l_output_d[sample_id]["meta_data"] = ll_orig_sent[sample_id][ex_id]
 
         lines = []
         sample_id = 0

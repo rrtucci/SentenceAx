@@ -56,20 +56,20 @@ DROPOUT = 0.0
 NUM_EMBEDDINGS = 100
 MAX_EXTRACTION_LENGTH = 5
 
-BOS_LABEL = 101 # bos = begin of sentence
-EOS_LABEL = 102 # eos = end of sentence
-NUM_LABELS = 6
-LABELLING_DIM = 300
-EXTAG_TO_LABEL = {'NONE': 0, 'ARG1': 1, 'REL': 2, 'ARG2': 3,
+BOS_ILABEL = 101 # bos = begin of sentence
+EOS_ILABEL = 102 # eos = end of sentence
+NUM_ILABELS = 6
+ILABELLING_DIM = 300
+EXTAG_TO_ILABEL = {'NONE': 0, 'ARG1': 1, 'REL': 2, 'ARG2': 3,
                    'LOC': 4, 'TIME': 4, 'TYPE': 5, 'ARGS': 3}
-BASE_EXTAGS = EXTAG_TO_LABEL.keys()
-LABEL_TO_EXTAG={0: 'NONE', 1: 'ARG1', 2: 'REL', 3: 'ARG2',
+BASE_EXTAGS = EXTAG_TO_ILABEL.keys()
+ILABEL_TO_EXTAG={0: 'NONE', 1: 'ARG1', 2: 'REL', 3: 'ARG2',
                  4: 'ARG2', 5: 'NONE'}
 
-CCTAG_TO_LABEL = {'NONE': 0, 'CP': 1, 'CP_START': 2,
+CCTAG_TO_ILABEL = {'NONE': 0, 'CP': 1, 'CP_START': 2,
                    'CC': 3, 'SEP': 4, 'OTHERS': 5}
-BASE_CCTAGS = CCTAG_TO_LABEL.keys()
-LABEL_TO_CCTAG = {0: 'NONE', 1: 'CP', 2: 'CP_START',
+BASE_CCTAGS = CCTAG_TO_ILABEL.keys()
+ILABEL_TO_CCTAG = {0: 'NONE', 1: 'CP', 2: 'CP_START',
                    3: 'CC', 4:'SEP', 5: 'OTHERS'}
 
 # LIGHT_VERBS = [
@@ -123,11 +123,11 @@ MODE = globals()["MODE"]
 print('you\'ve entered MODE= "' + MODE + '"')
 
 if TASK == "ex":
-    TAG_TO_LABEL = EXTAG_TO_LABEL
+    TAG_TO_ILABEL = EXTAG_TO_ILABEL
     MAX_DEPTH = MAX_EXTRACTION_LENGTH
     LOG_DIR = WEIGHTS_DIR + '/ex_logs'
 elif TASK == "cc":
-    TAG_TO_LABEL = CCTAG_TO_LABEL
+    TAG_TO_ILABEL = CCTAG_TO_ILABEL
     MAX_DEPTH = 3
     LOG_dir = WEIGHTS_DIR + '/cc_logs'
 else:

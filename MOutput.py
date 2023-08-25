@@ -5,11 +5,11 @@ class ExOutput:
     sam = ex_output[sample_id]
     child = sam.l_child[depth]
         meta_data  sam.orig_sent
-        self.lll_label = child.tags
+        self.lll_ilabel = child.tags
         self.ll_score = None child.score
         self.loss = None ex_output.loss
         self.train_loss = ex_output.train_loss
-        self.true_lll_label = None sam.ground_truth_sample
+        self.true_lll_ilabel = None sam.ground_truth_sample
         self.ll_orig_sent  sam.orig_sent
 
         self.cc_l_spanned_words = [] get_words(child.simple_sent)

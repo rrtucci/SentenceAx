@@ -26,7 +26,7 @@ class Sample:
         self.l_child = None
         self.max_depth = None
         self.orig_sentL = None
-        self.ll_label = None
+        self.ll_ilabel = None
 
     @staticmethod
     def write_samples_file(samples,
@@ -50,27 +50,27 @@ class Sample:
 
 
 class ExTagsSample(Sample):
-    def __init__(self, orig_sent=None, ll_label=None):
-        Sample.__init__(self, orig_sent, ll_label)
+    def __init__(self, orig_sent=None, ll_ilabel=None):
+        Sample.__init__(self, orig_sent, ll_ilabel)
 
-        if orig_sent and ll_label:
-            self.fill_from_ll_label(orig_sent, ll_label)
+        if orig_sent and ll_ilabel:
+            self.fill_from_ll_ilabel(orig_sent, ll_ilabel)
 
-    def fill_from_ll_label(self,
+    def fill_from_ll_ilabel(self,
                            orig_sent,
-                           ll_label):
+                           ll_ilabel):
         self.orig_sent = orig_sent
         self.orig_sentL = self.orig_sent + UNUSED_TOKENS_STR
-        self.ll_label = ll_label
-        self.max_depth = len(ll_label)
+        self.ll_ilabel = ll_ilabel
+        self.max_depth = len(ll_ilabel)
 
         self.l_child = []
         for i in range(self.max_depth):
             child = SampleChild()
-            for l_label in ll_label:
+            for l_ilabel in ll_ilabel:
                 child.tags = []
-                for label in l_label:
-                    child.tags.append(LABEL_TO_EXTAG[label])
+                for ilabel in l_ilabel:
+                    child.tags.append(ILABEL_TO_EXTAG[ilabel])
             simp_words = []
             orig_words = get_words(orig_sent)
             for k, tag in enumerate(child.tags):
@@ -95,32 +95,32 @@ class ExTagsSample(Sample):
 
 
 class CCTagsSample(Sample):
-    def __init__(self, orig_sent=None, ll_label=None):
-        Sample.__init__(self, orig_sent, ll_label)
+    def __init__(self, orig_sent=None, ll_ilabel=None):
+        Sample.__init__(self, orig_sent, ll_ilabel)
 
-        if orig_sent and ll_label:
-            self.fill_from_ll_label(orig_sent, ll_label)
+        if orig_sent and ll_ilabel:
+            self.fill_from_ll_ilabel(orig_sent, ll_ilabel)
 
-    def fill_from_ll_label(self,
+    def fill_from_ll_ilabel(self,
                                 orig_sent,
-                                ll_label):
+                                ll_ilabel):
 
         self.orig_sent = orig_sent
         self.orig_sentL = self.orig_sent + UNUSED_TOKENS_STR
-        self.ll_label = ll_label
-        self.max_depth = len(ll_label)
+        self.ll_ilabel = ll_ilabel
+        self.max_depth = len(ll_ilabel)
 
-        cctree = CCTree(orig_sent, ll_label)
+        cctree = CCTree(orig_sent, ll_ilabel)
         cc_sents, spanned_sents, l_spanned_locs = cctree.get_cc_sents()
 
         assert self.max_depth == len(cc_sents)
         self.l_child = []
         for cc_sent in cc_sents:
             child = SampleChild()
-            for l_label in ll_label:
+            for l_ilabel in ll_ilabel:
                 child.tags = []
-                for label in l_label:
-                    child.tags.append(LABEL_TO_CCTAG[label])
+                for ilabel in l_ilabel:
+                    child.tags.append(ILABEL_TO_CCTAG[ilabel])
 
             child.simple_sent = cc_sent
             self.l_child.append(child)

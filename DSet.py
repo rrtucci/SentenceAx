@@ -25,20 +25,20 @@ class DSet(Dataset):
 
         self.num_samples = len(padded_data["ll_sentL_id"])
         self.num_words =  len(padded_data["ll_sentL_id"][0])
-        self.depth = len(padded_data["lll_label"])
+        self.depth = len(padded_data["lll_ilabel"])
 
 
         x = []
         num_xtypes = -1
         for name, li in padded_data.items():
-            if name != "lll_label":
+            if name != "lll_ilabel":
                 num_xtypes +=1
                 x.append(li)
         self.num_xtypes = num_xtypes
         x = np.array(x)
         self.x = torch.from_numpy(x)
 
-        y = padded_data["lll_label"]
+        y = padded_data["lll_ilabel"]
         y = np.array(y)
         self.y = torch.from_numpy(y)
 

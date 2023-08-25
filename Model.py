@@ -98,12 +98,12 @@ class Model(pl.LightningModule):
         embedding_dim (int) – the size of each embedding vector
             
         """
-        self.label_embeddings = nn.Embedding(NUM_EMBEDDINGS,  # 100
+        self.ilabel_embeddings = nn.Embedding(NUM_EMBEDDINGS,  # 100
                                              self.hidden_size)
         self.merge_layer = nn.Linear(self.hidden_size,
-                                     LABELLING_DIM)  # 300
-        self.labelling_layer = nn.Linear(LABELLING_DIM,  # 300
-                                         NUM_LABELS)  # 6
+                                     ILABELLING_DIM)  # 300
+        self.ilabelling_layer = nn.Linear(ILABELLING_DIM,  # 300
+                                         NUM_ILABELS)  # 6
 
         self.loss = nn.CrossEntropyLoss()
 
@@ -118,7 +118,7 @@ class Model(pl.LightningModule):
             assert False
 
         # similar to batch_d
-        self.lll_label = None
+        self.lll_ilabel = None
         self.meta_data = None
         self.pos_index = None
         self.text = None
@@ -237,7 +237,7 @@ class Model(pl.LightningModule):
         # second list over extractions
         # third (inner) list over number of labels in a line
         # after padding and adding the 3 unused tokens
-        batch_size, depth, labels_length = self.lll_label.shape
+        batch_size, depth, ilabels_length = self.lll_ilabel.shape
         if mode != 'train':
             depth = MAX_DEPTH
 
@@ -258,12 +258,12 @@ class Model(pl.LightningModule):
             word_hidden_states = torch.gather(hidden_states, 1, bat)
 
             if d != 0:
-                greedy_labels = torch.argmax(word_scores, dim=-1)
-                label_embeddings = self.label_embeddings(greedy_labels)
-                word_hidden_states += label_embeddings
+                greedy_ilabels = torch.argmax(word_scores, dim=-1)
+                ilabel_embeddings = self.ilabel_embeddings(greedy_ilabels)
+                word_hidden_states += ilabel_embeddings
 
             word_hidden_states = self.merge_layer(word_hidden_states)
-            word_scores = self.labelling_layer(word_hidden_states)
+            word_scores = self.ilabelling_layer(word_hidden_states)
             l_word_scores.append(word_scores)
 
             d += 1
@@ -305,15 +305,15 @@ class Model(pl.LightningModule):
 
         word_scores = l_word_scores[-1]
         loss = 0
-        pred_lll_label = []
+        pred_lll_ilabel = []
         ll_score = []
         batch_size, num_words, _ = word_scores.shape
-        self.lll_label = self.lll_label.long()
+        self.lll_ilabel = self.lll_ilabel.long()
         for d, word_scores in enumerate(l_word_scores):
             if mode == 'train':
                 loss += self.loss(
                     word_scores.reshape(batch_size * num_words, -1),
-                    self.lll_label[:, d, :].reshape(-1))
+                    self.lll_ilabel[:, d, :].reshape(-1))
             else:
                 word_log_probs = torch.log_softmax(word_scores, dim=2)
                 max_log_probs, predictions = \
@@ -322,18 +322,18 @@ class Model(pl.LightningModule):
                 # first (outer) list over batch events
                 # second list over extractions
                 # third (inner) list over number of labels in a line
-                padding_labels = (
-                        self.lll_label[:, 0, :] != -100).float()
+                padding_ilabels = (
+                        self.lll_ilabel[:, 0, :] != -100).float()
 
-                sro_labepred_lll_label = \
-                    (predictions != 0).float() * padding_labels
+                sro_labepred_lll_ilabel = \
+                    (predictions != 0).float() * padding_ilabels
                 log_probs_norm_ext_len = \
-                    (max_log_probs * sro_labepred_lll_label) \
-                    / (sro_labepred_lll_label.sum(dim=0) + 1)
+                    (max_log_probs * sro_labepred_lll_ilabel) \
+                    / (sro_labepred_lll_ilabel.sum(dim=0) + 1)
                 confidences = torch.exp(
                     torch.sum(log_probs_norm_ext_len, dim=1))
 
-                pred_lll_label.append(predictions.unsqueeze(1))
+                pred_lll_ilabel.append(predictions.unsqueeze(1))
                 ll_score.append(confidences.unsqueeze(1))
 
         if mode == 'train':
@@ -358,10 +358,10 @@ class Model(pl.LightningModule):
             # if A and B are of shape (3, 4):
             # torch.cat([A, B], dim=0) will be of shape (6, 4)
             # torch.stack([A, B], dim=0) will be of shape (2, 3, 4)
-            pred_lll_label = torch.cat(pred_lll_label, dim=1)
+            pred_lll_ilabel = torch.cat(pred_lll_ilabel, dim=1)
             ll_score = torch.cat(ll_score, dim=1)
 
-            self.output.pred_lll_label = pred_lll_label
+            self.output.pred_lll_ilabel = pred_lll_ilabel
             self.output.ll_score = ll_score
 
             if constraints_str and \
@@ -374,12 +374,12 @@ class Model(pl.LightningModule):
                 # for checking test set
                 # labels = copy(self.lll_label)
                 # labels[labels == -100] = 0
-                labels = copy(pred_lll_label)
+                ilabels = copy(pred_lll_ilabel)
 
-                labels = labels.unsqueeze(-1)
-                labels_depth = labels.shape[1]
-                l_word_scores = l_word_scores[:, :labels_depth, :, :]
-                l_word_scores.scatter_(3, labels.long(), 1)
+                ilabels = ilabels.unsqueeze(-1)
+                ilabels_depth = ilabels.shape[1]
+                l_word_scores = l_word_scores[:, :ilabels_depth, :, :]
+                l_word_scores.scatter_(3, ilabels.long(), 1)
 
                 constraints_str = 'posm_hvc_hvr_hve'
                 cweights_str = '1_1_1_1'
@@ -416,10 +416,10 @@ class Model(pl.LightningModule):
         -------
 
         """
-        batch_size, depth, num_words, num_labels = l_word_scores.shape
+        batch_size, depth, num_words, num_ilabels = l_word_scores.shape
         hinge_loss = 0
         bat = self.verb_locs.unsqueeze(1).unsqueeze(3). \
-            repeat(1, depth, 1, num_labels)
+            repeat(1, depth, 1, num_ilabels)
         verb_scores = torch.gather(l_word_scores, 2, bat)
         verb_rel_scores = verb_scores[:, :, :, 2]
         # (batch_size, depth, num_words)
@@ -447,7 +447,7 @@ class Model(pl.LightningModule):
 
         if 'posm' in constraints_str:
             bat = self.pos_index.unsqueeze(1).unsqueeze(3). \
-                repeat(1, depth, 1, num_labels)
+                repeat(1, depth, 1, num_ilabels)
             pos_scores = torch.gather(l_word_scores, 2, bat)
             pos_nnone_scores = \
                 torch.max(pos_scores[:, :, :, 1:], dim=-1)[0]
@@ -505,9 +505,9 @@ class Model(pl.LightningModule):
             constraints_str=self.params_d["constraints_str"],
             cweights_str=self.params_d["cweights_str"])
 
-        output0_d = {"pred_lll_label": self.output.pred_lll_label,
+        output0_d = {"pred_lll_ilabel": self.output.pred_lll_ilabel,
                      "ll_score": self.output.ll_score,
-                     "ground_truth": self.lll_label,
+                     "ground_truth": self.lll_ilabel,
                      "meta_data": self.meta_data}
         output0_d = OrderedDict(output0_d)
 
@@ -551,11 +551,11 @@ class Model(pl.LightningModule):
         eval_results_d = None
         if self.params_d["mode"] == 'test':
             for output_index, sample in enumerate(l_output_d):
-                self.output.pred_lll_label = self.output.pred_lll_label.cpu()
+                self.output.pred_lll_ilabel = self.output.pred_lll_ilabel.cpu()
                 self.output.ll_score = self.output.ll_score.cpu()
                 self.output.ll_score = \
                     (self.output.ll_score * 100).round() / 100
-                self.output.true_lll_label = self.output.true_lll_label.cpu()
+                self.output.true_lll_ilabel = self.output.true_lll_ilabel.cpu()
                 self.sample.orig_sent = self.sample.orig_sent.cpu()
         if self.params_d["task"] == "cc":
             if 'predict' in self.params_d["mode"]:
@@ -566,8 +566,8 @@ class Model(pl.LightningModule):
                         self.sample.orig_sent = [self.auto_tokenizer.decode[m]
                                                  for m in
                                                  self.sample.orig_sent]
-                    self.metric(self.output.pred_lll_label,
-                                self.output.true_lll_label,
+                    self.metric(self.output.pred_lll_ilabel,
+                                self.output.true_lll_ilabel,
                                 meta_data=self.sample.orig_sent)
                 metrics_d = self.metric.get_metric_values(reset=True, mode=mode)
 
@@ -585,7 +585,7 @@ class Model(pl.LightningModule):
                         self.sample.orig_sent = [self.auto_tokenizer.decode[m]
                                                  for m in
                                                  self.sample.orig_sent]
-                    self.metric(self.output.pred_lll_label,
+                    self.metric(self.output.pred_lll_ilabel,
                                 self.sample.orig_sent,
                                 self.output.ll_score)
                 metrics_d = self.metric.get_metric_values(reset=True, mode=mode)
@@ -667,11 +667,11 @@ class Model(pl.LightningModule):
         """
         return None
 
-    def _get_extraction(self, ex_labels, orig_sentL, score):
+    def _get_extraction(self, ex_ilabels, orig_sentL, score):
         """
         similar to model.process_extraction()
 
-        LABEL_TO_EXTAG={
+        ILABEL_TO_EXTAG={
             0: 'NONE',
             1: 'ARG1',
             2: 'REL',
@@ -691,7 +691,7 @@ class Model(pl.LightningModule):
         -------
 
         """
-        ex_labels = ex_labels.to_list()  # change from torch tensor to list
+        ex_ilabels = ex_ilabels.to_list()  # change from torch tensor to list
 
         l_rel = []
         l_arg1 = []
@@ -701,20 +701,20 @@ class Model(pl.LightningModule):
         rel_case = 0
         for i, word in enumerate(get_words(orig_sentL)):
             if '[unused' in word:
-                if ex_labels[i] == 2:  # REL
+                if ex_ilabels[i] == 2:  # REL
                     rel_case = int(
                         re.search('\[unused(.*)\]', word).group(1)
                     )  # this returns either 1, 2 or 3
                 continue
-            if ex_labels[i] == 0:  # NONE
+            if ex_ilabels[i] == 0:  # NONE
                 pass
-            elif ex_labels[i] == 1:  # ARG1
+            elif ex_ilabels[i] == 1:  # ARG1
                 l_arg1.append(word)
-            elif ex_labels[i] == 2:  # REL
+            elif ex_ilabels[i] == 2:  # REL
                 l_rel.append(word)
-            elif ex_labels[i] == 3:  # ARG2
+            elif ex_ilabels[i] == 3:  # ARG2
                 l_arg2.append(word)
-            elif ex_labels[i] == 4:  # ARG2
+            elif ex_ilabels[i] == 4:  # ARG2
                 # l_loc_time.append(word)
                 l_arg2.append(word)
             else:
@@ -747,11 +747,11 @@ class Model(pl.LightningModule):
     def _write_if_task_ex(self, sample):
         fix_d = self.metric.fix_d
 
-        pred_lll_label = self.output.pred_lll_label
+        pred_lll_ilabel = self.output.pred_lll_ilabel
         l_orig_sentL = self.sample.orig_sent
         ll_score = self.output.ll_score
         num_sents, ex_depth, max_sent_len = \
-            pred_lll_label.shape
+            pred_lll_ilabel.shape
         assert num_sents == len(l_orig_sentL)
         orig_sent_to_pred_l_ex = {}
         for sample_id, orig_sentL in enumerate(l_orig_sentL):
@@ -765,11 +765,11 @@ class Model(pl.LightningModule):
                     orig_sent_to_pred_l_ex[orig_sent] = []
             for depth in range(ex_depth):
                 num_words = len(get_words(orig_sentL))
-                ex_labels = pred_lll_label[sample_id][depth][:num_words]
-                if sum(ex_labels) == 0:  # extractions completed
+                ex_ilabels = pred_lll_ilabel[sample_id][depth][:num_words]
+                if sum(ex_ilabels) == 0:  # extractions completed
                     break
                 ex = self._get_extraction(
-                    ex_labels, orig_sentL, ll_score[sample_id][depth].item())
+                    ex_ilabels, orig_sentL, ll_score[sample_id][depth].item())
                 if ex.arg1_pair[0] and ex.rel_pair[0]:
                     if fix_d:
                         orig_sent0 = fix_d[orig_sent]
@@ -810,24 +810,24 @@ class Model(pl.LightningModule):
         correct = True
         total_num_ex_sents1 = 0
         total_num_ex_sents2 = 0
-        pred_lll_label = self.output.pred_lll_label
+        pred_lll_ilabel = self.output.pred_lll_ilabel
         # thruth = self.output.true_lll_label"]
         l_orig_sentL = self.sample.orig_sent
-        total_depth = pred_lll_label.shape[1]
+        total_depth = pred_lll_ilabel.shape[1]
         l_pred_str = []
         l_spanned_words = []
         ll_spanned_loc = []
         for id in range(len(l_orig_sentL)):
             sample_id += 1
             orig_sentL = l_orig_sentL[id]
-            ll_label = []
+            ll_ilabel = []
             l_orig_sent = []
             for depth in range(total_depth):
                 num_words = len(get_words(orig_sentL))
-                l_label = pred_lll_label[id][depth][:num_words].tolist()
-                ll_label.append(l_label)
+                l_ilabel = pred_lll_ilabel[id][depth][:num_words].tolist()
+                ll_ilabel.append(l_ilabel)
             orig_sent = orig_sentL.split("[used1]")[0]
-            tree = CCTree(orig_sent, ll_label)
+            tree = CCTree(orig_sent, ll_ilabel)
             tree.set_ccnodes()
             pred_ccnodes = tree.ccnodes
 
@@ -861,9 +861,9 @@ class Model(pl.LightningModule):
         -------
 
         """
-        self.output.pred_lll_label = self.output.pred_lll_label.cpu()
+        self.output.pred_lll_ilabel = self.output.pred_lll_ilabel.cpu()
         self.output.ll_score = self.output.ll_score.cpu()
-        self.output.true_lll_label = self.output.true_lll_label.cpu()
+        self.output.true_lll_ilabel = self.output.true_lll_ilabel.cpu()
         self.sample.orig_sent = self.sample.orig_sent.cpu()
         # note, right hand side depends on self.sample.orig_sent
         self.sample.orig_sent = [self.auto_tokenizer.decode[m] for m

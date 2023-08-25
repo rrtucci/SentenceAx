@@ -5,11 +5,11 @@ from copy import deepcopy
 
 
 class CCTree:
-    def __init__(self, orig_sent, ll_label):
+    def __init__(self, orig_sent, ll_ilabel):
         # orig_sent is a coordinated sentence, the full original sentence
         # before extractions
         self.orig_sent = orig_sent
-        self.ll_label = ll_label
+        self.ll_ilabel = ll_ilabel
         self.extra_locs = []
 
         self.ccnodes = None
@@ -62,11 +62,11 @@ class CCTree:
         """
         self.ccnodes = []
 
-        for depth in range(len(self.ll_label)):
+        for depth in range(len(self.ll_ilabel)):
             ccnode = None
             start_loc = -1
             is_CP = False  # CP stands for coordinating phrase
-            predictions = self.ll_label[depth]
+            predictions = self.ll_ilabel[depth]
 
             # cctag_to_int = {
             #   'NONE': 0

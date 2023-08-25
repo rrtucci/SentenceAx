@@ -104,9 +104,9 @@ class DPadder:
         padded_ll_sentL_id = DPadder.get_padded_list(ll_sentL_id,
                                                          self.sent_pad_id)
 
-        lll_label = [sample_d['ll_label'] for sample_d in l_sample_d]
-        padded_lll_label = DPadder.get_padded_list(
-            lll_label,
+        lll_ilabel = [sample_d['ll_ilabel'] for sample_d in l_sample_d]
+        padded_lll_ilabel = DPadder.get_padded_list(
+            lll_ilabel,
             pad_id0=0,
             pad_id1=-100,
             max_outer_dim=MAX_DEPTH)
@@ -124,7 +124,7 @@ class DPadder:
         # padded_ll_word_start = torch.tensor(padded_ll_word_start)
 
         padded_data = {'ll_sentL_id': padded_ll_sentL_id,
-                       'lll_label': padded_lll_label,
+                       'lll_ilabel': padded_lll_ilabel,
                        'll_word_start': padded_ll_word_start,
                        'l_orig_sent': l_orig_sent}
 

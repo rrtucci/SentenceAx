@@ -148,7 +148,7 @@ class DLoader:
 
         # l_sample_d = []  # list[example_d]
         l_sample_d = []  # list[example_d]
-        labels_for_each_ex = []  # a list of a list of labels, list[list[in]]
+        ilabels_for_each_ex = []  # a list of a list of labels, list[list[in]]
         orig_sents = []
 
         if type(inp_fp) == type([]):
@@ -164,7 +164,7 @@ class DLoader:
                 sentL = line
                 encoding = self.auto_tokenizer.batch_encode_plus(
                     sentL.split())
-                sentL_ids = [BOS_LABEL]
+                sentL_ids = [BOS_ILABEL]
                 word_starts = []
                 for ids in encoding['input_ids']:
                     # special spacy tokens like \x9c have zero length
@@ -172,33 +172,33 @@ class DLoader:
                         ids = [100]
                     word_starts.append(len(sentL_ids))
                     sentL_ids += ids  # same as sentL_ids.extend(ids)
-                sentL_ids.append(EOS_LABEL)
+                sentL_ids.append(EOS_ILABEL)
 
                 orig_sent = sentL.split('[unused1]')[0].strip()
                 orig_sents.append(orig_sent)
 
             elif line and '[used' not in line:  # it's a line of tags
-                labels = [TAG_TO_LABEL[tag] for tag in line.split()]
+                ilabels = [TAG_TO_ILABEL[tag] for tag in line.split()]
                 # take away last 3 ids for unused tokens
-                labels = labels[:len(word_starts)]
-                labels_for_each_ex.append(labels)
+                ilabels = ilabels[:len(word_starts)]
+                ilabels_for_each_ex.append(ilabels)
                 prev_line = line
             # last line of file or empty line after example
             # line is either "" or None
             elif len(prev_line) != 0 and not line:
-                if len(labels_for_each_ex) == 0:
-                    labels_for_each_ex = [[0]]
+                if len(ilabels_for_each_ex) == 0:
+                    ilabels_for_each_ex = [[0]]
                 # note that if li=[2,3]
                 # then li[:100] = [2,3]
                 sample_d = {
                     'sentL_ids': sentL_ids,
-                    'l_labels': labels_for_each_ex[:MAX_EXTRACTION_LENGTH],
+                    'l_ilabels': ilabels_for_each_ex[:MAX_EXTRACTION_LENGTH],
                     'word_starts': word_starts,
                     'orig_sent': orig_sent
                 }
                 if len(sentL.split()) <= 100:
                     l_sample_d.append(sample_d)
-                labels_for_each_ex = []
+                ilabels_for_each_ex = []
                 prev_line = line
 
             else:

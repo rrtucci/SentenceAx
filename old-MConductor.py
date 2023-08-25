@@ -473,12 +473,12 @@ class MConductor:
 
         self.predict(pred_test_dloader=pred_test_dataloader)
 
-        label_lines = self.get_extags(self.model,
+        ilabel_lines = self.get_extags(self.model,
                                       l_orig_sentL,
                                       l_orig_sentL,
                                       ll_spanned_loc)
-        with open(PREDICTIONS_DIR + '/ex_labels.txt', 'w') as f:
-            f.write('\n'.join(label_lines))
+        with open(PREDICTIONS_DIR + '/ex_ilabels.txt', 'w') as f:
+            f.write('\n'.join(ilabel_lines))
         MConductor.write_extags_file_from_predictions()
 
                         
@@ -592,7 +592,7 @@ class MConductor:
                                            ll_sent_loc):
         """
         similar to run.get_labels()
-        LABEL_TO_EXTAG={0: 'NONE', 1: 'ARG1', 2: 'REL', 3: 'ARG2',
+        ILABEL_TO_EXTAG={0: 'NONE', 1: 'ARG1', 2: 'REL', 3: 'ARG2',
                  4: 'ARG2', 5: 'NONE'}
 
 
@@ -623,28 +623,28 @@ class MConductor:
                     get_words(l_output_d[sample_id]["meta_data"][ex_id]))
                 sentL = l_output_d[sample_id]["meta_data"][ex_id].strip() + UNUSED_TOKENS_STR
                 assert sentL == l_sentL[i]
-                ll_pred_label = l_output_d[sample_id]["predictions"][
+                ll_pred_ilabel = l_output_d[sample_id]["predictions"][
                     ex_id]
 
-                for pred_labels in ll_pred_label:
+                for pred_ilabels in ll_pred_ilabel:
                     # You can use x.item() to get a Python number
                     # from a torch tensor that has one element
-                    if pred_labels.sum().item() == 0:
+                    if pred_ilabels.sum().item() == 0:
                         break
 
-                    labels = [0] * len(get_words(sentL))
-                    pred_labels = pred_labels[:len(sentL.split())].tolist()
+                    ilabels = [0] * len(get_words(sentL))
+                    pred_ilabels = pred_ilabels[:len(sentL.split())].tolist()
                     for k, loc in enumerate(
                             sorted(ll_sent_loc[i][j])):
-                        labels[loc] = pred_labels[k]
+                        ilabels[loc] = pred_ilabels[k]
 
-                    labels = labels[:-3]
+                    ilabels = ilabels[:-3]
                     # 1: arg1, 2: rel
-                    if 1 not in pred_labels and 2 not in pred_labels:
+                    if 1 not in pred_ilabels and 2 not in pred_ilabels:
                         continue
 
                     str_extags = \
-                        ' '.join([LABEL_TO_EXTAG[i] for i in labels])
+                        ' '.join([ILABEL_TO_EXTAG[i] for i in ilabels])
                     lines.append(str_extags)
 
                 word_id += 1

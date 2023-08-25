@@ -1,8 +1,11 @@
 from sax_utils import *
+from CCTree import *
 
 class SampleChild:
     def __init__(self, tags=None):
         self.tags=tags
+        self.confidence = None
+        self.simple_sent = None
     def get_tag_str(self):
         return " ".join(self.tags)
     def get_nontrivial_locs(self):
@@ -12,13 +15,14 @@ class SampleChild:
                 locs.append(loc)
         return locs
 
+
 class Sample:
 
     def __init__(self, orig_sent=None):
         self.orig_sent = orig_sent
         self.l_child=None
         self.max_depth = None
-        self.confidences = None
+
     @staticmethod
     def write_samples_file(samples,
                            path,
@@ -33,10 +37,10 @@ class Sample:
                     f.write(orig_sentL + "\n")
                 else:
                     f.write(sam.orig_sent)
-                    for i, child in enumerate(sam.l_child):
+                    for child in sam.l_child:
                         end_str = "\n"
                         if with_confidences:
-                            end_str = "(" + sam.confidences[i] + ")"
+                            end_str = "(" + sam.child.confidence + ")"
                         f.write(child.get_token_str() + end_str)
 
 
@@ -45,44 +49,68 @@ class ExTagsSample(Sample):
         Sample.__init__(self, orig_sent)
         self.orig_sentL = self.orig_sent + UNUSED_TOKENS_STR
 
+    def construct_from_orig_sent_and_ll_label(self,
+                                              orig_sent,
+                                              ll_label):
+        self.orig_sent = orig_sent
+
+        self.max_depth = len(ll_label)
+        self.l_child = []
+        for i in range(self.max_depth):
+            child = SampleChild()
+            for l_label in ll_label:
+                child.tags = []
+                for label in l_label:
+                    child.tags.append(LABEL_TO_EXTAG[label])
+            simp_words = []
+            orig_words = get_words(orig_sent)
+            for k, tag in enumerate(child.tags):
+                if tag is not "NONE":
+                    simp_words.append(orig_words[i])
+
+            child.simple_sent = " ".join(simp_words)
+            self.l_child.append(child)
+
     def construct_from_extraction_list(self, l_ex):
         self.max_depth = len(l_ex)
-        self.confidences = []
         self.l_child = []
         for ex in l_ex:
-            self.confidences.append(ex.confidence)
             assert ex.orig_sentL == self.orig_sentL
             ex.set_extags_of_all()
             child = SampleChild(ex.sent_extags)
+            child.confidence = ex.confidence
+            child.simple_sent = ex.get_simple_sent()
             self.l_child.append(child)
-
-    @staticmethod
-    def write_extags_file(samples, path, with_scores=False):
-        Sample.write_samples_file(samples,
-                                  path,
-                                  with_confidences=with_scores,
-                                  with_unused_tokens=True)
 
 class CCTagsSample(Sample):
     def __init__(self, orig_sent=None):
         Sample.__init__(self, orig_sent)
 
-    def construct_from_cctree(self, cctree):
-        assert cctree.orig_sent == self.orig_sent
+    def construct_from_orig_sent_and_ll_label(self,
+                                              orig_sent,
+                                              ll_label):
+        self.orig_sent = orig_sent
+        cctree = CCTree(orig_sent, ll_label)
         cc_sents, spanned_sents, l_spanned_locs = cctree.get_cc_sents()
 
         self.max_depth = len(cc_sents)
         self.l_child = []
         for cc_sent in cc_sents:
-            child = SampleChild(get_words(cc_sent))
+            child = SampleChild()
+            for l_label in ll_label:
+                child.tags = []
+                for label in l_label:
+                    child.tags.append(LABEL_TO_CCTAG[label])
+
+            child.simple_sent = cc_sent
             self.l_child.append(child)
 
 
     @staticmethod
-    def write_cctags_file(samples, path, with_scores=False):
+    def write_cctags_file(samples, path, with_confidences=False):
         Sample.write_samples_file(samples,
                                   path,
-                                  with_confidences=with_scores,
+                                  with_confidences=with_confidences,
                                   with_unused_tokens=False)
 
 

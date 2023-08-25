@@ -69,6 +69,8 @@ LABEL_TO_EXTAG={0: 'NONE', 1: 'ARG1', 2: 'REL', 3: 'ARG2',
 CCTAG_TO_LABEL = {'NONE': 0, 'CP': 1, 'CP_START': 2,
                    'CC': 3, 'SEP': 4, 'OTHERS': 5}
 BASE_CCTAGS = CCTAG_TO_LABEL.keys()
+LABEL_TO_CCTAG = {0: 'NONE', 1: 'CP', 2: 'CP_START',
+                   3: 'CC', 4:'SEP', 5: 'OTHERS'}
 
 # LIGHT_VERBS = [
 #     "take", "have", "give", "do", "make", "has", "have",

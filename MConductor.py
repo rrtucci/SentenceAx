@@ -38,21 +38,6 @@ class MConductor:
         input, target = batch
     
     
-    batch_d={
-        "lll_label": np.array of ints, shape:(batch_size, depth, labels_length)
-    
-        "meta_data": any
-    
-        "pos_index": int
-    
-        "text": str
-    
-        "verb_mask": list[int], a list of 0, 1, 1 if word in text is a verb and 0 if not
-    
-        "verb_locs": list[int], locations of verbs  in text
-    
-        "word_starts":
-    }
 
 
     Refs:

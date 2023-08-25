@@ -2,7 +2,7 @@ from SAXExtraction import *
 from ExMetric import *
 from CCMetric import *
 from CCTree import *
-from MOutput import *
+from output_classes import *
 
 import os
 from copy import copy, deepcopy
@@ -17,18 +17,12 @@ from torch.optim import Adam
 import pytorch_lightning as pl
 from transformers import AdamW, AutoModel
 
-import threading
-from threading import Thread
-
-sem = threading.Semaphore()
-
 # prevents printing of model weights, etc
 logging.getLogger(
     'transformers.configuration_utils').setLevel(logging.ERROR)
 logging.getLogger(
     'transformers.modeling_utils').setLevel(logging.ERROR)
 logging.getLogger().setLevel(logging.ERROR)
-
 
 class Model(pl.LightningModule):
     """
@@ -52,20 +46,30 @@ class Model(pl.LightningModule):
         def configure_optimizers(self):
             return torch.optim.Adam(self.parameters(), lr=0.02)
 
-    output_d = {
-        "meta_data":
-        "ground_truth":
-        "loss":
-        "predictions":
-        "scores":
-    }
-
     This class has an abstract class as its parent. Uninherited methods
     start with an underscore.
 
+    
+        batch_d={
+        "lll_label": np.array of ints, shape:(batch_size, depth, labels_length)
+    
+        "meta_data": any
+    
+        "pos_index": int
+    
+        "text": str
+    
+        "verb_mask": list[int], a list of 0, 1, 1 if word in text is a verb and 0 if not
+    
+        "verb_locs": list[int], locations of verbs  in text
+    
+        "word_starts":
+    }
+
+
     """
 
-    def __init__(self, params_d, auto_tokenizer):
+    def __init__(self, params_d, auto_tokenizer, num_samples):
         super().__init__(self)
         self.params_d = params_d
         self.auto_tokenizer = auto_tokenizer
@@ -106,9 +110,21 @@ class Model(pl.LightningModule):
         self.metric = ExMetric(self.params_d) \
             if self.params_d["task"] == "ex" else CCMetric()
         
-        self.output = MOutput()
+        if TASK == "ex":
+            m_out = ExOutput(num_samples)
+        elif TASK == "cc":
+            m_out = CCOutput(num_samples)
+        else:
+            assert False
 
-
+        # similar to batch_d
+        self.lll_label = None
+        self.meta_data = None
+        self.pos_index = None
+        self.text = None
+        self.verb_mask = None
+        self.verb_locs = None
+        self.word_starts = None
 
     def configure_optimizers(self):
         """
@@ -191,7 +207,7 @@ class Model(pl.LightningModule):
         tqdm = {'loss': '{:.3f}'.format(avg_training_loss), 'best': best}
         return tqdm
 
-    def forward(self, batch_d, mode='train', batch_id=-1,
+    def forward(self, batch_id=-1, mode='train', 
                 constraints_str=None, cweights_str=None):
         """
         inherited method
@@ -202,7 +218,6 @@ class Model(pl.LightningModule):
         
         Parameters
         ----------
-        batch_d
         mode
         batch_id
         constraints_str
@@ -222,14 +237,13 @@ class Model(pl.LightningModule):
         # second list over extractions
         # third (inner) list over number of labels in a line
         # after padding and adding the 3 unused tokens
-        batch_size, depth, labels_length = batch_d["lll_label"].shape
+        batch_size, depth, labels_length = self.lll_label.shape
         if mode != 'train':
             depth = MAX_DEPTH
 
         # `loss` is not used in this function anymore
         # loss, lstm_loss = 0, 0
-        hidden_states, _ = self.base_model(batch_d["text"])
-        output_d = {}
+        hidden_states, _ = self.base_model(self.text)
         l_word_scores = []
         word_scores = []
 
@@ -239,7 +253,7 @@ class Model(pl.LightningModule):
                 hidden_states = layer(hidden_states)[0]
 
             hidden_states = self.dropout(hidden_states)
-            bat = batch_d["word_starts"].unsqueeze(2). \
+            bat = self.word_starts.unsqueeze(2). \
                 repeat(1, 1, hidden_states.shape[2])
             word_hidden_states = torch.gather(hidden_states, 1, bat)
 
@@ -265,14 +279,14 @@ class Model(pl.LightningModule):
                 if not valid_ext:
                     break
         # outsource everything after do loop to a new function
-        return self._fill_output_d_loss(
-            mode, output_d,
-            batch_d, l_word_scores,
+        return self._fill_m_out_loss(
+            mode,
+            l_word_scores,
             constraints_str, cweights_str)
 
-    def _fill_output_d_loss(
-            self, mode, output_d,
-            batch_d, l_word_scores,
+    def _fill_m_out_loss(
+            self, mode,
+            l_word_scores,
             constraints_str, cweights_str):
         """
         not inherited method. used in forward() method
@@ -280,8 +294,6 @@ class Model(pl.LightningModule):
         Parameters
         ----------
         mode
-        output_d
-        batch_d
         l_word_scores
         constraints_str
         cweights_str
@@ -293,15 +305,15 @@ class Model(pl.LightningModule):
 
         word_scores = l_word_scores[-1]
         loss = 0
-        l_predictions = []
+        pred_lll_label = []
         ll_score = []
         batch_size, num_words, _ = word_scores.shape
-        batch_d["lll_label"] = batch_d["lll_label"].long()
+        self.lll_label = self.lll_label.long()
         for d, word_scores in enumerate(l_word_scores):
             if mode == 'train':
                 loss += self.loss(
                     word_scores.reshape(batch_size * num_words, -1),
-                    batch_d["lll_label"][:, d, :].reshape(-1))
+                    self.lll_label[:, d, :].reshape(-1))
             else:
                 word_log_probs = torch.log_softmax(word_scores, dim=2)
                 max_log_probs, predictions = \
@@ -311,17 +323,17 @@ class Model(pl.LightningModule):
                 # second list over extractions
                 # third (inner) list over number of labels in a line
                 padding_labels = (
-                        batch_d["lll_label"][:, 0, :] != -100).float()
+                        self.lll_label[:, 0, :] != -100).float()
 
-                sro_label_predictions = \
+                sro_labepred_lll_label = \
                     (predictions != 0).float() * padding_labels
                 log_probs_norm_ext_len = \
-                    (max_log_probs * sro_label_predictions) \
-                    / (sro_label_predictions.sum(dim=0) + 1)
+                    (max_log_probs * sro_labepred_lll_label) \
+                    / (sro_labepred_lll_label.sum(dim=0) + 1)
                 confidences = torch.exp(
                     torch.sum(log_probs_norm_ext_len, dim=1))
 
-                l_predictions.append(predictions.unsqueeze(1))
+                pred_lll_label.append(predictions.unsqueeze(1))
                 ll_score.append(confidences.unsqueeze(1))
 
         if mode == 'train':
@@ -331,7 +343,7 @@ class Model(pl.LightningModule):
                 l_word_scores = torch.softmax(l_word_scores, dim=-1)
 
                 const_loss = self._constrained_loss(
-                    l_word_scores, batch_d,
+                    l_word_scores,
                     constraints_str, cweights_str) / batch_size
                 loss = const_loss
 
@@ -346,10 +358,10 @@ class Model(pl.LightningModule):
             # if A and B are of shape (3, 4):
             # torch.cat([A, B], dim=0) will be of shape (6, 4)
             # torch.stack([A, B], dim=0) will be of shape (2, 3, 4)
-            l_predictions = torch.cat(l_predictions, dim=1)
+            pred_lll_label = torch.cat(pred_lll_label, dim=1)
             ll_score = torch.cat(ll_score, dim=1)
 
-            self.output.lll_prediction = l_predictions
+            self.output.pred_lll_label = pred_lll_label
             self.output.ll_score = ll_score
 
             if constraints_str and \
@@ -360,9 +372,9 @@ class Model(pl.LightningModule):
                 l_word_scores.fill_(0)
 
                 # for checking test set
-                # labels = copy(batch_d["lll_label"])
+                # labels = copy(self.lll_label)
                 # labels[labels == -100] = 0
-                labels = copy(l_predictions)
+                labels = copy(pred_lll_label)
 
                 labels = labels.unsqueeze(-1)
                 labels_depth = labels.shape[1]
@@ -379,16 +391,16 @@ class Model(pl.LightningModule):
                 for constraint, weight in \
                         zip(l_constraint, l_cweight):
                     const_loss = self._constrained_loss(l_word_scores,
-                                                        batch_d, constraint,
+                                                        constraint,
                                                         float(weight))
                     if constraint not in self.constraints_str_d:
                         self.constraints_str_d[constraint] = []
                     self.constraints_str_d[constraint].append(const_loss)
 
         self.output.loss = loss
-        return output_d
+        return sample
 
-    def _constrained_loss(self, l_word_scores, batch_d,
+    def _constrained_loss(self, l_word_scores, 
                           constraints_str, cweights_str):
         """
         similar to model.constrained_loss()
@@ -397,7 +409,6 @@ class Model(pl.LightningModule):
         Parameters
         ----------
         l_word_scores
-        batch_d
         constraints_str
         cweights_str
 
@@ -407,24 +418,24 @@ class Model(pl.LightningModule):
         """
         batch_size, depth, num_words, num_labels = l_word_scores.shape
         hinge_loss = 0
-        bat = batch_d["verb_index"].unsqueeze(1).unsqueeze(3). \
+        bat = self.verb_locs.unsqueeze(1).unsqueeze(3). \
             repeat(1, depth, 1, num_labels)
         verb_scores = torch.gather(l_word_scores, 2, bat)
         verb_rel_scores = verb_scores[:, :, :, 2]
         # (batch_size, depth, num_words)
-        verb_rel_scores = verb_rel_scores * (batch_d["verb_index"] != 0). \
+        verb_rel_scores = verb_rel_scores * (self.verb_locs != 0). \
             unsqueeze(1).float()
 
         # every head-verb must be included in a relation
         if 'hvc' in constraints_str:
             column_loss = torch.abs(1 - torch.sum(verb_rel_scores, dim=1))
-            column_loss = column_loss[batch_d["verb_index"] != 0]
+            column_loss = column_loss[self.verb_locs != 0]
             hinge_loss += cweights_str * column_loss.sum()
 
         # extractions must have at least k-relations with
         # a head verb in them
         if 'hvr' in constraints_str:
-            row_rel_loss = F.relu(batch_d["verb"].sum(dim=1).float() -
+            row_rel_loss = F.relu(self.verb_mask.sum(dim=1).float() -
                                   torch.max(verb_rel_scores, dim=2)[0].sum(
                                       dim=1))
             hinge_loss += cweights_str * row_rel_loss.sum()
@@ -435,24 +446,23 @@ class Model(pl.LightningModule):
             hinge_loss += cweights_str * ex_loss.sum()
 
         if 'posm' in constraints_str:
-            bat = batch_d["pos_index"].unsqueeze(1).unsqueeze(3). \
+            bat = self.pos_index.unsqueeze(1).unsqueeze(3). \
                 repeat(1, depth, 1, num_labels)
             pos_scores = torch.gather(l_word_scores, 2, bat)
             pos_nnone_scores = \
                 torch.max(pos_scores[:, :, :, 1:], dim=-1)[0]
             column_loss = (1 - torch.max(pos_nnone_scores, dim=1)[0]) * \
-                          (batch_d["pos_index"] != 0).float()
+                          (self.pos_index != 0).float()
             hinge_loss += cweights_str * column_loss.sum()
 
         return hinge_loss
 
-    def training_step(self, batch_d, batch_id, optimizer_id=-1):
+    def training_step(self, batch_id, optimizer_id=-1):
         """
         inherited method
 
         Parameters
         ----------
-        batch_d
         batch_id
         optimizer_id
 
@@ -469,7 +479,7 @@ class Model(pl.LightningModule):
             constraints_str = self.params_d["constraints_str"]
             cweights_str = float(self.params_d["cweights_str"])
 
-        output_d = self.forward(batch_d, mode='train',
+        sample = self.forward(mode='train',
                                 batch_id=batch_id,
                                 constraints_str=constraints_str,
                                 cweights_str=cweights_str)
@@ -478,55 +488,48 @@ class Model(pl.LightningModule):
 
         return output0_d
 
-    def validation_step(self, batch_d, batch_id):
+    def validation_step(self, batch_id):
         """
         inherited method
 
         Parameters
         ----------
-        batch_d
         batch_id
 
         Returns
         -------
 
         """
-        output_d = self.forward(
-            batch_d,
+        sample = self.forward(
             mode='val',
             constraints_str=self.params_d["constraints_str"],
             cweights_str=self.params_d["cweights_str"])
 
-        output0_d = {"l_predictions": self.output.lll_prediction,
+        output0_d = {"pred_lll_label": self.output.pred_lll_label,
                      "ll_score": self.output.ll_score,
-                     "ground_truth": batch_d["lll_label"],
-                     "meta_data": batch_d["meta_data"]}
+                     "ground_truth": self.lll_label,
+                     "meta_data": self.meta_data}
         output0_d = OrderedDict(output0_d)
 
         if self.params_d["mode"] != 'test':
-            if self.params_d["write_async"]:
-                t = Thread(target=self._write_output,
-                           args=(output0_d, batch_id, self.params_d["task"]))
-                t.start()
-            else:
-                self._write_output(output0_d, batch_id, self.params_d["task"])
+
+            self._write_output(output0_d, batch_id, self.params_d["task"])
 
         return output0_d
 
-    def test_step(self, batch_d, batch_id):
+    def test_step(self, batch_id):
         """
         inherited method
 
         Parameters
         ----------
-        batch_d
         batch_id
 
         Returns
         -------
 
         """
-        return self.validation_step(batch_d, batch_id)
+        return self.validation_step(batch_id)
 
     def _eval_metrics_at_epoch_end(self,
                                    l_output_d,
@@ -547,25 +550,25 @@ class Model(pl.LightningModule):
         """
         eval_results_d = None
         if self.params_d["mode"] == 'test':
-            for output_index, output_d in enumerate(l_output_d):
-                self.output.lll_prediction = self.output.lll_prediction.cpu()
+            for output_index, sample in enumerate(l_output_d):
+                self.output.pred_lll_label = self.output.pred_lll_label.cpu()
                 self.output.ll_score = self.output.ll_score.cpu()
                 self.output.ll_score = \
                     (self.output.ll_score * 100).round() / 100
-                self.output.ground_truth = self.output.ground_truth.cpu()
-                self.output.meta_data = self.output.meta_data.cpu()
+                self.output.true_lll_label = self.output.true_lll_label.cpu()
+                self.sample.orig_sent = self.sample.orig_sent.cpu()
         if self.params_d["task"] == "cc":
             if 'predict' in self.params_d["mode"]:
                 metrics_d = {'P_exact': 0, 'R_exact': 0, 'F1_exact': 0}
             else:
-                for output_d in l_output_d:
-                    if type(self.output.meta_data[0]) != str:
-                        self.output.meta_data = [self.auto_tokenizer.decode[m]
+                for sample in l_output_d:
+                    if type(self.sample.orig_sent[0]) != str:
+                        self.sample.orig_sent = [self.auto_tokenizer.decode[m]
                                                  for m in
-                                                 self.output.meta_data]
-                    self.metric(self.output.lll_prediction,
-                                self.output.ground_truth,
-                                meta_data=self.output.meta_data)
+                                                 self.sample.orig_sent]
+                    self.metric(self.output.pred_lll_label,
+                                self.output.true_lll_label,
+                                meta_data=self.sample.orig_sent)
                 metrics_d = self.metric.get_metric_values(reset=True, mode=mode)
 
             val_acc = metrics_d["F1_exact"]
@@ -577,13 +580,13 @@ class Model(pl.LightningModule):
             if 'predict' in self.params_d["mode"]:
                 metrics_d = {'carb_f1': 0, 'carb_auc': 0, 'carb_lastf1': 0}
             else:
-                for output_d in l_output_d:
-                    if type(self.output.meta_data[0]) != str:
-                        self.output.meta_data = [self.auto_tokenizer.decode[m]
+                for sample in l_output_d:
+                    if type(self.sample.orig_sent[0]) != str:
+                        self.sample.orig_sent = [self.auto_tokenizer.decode[m]
                                                  for m in
-                                                 self.output.meta_data]
-                    self.metric(self.output.lll_prediction,
-                                self.output.meta_data,
+                                                 self.sample.orig_sent]
+                    self.metric(self.output.pred_lll_label,
+                                self.sample.orig_sent,
                                 self.output.ll_score)
                 metrics_d = self.metric.get_metric_values(reset=True, mode=mode)
 
@@ -641,10 +644,7 @@ class Model(pl.LightningModule):
                      "progress_bar": eval_results_d,
                      "test_acc": eval_results_d["eval_f1"]}
         # self.results = d_eval_results # never used!
-        if self.params_d["write_async"]:
-            while not sem.acquire(blocking=True):
-                pass
-            sem.release()
+
         return results_d
 
     def train_dataloader(self):
@@ -744,14 +744,14 @@ class Model(pl.LightningModule):
 
         return extraction
 
-    def _write_if_task_ex(self, output_d):
+    def _write_if_task_ex(self, sample):
         fix_d = self.metric.fix_d
 
-        lll_prediction = self.output.lll_prediction
-        l_orig_sentL = self.output.meta_data
+        pred_lll_label = self.output.pred_lll_label
+        l_orig_sentL = self.sample.orig_sent
         ll_score = self.output.ll_score
         num_sents, ex_depth, max_sent_len = \
-            lll_prediction.shape
+            pred_lll_label.shape
         assert num_sents == len(l_orig_sentL)
         orig_sent_to_pred_l_ex = {}
         for sample_id, orig_sentL in enumerate(l_orig_sentL):
@@ -765,7 +765,7 @@ class Model(pl.LightningModule):
                     orig_sent_to_pred_l_ex[orig_sent] = []
             for depth in range(ex_depth):
                 num_words = len(get_words(orig_sentL))
-                ex_labels = lll_prediction[sample_id][depth][:num_words]
+                ex_labels = pred_lll_label[sample_id][depth][:num_words]
                 if sum(ex_labels) == 0:  # extractions completed
                     break
                 ex = self._get_extraction(
@@ -803,17 +803,17 @@ class Model(pl.LightningModule):
             l_pred_allen_str.append(allen_str.strip("/n"))
         return l_pred_str, l_pred_allen_str
 
-    def _write_if_task_cc(self, output_d):
+    def _write_if_task_cc(self, sample):
         fix_d = self.metric.fix_d
 
         sample_id = 0
         correct = True
         total_num_ex_sents1 = 0
         total_num_ex_sents2 = 0
-        lll_prediction = self.output.lll_prediction
-        # thruth = self.output.ground_truth"]
-        l_orig_sentL = self.output.meta_data
-        total_depth = lll_prediction.shape[1]
+        pred_lll_label = self.output.pred_lll_label
+        # thruth = self.output.true_lll_label"]
+        l_orig_sentL = self.sample.orig_sent
+        total_depth = pred_lll_label.shape[1]
         l_pred_str = []
         l_spanned_words = []
         ll_spanned_loc = []
@@ -824,7 +824,7 @@ class Model(pl.LightningModule):
             l_orig_sent = []
             for depth in range(total_depth):
                 num_words = len(get_words(orig_sentL))
-                l_label = lll_prediction[id][depth][:num_words].tolist()
+                l_label = pred_lll_label[id][depth][:num_words].tolist()
                 ll_label.append(l_label)
             orig_sent = orig_sentL.split("[used1]")[0]
             tree = CCTree(orig_sent, ll_label)
@@ -847,13 +847,13 @@ class Model(pl.LightningModule):
 
         return l_pred_str
 
-    def _write_output(self, output_d, batch_id, task):
+    def _write_output(self, sample, batch_id, task):
         """
         similar to model.write_to_file()
 
         Parameters
         ----------
-        output_d
+        sample
         batch_id
         task
 
@@ -861,22 +861,17 @@ class Model(pl.LightningModule):
         -------
 
         """
-        if self.params_d["write_async"]:
-            while not sem.acquire(blocking=True):
-                # print("No Semaphore available")
-                pass
-            # print('Got semaphore')
-        self.output.lll_prediction = self.output.lll_prediction.cpu()
+        self.output.pred_lll_label = self.output.pred_lll_label.cpu()
         self.output.ll_score = self.output.ll_score.cpu()
-        self.output.ground_truth = self.output.ground_truth.cpu()
-        self.output.meta_data = self.output.meta_data.cpu()
-        # note, right hand side depends on self.output.meta_data
-        self.output.meta_data = [self.auto_tokenizer.decode[m] for m
-                                 in self.output.meta_data]
+        self.output.true_lll_label = self.output.true_lll_label.cpu()
+        self.sample.orig_sent = self.sample.orig_sent.cpu()
+        # note, right hand side depends on self.sample.orig_sent
+        self.sample.orig_sent = [self.auto_tokenizer.decode[m] for m
+                                 in self.sample.orig_sent]
         if task == "ex":
-            l_pred_str, l_pred_allen_str = self._write_if_task_ex(output_d)
+            l_pred_str, l_pred_allen_str = self._write_if_task_ex(sample)
         elif task == "cc":
-            l_pred_str = self._write_if_task_cc(output_d)
+            l_pred_str = self._write_if_task_cc(sample)
         else:
             assert False
         fpath = TASK + ".txt"
@@ -896,5 +891,3 @@ class Model(pl.LightningModule):
             allen_f = open(fpath, fmode)
             allen_f.write('\n'.join(l_pred_allen_str) + '\n')
             allen_f.close()
-        if self.params_d["write_async"]:
-            sem.release()

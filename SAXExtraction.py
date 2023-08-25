@@ -50,6 +50,7 @@ class SAXExtraction():
         self.extags = ["NONE"] * len(self.orig_sentL_pair[1])
         self.base_extag_is_assigned = {extag_name: False
                                        for extag_name in BASE_EXTAGS}
+        self.extags_are_set = False
 
     def __eq__(self, other):
         return self.get_simple_sent() == other.get_simple_sent()
@@ -390,15 +391,17 @@ class SAXExtraction():
             self.set_extags_of_2_matches(matches, arg_name.upper())
 
     def set_extags(self):
-        if not self.extags:
-            self.set_extags_of_arg2()
-            self.set_extags_of_arg1_or_rel("arg1")
-            self.set_extags_of_arg1_or_rel("rel")
-            self.set_extags_of_IS_OF_FROM()
-            self.set_extags_of_repeated_arg1()
-            self.set_extags_of_repeated_rel()
-            self.set_extags_of_loc_or_time("loc")
-            self.set_extags_of_loc_or_time("time")
+
+        self.set_extags_of_arg2()
+        self.set_extags_of_arg1_or_rel("arg1")
+        self.set_extags_of_arg1_or_rel("rel")
+        self.set_extags_of_IS_OF_FROM()
+        self.set_extags_of_repeated_arg1()
+        self.set_extags_of_repeated_rel()
+        self.set_extags_of_loc_or_time("loc")
+        self.set_extags_of_loc_or_time("time")
+
+        self.extags_are_set = True
 
     @staticmethod
     def convert_to_sax_extraction(carb_ext):

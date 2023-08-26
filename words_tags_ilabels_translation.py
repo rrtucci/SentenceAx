@@ -33,6 +33,14 @@ from sax_utils import *
 from SAXExtraction import *
 from CCTree import *
 
+"""
+
+translate_words_to_extags and translate_words_to_cctags are the hardest. All 
+the others are trivial.
+
+
+"""
+
 
 def translate_words_to_extags(ex, set_extags):
     if set_extags:

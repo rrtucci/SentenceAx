@@ -82,7 +82,7 @@ class AllenTool:
         # print("zlpd", sent_to_extractions)
         return sent_to_extractions
     
-    def write_simp_sents_file(self,
+    def write_simple_sents_file(self,
                           out_fp,
                           first_sample_id,
                           last_sample_id):

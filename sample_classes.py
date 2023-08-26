@@ -5,8 +5,10 @@ from CCTree import *
 class SampleChild:
     def __init__(self, tags=None):
         self.tags = tags
+        self.ilabels = None
         self.confidence = None
         self.simple_sent = None
+        self.depth = None
 
     def get_tag_str(self):
         return " ".join(self.tags)
@@ -21,115 +23,48 @@ class SampleChild:
 
 class Sample:
 
-    def __init__(self, orig_sent=None):
+    def __init__(self, orig_sent=None, ll_ilabel=None):
         self.orig_sent = orig_sent
         self.l_child = None
         self.max_depth = None
-        self.orig_sentL = None
-        self.ll_ilabel = None
+        if ll_ilabel:
+            self.set_children(ll_ilabel)
 
-    @staticmethod
-    def write_samples_file(samples,
-                           path,
-                           with_confidences,
-                           with_unused_tokens):
-        with open(path, "w") as f:
-            for k, sam in enumerate(samples):
-                f.write(str(k + 1) + "." + "\n")
-
-                if with_unused_tokens:
-                    orig_sentL = sam.orig_sent + UNUSED_TOKENS_STR
-                    f.write(orig_sentL + "\n")
-                else:
-                    f.write(sam.orig_sent)
-                    for child in sam.l_child:
-                        end_str = "\n"
-                        if with_confidences:
-                            end_str = "(" + sam.child.confidence + ")"
-                        f.write(child.get_token_str() + end_str)
+    def set_children(self, ll_ilabel):
+        self.max_depth = len(ll_ilabel)
+        self.l_child = []
+        for depth, l_ilabel in enumerate(ll_ilabel):
+            self.l_child.append(SampleChild())
+            self.l_child[-1].depth = depth
+            self.l_child[-1].ilabels = l_ilabel
 
 
 class ExTagsSample(Sample):
     def __init__(self, orig_sent=None, ll_ilabel=None):
         Sample.__init__(self, orig_sent, ll_ilabel)
+        if ll_ilabel:
+            self.set_tags(ll_ilabel)
 
-        if orig_sent and ll_ilabel:
-            self.fill_from_ll_ilabel(orig_sent, ll_ilabel)
-
-    def fill_from_ll_ilabel(self,
-                           orig_sent,
-                           ll_ilabel):
-        self.orig_sent = orig_sent
-        self.orig_sentL = self.orig_sent + UNUSED_TOKENS_STR
-        self.ll_ilabel = ll_ilabel
-        self.max_depth = len(ll_ilabel)
-
-        self.l_child = []
-        for i in range(self.max_depth):
-            child = SampleChild()
-            for l_ilabel in ll_ilabel:
-                child.tags = []
-                for ilabel in l_ilabel:
-                    child.tags.append(ILABEL_TO_EXTAG[ilabel])
-            simp_words = []
-            orig_words = get_words(orig_sent)
-            for k, tag in enumerate(child.tags):
-                if tag is not "NONE":
-                    simp_words.append(orig_words[i])
-
-            child.simple_sent = " ".join(simp_words)
-            self.l_child.append(child)
-
-    # def fill_from_extraction_list(self, l_ex):
-    #     self.orig_sentL = l_ex[0].orig_sentL
-    #     self.orig_sent = self.orig_sentL.split("[used1]")[0].strip()
-    #     self.max_depth = len(l_ex)
-    #     self.l_child = []
-    #     for ex in l_ex:
-    #         assert self.orig_sent == ex.orig_sentL
-    #         ex.set_extags_of_all()
-    #         child = SampleChild(ex.sent_extags)
-    #         child.confidence = ex.confidence
-    #         child.simple_sent = ex.get_simple_sent()
-    #         self.l_child.append(child)
+    def set_tags(self, ll_ilabel):
+        for depth, l_ilabel in enumerate(ll_ilabel):
+            child = self.l_child[depth]
+            child.tags = []
+            for ilabel in l_ilabel:
+                child.tags.append(ILABEL_TO_EXTAG[ilabel])
 
 
 class CCTagsSample(Sample):
     def __init__(self, orig_sent=None, ll_ilabel=None):
         Sample.__init__(self, orig_sent, ll_ilabel)
+        if ll_ilabel:
+            self.set_tags(ll_ilabel)
 
-        if orig_sent and ll_ilabel:
-            self.fill_from_ll_ilabel(orig_sent, ll_ilabel)
-
-    def fill_from_ll_ilabel(self,
-                                orig_sent,
-                                ll_ilabel):
-
-        self.orig_sent = orig_sent
-        self.orig_sentL = self.orig_sent + UNUSED_TOKENS_STR
-        self.ll_ilabel = ll_ilabel
-        self.max_depth = len(ll_ilabel)
-
-        cctree = CCTree(orig_sent, ll_ilabel)
-
-        assert self.max_depth == len(cctree.cc_sents)
-        self.l_child = []
-        for cc_sent in cc_sents:
-            child = SampleChild()
-            for l_ilabel in ll_ilabel:
-                child.tags = []
-                for ilabel in l_ilabel:
-                    child.tags.append(ILABEL_TO_CCTAG[ilabel])
-
-            child.simple_sent = cc_sent
-            self.l_child.append(child)
-
-    @staticmethod
-    def write_cctags_file(samples, path, with_confidences=False):
-        Sample.write_samples_file(samples,
-                                  path,
-                                  with_confidences=with_confidences,
-                                  with_unused_tokens=False)
+    def set_tags(self, ll_ilabel):
+        for depth, l_ilabel in enumerate(ll_ilabel):
+            child = self.l_child[depth]
+            child.tags = []
+            for ilabel in l_ilabel:
+                child.tags.append(ILABEL_TO_CCTAG[ilabel])
 
 
 class SplitPredSample():
@@ -142,3 +77,37 @@ class SplitPredSample():
             self.l_child[-1].l_child = []
             for j in range(max_ex_depth):
                 self.l_child[-1].l_child.append(ExTagsSample())
+
+
+def write_samples_file(samples,
+                       path,
+                       with_confidences,
+                       with_unused_tokens):
+    with open(path, "w") as f:
+        for k, sam in enumerate(samples):
+            f.write(str(k + 1) + "." + "\n")
+
+            if with_unused_tokens:
+                orig_sentL = sam.orig_sent + UNUSED_TOKENS_STR
+                f.write(orig_sentL + "\n")
+            else:
+                f.write(sam.orig_sent)
+                for child in sam.l_child:
+                    end_str = "\n"
+                    if with_confidences:
+                        end_str = "(" + sam.child.confidence + ")"
+                    f.write(child.get_token_str() + end_str)
+
+
+def write_extags_file(samples, path, with_confidences=False):
+    Sample.write_samples_file(samples,
+                              path,
+                              with_confidences=with_confidences,
+                              with_unused_tokens=True)
+
+
+def write_cctags_file(samples, path, with_confidences=False):
+    Sample.write_samples_file(samples,
+                              path,
+                              with_confidences=with_confidences,
+                              with_unused_tokens=False)

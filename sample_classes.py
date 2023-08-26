@@ -111,9 +111,8 @@ class CCTagsSample(Sample):
         self.max_depth = len(ll_ilabel)
 
         cctree = CCTree(orig_sent, ll_ilabel)
-        cc_sents, spanned_sents, l_spanned_locs = cctree.get_cc_sents()
 
-        assert self.max_depth == len(cc_sents)
+        assert self.max_depth == len(cctree.cc_sents)
         self.l_child = []
         for cc_sent in cc_sents:
             child = SampleChild()

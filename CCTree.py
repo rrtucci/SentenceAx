@@ -16,10 +16,17 @@ class CCTree:
         # This must be called before calling self.set_tree_structure()
         self.set_ccnodes()
 
-        self.root_cclocs = []
-        self.par_ccloc_to_child_cclocs = {}
-        self.child_ccloc_to_par_cclocs = {}
+        self.root_cclocs = None
+        self.par_ccloc_to_child_cclocs = None
+        self.child_ccloc_to_par_cclocs = None
+        # this fill the 3 previous None's
         self.set_tree_structure()
+        
+        self.spanned_sents = None
+        self.l_spanned_locs = None
+        self.cc_sents = None
+        # this fills the 3 previous None's
+        self.set_cc_sents()
 
     @staticmethod
     def get_ccnode_from_ccloc(ccloc, ccnodes):
@@ -232,8 +239,9 @@ class CCTree:
                     ll_eqlevel_spanned_loc.append(loc_list)
 
         return ll_eqlevel_spanned_loc
+    
 
-    def get_cc_sents(self):
+    def set_cc_sents(self):
         """
         similar to data.coords_to_sentences()
 
@@ -285,7 +293,10 @@ class CCTree:
                 ' '.join([orig_words[i] for i in sorted(spanned_locs)])
             cc_sents.append(cc_sent)
 
-        return cc_sents, spanned_sents, l_spanned_locs
+        
+        self.spanned_sents = spanned_sents
+        self.l_spanned_locs = l_spanned_locs
+        self.cc_sents = cc_sents
 
 
     # def get_shifted_ccnodes(self, arr):  # post_process()

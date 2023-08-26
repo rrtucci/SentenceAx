@@ -11,46 +11,123 @@ BASE_CCTAGS = CCTAG_TO_ILABEL.keys()
 ILABEL_TO_CCTAG = {0: 'NONE', 1: 'CP', 2: 'CP_START',
                    3: 'CC', 4:'SEP', 5: 'OTHERS'}
 
+* extags (openie-data/openie4_labels) *.labels has no [unused1], *_labels does
+have [unused]
+Hercule Poirot is a fictional Belgian detective , created by Agatha Christie . [unused1] [unused2] [unused3]
+ARG1 ARG1 REL ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 NONE NONE NONE NONE
+NONE NONE NONE ARG1 ARG1 ARG1 ARG1 NONE REL ARG2 ARG2 ARG2 NONE NONE NONE NONE
+
+
+* cctags (openie-data/ptb-train.labels)
+Bell , based in Los Angeles , makes and distributes electronic , computer and building products .
+NONE NONE NONE NONE NONE NONE NONE CP_START CC CP CP_START SEP CP CC CP NONE NONE
+NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE
+NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE
+
+
 CHAIN OF CONVERSIONS
 words->extags, cctags->ilabels->extags->words
 """
 from sax_globals import *
 from sax_utils import *
 from SAXExtraction import *
+from CCTree import *
 
 
-def trans_words_to_extags(ex, set_extags):
+def translate_words_to_extags(ex, set_extags):
     if set_extags:
         ex.set_extags()
     return ex.extags
 
 
-def trans_words_to_cctags():
+def translate_words_to_cctags(orig_sent, ll_ilabel):
+    """
+    CCTree ilabels not same as those provided by AutoEncoder.
+
+    This method is surely wrong, but a good first stab.
+
+    Openie6 not very clear about this.
+
+
+    Parameters
+    ----------
+    orig_sent
+    ll_ilabel
+
+    Returns
+    -------
+
+    """
+    words = get_words(orig_sent)
+    cctree = CCTree(orig_sent, ll_ilabel)
+    l_spanned_locs = cctree.l_spanned_locs
+    max_depth = len(l_spanned_locs)
+    nodes = cctree.ccnodes
+    depth_to_cclocs = {}
+    depth_to_seplocs = {}
+    for depth in range(max_depth):
+        seplocs = []
+        cclocs = []
+        for node in nodes:
+            if node.depth == depth:
+                seplocs += node.seplocs
+                cclocs.append(node.ccloc)
+        depth_to_seplocs[depth] = seplocs
+        depth_to_cclocs[depth] = cclocs
+    l_cctags = [["NONE"]*len(words)]
+    for depth, locs in enumerate(l_spanned_locs):
+        cctags = l_cctags[depth]
+        for k, loc in enumerate(sorted(locs)):
+            if k==0:
+                cctags[loc] = "CP_START"
+            else:
+                cctags[loc] = "CP"
+            if loc in depth_to_cclocs[depth]:
+                cctags[loc] = "CC"
+            if loc in depth_to_seplocs[depth]:
+                cctags[loc] = "SEP"
+    return l_cctags
 
 
 
-def trans_extags_to_ilabels(extags):
+
+
+def translate_extags_to_ilabels(extags):
     ilabels = []
     for extag in extags:
         ilabels.append(EXTAG_TO_ILABEL[extag])
     return ilabels
 
 
-def trans_cctags_to_ilabels(cctags):
+def translate_cctags_to_ilabels(cctags):
     ilabels = []
     for cctag in cctags:
         ilabels.append(CCTAG_TO_ILABEL[cctag])
     return ilabels
 
 
-def trans_ilabels_to_cctags(ilabels, all_words):
+def translate_ilabels_to_cctags(ilabels):
+    """
+    Openie6 seems to use CCTree to go from l_ilabels to l_cctags (see
+    metric.get_coords()). However, I believe the l_ilabels used by CCTree,
+    and the ones in this function are different.
+
+    Parameters
+    ----------
+    ilabels
+
+    Returns
+    -------
+
+    """
+
     cctags = []
     for ilabel in ilabels:
         cctags.append(ILABEL_TO_CCTAG(ilabel))
     return cctags
 
 
-def trans_ilabels_to_extags(ilabels):
+def translate_ilabels_to_extags(ilabels):
     extags = []
     for ilabel in ilabels:
         extags.append(ILABEL_TO_EXTAG(ilabel))
@@ -58,18 +135,18 @@ def trans_ilabels_to_extags(ilabels):
     return extags
 
 
-def trans_cctags_to_words(cctags, orig_sentL):
+def translate_cctags_to_words(cctags, orig_sentL):
     all_words = get_words(orig_sentL)
     max_len = len(all_words)
     cc_words = []
     for k, cctag in enumerate(cctags):
         # cctags may be padded
-        if k < max_len and cctag not in ["CP_START", "NONE"]:
+        if k < max_len and cctag not in "NONE":
             cc_words.append(all_words[k])
     return cc_words
 
 
-def trans_extags_to_words(extags, orig_sentL):
+def translate_extags_to_words(extags, orig_sentL):
     """
     inferred from Openie6 data_processing.label_is_of_relations()
 
@@ -94,7 +171,7 @@ def trans_extags_to_words(extags, orig_sentL):
                 l_arg1.append(all_words[k])
             elif extag ==  "REL":
                 l_rel.append(all_words[k])
-            elif extag == "ARG2":
+            elif extag in ["ARG2", "LOC", "TIME"]:
                 l_arg2.append(all_words[k])
             if l_rel[-1] == "[unused1]":
                 l_rel = ["[is]"] + l_rel[:-1]

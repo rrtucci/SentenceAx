@@ -23,7 +23,8 @@ class SampleChild:
 
 class Sample:
 
-    def __init__(self, orig_sent=None, ll_ilabel=None):
+    def __init__(self, task, orig_sent=None, ll_ilabel=None):
+        self.task = task
         self.orig_sent = orig_sent
         self.ll_ilabel = ll_ilabel
         self.l_child = None
@@ -39,34 +40,17 @@ class Sample:
             self.l_child[-1].depth = depth
             self.l_child[-1].ilabels = l_ilabel
 
-
-class ExTagsSample(Sample):
-    def __init__(self, orig_sent=None, ll_ilabel=None):
-        Sample.__init__(self, orig_sent, ll_ilabel)
-        if ll_ilabel:
-            self.set_tags(ll_ilabel)
-
     def set_tags(self, ll_ilabel):
         for depth, l_ilabel in enumerate(ll_ilabel):
             child = self.l_child[depth]
             child.tags = []
             for ilabel in l_ilabel:
-                child.tags.append(ILABEL_TO_EXTAG[ilabel])
-
-
-class CCTagsSample(Sample):
-    def __init__(self, orig_sent=None, ll_ilabel=None):
-        Sample.__init__(self, orig_sent, ll_ilabel)
-        if ll_ilabel:
-            self.set_tags(ll_ilabel)
-
-    def set_tags(self, ll_ilabel):
-        for depth, l_ilabel in enumerate(ll_ilabel):
-            child = self.l_child[depth]
-            child.tags = []
-            for ilabel in l_ilabel:
-                child.tags.append(ILABEL_TO_CCTAG[ilabel])
-
+                if self.task == "ex":
+                    child.tags.append(ILABEL_TO_EXTAG[ilabel])
+                elif self.task == "cc":
+                    child.tags.append(ILABEL_TO_CCTAG[ilabel])
+                else:
+                    assert False
 
 class SplitPredSample():
     def __init__(self):

@@ -131,7 +131,7 @@ if TASK == "ex":
 elif TASK == "cc":
     TAG_TO_ILABEL = CCTAG_TO_ILABEL
     MAX_DEPTH = MAX_CC_DEPTH
-    LOG_dir = WEIGHTS_DIR + '/cc_logs'
+    LOG_DIR = WEIGHTS_DIR + '/cc_logs'
 else:
     assert False
 

@@ -54,7 +54,8 @@ UNUSED_TOKENS_STR = " " + " ".join(UNUSED_TOKENS)
 
 DROPOUT = 0.0
 NUM_EMBEDDINGS = 100
-MAX_EXTRACTION_LENGTH = 5
+MAX_EX_DEPTH = 5
+MAX_CC_DEPTH = 3
 
 BOS_ILABEL = 101 # bos = begin of sentence
 EOS_ILABEL = 102 # eos = end of sentence
@@ -125,11 +126,11 @@ print('you\'ve entered MODE= "' + MODE + '"')
 
 if TASK == "ex":
     TAG_TO_ILABEL = EXTAG_TO_ILABEL
-    MAX_DEPTH = MAX_EXTRACTION_LENGTH
+    MAX_DEPTH = MAX_EX_DEPTH
     LOG_DIR = WEIGHTS_DIR + '/ex_logs'
 elif TASK == "cc":
     TAG_TO_ILABEL = CCTAG_TO_ILABEL
-    MAX_DEPTH = 3
+    MAX_DEPTH = MAX_CC_DEPTH
     LOG_dir = WEIGHTS_DIR + '/cc_logs'
 else:
     assert False

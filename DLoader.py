@@ -192,7 +192,7 @@ class DLoader:
                 # then li[:100] = [2,3]
                 sample_d = {
                     'sentL_ids': sentL_ids,
-                    'l_ilabels': ilabels_for_each_ex[:MAX_EXTRACTION_LENGTH],
+                    'l_ilabels': ilabels_for_each_ex[:MAX_EX_DEPTH],
                     'word_starts': word_starts,
                     'orig_sent': orig_sent
                 }
@@ -230,7 +230,7 @@ class DLoader:
 
         # example_d = {
         #     'sentL_ids': sentL_ids,
-        #     'll_label': labels_for_each_ex[:MAX_EXTRACTION_LENGTH],
+        #     'll_label': labels_for_each_ex[:MAX_EX_DEPTH],
         #     'word_starts': word_starts,
         #     'orig_sent': orig_sent,
         #     # if spacy_model:

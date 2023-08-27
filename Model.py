@@ -118,7 +118,7 @@ class Model(pl.LightningModule):
             assert False
 
         # similar to batch_d
-        self.lll_ilabel = None
+        self.m_out = MOutput()
         self.meta_data = None
         self.pos_index = None
         self.text = None

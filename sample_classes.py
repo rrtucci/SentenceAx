@@ -6,7 +6,7 @@ class SampleChild:
     def __init__(self, tags=None):
         self.tags = tags
         self.ilabels = None
-        self.confi = None
+        self.score = None
         self.simple_sent = None
         self.depth = None
 
@@ -40,6 +40,10 @@ class Sample:
             self.l_child[-1].depth = depth
             self.l_child[-1].ilabels = l_ilabel
 
+    def set_scores(self, l_score):
+        for k, child in enumerate(self.l_child):
+            child.score = l_score[k]
+
     def set_tags(self, ll_ilabel):
         for depth, l_ilabel in enumerate(ll_ilabel):
             child = self.l_child[depth]
@@ -64,7 +68,7 @@ class SplitPredSample():
 
 def write_samples_file(samples,
                        path,
-                       with_confis,
+                       with_scores,
                        with_unused_tokens):
     with open(path, "w") as f:
         for k, sam in enumerate(samples):
@@ -77,20 +81,20 @@ def write_samples_file(samples,
                 f.write(sam.orig_sent)
                 for child in sam.l_child:
                     end_str = "\n"
-                    if with_confis:
-                        end_str = "(" + sam.child.confi + ")"
+                    if with_scores:
+                        end_str = "(" + sam.child.score + ")"
                     f.write(child.get_token_str() + end_str)
 
 
-def write_extags_file(samples, path, with_confis=False):
+def write_extags_file(samples, path, with_scores=False):
     Sample.write_samples_file(samples,
                               path,
-                              with_confis=with_confis,
+                              with_scores=with_scores,
                               with_unused_tokens=True)
 
 
-def write_cctags_file(samples, path, with_confis=False):
+def write_cctags_file(samples, path, with_scores=False):
     Sample.write_samples_file(samples,
                               path,
-                              with_confis=with_confis,
+                              with_scores=with_scores,
                               with_unused_tokens=False)

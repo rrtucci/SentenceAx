@@ -498,7 +498,7 @@ class MConductor:
         for line_i, line in enumerate(rescored):
             fields = line.split('\t')
             sentence = fields[0]
-            confidence = float(fields[2])
+            score = float(fields[2])
 
             if line_i == 0:
                 sentence_str = f'{sentence}\n'
@@ -521,13 +521,13 @@ class MConductor:
             arg2 = re.findall("<arg2>.*</arg2>", fields[1])[0].strip(
                 '<arg2>').strip('</arg2>').strip()
 
-            # why must confidence be exponentiated?
+            # why must score be exponentiated?
 
             extraction = SAXExtraction(orig_sentL= orig_senL,
                                         arg1=arg1,
                                        rel=rel,
                                        arg2=arg2,
-                                       confidence=math.exp(confidence))
+                                       score=math.exp(score))
             extraction.arg1 = arg1
             extraction.arg2 = arg2
             if self.params_d["type"] == 'sentences':

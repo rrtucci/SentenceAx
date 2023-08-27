@@ -37,9 +37,9 @@ class SAXExtraction():
                  arg1="",
                  rel="",
                  arg2="",
-                 confidence=None):
+                 score=None):
 
-        self.confidence = confidence
+        self.score = score
         self.orig_sentL_pair = (orig_sentL, get_words(orig_sentL))
         self.arg1_pair = (arg1, get_words(arg1))
         self.rel_pair = (rel, get_words(rel))
@@ -451,7 +451,7 @@ class SAXExtraction():
                              arg1=arg1,
                              rel=carb_ext.rel,
                              arg2=arg2,
-                             confidence=carb_ext.confidence)
+                             score=carb_ext.confidence)
 
     def convert_to_carb_extraction(self):
         """
@@ -464,7 +464,7 @@ class SAXExtraction():
         carb_ext = Extraction(pred=self.rel_pair[0],
                               head_pred_index=None,
                               sent=self.orig_sentL_pair[0],
-                              confidence=self.confidence)
+                              confidence=self.score)
         carb_ext.addArg(self.arg1_pair[0])
         carb_ext.addArg(self.arg2_pair[0])
         return carb_ext

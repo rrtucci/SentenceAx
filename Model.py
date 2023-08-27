@@ -137,6 +137,10 @@ class Model(pl.LightningModule):
         self.verb_locs = None
         self.word_starts = None
         self.hidden_states = None
+        
+        self.output = MOutput(TASK)
+        self.pred_output = MOutput(TASK)
+        self.true_output = MOutput(TASK)
 
     def configure_optimizers(self):
         """
@@ -372,7 +376,7 @@ class Model(pl.LightningModule):
             pred_lll_ilabel = torch.cat(pred_lll_ilabel, dim=1)
             ll_score = torch.cat(ll_score, dim=1)
 
-            self.output.pred_lll_ilabel = pred_lll_ilabel
+            self.pred_output.lll_ilabel = pred_lll_ilabel
             self.output.ll_score = ll_score
 
             if constraints_str and \
@@ -516,7 +520,7 @@ class Model(pl.LightningModule):
             constraints_str=self.params_d["constraints_str"],
             cweights_str=self.params_d["cweights_str"])
 
-        output0_d = {"pred_lll_ilabel": self.output.pred_lll_ilabel,
+        output0_d = {"pred_lll_ilabel": self.pred_output.lll_ilabel,
                      "ll_score": self.output.ll_score,
                      "ground_truth": self.lll_ilabel,
                      "meta_data": self.meta_data}
@@ -562,24 +566,24 @@ class Model(pl.LightningModule):
         eval_results_d = None
         if self.params_d["mode"] == 'test':
             for output_index, sample in enumerate(l_output_d):
-                self.output.pred_lll_ilabel = self.output.pred_lll_ilabel.cpu()
+                self.pred_output.lll_ilabel = self.pred_output.lll_ilabel.cpu()
                 self.output.ll_score = self.output.ll_score.cpu()
                 self.output.ll_score = \
                     (self.output.ll_score * 100).round() / 100
-                self.output.true_lll_ilabel = self.output.true_lll_ilabel.cpu()
-                self.sample.orig_sent = self.sample.orig_sent.cpu()
+                self.true_output.lll_ilabel = self.true_output.lll_ilabel.cpu()
+                self.output.meta_data = self.output.meta_data.cpu()
         if self.params_d["task"] == "cc":
             if 'predict' in self.params_d["mode"]:
                 metrics_d = {'P_exact': 0, 'R_exact': 0, 'F1_exact': 0}
             else:
                 for sample in l_output_d:
-                    if type(self.sample.orig_sent[0]) != str:
-                        self.sample.orig_sent = [self.auto_tokenizer.decode[m]
+                    if type(self.output.meta_data[0]) != str:
+                        self.output.meta_data = [self.auto_tokenizer.decode[m]
                                                  for m in
-                                                 self.sample.orig_sent]
-                    self.metric(self.output.pred_lll_ilabel,
-                                self.output.true_lll_ilabel,
-                                meta_data=self.sample.orig_sent)
+                                                 self.output.meta_data]
+                    self.metric(self.pred_output.lll_ilabel,
+                                self.true_output.lll_ilabel,
+                                meta_data=self.output.meta_data)
                 metrics_d = self.metric.get_metric_values(reset=True, mode=mode)
 
             val_acc = metrics_d["F1_exact"]
@@ -592,12 +596,12 @@ class Model(pl.LightningModule):
                 metrics_d = {'carb_f1': 0, 'carb_auc': 0, 'carb_lastf1': 0}
             else:
                 for sample in l_output_d:
-                    if type(self.sample.orig_sent[0]) != str:
-                        self.sample.orig_sent = [self.auto_tokenizer.decode[m]
+                    if type(self.output.meta_data[0]) != str:
+                        self.output.meta_data = [self.auto_tokenizer.decode[m]
                                                  for m in
-                                                 self.sample.orig_sent]
-                    self.metric(self.output.pred_lll_ilabel,
-                                self.sample.orig_sent,
+                                                 self.output.meta_data]
+                    self.metric(self.pred_output.lll_ilabel,
+                                self.output.meta_data,
                                 self.output.ll_score)
                 metrics_d = self.metric.get_metric_values(reset=True, mode=mode)
 
@@ -758,8 +762,8 @@ class Model(pl.LightningModule):
     def _write_if_task_ex(self, sample):
         fix_d = self.metric.fix_d
 
-        pred_lll_ilabel = self.output.pred_lll_ilabel
-        l_orig_sentL = self.sample.orig_sent
+        pred_lll_ilabel = self.pred_output.lll_ilabel
+        l_orig_sentL = self.output.meta_data
         ll_score = self.output.ll_score
         num_sents, ex_depth, max_sent_len = \
             pred_lll_ilabel.shape
@@ -821,9 +825,9 @@ class Model(pl.LightningModule):
         correct = True
         total_num_ex_sents1 = 0
         total_num_ex_sents2 = 0
-        pred_lll_ilabel = self.output.pred_lll_ilabel
-        # thruth = self.output.true_lll_label"]
-        l_orig_sentL = self.sample.orig_sent
+        pred_lll_ilabel = self.pred_output.lll_ilabel
+        # thruth = self.true_output.lll_label"]
+        l_orig_sentL = self.output.meta_data
         total_depth = pred_lll_ilabel.shape[1]
         l_pred_str = []
         l_spanned_words = []
@@ -872,13 +876,13 @@ class Model(pl.LightningModule):
         -------
 
         """
-        self.output.pred_lll_ilabel = self.output.pred_lll_ilabel.cpu()
+        self.pred_output.lll_ilabel = self.pred_output.lll_ilabel.cpu()
         self.output.ll_score = self.output.ll_score.cpu()
-        self.output.true_lll_ilabel = self.output.true_lll_ilabel.cpu()
-        self.sample.orig_sent = self.sample.orig_sent.cpu()
-        # note, right hand side depends on self.sample.orig_sent
-        self.sample.orig_sent = [self.auto_tokenizer.decode[m] for m
-                                 in self.sample.orig_sent]
+        self.true_output.lll_ilabel = self.true_output.lll_ilabel.cpu()
+        self.output.meta_data = self.output.meta_data.cpu()
+        # note, right hand side depends on self.output.meta_data
+        self.output.meta_data = [self.auto_tokenizer.decode[m] for m
+                                 in self.output.meta_data]
         if task == "ex":
             l_pred_str, l_pred_allen_str = self._write_if_task_ex(sample)
         elif task == "cc":

@@ -1,6 +1,7 @@
 from pytorch_lightning import Trainer
 from pytorch_lightning.logging import TensorBoardLogger
 from pytorch_lightning.callbacks import ModelCheckpoint
+import warnings
 
 import os
 import math
@@ -11,7 +12,6 @@ from Model import *
 from DLoader import *
 from sax_utils import *
 from sax_globals import *
-from tag_file_writers import *
 
 
 class MConductor:
@@ -54,6 +54,7 @@ class MConductor:
         self.params_d = PARAMS_D
         self.saved = False
         self.has_cuda = torch.cuda.is_available()
+        warnings.filterwarnings('ignore')
 
         if TASK == 'cc':
             self.train_fp = CCTAGS_TRAIN_FP
@@ -159,12 +160,12 @@ class MConductor:
 
         # the current log file will have no number prefix,
         # stored ones will.
-        if os.path.exists(LOG_DIR + f'/{MODE}'):
-            num_numbered_logs = len(list(glob(LOG_DIR + f'/{MODE}_*')))
-            new_id = num_numbered_logs + 1
-            print('Retiring current log file by changing its name')
-            print(shutil.move(LOG_DIR + f'/{MODE}',
-                              LOG_DIR + f'/{MODE}_{new_id}'))
+        assert os.path.exists(LOG_DIR + "/" + MODE)
+        num_numbered_logs = len(list(glob(LOG_DIR + f'/{MODE}_*')))
+        new_id = num_numbered_logs + 1
+        print('Retiring current log file by changing its name')
+        print(shutil.move(LOG_DIR + f'/{MODE}',
+                          LOG_DIR + f'/{MODE}_{new_id}'))
         logger = TensorBoardLogger(
             save_dir=WEIGHTS_DIR,
             name='logs',
@@ -172,7 +173,7 @@ class MConductor:
         return logger
 
     def get_trainer(self, logger, checkpoint_path,
-                    use_minimal=False):
+                    use_minimal):
         """
 
         Parameters
@@ -200,10 +201,6 @@ class MConductor:
         #     train_percent_check = params_d.train_percent_check,
         #     use_tpu = params_d.use_tpu,
         #     val_check_interval = params_d.val_check_interval)
-        if MODE == "resume":
-            resume_from_cpoint = checkpoint_path
-        else:
-            resume_from_cpoint = None
 
         if use_minimal:
             trainer = Trainer(
@@ -218,7 +215,8 @@ class MConductor:
                 logger=logger,
                 max_epochs = self.params_d["epochs"],
                 min_epochs = self.params_d["epochs"],
-                resume_from_checkpoint=resume_from_cpoint,
+                resume_from_checkpoint=\
+                    checkpoint_path if MODE == "resume" else None,
                 show_progress_bar=True,
                 **self.params_d)
         return trainer
@@ -237,12 +235,11 @@ class MConductor:
 
         """
         if self.has_cuda:
-            loaded_params_d = torch.load(
-                self.checkpoint_path)["params_d"]
+            loaded_params_d = torch.load(checkpoint_path)["params_d"]
         else:
-            mloc = torch.device('cpu')
+            map_loc = torch.device('cpu')
             loaded_params_d = torch.load(
-                self.checkpoint_path, map_location=mloc)["params_d"]
+                checkpoint_path, map_location=map_loc)["params_d"]
 
         self.params_d = merge_dicts(loaded_params_d,
                                     default_d=self.params_d)
@@ -258,7 +255,9 @@ class MConductor:
         # train is the only mode that doesn't require update_params_d()
         self.model = Model(self.params_d, self.auto_tokenizer)
         logger = self.get_logger()
-        trainer = self.get_trainer(logger)
+        trainer = self.get_trainer(logger,
+                                   checkpoint_path=None,
+                                   use_minimal=False)
         trainer.fit(
             self.model,
             train_dataloader=self.dloader.get_ttt_dataloaders("train"),
@@ -280,16 +279,20 @@ class MConductor:
 
         """
         checkpoint_path = self.get_checkpoint_path()
+        # train is the only mode that doesn't require
+        # update_params_d() because it is called first
         self.update_params_d(checkpoint_path)
         self.model = Model(self.params_d, self.auto_tokenizer)
         logger = self.get_logger()
-        trainer = self.get_trainer(logger, checkpoint_path)
+        trainer = self.get_trainer(logger,
+                                   checkpoint_path,
+                                   use_minimal=False)
         trainer.fit(
             self.model,
             train_dataloader=self.dloader.get_ttt_dataloaders("train"),
             val_dataloaders=self.dloader.get_ttt_dataloaders("val"))
-        shutil.move(WEIGHTS_DIR + f'/logs/resume.part',
-                    WEIGHTS_DIR + f'/logs/resume')
+        shutil.move(WEIGHTS_DIR + '/logs/resume.part',
+                    WEIGHTS_DIR + '/logs/resume')
 
     def test(self):
         """
@@ -305,7 +308,8 @@ class MConductor:
         """
         checkpoint_path = self.get_checkpoint_path()
         if 'train' not in MODE:
-            # train is the only mode that doesn't require update_params_d()
+            # train is the only mode that doesn't require
+            # update_params_d() because it is called first
             self.update_params_d(checkpoint_path)
 
         self.model = Model(self.params_d, self.auto_tokenizer)
@@ -472,7 +476,9 @@ class MConductor:
         print("Starting re-scoring ...")
         print()
 
-        sentence_line_nums, prev_line_num, no_extractions = set(), 0, dict()
+        sentence_line_nums=set()
+        prev_line_num= 0
+        no_extractions = {}
         curr_line_num = 0
         for sentence_str in self.all_predictions_oie:
             sentence_str = sentence_str.strip('\n')
@@ -494,7 +500,8 @@ class MConductor:
                                 model_dir=RESCORE_DIR,
                                 batch_size=256)
 
-        all_predictions, sentence_str = [], ''
+        all_predictions=[]
+        sentence_str = ''
         for line_i, line in enumerate(rescored):
             fields = line.split('\t')
             sentence = fields[0]
@@ -595,23 +602,24 @@ class MConductor:
         sample_id = 0
         ex_id = 0
         word_id = 0
+        l_sample = self.model.batch_out.l_sample
+        num_samples = len(l_sample)
 
-        for i in range(0, len(ll_sent_loc)):
-            if len(ll_sent_loc[i]) == 0:
-                words = get_words(l_sentL[i].split('[unused1]')[0])
-                ll_sent_loc[i].append(list(range(len(words))))
+        for sample_id in range(num_samples):
+            l_child = l_sample[sample_id].l_child
+            if len(ll_sent_loc[sample_id]) == 0:
+                words = get_words(l_sentL[sample_id].split('[unused1]')[0])
+                ll_sent_loc[sample_id].append(list(range(len(words))))
 
             lines.append(
-                '\n' + l_sentL[i].split('[unused1]')[0].strip())
-            for j in range(0, len(ll_sent_loc[i])):
-                assert len(ll_sent_loc[i][j]) == len(
-                    get_words(l_output_d[sample_id]["meta_data"][ex_id]))
-                sentL = l_output_d[sample_id]["meta_data"][ex_id].strip() + UNUSED_TOKENS_STR
-                assert sentL == l_sentL[i]
-                ll_pred_ilabel = l_output_d[sample_id]["predictions"][
-                    ex_id]
-
-                for pred_ilabels in ll_pred_ilabel:
+                '\n' + l_sentL[sample_id].split('[unused1]')[0].strip())
+            for ex_id in range(0, len(ll_sent_loc[sample_id])):
+                assert len(ll_sent_loc[sample_id][ex_id]) == len(
+                    get_words(l_child[ex_id].orig_sent))
+                sentL = l_child[ex_id].strip() + UNUSED_TOKENS_STR
+                assert sentL == l_sentL[sample_id]
+                ll_ilabel = l_child[ex_id].ilabels
+                for l_ilabel in ll_ilabel:
                     # You can use x.item() to get a Python number
                     # from a torch tensor that has one element
                     if pred_ilabels.sum().item() == 0:
@@ -620,7 +628,7 @@ class MConductor:
                     ilabels = [0] * len(get_words(sentL))
                     pred_ilabels = pred_ilabels[:len(sentL.split())].tolist()
                     for k, loc in enumerate(
-                            sorted(ll_sent_loc[i][j])):
+                            sorted(ll_sent_loc[sample_id][ex_id])):
                         ilabels[loc] = pred_ilabels[k]
 
                     ilabels = ilabels[:-3]
@@ -634,7 +642,7 @@ class MConductor:
 
                 word_id += 1
                 ex_id += 1
-                if ex_id == len(l_output_d[sample_id]["meta_data"]):
+                if ex_id == len(l_sample):
                     ex_id = 0
                     sample_id += 1
 

@@ -114,7 +114,7 @@ UNBREAKABLE_WORDS = \
 # TASK in "ex", "cc"
 # choose "ex" task if doing both "ex" and "cc". Choose "cc" task only
 # when doing "cc" only
-# MODE in ("predict", "train_test", "splitpredict", "resume", "test")
+# MODE in ("train_test", "resume", "test", "predict", "splitpredict")
 
 assert "TASK" in globals()
 TASK = globals()["TASK"]
@@ -141,6 +141,22 @@ assert MODE in ["predict", "train_test", "splitpredict",
 # Do not define capitalized global and PARAMS_D key for the same
 # parameter. Define one or the other but not both
 
+# Possible choices for PARAMS_D
+# 1. prior custom choice
+# 2. ex, train_test
+#    Conductor.train() followed by Conductor.test()
+# 3. ex, test  (appears twice)
+#     Conductor.test()
+# 4. ex, predict (appears twice)
+#     Conductor.predict()
+# 5. ex, resume
+#     Conductor.resume()
+# 6. cc, train_test
+#    Conductor.train() followed by Conductor.test()
+# 7. ex, splitpredict (appears twice)
+#    Conductor.splitpredict()
+
+
 if "PARAMS_D" in globals():
     print("PARAM_D was defined prior to running sax_globals.py")
 
@@ -149,21 +165,22 @@ if "PARAMS_D" in globals():
     # some pointers on how to define a custom params_d.
 
 ## Running Model
-elif TASK == "ex" and MODE == "splitpredict":
-    PARAMS_D = {
-        "cc_model_fp": WEIGHTS_DIR + 
-                    "/cc_model/epoch=28_eval_acc=0.854.ckpt",
-        "gpus": 1,
-        # "inp": "sentences.txt",
-        "mode": "splitpredict",
-        "num_extractions": 5,
-        "ex_model_fp": WEIGHTS_DIR + 
-                    "/ex_model/epoch=14_eval_acc=0.551_v0.ckpt",
-        #"out": "predictions.txt",
-        # "rescore_model": WEIGHTS_DIR + "/rescore_model",
-        "rescoring": True,
-        "task": "ex"
-    }
+# this is repeated at begin and end.
+# elif TASK == "ex" and MODE == "splitpredict":
+#     PARAMS_D = {
+#         "cc_model_fp": WEIGHTS_DIR +
+#                     "/cc_model/epoch=28_eval_acc=0.854.ckpt",
+#         "gpus": 1,
+#         # "inp": "sentences.txt",
+#         "mode": "splitpredict",
+#         "num_extractions": 5,
+#         "ex_model_fp": WEIGHTS_DIR +
+#                     "/ex_model/epoch=14_eval_acc=0.551_v0.ckpt",
+#         #"out": "predictions.txt",
+#         # "rescore_model": WEIGHTS_DIR + "/rescore_model",
+#         "rescoring": True,
+#         "task": "ex"
+#     }
 
 ## Training Model
 
@@ -184,27 +201,31 @@ elif TASK == "ex" and MODE == "train_test":
     }
     
 # Testing:
-elif TASK == "ex" and MODE == "test":
-    PARAMS_D = {
-        "batch_size": 24,
-        "gpus": 1,
-        "mode": "test",
-        "model_str": "bert-base-cased",
-        # "save": WEIGHTS_DIR + "/warmup_ex_model",
-        "task": "ex"
-    }
+# this ex/test pair is a repeat. First one only differs
+# in save directory and batch size (16 before, 24 now)
+# elif TASK == "ex" and MODE == "test":
+#     PARAMS_D = {
+#         "batch_size": 24,
+#         "gpus": 1,
+#         "mode": "test",
+#         "model_str": "bert-base-cased",
+#         # "save": WEIGHTS_DIR + "/warmup_ex_model",
+#         "task": "ex"
+#     }
 
 # Predicting
-elif TASK == "ex" and MODE == "predict":
-    PARAMS_D = {
-        "gpus": 1,
-        # "inp": "sentences.txt",
-        "mode": "predict",
-        "model_str": "bert-base-cased",
-        #"out": "predictions.txt",
-        # "save": WEIGHTS_DIR + "/warmup_ex_model",
-        "task": "ex"
-    }
+# this ex/predict pair is a repeat. First one only differs
+# in save directory
+# elif TASK == "ex" and MODE == "predict":
+#     PARAMS_D = {
+#         "gpus": 1,
+#         # "inp": "sentences.txt",
+#         "mode": "predict",
+#         "model_str": "bert-base-cased",
+#         #"out": "predictions.txt",
+#         # "save": WEIGHTS_DIR + "/warmup_ex_model",
+#         "task": "ex"
+#     }
 
 ### Constrained Model
 # Training
@@ -277,21 +298,21 @@ elif TASK == "cc" and MODE == "train_test":
 # Running
 # The splitpredict mode was stated already at the beginning.
 # It is a repeat.
-# elif TASK == "ex" and MODE == "splitpredict":
-#     PARAMS_D = {
-#         "cc_model_fp": WEIGHTS_DIR + 
-#                     "/cc_model-epoch=28_eval_acc=0.854.ckpt",
-#         "gpus": 1,
-#         # "inp": "carb_subset/data/carb_sentences.txt",
-#         "mode": "splitpredict",
-#         "num_extractions": 5,
-#         "ex_model_fp": WEIGHTS_DIR + 
-#                     "/ex_model/epoch=14_eval_acc=0.551_v0.ckpt",
-#         # "out": WEIGHTS_DIR + "/results/final",
-#         # "rescore_model": WEIGHTS_DIR + "/rescore_model",
-#         "rescoring": True,
-#         "task": "ex"
-#     }
+elif TASK == "ex" and MODE == "splitpredict":
+    PARAMS_D = {
+        "cc_model_fp": WEIGHTS_DIR +
+                    "/cc_model-epoch=28_eval_acc=0.854.ckpt",
+        "gpus": 1,
+        # "inp": "carb_subset/data/carb_sentences.txt",
+        "mode": "splitpredict",
+        "num_extractions": 5,
+        "ex_model_fp": WEIGHTS_DIR +
+                    "/ex_model/epoch=14_eval_acc=0.551_v0.ckpt",
+        # "out": WEIGHTS_DIR + "/results/final",
+        # "rescore_model": WEIGHTS_DIR + "/rescore_model",
+        "rescoring": True,
+        "task": "ex"
+    }
 else:
     assert False
 

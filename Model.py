@@ -140,8 +140,12 @@ class Model(pl.LightningModule):
 
         self.batch_out = MOutput(TASK)
         self.true_batch_out = MOutput(TASK)
+        self.eval_out_d = None  # filled in test_epoch_end()
+
         self.tqdm = None
         self.hinge_loss = None
+
+
 
     def configure_optimizers(self):
         """
@@ -657,12 +661,11 @@ class Model(pl.LightningModule):
         -------
 
         """
-        eval_out_d = \
+        self.eval_out_d = \
             self._eval_metrics_at_epoch_end('test')
-        # self.batch_out = output # never used
-        test_ee_out_d = {"log": eval_out_d,
-                     "progress_bar": eval_out_d,
-                     "test_acc": eval_out_d["eval_f1"]}
+        test_ee_out_d = {"log": self.eval_out_d,
+                     "progress_bar": self.eval_out_d,
+                     "test_acc": self.eval_out_d["eval_f1"]}
         # self.results = d_eval_results # never used!
 
         return test_ee_out_d
@@ -769,11 +772,12 @@ class Model(pl.LightningModule):
 
         lll_ilabel = self.batch_out.lll_ilabel
         ll_score = self.batch_out.ll_score
+        num_samples, max_depth, _= lll_ilabel.shape
 
-        l_orig_sentL = sample.orig_sent + UNUSED_TOKENS_STR
-        l_score = sample.l_score
-        ex_depth, max_sent_len = ll_ilabel.shape
-        assert num_sents == len(l_orig_sentL)
+        l_orig_sentL = [self.batch_out.l_sample[k].orig_sent
+                        + UNUSED_TOKENS_STR for
+                        k in range(num_samples)]
+
         orig_sent_to_pred_l_ex = {}
         for sample_id, orig_sentL in enumerate(l_orig_sentL):
             orig_sent = orig_sentL.split('[unused1]')[0].strip()
@@ -784,7 +788,7 @@ class Model(pl.LightningModule):
             else:
                 if orig_sent not in orig_sent_to_pred_l_ex:
                     orig_sent_to_pred_l_ex[orig_sent] = []
-            for depth in range(ex_depth):
+            for depth in range(max_depth):
                 num_words = len(get_words(orig_sentL))
                 ex_ilabels = lll_ilabel[sample_id][depth][:num_words]
                 if sum(ex_ilabels) == 0:  # extractions completed
@@ -829,35 +833,33 @@ class Model(pl.LightningModule):
 
         sample_id = 0
         correct = True
-        total_num_ex_sents1 = 0
-        total_num_ex_sents2 = 0
+        total_num_cc_sents1 = 0
+        total_num_cc_sents2 = 0
         lll_ilabel = self.batch_out.lll_ilabel
-        # thruth = self.true_batch_out.lll_label"]
-        l_orig_sentL = self.batch_out.meta_data
-        total_depth = lll_ilabel.shape[1]
+        num_samples, max_depth, _ = lll_ilabel.shape
+        # true_lll_ilabel = self.true_batch_out.lll_label
+        l_orig_sent = [self.batch_out.l_sample[k].orig_sent for
+                        k in range(num_samples)]
         l_pred_str = []
         l_spanned_words = []
         ll_spanned_loc = []
-        for id in range(len(l_orig_sentL)):
+        for id in range(len(l_orig_sent)):
             sample_id += 1
-            orig_sentL = l_orig_sentL[id]
+            orig_sent = l_orig_sent[id]
             ll_ilabel = []
             l_orig_sent = []
-            for depth in range(total_depth):
-                num_words = len(get_words(orig_sentL))
+            for depth in range(max_depth):
+                num_words = len(get_words(orig_sent))
                 l_ilabel = lll_ilabel[id][depth][:num_words].tolist()
                 ll_ilabel.append(l_ilabel)
-            orig_sent = orig_sentL.split("[used1]")[0]
             tree = CCTree(orig_sent, ll_ilabel)
-            tree.set_ccnodes()
-            pred_ccnodes = tree.ccnodes
 
-            pred_str = orig_sentL + '\n'
-            ex_sents, spanned_words, l_spanned_locs = tree.get_ex_sents()
+            pred_str = orig_sent + '\n'
+            ex_sents, spanned_words, l_spanned_locs = tree.cc_sents
             l_spanned_words.append(spanned_words)
             ll_spanned_loc.append(l_spanned_locs)
-            total_num_ex_sents1 += len(ex_sents)
-            total_num_ex_sents2 += 1 if len(ex_sents) > 0 else 0
+            total_num_cc_sents1 += len(ex_sents)
+            total_num_cc_sents2 += 1 if len(ex_sents) > 0 else 0
             pred_str += '\n'.join(ex_sents) + '\n'
 
             l_pred_str.append(pred_str)

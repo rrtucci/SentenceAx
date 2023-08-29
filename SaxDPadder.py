@@ -3,7 +3,7 @@ from sax_globals import *
 # from torchtext.data.utils import get_tokenizer
 # from torchtext.vocab import build_vocab_from_iterator
 
-class DPadder:
+class SaxDPadder:
 
     def __init__(self, sent_pad_id, spacy_model):
 
@@ -101,11 +101,11 @@ class DPadder:
 
         ll_sentL_id = [sample_d['sentL_ids'] for sample_d in
                            l_sample_d]
-        padded_ll_sentL_id = DPadder.get_padded_list(ll_sentL_id,
-                                                         self.sent_pad_id)
+        padded_ll_sentL_id = SaxDPadder.get_padded_list(ll_sentL_id,
+                                                        self.sent_pad_id)
 
         lll_ilabel = [sample_d['ll_ilabel'] for sample_d in l_sample_d]
-        padded_lll_ilabel = DPadder.get_padded_list(
+        padded_lll_ilabel = SaxDPadder.get_padded_list(
             lll_ilabel,
             pad_id0=0,
             pad_id1=-100,
@@ -113,7 +113,7 @@ class DPadder:
 
         ll_word_start = \
             [sample_d['word_starts'] for sample_d in l_sample_d]
-        padded_ll_word_start = DPadder.get_padded_list(ll_word_start, 0)
+        padded_ll_word_start = SaxDPadder.get_padded_list(ll_word_start, 0)
 
 
         l_orig_sent = [sample_d['orig_sent'] for
@@ -133,7 +133,7 @@ class DPadder:
             for i in range(len(names)):
                 l = [sample_d[names[i]] for sample_d in
                      l_sample_d]
-                padded_l = DPadder.get_padded_list(l, pad_id=0)
+                padded_l = SaxDPadder.get_padded_list(l, pad_id=0)
                 # padded_data[names[i]] = torch.tensor(padded_l)
 
         # input data=l_sample_d was a list of dictionaries

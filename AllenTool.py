@@ -52,7 +52,7 @@ class AllenTool:
             # print("vcbgh", part)
             part = ' '.join(get_words(part.strip(begin_tag).strip(end_tag)))
             parts.append(part)
-        ex = SAXExtraction(in_sent, parts[0], parts[1], parts[2], confidence)
+        ex = SaxExtraction(in_sent, parts[0], parts[1], parts[2], confidence)
     
         return ex
        

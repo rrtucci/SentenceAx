@@ -18,7 +18,7 @@ import nltk
 from copy import deepcopy
 from DSet import *
 
-class DLoader:
+class SaxDLoader:
     """
     Classes Example and Field from tt were used in the Openie6 code,
     but they are now deprecated, so they are not used Mappa Mundi. Here is
@@ -210,18 +210,18 @@ class DLoader:
             sents = [sample_d['orig_sent'] for sample_d in l_sample_d]
             for sent_index, spacy_tokens in enumerate(
                     self.spacy_model.pipe(sents, batch_size=10000)):
-                spacy_tokens = DLoader.remerge_sent(spacy_tokens)
+                spacy_tokens = SaxDLoader.remerge_sent(spacy_tokens)
                 assert len(sents[sent_index].split()) == len(
                     spacy_tokens)
                 sample_d = l_sample_d[sent_index]
 
                 pos_mask, pos_indices, pos_words = \
-                    DLoader.pos_mask(spacy_tokens)
+                    SaxDLoader.pos_mask(spacy_tokens)
                 sample_d['pos_mask'] = pos_mask
                 sample_d['pos_indices'] = pos_indices
 
                 verb_mask, verb_indices, verb_words = \
-                    DLoader.verb_mask(spacy_tokens)
+                    SaxDLoader.verb_mask(spacy_tokens)
                 sample_d['verb_mask'] = verb_mask
                 if len(verb_indices) != 0:
                     sample_d['verb_indices'] = verb_indices
@@ -309,9 +309,9 @@ class DLoader:
                 self.get_l_sample_d(PRED_IN_FP)
             #vocab = build_vocab(predict_l_sample_d)
 
-            predict_dataset = DSet(predict_l_sample_d,
-                                   self.spacy_model,
-                                   self.sent_pad_id)
+            predict_dataset = SaxDSet(predict_l_sample_d,
+                                      self.spacy_model,
+                                      self.sent_pad_id)
             train_dataset, dev_dataset, test_dataset = \
                 predict_dataset, predict_dataset, predict_dataset
         else: # 'predict' not in self.params_d["mode"]
@@ -344,13 +344,13 @@ class DLoader:
             # vocab = self.build_vocab(
             #     train_l_sample_d + dev_l_sample_d + test_l_sample_d)
 
-            train_dataset = DSet(train_l_sample_d,
-                                   self.spacy_model,
-                                   self.sent_pad_id)
-            dev_dataset = DSet(dev_l_sample_d,
-                                   self.spacy_model,
-                                   self.sent_pad_id)
-            test_dataset = DSet(test_l_sample_d,
+            train_dataset = SaxDSet(train_l_sample_d,
+                                    self.spacy_model,
+                                    self.sent_pad_id)
+            dev_dataset = SaxDSet(dev_l_sample_d,
+                                  self.spacy_model,
+                                  self.sent_pad_id)
+            test_dataset = SaxDSet(test_l_sample_d,
                                    self.spacy_model,
                                    self.sent_pad_id)
             train_dataset.sort()  # to simulate bucket sort (along with pad_data)

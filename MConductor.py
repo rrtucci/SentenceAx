@@ -84,11 +84,11 @@ class MConductor:
         self.decode = self.auto_tokenizer.decode
         self.sent_pad_id = self.encode(self.auto_tokenizer.pad_token)
 
-        self.dloader = DLoader(self.auto_tokenizer,
-                               self.sent_pad_id,
-                               self.train_fp,
-                               self.dev_fp,
-                               self.test_fp)
+        self.dloader = SaxDLoader(self.auto_tokenizer,
+                                  self.sent_pad_id,
+                                  self.train_fp,
+                                  self.dev_fp,
+                                  self.test_fp)
 
         self.constraints_str_d = dict()
 
@@ -337,7 +337,7 @@ class MConductor:
         shutil.move(WEIGHTS_DIR + f'/logs/test.part',
                     WEIGHTS_DIR + f'/logs/test')
 
-    def predict(self):
+    def predict(self, test_dloader=None):
         """
         similar to run.predict()
 
@@ -377,7 +377,8 @@ class MConductor:
         # self.model.all_sentences = all_sentences
         trainer.test(
             self.model,
-            test_dataloaders=self.dloader.get_ttt_dataloaders("test"))
+            test_dataloaders=test_dloader if
+                test_dloader else self.dloader.get_ttt_dataloaders("test"))
         end_time = time()
         print(f'Total Time taken = {(end_time - start_time) / 60:2f} minutes')
 
@@ -443,10 +444,8 @@ class MConductor:
         self.params_d["task"] = TASK = 'ex'
         self.params_d["checkpoint_fp"] = self.params_d["ex_model_fp"]
         self.params_d["model_str"] = 'bert-base-cased'
-        train_dataset, dev_dataset, split_test_dataset = \
-            self.dloader.get_ttt_datasets(self.l_pred_sentL)
         pred_test_dataloader = self.dloader.get_ttt_dataloaders(
-            "test", split_test_dataset)
+            "test", self.l_pred_sentL)
 
         self.predict(test_dloader=pred_test_dataloader)
 
@@ -517,7 +516,7 @@ class MConductor:
 
             # why must score be exponentiated?
 
-            extraction = SAXExtraction(orig_sentL=orig_senL,
+            extraction = SaxExtraction(orig_sentL=orig_senL,
                                        arg1=arg1,
                                        rel=rel,
                                        arg2=arg2,

@@ -10,7 +10,7 @@ def contains_extraction(ex, l_ex):
     Parameters
     ----------
     ex: Extraction
-        This is a carb class, not SAXExtraction
+        This is a carb class, not SaxExtraction
     l_ex: list[Extraction]
 
     Returns

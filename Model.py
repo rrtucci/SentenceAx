@@ -759,7 +759,7 @@ class Model(pl.LightningModule):
         # if not self.params_d["no_lt"]: # no_lt = no loc time
         #     arg2 = (arg2 + ' ' + loc_time + ' ' + args).strip()
 
-        extraction = SAXExtraction(orig_sentL,
+        extraction = SaxExtraction(orig_sentL,
                                    arg1,
                                    rel,
                                    arg2,

@@ -3,14 +3,14 @@ from sax_utils import *
 from sax_extraction_utils import *
 
 
-class SAXExtraction():
+class SaxExtraction():
     """
     similar to data_processing.py
     
     important
     carb has its own Extraction class at
     carb_subset.oie_readers.extraction
-    call ours SAXExtraction
+    call ours SaxExtraction
     sax = sentence ax
     
     
@@ -447,7 +447,7 @@ class SAXExtraction():
             if k > 0:
                 arg2 += ' '.join(arg.words)
 
-        return SAXExtraction(orig_sentL=carb_ext.sent,
+        return SaxExtraction(orig_sentL=carb_ext.sent,
                              arg1=arg1,
                              rel=carb_ext.rel,
                              arg2=arg2,

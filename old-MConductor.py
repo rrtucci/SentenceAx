@@ -106,7 +106,7 @@ class MConductor:
 
         self.constraints_str_d = dict()
 
-        self.cc_l_spanned_words = []
+        self.cc_ll_spanned_word = []
         self.cc_ll_spanned_loc = []
         self.cc_l_pred_str = []
 
@@ -398,7 +398,7 @@ class MConductor:
     def splitpredict_do_cc_first(self):
         self.ex_fix_d = {}
         self.cc_fix_d = {}
-        if not PRED_INP_FP:
+        if not PRED_IN_FP:
             self.params_d["task"] = TASK = 'cc'
             self.params_d["checkpoint_fp"] = self.params_d["cc_model_fp"]
             self.params_d["model_str"] = 'bert-base-cased'
@@ -407,13 +407,13 @@ class MConductor:
             l_pred_str = self.cc_l_pred_str
             ll_spanned_loc = self.cc_ll_spanned_loc
             assert len(l_pred_str) == len(ll_spanned_loc)
-            l_spanned_words = self.cc_l_spanned_words
+            ll_spanned_word = self.cc_ll_spanned_word
 
             l_sent = []
             l_orig_sentL = []
             for sample_id, pred_str in enumerate(l_pred_str):
                 l_pred_sent = pred_str.strip('\n').split('\n')
-                words = l_spanned_words[sample_id]
+                words = ll_spanned_word[sample_id]
                 if len(l_pred_sent) == 1:
                     orig_sent = l_pred_sent[0]
                     l_orig_sentL.append(orig_sent + UNUSED_TOKENS_STR)
@@ -439,7 +439,7 @@ class MConductor:
             # assert count == len(l_orig_sentL) - 1
 
         else:
-            with open(PRED_INP_FP, 'r') as f:
+            with open(PRED_IN_FP, 'r') as f:
                 lines = f.read()
                 lines = lines.replace("\\", "")
 
@@ -504,8 +504,8 @@ class MConductor:
             prev_line_num = curr_line_num
 
         # testing rescoring
-        inp_fp = self.model.predictions_f_allennlp
-        rescored = self.rescore(inp_fp,
+        in_fp = self.model.predictions_f_allennlp
+        rescored = self.rescore(in_fp,
                                 model_dir=RESCORE_DIR,
                                 batch_size=256)
 

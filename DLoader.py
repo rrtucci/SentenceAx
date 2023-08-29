@@ -123,7 +123,7 @@ class DLoader:
         verb_mask.append(0)
         return verb_mask, verb_indices, verb_words
 
-    def get_l_sample_d(self, inp_fp):
+    def get_l_sample_d(self, in_fp):
         """
         similar to data._process_data()
 
@@ -151,10 +151,10 @@ class DLoader:
         ilabels_for_each_ex = []  # a list of a list of labels, list[list[in]]
         orig_sents = []
 
-        if type(inp_fp) == type([]):
+        if type(in_fp) == type([]):
             inp_lines = None
         else:
-            with(inp_fp, "r") as f:
+            with(in_fp, "r") as f:
                 inp_lines = f.readlines()
 
         prev_line = ""
@@ -275,12 +275,12 @@ class DLoader:
         if 'predict' in self.params_d["mode"]:
             # no caching used in predict mode
             if not pred_inp_sents:  # predict
-                # if self.params_d["inp_fp"] :
-                #     predict_fp = self.params_d["inp_fp"]
+                # if self.params_d["in_fp"] :
+                #     predict_fp = self.params_d["in_fp"]
                 # else:
                 #     predict_fp = self.params_d["predict_fp"]
-                # will set predict_fp = PRED_INP_FP
-                with open(PRED_INP_FP, "r") as f:
+                # will set predict_fp = PRED_IN_FP
+                with open(PRED_IN_FP, "r") as f:
                     predict_lines = f.readlines()
 
                 pred_inp_sents = []
@@ -306,7 +306,7 @@ class DLoader:
             # get_samples()
             # returns: examples, orig_sents
             predict_l_sample_d, orig_sents = \
-                self.get_l_sample_d(PRED_INP_FP)
+                self.get_l_sample_d(PRED_IN_FP)
             #vocab = build_vocab(predict_l_sample_d)
 
             predict_dataset = DSet(predict_l_sample_d,

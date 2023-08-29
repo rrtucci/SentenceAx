@@ -92,7 +92,7 @@ class MConductor:
 
         self.constraints_str_d = dict()
 
-        self.cc_l_spanned_words = []
+        self.cc_ll_spanned_word = []
         self.cc_ll_spanned_loc = []
         self.cc_l_pred_str = []
 
@@ -318,28 +318,25 @@ class MConductor:
         if TASK == "cc" and self.cc_fix_d:
             self.model.metric.fix_d = self.cc_fix_d
 
-
         logger = self.get_logger()
-        test_f = open(WEIGHTS_DIR + '/logs/test.txt', 'w')
-
-        for checkpoint_path in self.get_all_checkpoint_paths():
-            trainer = self.get_trainer(logger,
-                                       checkpoint_path,
-                                       use_minimal = True)
-            # trainer.fit() and trainer.test() are different
-            trainer.test(
-                self.model,
-                test_dataloaders=self.dloader.get_ttt_dataloaders("test"))
-            result = self.model.results
-            test_f.write(f'{checkpoint_path}\t{result}\n')
-            # note test_f created outside loop.
-            # refresh/clear/flush test_f after each write
-            test_f.flush()
-        test_f.close()
+        with open(WEIGHTS_DIR + '/logs/test.txt', 'w') as test_f:
+            for checkpoint_path in self.get_all_checkpoint_paths():
+                trainer = self.get_trainer(logger,
+                                           checkpoint_path,
+                                           use_minimal = True)
+                # trainer.fit() and trainer.test() are different
+                trainer.test(
+                    self.model,
+                    test_dataloaders=self.dloader.get_ttt_dataloaders("test"))
+                eval_out_d = self.model.eval_out_d
+                test_f.write(f'{checkpoint_path}\t{eval_out_d}\n')
+                # note test_f created outside loop.
+                # refresh/clear/flush test_f after each write
+                test_f.flush()
         shutil.move(WEIGHTS_DIR + f'/logs/test.part',
                     WEIGHTS_DIR + f'/logs/test')
 
-    def predict(self, pred_test_dloader=None):
+    def predict(self):
         """
         similar to run.predict()
 
@@ -379,15 +376,14 @@ class MConductor:
         # self.model.all_sentences = all_sentences
         trainer.test(
             self.model,
-            test_dataloaders=self.dloader.get_ttt_dataloaders("test") if\
-            not pred_test_dloader else pred_test_dloader)
+            test_dataloaders=self.dloader.get_ttt_dataloaders("test"))
         end_time = time()
         print(f'Total Time taken = {(end_time - start_time) / 60:2f} minutes')
 
     def splitpredict_do_cc_first(self):
         self.ex_fix_d = {}
         self.cc_fix_d = {}
-        if not PRED_INP_FP:
+        if not PRED_IN_FP:
             self.params_d["task"] = TASK = 'cc'
             self.params_d["checkpoint_fp"] = self.params_d["cc_model_fp"]
             self.params_d["model_str"] = 'bert-base-cased'
@@ -396,29 +392,26 @@ class MConductor:
             l_pred_str = self.cc_l_pred_str
             ll_spanned_loc = self.cc_ll_spanned_loc
             assert len(l_pred_str) == len(ll_spanned_loc)
-            l_spanned_words = self.cc_l_spanned_words
+            ll_spanned_word = self.cc_ll_spanned_word
 
-            l_sent = []
+            l_pred_sentL = []
             l_orig_sentL = []
             for sample_id, pred_str in enumerate(l_pred_str):
                 l_pred_sent = pred_str.strip('\n').split('\n')
-                words = l_spanned_words[sample_id]
-                if len(l_pred_sent) == 1:
-                    orig_sent = l_pred_sent[0]
-                    l_orig_sentL.append(orig_sent + UNUSED_TOKENS_STR)
-                    self.cc_fix_d[orig_sent] = l_pred_sent[0]
-                    self.cc_fix_d[orig_sent] = words
-                elif len(l_pred_sent) > 1:
-                    l_orig_sentL.append(
-                        l_pred_sent[0] + UNUSED_TOKENS_STR)
-                    self.cc_fix_d[l_pred_sent[0]] = words
-                    for sent in l_pred_sent[1:]:
-                        self.ex_fix_d[sent] = l_pred_sent[0]
-                        l_orig_sentL.append(sent + UNUSED_TOKENS_STR)
-                else:
-                    assert False
-            l_orig_sentL.append('\n')
+                
+                # why this doesn't occur when reading from PRED_IN_FP
+                words = ll_spanned_word[sample_id]
+                self.cc_fix_d[l_pred_sent[0]] = " ".join(words)
+                
+                l_orig_sentL.append(l_pred_sent[0] + UNUSED_TOKENS_STR)
+                for sent in l_pred_sent:
+                    self.ex_fix_d[sent] = l_pred_sent[0]
+                    l_pred_sentL.append(sent + UNUSED_TOKENS_STR)
+            # this not done when reading from PRED_IN_FP
+            # l_orig_sentL.append('\
+            
 
+            # Never used:
             # count = 0
             # for l_spanned_loc in ll_spanned_loc:
             #     if len(l_spanned_loc) == 0:
@@ -428,27 +421,19 @@ class MConductor:
             # assert count == len(l_orig_sentL) - 1
 
         else:
-            with open(PRED_INP_FP, 'r') as f:
+            with open(PRED_IN_FP, 'r') as f:
                 lines = f.read()
                 lines = lines.replace("\\", "")
 
-            self.l_pred_sentL = []
+            l_pred_sentL = []
             l_orig_sentL = []
             for line in lines.split('\n\n'):
                 if len(line) > 0:
                     l_pred_sent = line.strip().split('\n')
-                    if len(l_pred_sent) == 1:
-                        self.ex_fix_d[l_pred_sent[0]] = l_pred_sent[0]
-                        self.l_pred_sentL.append(l_pred_sent[0] +
-                                             UNUSED_TOKENS_STR)
-                        l_orig_sentL.append(l_pred_sent[0] + UNUSED_TOKENS_STR)
-                    elif len(l_pred_sent) > 1:
-                        l_orig_sentL.append(l_pred_sent[0] + UNUSED_TOKENS_STR)
-                        for sent in l_pred_sent[1:]:
-                            self.ex_fix_d[sent] = l_pred_sent[0]
-                            self.l_pred_sentL.append(sent + UNUSED_TOKENS_STR)
-                    else:
-                        assert False
+                    l_orig_sentL.append(l_pred_sent[0] + UNUSED_TOKENS_STR)
+                    for sent in l_pred_sent:
+                        self.ex_fix_d[sent] = l_pred_sent[0]
+                        l_pred_sentL.append(sent + UNUSED_TOKENS_STR)
                         
     def splitpredict_do_ex_second(self):
         self.params_d["write_allennlp"] = True
@@ -460,7 +445,7 @@ class MConductor:
         pred_test_dataloader = self.dloader.get_ttt_dataloaders(
             "test", split_test_dataset)
 
-        self.predict(pred_test_dloader=pred_test_dataloader)
+        self.predict(test_dloader=pred_test_dataloader)
 
         ilabel_lines = self.get_extags(self.model,
                                       l_orig_sentL,
@@ -495,8 +480,8 @@ class MConductor:
             prev_line_num = curr_line_num
 
         # testing rescoring
-        inp_fp = self.model.predictions_f_allennlp
-        rescored = self.rescore(inp_fp,
+        in_fp = self.model.predictions_f_allennlp
+        rescored = self.rescore(in_fp,
                                 model_dir=RESCORE_DIR,
                                 batch_size=256)
 

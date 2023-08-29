@@ -12,7 +12,7 @@ class ExOutput:
         self.true_lll_ilabel = None sam.ground_truth_sample
         self.ll_orig_sent  sam.orig_sent
 
-        self.cc_l_spanned_words = [] get_words(child.simple_sent)
+        self.cc_ll_spanned_word = [] get_words(child.simple_sent)
         self.cc_ll_spanned_loc = [] child.get_nontrivial_locs()
         self.cc_l_pred_str = [] child.simple_sent
 

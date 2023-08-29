@@ -815,7 +815,7 @@ class Model(pl.LightningModule):
         l_orig_sentL = self.output.meta_data
         total_depth = lll_prediction.shape[1]
         l_pred_str = []
-        l_spanned_words = []
+        ll_spanned_word = []
         ll_spanned_loc = []
         for id in range(len(l_orig_sentL)):
             sample_id += 1
@@ -833,7 +833,7 @@ class Model(pl.LightningModule):
 
             pred_str = orig_sentL + '\n'
             ex_sents, spanned_words, l_spanned_locs = tree.get_ex_sents()
-            l_spanned_words.append(spanned_words)
+            ll_spanned_word.append(spanned_words)
             ll_spanned_loc.append(l_spanned_locs)
             total_num_ex_sents1 += len(ex_sents)
             total_num_ex_sents2 += 1 if len(ex_sents) > 0 else 0
@@ -841,7 +841,7 @@ class Model(pl.LightningModule):
 
             l_pred_str.append(pred_str)
         # list1 + list2 is the same as list1.extend(list2)
-        self.cc_l_spanned_words+= l_spanned_words
+        self.cc_ll_spanned_word+= ll_spanned_word
         self.cc_l_pred_str += l_pred_str
         self.cc_ll_spanned_loc += ll_spanned_loc
 

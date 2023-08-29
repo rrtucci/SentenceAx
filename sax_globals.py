@@ -1,9 +1,9 @@
 """
 
 
-hparams = hyperparamters,
+hparams = hyperparameters,
 fp = file path
-params_d = pamameters dictionary
+params_d = parameters dictionary
 
 
 """
@@ -34,7 +34,7 @@ EXTAGS_TUNE_FP = 'input_data/carb-data/dev.txt'
 EXTAGS_TEST_FP = 'input_data/carb-data/test.txt'
 
 # sentences used for prediction
-PRED_INP_FP = "carb_subset/data/carb_sentences.txt"
+PRED_IN_FP = "carb_subset/data/carb_sentences.txt"
 
 CACHE_DIR = 'input_data/pretrained_cache' # used by AutoModel and AutoTokenizer
 WEIGHTS_DIR = "weights"

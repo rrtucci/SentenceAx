@@ -52,7 +52,7 @@ class MConductor:
         """
         self.pred_fname = pred_fname
         self.params_d = PARAMS_D
-        self.saved = False
+        self.has_been_saved = False
         self.has_cuda = torch.cuda.is_available()
         warnings.filterwarnings('ignore')
 
@@ -97,8 +97,9 @@ class MConductor:
         self.cc_l_pred_str = []
 
         self.l_pred_sentL = None
+        self.l_orig_sentL = None
 
-        self.ex_l_pred_str = []
+        self.ex_l_pred_str = None
 
         self.model = None
         self.ex_fit_d = None
@@ -209,13 +210,13 @@ class MConductor:
                 resume_from_checkpoint=checkpoint_path)
         else:
             trainer = Trainer(
-                accumulate_grad_batches=\
+                accumulate_grad_batches= \
                     int(self.params_d["accumulate_grad_batches"]),
                 checkpoint_callback=self.checkpoint_callback,
                 logger=logger,
-                max_epochs = self.params_d["epochs"],
-                min_epochs = self.params_d["epochs"],
-                resume_from_checkpoint=\
+                max_epochs=self.params_d["epochs"],
+                min_epochs=self.params_d["epochs"],
+                resume_from_checkpoint= \
                     checkpoint_path if MODE == "resume" else None,
                 show_progress_bar=True,
                 **self.params_d)
@@ -323,7 +324,7 @@ class MConductor:
             for checkpoint_path in self.get_all_checkpoint_paths():
                 trainer = self.get_trainer(logger,
                                            checkpoint_path,
-                                           use_minimal = True)
+                                           use_minimal=True)
                 # trainer.fit() and trainer.test() are different
                 trainer.test(
                     self.model,
@@ -398,18 +399,17 @@ class MConductor:
             l_orig_sentL = []
             for sample_id, pred_str in enumerate(l_pred_str):
                 l_pred_sent = pred_str.strip('\n').split('\n')
-                
-                # why this doesn't occur when reading from PRED_IN_FP
+
+                # not done when reading from PRED_IN_FP
                 words = ll_spanned_word[sample_id]
                 self.cc_fix_d[l_pred_sent[0]] = " ".join(words)
-                
+
                 l_orig_sentL.append(l_pred_sent[0] + UNUSED_TOKENS_STR)
                 for sent in l_pred_sent:
                     self.ex_fix_d[sent] = l_pred_sent[0]
                     l_pred_sentL.append(sent + UNUSED_TOKENS_STR)
             # this not done when reading from PRED_IN_FP
             # l_orig_sentL.append('\
-            
 
             # Never used:
             # count = 0
@@ -422,19 +422,22 @@ class MConductor:
 
         else:
             with open(PRED_IN_FP, 'r') as f:
-                lines = f.read()
-                lines = lines.replace("\\", "")
+                content = f.read()
+            content = content.replace("\\", "")
+            lines = content.split('\n\n')
 
             l_pred_sentL = []
             l_orig_sentL = []
-            for line in lines.split('\n\n'):
+            for line in lines:
                 if len(line) > 0:
                     l_pred_sent = line.strip().split('\n')
                     l_orig_sentL.append(l_pred_sent[0] + UNUSED_TOKENS_STR)
                     for sent in l_pred_sent:
                         self.ex_fix_d[sent] = l_pred_sent[0]
                         l_pred_sentL.append(sent + UNUSED_TOKENS_STR)
-                        
+        self.l_pred_sentL = l_pred_sentL
+        self.l_orig_sentL = l_orig_sentL
+
     def splitpredict_do_ex_second(self):
         self.params_d["write_allennlp"] = True
         self.params_d["task"] = TASK = 'ex'
@@ -448,21 +451,20 @@ class MConductor:
         self.predict(test_dloader=pred_test_dataloader)
 
         ilabel_lines = self.get_extags(self.model,
-                                      l_orig_sentL,
-                                      l_orig_sentL,
-                                      ll_spanned_loc)
+                                       l_orig_sentL,
+                                       l_orig_sentL,
+                                       ll_spanned_loc)
         with open(PREDICTIONS_DIR + '/ex_ilabels.txt', 'w') as f:
             f.write('\n'.join(ilabel_lines))
         MConductor.write_extags_file_from_predictions()
 
-                        
     def splitpredict_do_rescoring(self):
         print()
         print("Starting re-scoring ...")
         print()
 
-        sentence_line_nums=set()
-        prev_line_num= 0
+        sentence_line_nums = set()
+        prev_line_num = 0
         no_extractions = {}
         curr_line_num = 0
         for sentence_str in self.all_predictions_oie:
@@ -485,7 +487,7 @@ class MConductor:
                                 model_dir=RESCORE_DIR,
                                 batch_size=256)
 
-        all_predictions=[]
+        all_predictions = []
         sentence_str = ''
         for line_i, line in enumerate(rescored):
             fields = line.split('\t')
@@ -515,8 +517,8 @@ class MConductor:
 
             # why must score be exponentiated?
 
-            extraction = SAXExtraction(orig_sentL= orig_senL,
-                                        arg1=arg1,
+            extraction = SAXExtraction(orig_sentL=orig_senL,
+                                       arg1=arg1,
                                        rel=rel,
                                        arg2=arg2,
                                        score=math.exp(score))
@@ -558,7 +560,6 @@ class MConductor:
         #                  train_dataloader, val_dataloader, test_dataloader,
         #                  all_sentences):
 
-               
         self.splitpredict_do_cc_first()
         self.splitpredict_do_ex_second()
         if self.params_d["rescoring"]:
@@ -635,4 +636,4 @@ class MConductor:
         assert self.pred_fname
         with open(PREDICTIONS_DIR + "/" + self.pred_fname +
                   "-extags.txt") as f:
-                f.writelines(lines)
+            f.writelines(lines)

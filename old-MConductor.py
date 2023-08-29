@@ -67,7 +67,7 @@ class MConductor:
         """
         self.pred_fname = pred_fname
         self.params_d = PARAMS_D
-        self.saved = False
+        self.has_been_saved = False
         self.has_cuda = torch.cuda.is_available()
 
         if TASK == 'cc':

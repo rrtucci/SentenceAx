@@ -152,13 +152,13 @@ class DLoader:
         orig_sents = []
 
         if type(in_fp) == type([]):
-            inp_lines = None
+            in_lines = None
         else:
             with(in_fp, "r") as f:
-                inp_lines = f.readlines()
+                in_lines = f.readlines()
 
         prev_line = ""
-        for line in inp_lines:
+        for line in in_lines:
             line = line.strip()
             if '[used' in line:  # it's the  beginning of an example
                 sentL = line
@@ -248,13 +248,13 @@ class DLoader:
 
         return l_sample_d, orig_sents
 
-    def get_ttt_datasets(self, pred_inp_sents=None):
+    def get_ttt_datasets(self, pred_in_sents=None):
         """
         similar to data.process_data()
 
         Parameters
         ----------
-        pred_inp_sents
+        pred_in_sents
 
         Returns
         -------
@@ -274,7 +274,7 @@ class DLoader:
         orig_sents = []
         if 'predict' in self.params_d["mode"]:
             # no caching used in predict mode
-            if not pred_inp_sents:  # predict
+            if not pred_in_sents:  # predict
                 # if self.params_d["in_fp"] :
                 #     predict_fp = self.params_d["in_fp"]
                 # else:
@@ -283,7 +283,7 @@ class DLoader:
                 with open(PRED_IN_FP, "r") as f:
                     predict_lines = f.readlines()
 
-                pred_inp_sents = []
+                pred_in_sents = []
                 for line in predict_lines:
                     # Normalize the quotes - similar to that in training data
                     line = line.replace('’', '\'')
@@ -297,9 +297,9 @@ class DLoader:
                     # get_samples() uses spacy_model.pipe(sents...)
 
                     words = ' '.join(nltk.word_tokenize(line))
-                    pred_inp_sents.append(
+                    pred_in_sents.append(
                         words + UNUSED_TOKENS_STR)
-                    pred_inp_sents.append('\n')
+                    pred_in_sents.append('\n')
 
             # openie 6 is wrong here. Uses wrong arguments for
             # process_data() which is get_samples() for us.
@@ -357,13 +357,13 @@ class DLoader:
 
         return train_dataset, dev_dataset, test_dataset # , vocab, orig_sents
 
-    def get_ttt_dataloaders(self, type, pred_inp_sents=None):
+    def get_ttt_dataloaders(self, type, pred_in_sents=None):
         """
 
         Parameters
         ----------
         type
-        pred_inp_sents
+        pred_in_sents
 
         Returns
         -------
@@ -371,7 +371,7 @@ class DLoader:
         """
 
         train_dataset, val_dataset, test_dataset = \
-            self.get_ttt_datasets(pred_inp_sents)
+            self.get_ttt_datasets(pred_in_sents)
         # this method calls DataLoader
 
         if type == "train":

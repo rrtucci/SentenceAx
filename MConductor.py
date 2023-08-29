@@ -9,7 +9,7 @@ import shutil
 from glob import glob
 from time import time
 from Model import *
-from DLoader import *
+from SaxDataLoader import *
 from sax_utils import *
 from sax_globals import *
 
@@ -84,7 +84,7 @@ class MConductor:
         self.decode = self.auto_tokenizer.decode
         self.sent_pad_id = self.encode(self.auto_tokenizer.pad_token)
 
-        self.dloader = SaxDLoader(self.auto_tokenizer,
+        self.dloader = SaxDataLoader(self.auto_tokenizer,
                                   self.sent_pad_id,
                                   self.train_fp,
                                   self.dev_fp,

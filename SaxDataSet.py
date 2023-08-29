@@ -1,10 +1,10 @@
 import torch
 import numpy as np
 from torch.utils.data import Dataset
-from DPadder import *
+from SaxDataPadder import *
 
 
-class SaxDSet(Dataset):
+class SaxDataSet(Dataset):
     def __init__(self, l_sample_d, spacy_model, sent_pad_id):
         """
         In Openie6, the `torchtext.data.Dataset` class is a normal class
@@ -20,7 +20,7 @@ class SaxDSet(Dataset):
         #                'll_word_start': padded_ll_word_start,
         #                'l_orig_sent': l_orig_sent}
 
-        padder = SaxDPadder(sent_pad_id, spacy_model)
+        padder = SaxDataPadder(sent_pad_id, spacy_model)
         padded_data = padder.pad_data(l_sample_d)
 
         self.num_samples = len(padded_data["ll_sentL_id"])

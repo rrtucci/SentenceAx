@@ -1,5 +1,5 @@
 import difflib
-from SAXExtraction import *
+from SaxExtraction import *
 from carb_subset.oie_readers.extraction import Extraction
 
 

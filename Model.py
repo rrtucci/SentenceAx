@@ -1,8 +1,8 @@
-from SAXExtraction import *
+from SaxExtraction import *
 from ExMetric import *
 from CCMetric import *
 from CCTree import *
-from output_classes import *
+from MOutput import *
 
 import os
 from copy import copy, deepcopy
@@ -68,7 +68,7 @@ class Model(pl.LightningModule):
 
     BERT has a volume L * H * HL
     L = encoding length
-    AH = number of heads
+    AH = number of attention heads
     HL = number of hidden layers
 
     BERTBASE (L=12, HL=768, AH=12, Total Parameters=110M)
@@ -135,8 +135,7 @@ class Model(pl.LightningModule):
        # self.text = None
         self.verb_mask = None
         self.verb_locs = None
-        self.word_starts = None
-        self.hidden_states = None
+        self.l_starting_word_id = None
 
         self.batch_out = MOutput(TASK)
         self.true_batch_out = MOutput(TASK)
@@ -144,6 +143,8 @@ class Model(pl.LightningModule):
 
         self.tqdm = None
         self.hinge_loss = None
+
+        self.init_params_d = None
 
 
 
@@ -267,15 +268,24 @@ class Model(pl.LightningModule):
         word_ll_score = []
         word_scores = []
 
+        hidden_states, _ = self.base_model()
+
         d = 0
         while True:
             for layer in self.iterative_transformer:
-                self.hidden_states = layer(hidden_states)[0]
+                # layer(hidden_states)[0] returns a copy
+                # of the tensor hidden_states after transforming it
+                # in some way
+                #[0] chooses first component
+                hidden_states = layer(hidden_states)[0]
 
-            self.hidden_states = self.dropout(self.hidden_states)
-            bat = self.word_starts.unsqueeze(2). \
-                repeat(1, 1, self.hidden_states.shape[2])
-            word_hidden_states = torch.gather(self.hidden_states, 1, bat)
+            hidden_states = self.dropout(hidden_states)
+            # a chaptgpt generated explanation of this transformation
+            # is given in misc/hidden_states_transformation2.txt
+            #
+            bat = self.l_starting_word_id.unsqueeze(2). \
+                repeat(1, 1, hidden_states.shape[2])
+            word_hidden_states = torch.gather(hidden_states, 1, bat)
 
             if d != 0:
                 greedy_ilabels = torch.argmax(word_scores, dim=-1)
@@ -806,7 +816,7 @@ class Model(pl.LightningModule):
                         if ex.is_not_in(
                                 orig_sent_to_pred_l_ex[orig_sent]):
                             orig_sent_to_pred_l_ex[orig_sent].append(ex)
-        l_pred_str = []
+        l_pred_text = []
         l_pred_allen_str = []
         for sample_id, pred_ex_sent in enumerate(orig_sent_to_pred_l_ex):
             pred_l_ex = orig_sent_to_pred_l_ex[pred_ex_sent]
@@ -814,7 +824,7 @@ class Model(pl.LightningModule):
             str0 = f'{pred_ex_sent}\n'
             for pred_ex in pred_l_ex:
                 str0 += pred_ex.get_simple_sent() + '\n'
-            l_pred_str.append(str0.strip("/n"))
+            l_pred_text.append(str0.strip("/n"))
             allen_str = ""
             for pred_ex in pred_l_ex:
                 arg1 = pred_ex.arg1_pair[0]
@@ -826,7 +836,7 @@ class Model(pl.LightningModule):
                 allen_str += f"<arg2> {arg2} </arg2>\t"
                 allen_str += f"{pred_ex.score}\n"
             l_pred_allen_str.append(allen_str.strip("/n"))
-        return l_pred_str, l_pred_allen_str
+        return l_pred_text, l_pred_allen_str
 
     def _write_if_task_cc(self):
         fix_d = self.metric.fix_d
@@ -840,7 +850,7 @@ class Model(pl.LightningModule):
         # true_lll_ilabel = self.true_batch_out.lll_label
         l_orig_sent = [self.batch_out.l_sample[k].orig_sent for
                         k in range(num_samples)]
-        l_pred_str = []
+        l_pred_text = []
         ll_spanned_word = []
         ll_spanned_loc = []
         for id in range(len(l_orig_sent)):
@@ -862,13 +872,13 @@ class Model(pl.LightningModule):
             total_num_cc_sents2 += 1 if len(ex_sents) > 0 else 0
             pred_str += '\n'.join(ex_sents) + '\n'
 
-            l_pred_str.append(pred_str)
+            l_pred_text.append(pred_str)
         # list1 + list2 is the same as list1.extend(list2)
         self.cc_ll_spanned_word+= ll_spanned_word
-        self.cc_l_pred_str += l_pred_str
+        self.cc_l_pred_text += l_pred_text
         self.cc_ll_spanned_loc += ll_spanned_loc
 
-        return l_pred_str
+        return l_pred_text
 
     def _write_output(self, batch_id, task):
         """
@@ -894,10 +904,10 @@ class Model(pl.LightningModule):
             sample.orig_sent = [self.auto_tokenizer.decode[m] for m
                                  in sample.orig_sent]
         if task == "ex":
-            l_pred_str, l_pred_allen_str = \
+            l_pred_text, l_pred_allen_str = \
                 self._write_if_task_ex()
         elif task == "cc":
-            l_pred_str = self._write_if_task_cc()
+            l_pred_text = self._write_if_task_cc()
         else:
             assert False
         fpath = TASK + ".txt"
@@ -906,7 +916,7 @@ class Model(pl.LightningModule):
         else:
             fmode = 'a'
         with open(fpath, fmode) as pred_f:
-            pred_f.write('\n'.join(l_pred_str) + '\n')
+            pred_f.write('\n'.join(l_pred_text) + '\n')
         if task == "ex" and self.params_d["write_allennlp"]:
             fpath = PREDICTIONS_DIR + "/allen.txt"
             if batch_id == 0:

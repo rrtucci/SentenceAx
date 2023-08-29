@@ -1,7 +1,7 @@
 import re
 from unidecode import unidecode
 from collections import OrderedDict
-from SAXExtraction import *
+from SaxExtraction import *
 
 class AllenTool:
     """

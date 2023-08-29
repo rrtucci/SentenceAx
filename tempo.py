@@ -14,6 +14,6 @@ class ExOutput:
 
         self.cc_ll_spanned_word = [] get_words(child.simple_sent)
         self.cc_ll_spanned_loc = [] child.get_nontrivial_locs()
-        self.cc_l_pred_str = [] child.simple_sent
+        self.cc_l_pred_text = [] child.simple_sent
 
         self.l_pred_sentL = None

@@ -30,7 +30,7 @@ words->extags, cctags->ilabels->extags->words
 """
 from sax_globals import *
 from sax_utils import *
-from SAXExtraction import *
+from SaxExtraction import *
 from CCTree import *
 
 """

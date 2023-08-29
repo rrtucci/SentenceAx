@@ -12,6 +12,7 @@ from Model import *
 from SaxDataLoader import *
 from sax_utils import *
 from sax_globals import *
+from sample_classes import *
 
 
 class MConductor:
@@ -440,7 +441,6 @@ class MConductor:
         self.l_orig_sentL = l_orig_sentL
 
     def splitpredict_do_ex_second(self):
-        self.params_d["write_allennlp"] = True
         self.params_d["task"] = TASK = 'ex'
         self.params_d["checkpoint_fp"] = self.params_d["ex_model_fp"]
         self.params_d["model_str"] = 'bert-base-cased'
@@ -449,15 +449,14 @@ class MConductor:
 
         self.predict(test_dloader=pred_test_dataloader)
 
-        ilabel_lines = self.get_extags(self.model,
-                                       l_orig_sentL,
-                                       l_orig_sentL,
-                                       ll_spanned_loc)
-        with open(PREDICTIONS_DIR + '/ex_ilabels.txt', 'w') as f:
-            f.write('\n'.join(ilabel_lines))
-        MConductor.write_extags_file_from_predictions()
+        samples = self.model.batch_out.l_sample
+        samples.set_all_possible()
+        path = PREDICTIONS_DIR + "/" + self.pred_fname +"-extags.txt"
+        with_scores = False
+        write_extags_file(samples, path, with_scores)
 
     def splitpredict_do_rescoring(self):
+        self.params_d["write_allennlp"] = True
         print()
         print("Starting re-scoring ...")
         print()
@@ -598,7 +597,7 @@ class MConductor:
 
             lines.append(
                 '\n' + l_sentL[sample_id].split('[unused1]')[0].strip())
-            for ex_id in range(0, len(ll_sent_loc[sample_id])):
+            for ex_id in range(len(ll_sent_loc[sample_id])):
                 assert len(ll_sent_loc[sample_id][ex_id]) == len(
                     get_words(l_child[ex_id].orig_sent))
                 sentL = l_child[ex_id].strip() + UNUSED_TOKENS_STR

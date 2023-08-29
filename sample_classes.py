@@ -5,7 +5,6 @@ from CCTree import *
 class SampleChild:
     def __init__(self, tags=None):
         self.tags = tags
-        self.ilabels = None
         self.score = None
         self.simple_sent = None
         self.depth = None
@@ -23,24 +22,23 @@ class SampleChild:
 
 class Sample:
 
-    def __init__(self, task, orig_sent=None, ll_ilabel=None):
+    def __init__(self, task):
         self.task = task
-        self.orig_sent = orig_sent
-        self.ll_ilabel = ll_ilabel
+        self.orig_sent = None
         self.l_child = None
         self.max_depth = None
-        if ll_ilabel:
-            self.max_depth = len(ll_ilabel)
-            self.set_children(ll_ilabel)
 
-    def set_children(self, ll_ilabel):
+        self.ll_ilabel = None
+        self.l_score = None
+
+    def absorb_ll_ilabel(self, ll_ilabel):
         self.l_child = []
         for depth, l_ilabel in enumerate(ll_ilabel):
             self.l_child.append(SampleChild())
             self.l_child[-1].depth = depth
-            self.l_child[-1].ilabels = l_ilabel
+        self.set_tags(ll_ilabel)
 
-    def set_scores(self, l_score):
+    def absorb_l_score(self, l_score):
         for k, child in enumerate(self.l_child):
             child.score = l_score[k]
 
@@ -55,6 +53,13 @@ class Sample:
                     child.tags.append(ILABEL_TO_CCTAG[ilabel])
                 else:
                     assert False
+    def absorb_all_possible(self):
+        if self.ll_ilabel:
+            self.max_depth = len(self.ll_ilabel)
+            self.absorb_ll_ilabel(self.ll_ilabel)
+        if self.l_score:
+            self.absorb_l_score(self.l_score)
+
 
 class SplitPredSample():
     def __init__(self):

@@ -450,9 +450,11 @@ class MConductor:
         self.predict(test_dloader=pred_test_dataloader)
 
         samples = self.model.batch_out.l_sample
-        samples.set_all_possible()
+        samples.absorb_all_possible()
         path = PREDICTIONS_DIR + "/" + self.pred_fname +"-extags.txt"
         with_scores = False
+        # Does same thing as Openie6's run.get_labels()
+        # this replaces self.write_extags_file_from_predictions()
         write_extags_file(samples, path, with_scores)
 
     def splitpredict_do_rescoring(self):

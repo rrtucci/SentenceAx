@@ -5,7 +5,7 @@ from SaxDataPadder import *
 
 
 class SaxDataSet(Dataset):
-    def __init__(self, l_sample_d, spacy_model, sent_pad_id):
+    def __init__(self, minput, spacy_model, sent_pad_id):
         """
         In Openie6, the `torchtext.data.Dataset` class is a normal class
         `Dataset(examples, fields)` is abstract class but in newer versions
@@ -21,7 +21,7 @@ class SaxDataSet(Dataset):
         #                'l_orig_sent': l_orig_sent}
 
         padder = SaxDataPadder(sent_pad_id, spacy_model)
-        padded_data = padder.pad_data(l_sample_d)
+        padded_data = padder.pad_data(minput)
 
         self.num_samples = len(padded_data["ll_sentL_id"])
         self.num_words =  len(padded_data["ll_sentL_id"][0])

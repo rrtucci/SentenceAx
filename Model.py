@@ -40,8 +40,8 @@ class Model(pl.LightningModule):
         def training_step(self, batch, batch_id):
             x, y = batch
             y_hat = self(x)
-            loss = F.cross_entropy(y_hat, y)
-            return loss
+            loss_fun = F.cross_entropy(y_hat, y)
+            return loss_fun
 
         def configure_optimizers(self):
             return torch.optim.Adam(self.parameters(), lr=0.02)
@@ -55,7 +55,7 @@ class Model(pl.LightningModule):
     
         "meta_data": any
     
-        "pos_index": int
+        "pos_locs": int
     
         "text": str
     
@@ -106,7 +106,8 @@ class Model(pl.LightningModule):
         else:
             self.iterative_transformer = []
 
-        self.dropout = nn.Dropout(p=DROPOUT)  # 0.0
+
+        self.dropout_fun = nn.Dropout(p=DROPOUT)  # 0.0
 
         """
         nn.Embedding(num_embeddings, embedding_size)
@@ -121,32 +122,24 @@ class Model(pl.LightningModule):
         self.ilabelling_layer = nn.Linear(ILABELLING_DIM,  # 300
                                          NUM_ILABELS)  # 6
 
-        self.loss = nn.CrossEntropyLoss()
+        self.loss_fun = nn.CrossEntropyLoss()
 
         if TASK == "ex":
             self.metric = ExMetric(self.params_d)
         elif TASK == "cc":
             self.metric = CCMetric()
 
-        # similar to batch_d
-        self.true_lll_ilabel = None
-        self.meta_data = None
-        self.pos_index = None
-       # self.text = None
+
         self.verb_mask = None
         self.verb_locs = None
-        self.l_starting_word_id = None
+        self.l_starting_word_loc = None
 
         self.batch_out = MOutput(TASK)
         self.true_batch_out = MOutput(TASK)
-        self.eval_out_d = None  # filled in test_epoch_end()
+        self.eval_out_d = {}  # filled in test_epoch_end()
 
-        self.tqdm = None
-        self.hinge_loss = None
-
-        self.init_params_d = None
-
-
+        # self.init_params_d=None #Openie6 has this as Model attribute but
+        # not us
 
     def configure_optimizers(self):
         """
@@ -226,8 +219,11 @@ class Model(pl.LightningModule):
             best = self.trainer.checkpoint_callback.kth_value.item()
         else:
             best = self.trainer.checkpoint_callback.kth_value
-        tqdm = {'loss': '{:.3f}'.format(avg_training_loss), 'best': best}
-        return tqdm
+
+        tqdm_d = OrderedDict()
+        tqdm_d['loss_fun'] = '{:.3f}'.format(avg_training_loss)
+        tqdm_d['best'] = best
+        return tqdm_d
 
     def forward(self, batch_id=-1, mode='train', 
                 constraints_str=None, cweights_str=None):
@@ -236,9 +232,10 @@ class Model(pl.LightningModule):
         signature of parent method:  def forward(self, *args, **kwargs)
         
         wreg = weight regulator (default =0)
-        loss = loss + wreg*weight_diff
+        loss_fun = loss_fun + wreg*weight_diff
         
-        foward() is called by training_step() and validtion_step()
+        The following methods invoke forward() once:
+        training_step(), validation_step(), test_step()
         
         Parameters
         ----------
@@ -253,7 +250,7 @@ class Model(pl.LightningModule):
         """
         if self.params_d["wreg"] and \
                 not hasattr(self, 'init_params_d'):
-            self.init_params_d = deepcopy(
+            init_params_d = deepcopy(
                 dict(self.named_parameters()))
 
         # lll_label is similar to (in openie6, labels)
@@ -261,10 +258,10 @@ class Model(pl.LightningModule):
         # second list over extractions
         # third (inner) list over number of labels in a line
         # after padding and adding the 3 unused tokens
-        batch_size, max_depth, ilabels_length = self.true_lll_ilabel.shape
+        batch_size, max_depth, ilabels_length = self.true_batch_out.lll_ilabel.shape
 
-        # `loss` is not used in this function anymore
-        # loss, lstm_loss = 0, 0
+        # `loss_fun` is not used in this function anymore
+        # loss_fun, lstm_loss = 0, 0
         word_ll_score = []
         word_scores = []
 
@@ -279,11 +276,11 @@ class Model(pl.LightningModule):
                 #[0] chooses first component
                 hidden_states = layer(hidden_states)[0]
 
-            hidden_states = self.dropout(hidden_states)
+            hidden_states = self.dropout_fun(hidden_states)
             # a chaptgpt generated explanation of this transformation
             # is given in misc/hidden_states_transformation2.txt
             #
-            bat = self.l_starting_word_id.unsqueeze(2). \
+            bat = self.l_starting_word_loc.unsqueeze(2). \
                 repeat(1, 1, hidden_states.shape[2])
             word_hidden_states = torch.gather(hidden_states, 1, bat)
 
@@ -310,13 +307,16 @@ class Model(pl.LightningModule):
                     break
         # outsource everything after do loop to a new function
         return self._calc_forward_output(
+            init_params_d,
             mode,
             word_ll_score,
             constraints_str, 
             cweights_str)
 
     def _calc_forward_output(
-            self, mode,
+            self,
+            init_params_d,
+            mode,
             word_ll_score,
             constraints_str, 
             cweights_str):
@@ -336,16 +336,16 @@ class Model(pl.LightningModule):
         """
 
         word_scores = word_ll_score[-1]
-        loss = 0
+        batch_loss = 0
         lll_ilabel = []
         ll_score = []
         batch_size, num_words, _ = word_scores.shape
-        self.true_lll_ilabel = self.true_lll_ilabel.long()
+        self.true_batch_out.lll_ilabel = self.true_batch_out.lll_ilabel.long()
         for d, word_scores in enumerate(word_ll_score):
             if mode == 'train':
-                loss += self.loss(
+                batch_loss += self.loss_fun(
                     word_scores.reshape(batch_size * num_words, -1),
-                    self.true_lll_ilabel[:, d, :].reshape(-1))
+                    self.true_batch_out.lll_ilabel[:, d, :].reshape(-1))
             else:
                 word_log_probs = torch.log_softmax(word_scores, dim=2)
                 max_log_probs, predictions = \
@@ -355,7 +355,7 @@ class Model(pl.LightningModule):
                 # second list over extractions
                 # third (inner) list over number of labels in a line
                 padding_ilabels = (
-                        self.true_lll_ilabel[:, 0, :] != -100).float()
+                        self.true_batch_out.lll_ilabel[:, 0, :] != -100).float()
 
                 sro_lll_ilabel = \
                     (predictions != 0).float() * padding_ilabels
@@ -377,15 +377,15 @@ class Model(pl.LightningModule):
                 const_loss = self._constrained_loss(
                     word_ll_score,
                     constraints_str, cweights_str) / batch_size
-                loss = const_loss
+                batch_loss = const_loss
 
             if self.params_d["wreg"] != 0:
                 weight_diff = 0
                 current_parameters = dict(self.named_parameters())
-                for name in self.init_params_d:
+                for name in init_params_d:
                     weight_diff += torch.norm(current_parameters[name]
-                                              - self.init_params_d[name])
-                loss = loss + self.params_d["wreg"] * weight_diff
+                                              - init_params_d[name])
+                batch_loss = batch_loss + self.params_d["wreg"] * weight_diff
         else:  # not train
             # if A and B are of shape (3, 4):
             # torch.cat([A, B], dim=0) will be of shape (6, 4)
@@ -420,20 +420,22 @@ class Model(pl.LightningModule):
 
                 for constraint, weight in \
                         zip(l_constraint, l_cweight):
-                    const_loss = self._constrained_loss(word_ll_score,
+                    const_loss = self._constrained_loss(pos_locs,
+                                                        word_ll_score,
                                                         constraint,
                                                         float(weight))
                     if constraint not in self.constraints_str_d:
                         self.constraints_str_d[constraint] = []
                     self.constraints_str_d[constraint].append(const_loss)
 
-        return lll_ilabel, ll_score, loss
+        return lll_ilabel, ll_score, batch_loss
 
-    def _constrained_loss(self, word_ll_score, 
+    def _constrained_loss(self, pos_locs, word_ll_score,
                           constraints_str, cweights_str):
         """
         similar to model.constrained_loss()
         not inherited method
+        called by forward()
 
         Parameters
         ----------
@@ -446,7 +448,7 @@ class Model(pl.LightningModule):
 
         """
         batch_size, depth, num_words, num_ilabels = word_ll_score.shape
-        self.hinge_loss = 0
+        hinge_loss = 0
         bat = self.verb_locs.unsqueeze(1).unsqueeze(3). \
             repeat(1, depth, 1, num_ilabels)
         verb_scores = torch.gather(word_ll_score, 2, bat)
@@ -459,7 +461,7 @@ class Model(pl.LightningModule):
         if 'hvc' in constraints_str:
             column_loss = torch.abs(1 - torch.sum(verb_rel_scores, dim=1))
             column_loss = column_loss[self.verb_locs != 0]
-            self.hinge_loss += cweights_str * column_loss.sum()
+            hinge_loss += cweights_str * column_loss.sum()
 
         # extractions must have at least k-relations with
         # a head verb in them
@@ -467,22 +469,24 @@ class Model(pl.LightningModule):
             row_rel_loss = F.relu(self.verb_mask.sum(dim=1).float() -
                                   torch.max(verb_rel_scores, dim=2)[0].sum(
                                       dim=1))
-            self.hinge_loss += cweights_str * row_rel_loss.sum()
+            hinge_loss += cweights_str * row_rel_loss.sum()
 
         # one relation cannot contain more than one head verb
         if 'hve' in constraints_str:
             ex_loss = F.relu(torch.sum(verb_rel_scores, dim=2) - 1)
-            self.hinge_loss += cweights_str * ex_loss.sum()
+            hinge_loss += cweights_str * ex_loss.sum()
 
         if 'posm' in constraints_str:
-            bat = self.pos_index.unsqueeze(1).unsqueeze(3). \
+            bat = pos_locs.unsqueeze(1).unsqueeze(3). \
                 repeat(1, depth, 1, num_ilabels)
             pos_scores = torch.gather(word_ll_score, 2, bat)
             pos_nnone_scores = \
                 torch.max(pos_scores[:, :, :, 1:], dim=-1)[0]
             column_loss = (1 - torch.max(pos_nnone_scores, dim=1)[0]) * \
-                          (self.pos_index != 0).float()
-            self.hinge_loss += cweights_str * column_loss.sum()
+                          (pos_locs != 0).float()
+            hinge_loss += cweights_str * column_loss.sum()
+            
+        return hinge_loss
 
 
     def training_step(self, batch_id, optimizer_id=-1):
@@ -507,14 +511,12 @@ class Model(pl.LightningModule):
             constraints_str = self.params_d["constraints_str"]
             cweights_str = float(self.params_d["cweights_str"])
 
-        lll_ilabel, ll_score, loss = self.forward(mode='train',
+        lll_ilabel, ll_score, batch_loss = self.forward(mode='train',
                                 batch_id=batch_id,
                                 constraints_str=constraints_str,
                                 cweights_str=cweights_str)
-        tqdm_d = {"train_loss": loss}
-        train_out_d = OrderedDict({"loss": loss, "log": tqdm_d})
 
-        return train_out_d
+        return batch_loss
 
     def validation_step(self, batch_id):
         """
@@ -535,8 +537,8 @@ class Model(pl.LightningModule):
 
         val_out_d = {"lll_ilabel": lll_ilabel,
                      "ll_score": ll_score,
-                     "ground_truth": self.true_lll_ilabel,
-                     "meta_data": self.meta_data}
+                     "ground_truth": self.true_batch_out.lll_ilabel,
+                     "meta_data": self.batch_out.meta_data}
         val_out_d = OrderedDict(val_out_d)
 
         if self.params_d["mode"] != 'test':
@@ -548,6 +550,9 @@ class Model(pl.LightningModule):
     def test_step(self, batch_id):
         """
         inherited method
+        test_step() and validation_step() are identical. They invoke
+        forward() once. The following methods invoke forward() once:
+        training_step(), validation_step(), test_step()
 
         Parameters
         ----------
@@ -816,7 +821,7 @@ class Model(pl.LightningModule):
                         if ex.is_not_in(
                                 orig_sent_to_pred_l_ex[orig_sent]):
                             orig_sent_to_pred_l_ex[orig_sent].append(ex)
-        l_pred_text = []
+        l_pred_str = []
         l_pred_allen_str = []
         for sample_id, pred_ex_sent in enumerate(orig_sent_to_pred_l_ex):
             pred_l_ex = orig_sent_to_pred_l_ex[pred_ex_sent]
@@ -824,7 +829,7 @@ class Model(pl.LightningModule):
             str0 = f'{pred_ex_sent}\n'
             for pred_ex in pred_l_ex:
                 str0 += pred_ex.get_simple_sent() + '\n'
-            l_pred_text.append(str0.strip("/n"))
+            l_pred_str.append(str0.strip("/n"))
             allen_str = ""
             for pred_ex in pred_l_ex:
                 arg1 = pred_ex.arg1_pair[0]
@@ -836,7 +841,7 @@ class Model(pl.LightningModule):
                 allen_str += f"<arg2> {arg2} </arg2>\t"
                 allen_str += f"{pred_ex.score}\n"
             l_pred_allen_str.append(allen_str.strip("/n"))
-        return l_pred_text, l_pred_allen_str
+        return l_pred_str, l_pred_allen_str
 
     def _write_if_task_cc(self):
         fix_d = self.metric.fix_d
@@ -850,7 +855,7 @@ class Model(pl.LightningModule):
         # true_lll_ilabel = self.true_batch_out.lll_label
         l_orig_sent = [self.batch_out.l_sample[k].orig_sent for
                         k in range(num_samples)]
-        l_pred_text = []
+        l_pred_str = []
         ll_spanned_word = []
         ll_spanned_loc = []
         for id in range(len(l_orig_sent)):
@@ -872,13 +877,13 @@ class Model(pl.LightningModule):
             total_num_cc_sents2 += 1 if len(ex_sents) > 0 else 0
             pred_str += '\n'.join(ex_sents) + '\n'
 
-            l_pred_text.append(pred_str)
+            l_pred_str.append(pred_str)
         # list1 + list2 is the same as list1.extend(list2)
         self.cc_ll_spanned_word+= ll_spanned_word
-        self.cc_l_pred_text += l_pred_text
+        self.cc_l_pred_str += l_pred_str
         self.cc_ll_spanned_loc += ll_spanned_loc
 
-        return l_pred_text
+        return l_pred_str
 
     def _write_output(self, batch_id, task):
         """
@@ -904,10 +909,10 @@ class Model(pl.LightningModule):
             sample.orig_sent = [self.auto_tokenizer.decode[m] for m
                                  in sample.orig_sent]
         if task == "ex":
-            l_pred_text, l_pred_allen_str = \
+            l_pred_str, l_pred_allen_str = \
                 self._write_if_task_ex()
         elif task == "cc":
-            l_pred_text = self._write_if_task_cc()
+            l_pred_str = self._write_if_task_cc()
         else:
             assert False
         fpath = TASK + ".txt"
@@ -916,7 +921,7 @@ class Model(pl.LightningModule):
         else:
             fmode = 'a'
         with open(fpath, fmode) as pred_f:
-            pred_f.write('\n'.join(l_pred_text) + '\n')
+            pred_f.write('\n'.join(l_pred_str) + '\n')
         if task == "ex" and self.params_d["write_allennlp"]:
             fpath = PREDICTIONS_DIR + "/allen.txt"
             if batch_id == 0:

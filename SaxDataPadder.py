@@ -46,7 +46,7 @@ class SaxDataPadder:
             padded_ll_word[i] = ll_word[i].copy + [pad_id1] * max_l_word_len
         return padded_ll_word
 
-    # def build_vocab(self, l_sample_d):
+    # def build_vocab(self, minput):
     #     """
     #
     #     A vocabulary (vocab) is a function that turns
@@ -58,19 +58,19 @@ class SaxDataPadder:
     #
     #     # tokenizer = get_tokenizer("basic_english")
     #     tokenizer = self.auto_tokenizer
-    #     def yield_tokens(l_sample_d):
-    #         for example_d in l_sample_d:
+    #     def yield_tokens(minput):
+    #         for example_d in minput:
     #             orig_sent = example_d["orig_sent"]
     #             yield tokenizer(orig_sent)
     #
-    #     vocab = build_vocab_from_iterator(yield_tokens(l_sample_d),
+    #     vocab = build_vocab_from_iterator(yield_tokens(minput),
     #                                       specials=["<unk>"])
     #     vocab.set_default_index(vocab["<unk>"])
     #
     #     return vocab
 
 
-    def pad_data(self, l_sample_d):
+    def pad_data(self, minput):
         """
         similar to data.pad_data()
 
@@ -78,7 +78,7 @@ class SaxDataPadder:
 
         Parameters
         ----------
-        l_sample_d
+        minput
 
         Returns
         -------
@@ -86,7 +86,7 @@ class SaxDataPadder:
         """
 
 
-        # data_in = l_sample_d
+        # data_in = minput
         # example_d = {
         #     'sentL_ids': sentL_ids,
         #     'll_label': labels_for_each_ex[:MAX_EX_DEPTH],
@@ -94,17 +94,17 @@ class SaxDataPadder:
         #     'orig_sent': orig_sent,
         #     # if spacy_model:
         #     'pos_mask': pos_mask,
-        #     'pos_indices': pos_indices,
+        #     'pos_locs': pos_locs,
         #     'verb_mask': verb_mask,
-        #     'verb_indices': verb_indices
+        #     'verb_locs': verb_locs
         # }
 
         ll_sentL_id = [sample_d['sentL_ids'] for sample_d in
-                           l_sample_d]
+                           minput]
         padded_ll_sentL_id = SaxDataPadder.get_padded_list(ll_sentL_id,
                                                            self.sent_pad_id)
 
-        lll_ilabel = [sample_d['ll_ilabel'] for sample_d in l_sample_d]
+        lll_ilabel = [sample_d['ll_ilabel'] for sample_d in minput]
         padded_lll_ilabel = SaxDataPadder.get_padded_list(
             lll_ilabel,
             pad_id0=0,
@@ -112,12 +112,12 @@ class SaxDataPadder:
             max_outer_dim=MAX_DEPTH)
 
         ll_word_start = \
-            [sample_d['word_starts'] for sample_d in l_sample_d]
+            [sample_d['word_starts'] for sample_d in minput]
         padded_ll_word_start = SaxDataPadder.get_padded_list(ll_word_start, 0)
 
 
         l_orig_sent = [sample_d['orig_sent'] for
-                       sample_d in l_sample_d]
+                       sample_d in minput]
 
         # padded_ll_sentL_id = torch.tensor(padded_ll_sentL_id)
         # padded_lll_label = torch.tensor(padded_lll_label)
@@ -129,13 +129,13 @@ class SaxDataPadder:
                        'l_orig_sent': l_orig_sent}
 
         if self.spacy_model:
-            names = ["pos_mask", "pos_indices", "verb_mask", "verb_indices"]
+            names = ["pos_mask", "pos_locs", "verb_mask", "verb_locs"]
             for i in range(len(names)):
                 l = [sample_d[names[i]] for sample_d in
-                     l_sample_d]
+                     minput]
                 padded_l = SaxDataPadder.get_padded_list(l, pad_id=0)
                 # padded_data[names[i]] = torch.tensor(padded_l)
 
-        # input data=l_sample_d was a list of dictionaries
+        # input data=minput was a list of dictionaries
         # padded_data is a dictionary
         return padded_data

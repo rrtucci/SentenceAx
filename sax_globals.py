@@ -322,7 +322,7 @@ DEFAULT_PARAMS_D=\
     "batch_size": 32,
     "checkpoint_fp": "",
     "cweights": 1,
-    "dropout": 0.0,
+    "dropout_fun": 0.0,
     "gpus": 1,
     "iterative_layers": 2,
     "lr": 2E-5,

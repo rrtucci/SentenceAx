@@ -25,11 +25,11 @@ class Sample:
     def __init__(self, task):
         self.task = task
         self.orig_sent = None
-        self.l_child = None
+        self.l_child = []
         self.max_depth = None
 
-        self.ll_ilabel = None
-        self.l_score = None
+        self.ll_ilabel = []
+        self.l_score = []
 
     def absorb_ll_ilabel(self, ll_ilabel):
         self.l_child = []

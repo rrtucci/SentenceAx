@@ -17,6 +17,7 @@ import torchtext as tt
 import nltk
 from copy import deepcopy
 from SaxDataSet import *
+from MInput import *
 
 class SaxDataLoader:
     """
@@ -69,7 +70,7 @@ class SaxDataLoader:
         return tokens
 
     @staticmethod
-    def pos_mask(tokens):
+    def pos_info(tokens):
         """
         similar to data.pos_tags()
 
@@ -82,22 +83,22 @@ class SaxDataLoader:
 
         """
         pos_mask = []
-        pos_indices = []
+        pos_locs = []
         pos_words = []
         for token_index, token in enumerate(tokens):
             if token.pos_ in ['ADJ', 'ADV', 'NOUN', 'PROPN', 'VERB']:
                 pos_mask.append(1)
-                pos_indices.append(token_index)
+                pos_locs.append(token_index)
                 pos_words.append(token.lower_)
             else:
                 pos_mask.append(0)
         pos_mask.append(0)
         pos_mask.append(0)
         pos_mask.append(0)
-        return pos_mask, pos_indices, pos_words
+        return pos_mask, pos_locs, pos_words
 
     @staticmethod
-    def verb_mask(tokens):
+    def verb_info(tokens):
         """
         similar to data.verb_tags()
 
@@ -109,21 +110,42 @@ class SaxDataLoader:
         -------
 
         """
-        verb_mask, verb_indices, verb_words = [], [], []
+        verb_mask, verb_locs, verb_words = [], [], []
         for token_index, token in enumerate(tokens):
             if token.pos_ in ['VERB'] and \
                     token.lower_ not in LIGHT_VERBS:
                 verb_mask.append(1)
-                verb_indices.append(token_index)
+                verb_locs.append(token_index)
                 verb_words.append(token.lower_)
             else:
                 verb_mask.append(0)
         verb_mask.append(0)
         verb_mask.append(0)
         verb_mask.append(0)
-        return verb_mask, verb_indices, verb_words
+        return verb_mask, verb_locs, verb_words
+    
+    def fill_minput_with_spacy_info(self, minput):
 
-    def get_l_sample_d(self, in_fp):
+        for sent_id, spacy_tokens in enumerate(
+                self.spacy_model.pipe(minput.l_orig_sent, batch_size=10000)):
+            spacy_tokens = SaxDataLoader.remerge_sent(spacy_tokens)
+            assert len(minput.l_orig_sent[sent_id].split()) == len(
+                spacy_tokens)
+
+            pos_mask, pos_locs, pos_words = \
+                SaxDataLoader.pos_info(spacy_tokens)
+            minput.l_pos_mask.append(pos_mask)
+            minput.l_pos_locs.append(pos_locs)
+
+            verb_mask, verb_locs, verb_words = \
+                SaxDataLoader.verb_info(spacy_tokens)
+            minput.l_verb_mask.append(verb_mask)
+            if verb_locs:
+                minput.l_verb_locs.append(verb_locs)
+            else:
+                minput.l_verb_locs.append([0])
+
+    def get_minput(self, in_fp):
         """
         similar to data._process_data()
 
@@ -146,8 +168,7 @@ class SaxDataLoader:
         each original sentence and its tag sequences constitute a new example
         """
 
-        # l_sample_d = []  # list[example_d]
-        l_sample_d = []  # list[example_d]
+        minput = MInput(TASK)
         ilabels_for_each_ex = []  # a list of a list of labels, list[list[in]]
         orig_sents = []
 
@@ -190,14 +211,12 @@ class SaxDataLoader:
                     ilabels_for_each_ex = [[0]]
                 # note that if li=[2,3]
                 # then li[:100] = [2,3]
-                sample_d = {
-                    'sentL_ids': sentL_ids,
-                    'l_ilabels': ilabels_for_each_ex[:MAX_EX_DEPTH],
-                    'word_starts': word_starts,
-                    'orig_sent': orig_sent
-                }
+                
                 if len(sentL.split()) <= 100:
-                    l_sample_d.append(sample_d)
+                    minput.ll_sentL_id.append(sentL_ids)
+                    minput.lll_ilabel.append(ilabels_for_each_ex[:MAX_EX_DEPTH])
+                    minput.ll_starting_word_loc.append(word_starts)
+                    minput.l_orig_sent = orig_sent
                 ilabels_for_each_ex = []
                 prev_line = line
 
@@ -207,26 +226,7 @@ class SaxDataLoader:
         # so far, we haven't assumed any spacy derived data nanalysis
         # if spacy is allowed, the example_d can carry more info.
         if self.spacy_model:
-            sents = [sample_d['orig_sent'] for sample_d in l_sample_d]
-            for sent_index, spacy_tokens in enumerate(
-                    self.spacy_model.pipe(sents, batch_size=10000)):
-                spacy_tokens = SaxDataLoader.remerge_sent(spacy_tokens)
-                assert len(sents[sent_index].split()) == len(
-                    spacy_tokens)
-                sample_d = l_sample_d[sent_index]
-
-                pos_mask, pos_indices, pos_words = \
-                    SaxDataLoader.pos_mask(spacy_tokens)
-                sample_d['pos_mask'] = pos_mask
-                sample_d['pos_indices'] = pos_indices
-
-                verb_mask, verb_indices, verb_words = \
-                    SaxDataLoader.verb_mask(spacy_tokens)
-                sample_d['verb_mask'] = verb_mask
-                if len(verb_indices) != 0:
-                    sample_d['verb_indices'] = verb_indices
-                else:
-                    sample_d['verb_indices'] = [0]
+            self.fill_minput_with_spacy_info(minput)
 
         # example_d = {
         #     'sentL_ids': sentL_ids,
@@ -235,9 +235,9 @@ class SaxDataLoader:
         #     'orig_sent': orig_sent,
         #     # if spacy_model:
         #     'pos_mask': pos_mask,
-        #     'pos_indices': pos_indices,
+        #     'pos_locs': pos_locs,
         #     'verb_mask': verb_mask,
-        #     'verb_indices': verb_indices
+        #     'verb_locs': verb_locs
         # }
 
         # use of tt.data.Example is deprecated
@@ -246,7 +246,7 @@ class SaxDataLoader:
         #     examples.append(example)
         # return examples, orig_sents
 
-        return l_sample_d, orig_sents
+        return minput
 
     def get_ttt_datasets(self, pred_in_sents=None):
         """
@@ -305,11 +305,10 @@ class SaxDataLoader:
             # process_data() which is get_samples() for us.
             # get_samples()
             # returns: examples, orig_sents
-            predict_l_sample_d, orig_sents = \
-                self.get_l_sample_d(PRED_IN_FP)
-            #vocab = build_vocab(predict_l_sample_d)
+            predict_minput = self.get_minput(PRED_IN_FP)
+            #vocab = build_vocab(predict_minput)
 
-            predict_dataset = SaxDataSet(predict_l_sample_d,
+            predict_dataset = SaxDataSet(predict_minput,
                                       self.spacy_model,
                                       self.sent_pad_id)
             train_dataset, dev_dataset, test_dataset = \
@@ -322,35 +321,35 @@ class SaxDataLoader:
             # spacy_model usually abbreviated as nlp
             if not os.path.exists(cached_train_fp) or\
                     self.params_d["build_cache"]:
-                train_l_sample_d, _ = self.get_l_sample_d(self.train_fp)
-                pickle.dump(train_l_sample_d, open(cached_train_fp, 'wb'))
+                train_minput, _ = self.get_minput(self.train_fp)
+                pickle.dump(train_minput, open(cached_train_fp, 'wb'))
             else:
-                train_l_sample_d = pickle.load(open(cached_train_fp, 'rb'))
+                train_minput = pickle.load(open(cached_train_fp, 'rb'))
 
             if not os.path.exists(cached_dev_fp) or \
                     self.params_d["build_cache"]:
-                dev_l_sample_d, _ = self.get_l_sample_d(self.dev_fp)
-                pickle.dump(dev_l_sample_d, open(cached_dev_fp, 'wb'))
+                dev_minput, _ = self.get_minput(self.dev_fp)
+                pickle.dump(dev_minput, open(cached_dev_fp, 'wb'))
             else:
-                dev_l_sample_d = pickle.load(open(cached_dev_fp, 'rb'))
+                dev_minput = pickle.load(open(cached_dev_fp, 'rb'))
 
             if not os.path.exists(cached_test_fp) or\
                     self.params_d["build_cache"]:
-                test_l_sample_d, _ = self.get_l_sample_d(self.test_fp)
-                pickle.dump(test_l_sample_d, open(cached_test_fp, 'wb'))
+                test_minput, _ = self.get_minput(self.test_fp)
+                pickle.dump(test_minput, open(cached_test_fp, 'wb'))
             else:
-                test_l_sample_d = pickle.load(open(cached_test_fp, 'rb'))
+                test_minput = pickle.load(open(cached_test_fp, 'rb'))
 
             # vocab = self.build_vocab(
-            #     train_l_sample_d + dev_l_sample_d + test_l_sample_d)
+            #     train_minput + dev_minput + test_minput)
 
-            train_dataset = SaxDataSet(train_l_sample_d,
+            train_dataset = SaxDataSet(train_minput,
                                     self.spacy_model,
                                     self.sent_pad_id)
-            dev_dataset = SaxDataSet(dev_l_sample_d,
+            dev_dataset = SaxDataSet(dev_minput,
                                   self.spacy_model,
                                   self.sent_pad_id)
-            test_dataset = SaxDataSet(test_l_sample_d,
+            test_dataset = SaxDataSet(test_minput,
                                    self.spacy_model,
                                    self.sent_pad_id)
             train_dataset.sort()  # to simulate bucket sort (along with pad_data)

@@ -30,8 +30,8 @@ class MConductor:
     loader = torch.utils.dataloader(dset)
     for input, target in loader:
          output.meta_data = model(input)
-         loss = loss_fn(output.meta_data, target)
-         loss.backward()
+         loss_fun = loss_fn(output.meta_data, target)
+         loss_fun.backward()
          optimizer.step()
     
     Often, batch refers to the output.meta_data of loader, but not in SentenceAx
@@ -95,12 +95,12 @@ class MConductor:
 
         self.cc_ll_spanned_word = []
         self.cc_ll_spanned_loc = []
-        self.cc_l_pred_text = []
+        self.cc_l_pred_str = []
 
         self.l_pred_sentL = None
         self.l_orig_sentL = None
 
-        self.ex_l_pred_text = None
+        self.ex_l_pred_str = None
 
         self.model = None
         self.ex_fit_d = None
@@ -392,14 +392,14 @@ class MConductor:
             self.params_d["model_str"] = 'bert-base-cased'
             self.params_d["mode"] = MODE = 'predict'
             self.predict()
-            l_pred_text = self.cc_l_pred_text
+            l_pred_str = self.cc_l_pred_str
             ll_spanned_loc = self.cc_ll_spanned_loc
-            assert len(l_pred_text) == len(ll_spanned_loc)
+            assert len(l_pred_str) == len(ll_spanned_loc)
             ll_spanned_word = self.cc_ll_spanned_word
 
             l_pred_sentL = []
             l_orig_sentL = []
-            for sample_id, pred_str in enumerate(l_pred_text):
+            for sample_id, pred_str in enumerate(l_pred_str):
                 l_pred_sent = pred_str.strip('\n').split('\n')
 
                 # not done when reading from PRED_IN_FP

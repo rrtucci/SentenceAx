@@ -6,12 +6,12 @@ class MOutput:
         self.task = task
         self.num_samples = None
         self.loss = None
-        self.l_sample = None
+        self.l_sample = []
         self.meta_data = None
         
-        self.lll_ilabel = None
-        self.ll_score=None
-        self.l_orig_sent = None
+        self.lll_ilabel = []
+        self.ll_score= []
+        self.l_orig_sent = []
             
     def absorb_l_orig_sent(self, l_orig_sent):
         for k, orig_sent in enumerate(l_orig_sent):

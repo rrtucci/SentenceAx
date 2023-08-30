@@ -29,15 +29,20 @@ class SaxDataLoader:
     """
 
     def __init__(self, auto_tokenizer, sent_pad_id,
-                 train_fp, dev_fp, test_fp):
+                 train_fp, val_fp, test_fp):
 
         self.params_d = PARAMS_D
         self.auto_tokenizer = auto_tokenizer
         self.sent_pad_id = sent_pad_id
         self.train_fp = train_fp
-        self.dev_fp = dev_fp
+        self.val_fp = val_fp
         self.test_fp = test_fp
         self.spacy_model = None
+
+        self.train_minput = None
+        self.val_minput = None
+        self.test_minput = None
+        self.predict_minput = None
 
     @staticmethod
     def remerge_sent(tokens):
@@ -263,12 +268,12 @@ class SaxDataLoader:
 
 
         # train_fp = self.params_d["train_fp"]
-        # dev_fp = self.params_d["dev_fp"]
+        # val_fp = self.params_d["val_fp"]
         # test_fp = self.params_d["test_fp"]
 
         model_str = self.params_d["model_str"].replace("/", "_")
         cached_train_fp = f'{self.train_fp}.{model_str}.pkl'
-        cached_dev_fp = f'{self.dev_fp}.{model_str}.pkl'
+        cached_val_fp = f'{self.val_fp}.{model_str}.pkl'
         cached_test_fp = f'{self.test_fp}.{model_str}.pkl'
 
         orig_sents = []
@@ -311,7 +316,7 @@ class SaxDataLoader:
             predict_dataset = SaxDataSet(predict_minput,
                                       self.spacy_model,
                                       self.sent_pad_id)
-            train_dataset, dev_dataset, test_dataset = \
+            train_dataset, val_dataset, test_dataset = \
                 predict_dataset, predict_dataset, predict_dataset
         else: # 'predict' not in self.params_d["mode"]
             self.spacy_model = spacy.load("en_core_web_sm")
@@ -321,32 +326,32 @@ class SaxDataLoader:
             # spacy_model usually abbreviated as nlp
             if not os.path.exists(cached_train_fp) or\
                     self.params_d["build_cache"]:
-                train_minput, _ = self.get_minput(self.train_fp)
+                train_minput = self.get_minput(self.train_fp)
                 pickle.dump(train_minput, open(cached_train_fp, 'wb'))
             else:
                 train_minput = pickle.load(open(cached_train_fp, 'rb'))
 
-            if not os.path.exists(cached_dev_fp) or \
+            if not os.path.exists(cached_val_fp) or \
                     self.params_d["build_cache"]:
-                dev_minput, _ = self.get_minput(self.dev_fp)
-                pickle.dump(dev_minput, open(cached_dev_fp, 'wb'))
+                val_minput = self.get_minput(self.val_fp)
+                pickle.dump(val_minput, open(cached_val_fp, 'wb'))
             else:
-                dev_minput = pickle.load(open(cached_dev_fp, 'rb'))
+                val_minput = pickle.load(open(cached_val_fp, 'rb'))
 
             if not os.path.exists(cached_test_fp) or\
                     self.params_d["build_cache"]:
-                test_minput, _ = self.get_minput(self.test_fp)
+                test_minput = self.get_minput(self.test_fp)
                 pickle.dump(test_minput, open(cached_test_fp, 'wb'))
             else:
                 test_minput = pickle.load(open(cached_test_fp, 'rb'))
 
             # vocab = self.build_vocab(
-            #     train_minput + dev_minput + test_minput)
+            #     train_minput + val_minput + test_minput)
 
             train_dataset = SaxDataSet(train_minput,
                                     self.spacy_model,
                                     self.sent_pad_id)
-            dev_dataset = SaxDataSet(dev_minput,
+            val_dataset = SaxDataSet(val_minput,
                                   self.spacy_model,
                                   self.sent_pad_id)
             test_dataset = SaxDataSet(test_minput,
@@ -354,7 +359,7 @@ class SaxDataLoader:
                                    self.sent_pad_id)
             train_dataset.sort()  # to simulate bucket sort (along with pad_data)
 
-        return train_dataset, dev_dataset, test_dataset # , vocab, orig_sents
+        return train_dataset, val_dataset, test_dataset # , vocab, orig_sents
 
     def get_ttt_dataloaders(self, type, pred_in_sents=None):
         """

@@ -59,11 +59,11 @@ class MConductor:
 
         if TASK == 'cc':
             self.train_fp = CCTAGS_TRAIN_FP
-            self.dev_fp = CCTAGS_TUNE_FP
+            self.val_fp = CCTAGS_TUNE_FP
             self.test_fp = CCTAGS_TEST_FP
         elif TASK == 'ex':
             self.train_fp = EXTAGS_TRAIN_FP
-            self.dev_fp = EXTAGS_TUNE_FP
+            self.val_fp = EXTAGS_TUNE_FP
             self.test_fp = EXTAGS_TEST_FP
 
         self.checkpoint_callback = self.get_checkpoint_callback()
@@ -88,7 +88,7 @@ class MConductor:
         self.dloader = SaxDataLoader(self.auto_tokenizer,
                                   self.sent_pad_id,
                                   self.train_fp,
-                                  self.dev_fp,
+                                  self.val_fp,
                                   self.test_fp)
 
         self.constraints_str_d = dict()

@@ -5,10 +5,10 @@ from sax_globals import *
 
 class SaxDataPadder:
 
-    def __init__(self, sent_pad_id, spacy_model):
+    def __init__(self, sent_pad_id, use_spacy_model):
 
         self.sent_pad_id = sent_pad_id
-        self.spacy_model = spacy_model
+        self.use_spacy_model = use_spacy_model
 
     @staticmethod
     def get_padded_list(li_word, pad_id):
@@ -92,7 +92,7 @@ class SaxDataPadder:
         #     'll_label': labels_for_each_ex[:MAX_EX_DEPTH],
         #     'word_starts': word_starts,
         #     'orig_sent': orig_sent,
-        #     # if spacy_model:
+        #     # if use_spacy_model:
         #     'pos_mask': pos_mask,
         #     'pos_locs': pos_locs,
         #     'verb_mask': verb_mask,
@@ -128,7 +128,7 @@ class SaxDataPadder:
                        'll_word_start': padded_ll_word_start,
                        'l_orig_sent': l_orig_sent}
 
-        if self.spacy_model:
+        if self.use_spacy_model:
             names = ["pos_mask", "pos_locs", "verb_mask", "verb_locs"]
             for i in range(len(names)):
                 l = [sample_d[names[i]] for sample_d in

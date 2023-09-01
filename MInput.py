@@ -18,8 +18,8 @@ class MInput:
         # it's not (num_samples, max_depth=num_ex)
         # each word of orig_sent may be encoded with more than one ilabel
         # os = original sentence
-        self.l_os_start_word_locs = [] # shape=(num_samples, encoding len)
-        self.l_os_ilabels = []  # shape=(num_samples, encoding len
+        # self.l_os_start_word_locs = [] # shape=(num_samples, encoding len)
+        # self.l_os_ilabels = []  # shape=(num_samples, encoding len
 
 
         self.use_spacy_model = use_spacy_model
@@ -30,10 +30,10 @@ class MInput:
         # spacy_model.pipe()
         # spacy_model usually abbreviated as nlp
 
-        self.l_os_pos_mask = []  # shape=(num_samples, num_words)
-        self.l_os_pos_locs = []  # shape=(num_samples, num_words)
-        self.l_os_verb_mask = []  # shape=(num_samples, num_words)
-        self.l_os_verb_locs = []  # shape=(num_samples, num_words)
+        # self.l_os_pos_mask = []  # shape=(num_samples, num_words)
+        # self.l_os_pos_locs = []  # shape=(num_samples, num_words)
+        # self.l_os_verb_mask = []  # shape=(num_samples, num_words)
+        # self.l_os_verb_locs = []  # shape=(num_samples, num_words)
         
 
     def absorb_l_orig_sent(self, l_orig_sent):

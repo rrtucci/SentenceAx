@@ -31,6 +31,16 @@ class Sample:
         self.ll_ilabel = []
         self.l_score = []
 
+        self.word_start_locs = [] # shape=(encoding_len,)
+        self.ilabels =[] # shape=(encoding_len,)
+        
+        self.pos_mask = []  # shape=(num_words,)
+        self.pos_locs = []  # shape=(,num_words,)
+        self.verb_mask = []  # shape=(num_words,)
+        self.verb_locs = []  # shape=(num_words,)
+
+
+
     def absorb_ll_ilabel(self, ll_ilabel):
         self.l_child = []
         for depth, l_ilabel in enumerate(ll_ilabel):

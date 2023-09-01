@@ -15,7 +15,7 @@ class SaxDataSet(Dataset):
         """
         # abstract super class so don't need to call super().__init__(self)
 
-        # padded_data = {'ll_sentL_id': padded_ll_sentL_id,
+        # padded_data = {'ll_sentL_ilabel': padded_ll_sentL_ilabel,
         #                'lll_label': padded_ll_label,
         #                'll_word_start': padded_ll_word_start,
         #                'l_orig_sent': l_orig_sent}
@@ -23,8 +23,8 @@ class SaxDataSet(Dataset):
         padder = SaxDataPadder(sent_pad_id, use_spacy_model)
         padded_data = padder.pad_data(minput)
 
-        self.num_samples = len(padded_data["ll_sentL_id"])
-        self.num_words =  len(padded_data["ll_sentL_id"][0])
+        self.num_samples = len(padded_data["ll_sentL_ilabel"])
+        self.num_words =  len(padded_data["ll_sentL_ilabel"][0])
         self.depth = len(padded_data["lll_ilabel"])
 
 

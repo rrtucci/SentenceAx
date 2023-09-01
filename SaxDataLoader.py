@@ -46,7 +46,7 @@ class SaxDataLoader:
 
     def get_minput(self, in_fp):
         minput = MInput(TASK, self.auto_tokenizer, self.use_spacy_model)
-        minput.absorb_allen_input_file(in_fp)
+        minput.absorb_input_extags_file(in_fp)
 
         return minput
 

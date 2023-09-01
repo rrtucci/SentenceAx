@@ -99,9 +99,9 @@ class SaxDataPadder:
         #     'verb_locs': verb_locs
         # }
 
-        ll_sentL_id = [sample_d['sentL_ids'] for sample_d in
+        ll_sentL_ilabel = [sample_d['sentL_ids'] for sample_d in
                            minput]
-        padded_ll_sentL_id = SaxDataPadder.get_padded_list(ll_sentL_id,
+        padded_ll_sentL_ilabel = SaxDataPadder.get_padded_list(ll_sentL_ilabel,
                                                            self.sent_pad_id)
 
         lll_ilabel = [sample_d['ll_ilabel'] for sample_d in minput]
@@ -119,11 +119,11 @@ class SaxDataPadder:
         l_orig_sent = [sample_d['orig_sent'] for
                        sample_d in minput]
 
-        # padded_ll_sentL_id = torch.tensor(padded_ll_sentL_id)
+        # padded_ll_sentL_ilabel = torch.tensor(padded_ll_sentL_ilabel)
         # padded_lll_label = torch.tensor(padded_lll_label)
         # padded_ll_word_start = torch.tensor(padded_ll_word_start)
 
-        padded_data = {'ll_sentL_id': padded_ll_sentL_id,
+        padded_data = {'ll_sentL_ilabel': padded_ll_sentL_ilabel,
                        'lll_ilabel': padded_lll_ilabel,
                        'll_word_start': padded_ll_word_start,
                        'l_orig_sent': l_orig_sent}

@@ -1,5 +1,6 @@
 from sax_globals import *
 import spacy
+from sample_classes import *
 
 class MInput:
     def __init__(self, task, auto_tokenizer, use_spacy_model):
@@ -8,12 +9,18 @@ class MInput:
         self.use_spacy_model = use_spacy_model
         
         self.num_samples = None
-        self.l_sample = None
+        self.l_sample = None #shape=(num_samples,)
+        self.l_orig_sent = [] #shape=(num_samples,)
+        self.lll_ilabel = []#shape=(num_samples, max_depth=num_ex, num_ilabels)
 
-        self.l_orig_sent = []
-        self.lll_ilabel = []
-        self.ll_starting_word_loc = []
-        self.ll_sentL_id = []
+        # following lists have
+        # shape is (num_samples, encoding length =100)
+        # it's not (num_samples, max_depth=num_ex)
+        # each word of orig_sent may be encoded with more than one ilabel
+        # os = original sentence
+        self.l_os_start_word_locs = [] # shape=(num_samples, encoding len)
+        self.l_os_ilabels = []  # shape=(num_samples, encoding len
+
 
         self.use_spacy_model = use_spacy_model
         if self.use_spacy_model:
@@ -22,10 +29,11 @@ class MInput:
         # doc = spacy_model("This is a text")
         # spacy_model.pipe()
         # spacy_model usually abbreviated as nlp
-        self.l_pos_mask = []
-        self.l_pos_locs = []
-        self.l_verb_mask = []
-        self.l_verb_locs = []
+
+        self.l_os_pos_mask = []  # shape=(num_samples, num_words)
+        self.l_os_pos_locs = []  # shape=(num_samples, num_words)
+        self.l_os_verb_mask = []  # shape=(num_samples, num_words)
+        self.l_os_verb_locs = []  # shape=(num_samples, num_words)
         
 
     def absorb_l_orig_sent(self, l_orig_sent):
@@ -127,6 +135,10 @@ class MInput:
         return verb_mask, verb_locs, verb_words
 
     def fill_pos_and_verb_info(self):
+        l_os_pos_mask = []
+        l_os_pos_locs = []
+        l_os_verb_mask = []
+        l_os_verb_locs = []
         if not self.use_spacy_model:
             return
         for sent_id, spacy_tokens in enumerate(
@@ -137,18 +149,24 @@ class MInput:
 
             pos_mask, pos_locs, pos_words = \
                 MInput.pos_info(spacy_tokens)
-            self.l_pos_mask.append(pos_mask)
-            self.l_pos_locs.append(pos_locs)
+            l_os_pos_mask.append(pos_mask)
+            l_os_pos_locs.append(pos_locs)
 
             verb_mask, verb_locs, verb_words = \
                 MInput.verb_info(spacy_tokens)
-            self.l_verb_mask.append(verb_mask)
+            l_os_verb_mask.append(verb_mask)
             if verb_locs:
-                self.l_verb_locs.append(verb_locs)
+                l_os_verb_locs.append(verb_locs)
             else:
-                self.l_verb_locs.append([0])
+                l_os_verb_locs.append([0])
+        for k in range(self.num_samples):
+            self.l_sample[k].pos_mask = l_os_pos_mask[k]
+            self.l_sample[k].pos_locs = l_os_pos_locs[k]
+            self.l_sample[k].verb_mask = l_os_verb_mask[k]
+            self.l_sample[k].verb_locs = l_os_verb_locs[k]
 
-    def absorb_allen_input_file(self, in_fp):
+
+    def absorb_input_extags_file(self, in_fp):
         """
         similar to data._process_data()
 
@@ -170,61 +188,84 @@ class MInput:
         the tags may be extags or cctags
         each original sentence and its tag sequences constitute a new example
         """
+        l_orig_sent = []
+        l_os_start_word_locs = [] # similar to l_word_starts
+        l_os_ilabels = [] # similar to l_input_ids
+        ll_ex_ilabels = []  # similar to l_targets target=extraction
+        sentL = None # similar to `sentence`
 
-        ilabels_for_each_ex = []  # a list of a list of labels, list[list[in]]
-        orig_sents = []
+        with(in_fp, "r") as f:
+            lines = f.readlines()
 
-        if type(in_fp) == type([]):
-            in_lines = None
-        else:
-            with(in_fp, "r") as f:
-                in_lines = f.readlines()
+        def is_first_line_of_sample(line):
+            return '[used' in line
+        def is_tag_line_of_sample(line):
+            return len(line)!=0 and '[used' not in line
+        def is_end_of_sample(prev_line, line):
+            return not line or \
+                (prev_line and is_first_line_of_sample(line))
 
-        prev_line = ""
-        for line in in_lines:
+        prev_line = None
+        for line in lines:
             line = line.strip()
-            if '[used' in line:  # it's the  beginning of an example
+            if line == "":
+                # this skips blank lines
+                continue
+
+            if is_first_line_of_sample(line):
                 sentL = line
-                encoding = self.auto_tokenizer.batch_encode_plus(
+                encoding_d = self.auto_tokenizer.batch_encode_plus(
                     sentL.split())
-                sentL_ids = [BOS_ILABEL]
-                l_starting_word_loc = []
-                for ids in encoding['input_ids']:
+                os_ilabels = [BOS_ILABEL]
+                os_start_word_locs = []
+                # encoding_d['input_ids'] is a ll_ilabel
+                for l_ilabel0 in encoding_d['input_ids']:
                     # special spacy tokens like \x9c have zero length
-                    if len(ids) == 0:
-                        ids = [100]
-                    l_starting_word_loc.append(len(sentL_ids))
-                    sentL_ids += ids  # same as sentL_ids.extend(ids)
-                sentL_ids.append(EOS_ILABEL)
-
-                orig_sent = sentL.split('[unused1]')[0].strip()
-                orig_sents.append(orig_sent)
-
-            elif line and '[used' not in line:  # it's a line of tags
-                ilabels = [TAG_TO_ILABEL[tag] for tag in line.split()]
-                # take away last 3 ids for unused tokens
-                ilabels = ilabels[:len(l_starting_word_loc)]
-                ilabels_for_each_ex.append(ilabels)
-                prev_line = line
-            # last line of file or empty line after example
-            # line is either "" or None
-            elif len(prev_line) != 0 and not line:
-                if len(ilabels_for_each_ex) == 0:
-                    ilabels_for_each_ex = [[0]]
-                # note that if li=[2,3]
-                # then li[:100] = [2,3]
-
-                if len(sentL.split()) <= 100:
-                    self.ll_sentL_id.append(sentL_ids)
-                    self.lll_ilabel.append(
-                        ilabels_for_each_ex[:MAX_EX_DEPTH])
-                    self.ll_starting_word_loc.append(l_starting_word_loc)
-                    self.l_orig_sent = orig_sent
-                ilabels_for_each_ex = []
-                prev_line = line
-
+                    if len(l_ilabel0) == 0:
+                        l_ilabel0 = [100]
+                    # note os_start_word_locs[0]=1 because first
+                    # ilabels =[BOS_ILABEL]
+                    os_start_word_locs.append(len(os_ilabels))
+                    # same as ilabels.extend(l_ilabel0)
+                    os_ilabels += l_ilabel0
+                os_ilabels.append(EOS_ILABEL)
+                assert len(sentL.split())==len(os_start_word_locs)
+                l_ex_ilabels = []
+            elif is_tag_line_of_sample(line):
+                ex_ilabels = [TAG_TO_ILABEL[tag] for tag in line.split()]
+                assert ex_ilabels ==len(os_start_word_locs)
+                l_ex_ilabels.append(ex_ilabels)
             else:
                 assert False
+            if is_end_of_sample(prev_line, line):
+                if len(l_os_ilabels) == 0:
+                    l_os_ilabels = [[0]]
+
+                if len(sentL.split()) <= 100:
+                    l_os_ilabels.append(os_ilabels)
+                    orig_sent = sentL.split('[unused1]')[0].strip()
+                    l_orig_sent.append(orig_sent)
+
+                    # note that if li=[2,3]
+                    # then li[:100] = [2,3]
+                    ll_ex_ilabels.append(l_ex_ilabels)
+                    l_os_start_word_locs.append(os_start_word_locs)
+
+                os_ilabels = []
+                os_start_word_locs = []
+                l_ex_ilabels = []
+            prev_line = line
+        self.l_orig_sent = l_orig_sent
+        self.lll_ilabel = ll_ex_ilabels
+
+        self.num_samples = len(self.lll_ilabel)
+        self.l_sample = []
+        for k in range(self.num_samples):
+            sample = Sample(self.task)
+            self.l_sample.append(sample)
+            sample.ilabels = l_os_ilabels[k]
+            sample.start_word_locs = l_os_start_word_locs[k]
+
 
         # so far, we haven't assumed any spacy derived data nanalysis
         # if spacy is allowed, the example_d can carry more info.
@@ -232,9 +273,9 @@ class MInput:
             self.fill_pos_and_verb_info()
 
         # example_d = {
-        #     'sentL_ids': sentL_ids,
+        #     'l_ilabel': l_ilabel,
         #     'll_label': labels_for_each_ex[:MAX_EX_DEPTH],
-        #     'l_starting_word_loc': l_starting_word_loc,
+        #     'l_word_start_loc': l_word_start_loc,
         #     'orig_sent': orig_sent,
         #     # if spacy_model:
         #     'pos_mask': pos_mask,
@@ -249,4 +290,4 @@ class MInput:
         #     examples.append(example)
         # return examples, orig_sents
         
-        self.num_samples = len(self.lll_ilabel)
+

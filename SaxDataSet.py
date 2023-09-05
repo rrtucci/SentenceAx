@@ -5,7 +5,7 @@ from SaxDataPadder import *
 
 
 class SaxDataSet(Dataset):
-    def __init__(self, m_input, pad_ilabel, use_spacy_model):
+    def __init__(self, m_input, pad_icode, use_spacy_model):
         """
         In Openie6, the `torchtext.data.Dataset` class is a normal class
         `Dataset(examples, fields)` is abstract class but in newer versions
@@ -15,30 +15,30 @@ class SaxDataSet(Dataset):
         """
         # abstract super class so don't need to call super().__init__(self)
 
-        # padded_data_d = {'ll_sentL_ilabel': padded_ll_sentL_ilabel,
+        # padded_data_d = {'ll_sentL_icode': padded_ll_sentL_icode,
         #                'lll_label': padded_ll_label,
         #                'l_word_start_locs': padded_l_word_start_locs,
         #                'l_orig_sent': l_orig_sent}
 
-        padder = SaxDataPadder(pad_ilabel, use_spacy_model)
+        padder = SaxDataPadder(pad_icode, use_spacy_model)
         padded_data_d = padder.pad_data(m_input)
 
-        self.num_samples = len(padded_data_d["ll_sentL_ilabel"])
-        self.num_words =  len(padded_data_d["ll_sentL_ilabel"][0])
-        self.depth = len(padded_data_d["lll_ilabel"])
+        self.num_samples = len(padded_data_d["ll_sentL_icode"])
+        self.num_words =  len(padded_data_d["ll_sentL_icode"][0])
+        self.depth = len(padded_data_d["lll_icode"])
 
 
         x = []
         num_xtypes = -1
         for name, li in padded_data_d.items():
-            if name != "lll_ilabel":
+            if name != "lll_icode":
                 num_xtypes +=1
                 x.append(li)
         self.num_xtypes = num_xtypes
         x = np.array(x)
         self.x = torch.from_numpy(x)
 
-        y = padded_data_d["lll_ilabel"]
+        y = padded_data_d["lll_icode"]
         y = np.array(y)
         self.y = torch.from_numpy(y)
 

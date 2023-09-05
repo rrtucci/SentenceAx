@@ -28,12 +28,12 @@ class SaxDataLoader:
     https://colab.research.google.com/github/pytorch/text/blob/master/examples/legacy_tutorial/migration_tutorial.ipynb#scrollTo=kBV-Wvlo07ye
     """
 
-    def __init__(self, auto_tokenizer, pad_ilabel,
+    def __init__(self, auto_tokenizer, pad_icode,
                  train_fp, val_fp, test_fp, use_spacy_model=True):
 
         self.params_d = PARAMS_D
         self.auto_tokenizer = auto_tokenizer
-        self.pad_ilabel = pad_ilabel
+        self.pad_icode = pad_icode
         self.train_fp = train_fp
         self.val_fp = val_fp
         self.test_fp = test_fp
@@ -111,7 +111,7 @@ class SaxDataLoader:
             #vocab = build_vocab(predict_m_input)
 
             predict_dataset = SaxDataSet(predict_m_input,
-                                      self.pad_ilabel,
+                                      self.pad_icode,
                                       self.use_spacy_model)
             train_dataset, val_dataset, test_dataset = \
                 predict_dataset, predict_dataset, predict_dataset
@@ -141,13 +141,13 @@ class SaxDataLoader:
             #     train_m_input + val_m_input + test_m_input)
 
             train_dataset = SaxDataSet(train_m_input,
-                                       self.pad_ilabel,
+                                       self.pad_icode,
                                        self.use_spacy_model)
             val_dataset = SaxDataSet(val_m_input,
-                                     self.pad_ilabel,
+                                     self.pad_icode,
                                      self.use_spacy_model)
             test_dataset = SaxDataSet(test_m_input,
-                                      self.pad_ilabel,
+                                      self.pad_icode,
                                       self.use_spacy_model)
             train_dataset.sort()  # to simulate bucket sort (along with pad_data)
 

@@ -1,14 +1,14 @@
 """
-EXTAG_TO_ILABEL = {'NONE': 0, 'ARG1': 1, 'REL': 2, 'ARG2': 3,
+EXTAG_TO_ICODE = {'NONE': 0, 'ARG1': 1, 'REL': 2, 'ARG2': 3,
                    'LOC': 4, 'TIME': 4, 'TYPE': 5, 'ARGS': 3}
-BASE_EXTAGS = EXTAG_TO_ILABEL.keys()
-ILABEL_TO_EXTAG={0: 'NONE', 1: 'ARG1', 2: 'REL', 3: 'ARG2',
+BASE_EXTAGS = EXTAG_TO_ICODE.keys()
+ICODE_TO_EXTAG={0: 'NONE', 1: 'ARG1', 2: 'REL', 3: 'ARG2',
                  4: 'ARG2', 5: 'NONE'}
 
-CCTAG_TO_ILABEL = {'NONE': 0, 'CP': 1, 'CP_START': 2,
+CCTAG_TO_ICODE = {'NONE': 0, 'CP': 1, 'CP_START': 2,
                    'CC': 3, 'SEP': 4, 'OTHERS': 5}
-BASE_CCTAGS = CCTAG_TO_ILABEL.keys()
-ILABEL_TO_CCTAG = {0: 'NONE', 1: 'CP', 2: 'CP_START',
+BASE_CCTAGS = CCTAG_TO_ICODE.keys()
+ICODE_TO_CCTAG = {0: 'NONE', 1: 'CP', 2: 'CP_START',
                    3: 'CC', 4:'SEP', 5: 'OTHERS'}
 
 * extags (openie-data/openie4_labels) *.labels has no [unused1], *_labels does
@@ -26,7 +26,7 @@ NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE 
 
 
 CHAIN OF CONVERSIONS
-words->extags, cctags->ilabels->extags->words
+words->extags, cctags->icodes->extags->words
 """
 from sax_globals import *
 from sax_utils import *
@@ -48,9 +48,9 @@ def translate_words_to_extags(ex, set_extags):
     return ex.extags
 
 
-def translate_words_to_cctags(orig_sent, ll_ilabel):
+def translate_words_to_cctags(orig_sent, ll_icode):
     """
-    CCTree ilabels not same as those provided by AutoEncoder.
+    CCTree icodes not same as those provided by AutoEncoder.
 
     This method is surely wrong, but a good first stab.
 
@@ -60,14 +60,14 @@ def translate_words_to_cctags(orig_sent, ll_ilabel):
     Parameters
     ----------
     orig_sent
-    ll_ilabel
+    ll_icode
 
     Returns
     -------
 
     """
     words = get_words(orig_sent)
-    cctree = CCTree(orig_sent, ll_ilabel)
+    cctree = CCTree(orig_sent, ll_icode)
     l_spanned_locs = cctree.l_spanned_locs
     max_depth = len(l_spanned_locs)
     nodes = cctree.ccnodes
@@ -100,29 +100,29 @@ def translate_words_to_cctags(orig_sent, ll_ilabel):
 
 
 
-def translate_extags_to_ilabels(extags):
-    ilabels = []
+def translate_extags_to_icodes(extags):
+    icodes = []
     for extag in extags:
-        ilabels.append(EXTAG_TO_ILABEL[extag])
-    return ilabels
+        icodes.append(EXTAG_TO_ICODE[extag])
+    return icodes
 
 
-def translate_cctags_to_ilabels(cctags):
-    ilabels = []
+def translate_cctags_to_icodes(cctags):
+    icodes = []
     for cctag in cctags:
-        ilabels.append(CCTAG_TO_ILABEL[cctag])
-    return ilabels
+        icodes.append(CCTAG_TO_ICODE[cctag])
+    return icodes
 
 
-def translate_ilabels_to_cctags(ilabels):
+def translate_icodes_to_cctags(icodes):
     """
-    Openie6 seems to use CCTree to go from l_ilabels to l_cctags (see
-    metric.get_coords()). However, I believe the l_ilabels used by CCTree,
+    Openie6 seems to use CCTree to go from l_icodes to l_cctags (see
+    metric.get_coords()). However, I believe the l_icodes used by CCTree,
     and the ones in this function are different.
 
     Parameters
     ----------
-    ilabels
+    icodes
 
     Returns
     -------
@@ -130,15 +130,15 @@ def translate_ilabels_to_cctags(ilabels):
     """
 
     cctags = []
-    for ilabel in ilabels:
-        cctags.append(ILABEL_TO_CCTAG(ilabel))
+    for icode in icodes:
+        cctags.append(ICODE_TO_CCTAG(icode))
     return cctags
 
 
-def translate_ilabels_to_extags(ilabels):
+def translate_icodes_to_extags(icodes):
     extags = []
-    for ilabel in ilabels:
-        extags.append(ILABEL_TO_EXTAG(ilabel))
+    for icode in icodes:
+        extags.append(ICODE_TO_EXTAG(icode))
 
     return extags
 

@@ -28,11 +28,11 @@ class Sample:
         self.l_child = []
         self.max_depth = None
 
-        self.ll_ilabel = []
+        self.ll_icode = []
         self.l_score = []
 
         self.word_start_locs = [] # shape=(encoding_len,)
-        self.ilabels =[] # shape=(encoding_len,)
+        self.icodes =[] # shape=(encoding_len,)
         
         self.pos_mask = []  # shape=(num_words,)
         self.pos_locs = []  # shape=(,num_words,)
@@ -41,32 +41,32 @@ class Sample:
 
 
 
-    def absorb_ll_ilabel(self, ll_ilabel):
+    def absorb_ll_icode(self, ll_icode):
         self.l_child = []
-        for depth, l_ilabel in enumerate(ll_ilabel):
+        for depth, l_icode in enumerate(ll_icode):
             self.l_child.append(SampleChild())
             self.l_child[-1].depth = depth
-        self.set_tags(ll_ilabel)
+        self.set_tags(ll_icode)
 
     def absorb_l_score(self, l_score):
         for k, child in enumerate(self.l_child):
             child.score = l_score[k]
 
-    def set_tags(self, ll_ilabel):
-        for depth, l_ilabel in enumerate(ll_ilabel):
+    def set_tags(self, ll_icode):
+        for depth, l_icode in enumerate(ll_icode):
             child = self.l_child[depth]
             child.tags = []
-            for ilabel in l_ilabel:
+            for icode in l_icode:
                 if self.task == "ex":
-                    child.tags.append(ILABEL_TO_EXTAG[ilabel])
+                    child.tags.append(ICODE_TO_EXTAG[icode])
                 elif self.task == "cc":
-                    child.tags.append(ILABEL_TO_CCTAG[ilabel])
+                    child.tags.append(ICODE_TO_CCTAG[icode])
                 else:
                     assert False
     def absorb_all_possible(self):
-        if self.ll_ilabel:
-            self.max_depth = len(self.ll_ilabel)
-            self.absorb_ll_ilabel(self.ll_ilabel)
+        if self.ll_icode:
+            self.max_depth = len(self.ll_icode)
+            self.absorb_ll_icode(self.ll_icode)
         if self.l_score:
             self.absorb_l_score(self.l_score)
 

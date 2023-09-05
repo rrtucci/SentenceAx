@@ -103,7 +103,7 @@ class CCReport:
             if pred_ccnode is not None and true_ccnode is None:
                 self.overall_scorer.N1L0 += 1
             if pred_ccnode is None and true_ccnode is not None:
-                depth = true_ccnode.ilabel
+                depth = true_ccnode.icode
                 self.overall_scorer.N0L1 += 1
                 self.depth_scorer.N0L1 += 1
             if pred_ccnode is None and true_ccnode is None:

@@ -83,10 +83,10 @@ class MConductor:
         # decode()
         # replaces vocab.itos() (itos=integer to string)
         self.decode = self.auto_tokenizer.decode
-        self.pad_ilabel = self.encode(self.auto_tokenizer.pad_token)
+        self.pad_icode = self.encode(self.auto_tokenizer.pad_token)
 
         self.dloader = SaxDataLoader(self.auto_tokenizer,
-                                  self.pad_ilabel,
+                                  self.pad_icode,
                                   self.train_fp,
                                   self.val_fp,
                                   self.test_fp)
@@ -570,7 +570,7 @@ class MConductor:
                                            ll_sent_loc):
         """
         similar to run.get_labels()
-        ILABEL_TO_EXTAG={0: 'NONE', 1: 'ARG1', 2: 'REL', 3: 'ARG2',
+        ICODE_TO_EXTAG={0: 'NONE', 1: 'ARG1', 2: 'REL', 3: 'ARG2',
                  4: 'ARG2', 5: 'NONE'}
 
 
@@ -604,26 +604,26 @@ class MConductor:
                     get_words(l_child[ex_id].orig_sent))
                 sentL = l_child[ex_id].strip() + UNUSED_TOKENS_STR
                 assert sentL == l_sentL[sample_id]
-                ll_ilabel = l_child[ex_id].ilabels
-                for l_ilabel in ll_ilabel:
+                ll_icode = l_child[ex_id].icodes
+                for l_icode in ll_icode:
                     # You can use x.item() to get a Python number
                     # from a torch tensor that has one element
-                    if pred_ilabels.sum().item() == 0:
+                    if pred_icodes.sum().item() == 0:
                         break
 
-                    ilabels = [0] * len(get_words(sentL))
-                    pred_ilabels = pred_ilabels[:len(sentL.split())].tolist()
+                    icodes = [0] * len(get_words(sentL))
+                    pred_icodes = pred_icodes[:len(sentL.split())].tolist()
                     for k, loc in enumerate(
                             sorted(ll_sent_loc[sample_id][ex_id])):
-                        ilabels[loc] = pred_ilabels[k]
+                        icodes[loc] = pred_icodes[k]
 
-                    ilabels = ilabels[:-3]
+                    icodes = icodes[:-3]
                     # 1: arg1, 2: rel
-                    if 1 not in pred_ilabels and 2 not in pred_ilabels:
+                    if 1 not in pred_icodes and 2 not in pred_icodes:
                         continue
 
                     str_extags = \
-                        ' '.join([ILABEL_TO_EXTAG[i] for i in ilabels])
+                        ' '.join([ICODE_TO_EXTAG[i] for i in icodes])
                     lines.append(str_extags)
 
                 word_id += 1

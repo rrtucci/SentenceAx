@@ -28,27 +28,27 @@ class SaxDataLoader:
     https://colab.research.google.com/github/pytorch/text/blob/master/examples/legacy_tutorial/migration_tutorial.ipynb#scrollTo=kBV-Wvlo07ye
     """
 
-    def __init__(self, auto_tokenizer, sent_pad_id,
+    def __init__(self, auto_tokenizer, pad_ilabel,
                  train_fp, val_fp, test_fp, use_spacy_model=True):
 
         self.params_d = PARAMS_D
         self.auto_tokenizer = auto_tokenizer
-        self.sent_pad_id = sent_pad_id
+        self.pad_ilabel = pad_ilabel
         self.train_fp = train_fp
         self.val_fp = val_fp
         self.test_fp = test_fp
         self.use_spacy_model = use_spacy_model
 
-        self.train_minput = None
-        self.val_minput = None
-        self.test_minput = None
-        self.predict_minput = None
+        self.train_m_input = None
+        self.val_m_input = None
+        self.test_m_input = None
+        self.predict_m_input = None
 
-    def get_minput(self, in_fp):
-        minput = MInput(TASK, self.auto_tokenizer, self.use_spacy_model)
-        minput.absorb_input_extags_file(in_fp)
+    def get_m_input(self, in_fp):
+        m_input = MInput(TASK, self.auto_tokenizer, self.use_spacy_model)
+        m_input.read_input_extags_file(in_fp)
 
-        return minput
+        return m_input
 
     def get_ttt_datasets(self, pred_in_sents=None):
         """
@@ -107,47 +107,47 @@ class SaxDataLoader:
             # process_data() which is get_samples() for us.
             # get_samples()
             # returns: examples, orig_sents
-            predict_minput = self.get_minput(PRED_IN_FP)
-            #vocab = build_vocab(predict_minput)
+            predict_m_input = self.get_m_input(PRED_IN_FP)
+            #vocab = build_vocab(predict_m_input)
 
-            predict_dataset = SaxDataSet(predict_minput,
-                                      self.sent_pad_id,
+            predict_dataset = SaxDataSet(predict_m_input,
+                                      self.pad_ilabel,
                                       self.use_spacy_model)
             train_dataset, val_dataset, test_dataset = \
                 predict_dataset, predict_dataset, predict_dataset
         else: # 'predict' not in self.params_d["mode"]
             if not os.path.exists(cached_train_fp) or\
                     self.params_d["build_cache"]:
-                train_minput = self.get_minput(self.train_fp)
-                pickle.dump(train_minput, open(cached_train_fp, 'wb'))
+                train_m_input = self.get_m_input(self.train_fp)
+                pickle.dump(train_m_input, open(cached_train_fp, 'wb'))
             else:
-                train_minput = pickle.load(open(cached_train_fp, 'rb'))
+                train_m_input = pickle.load(open(cached_train_fp, 'rb'))
 
             if not os.path.exists(cached_val_fp) or \
                     self.params_d["build_cache"]:
-                val_minput = self.get_minput(self.val_fp)
-                pickle.dump(val_minput, open(cached_val_fp, 'wb'))
+                val_m_input = self.get_m_input(self.val_fp)
+                pickle.dump(val_m_input, open(cached_val_fp, 'wb'))
             else:
-                val_minput = pickle.load(open(cached_val_fp, 'rb'))
+                val_m_input = pickle.load(open(cached_val_fp, 'rb'))
 
             if not os.path.exists(cached_test_fp) or\
                     self.params_d["build_cache"]:
-                test_minput = self.get_minput(self.test_fp)
-                pickle.dump(test_minput, open(cached_test_fp, 'wb'))
+                test_m_input = self.get_m_input(self.test_fp)
+                pickle.dump(test_m_input, open(cached_test_fp, 'wb'))
             else:
-                test_minput = pickle.load(open(cached_test_fp, 'rb'))
+                test_m_input = pickle.load(open(cached_test_fp, 'rb'))
 
             # vocab = self.build_vocab(
-            #     train_minput + val_minput + test_minput)
+            #     train_m_input + val_m_input + test_m_input)
 
-            train_dataset = SaxDataSet(train_minput,
-                                       self.sent_pad_id,
+            train_dataset = SaxDataSet(train_m_input,
+                                       self.pad_ilabel,
                                        self.use_spacy_model)
-            val_dataset = SaxDataSet(val_minput,
-                                     self.sent_pad_id,
+            val_dataset = SaxDataSet(val_m_input,
+                                     self.pad_ilabel,
                                      self.use_spacy_model)
-            test_dataset = SaxDataSet(test_minput,
-                                      self.sent_pad_id,
+            test_dataset = SaxDataSet(test_m_input,
+                                      self.pad_ilabel,
                                       self.use_spacy_model)
             train_dataset.sort()  # to simulate bucket sort (along with pad_data)
 

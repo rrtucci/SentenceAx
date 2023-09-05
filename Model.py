@@ -258,11 +258,12 @@ class Model(pl.LightningModule):
         # second list over extractions
         # third (inner) list over number of labels in a line
         # after padding and adding the 3 unused tokens
-        batch_size, max_depth, ilabels_length = self.true_batch_out.lll_ilabel.shape
+        batch_size, max_depth, ilabels_length = \
+            self.true_batch_out.lll_ilabel.shape
 
         # `loss_fun` is not used in this function anymore
         # loss_fun, lstm_loss = 0, 0
-        word_ll_score = []
+        ll_word_score = []
         word_scores = []
 
         hidden_states, _ = self.base_model()
@@ -291,7 +292,7 @@ class Model(pl.LightningModule):
 
             word_hidden_states = self.merge_layer(word_hidden_states)
             word_scores = self.ilabelling_layer(word_hidden_states)
-            word_ll_score.append(word_scores)
+            ll_word_score.append(word_scores)
 
             d += 1
             if d >= max_depth:
@@ -309,7 +310,7 @@ class Model(pl.LightningModule):
         return self._calc_forward_output(
             init_params_d,
             mode,
-            word_ll_score,
+            ll_word_score,
             constraints_str, 
             cweights_str)
 
@@ -317,7 +318,7 @@ class Model(pl.LightningModule):
             self,
             init_params_d,
             mode,
-            word_ll_score,
+            ll_word_score,
             constraints_str, 
             cweights_str):
         """
@@ -326,7 +327,7 @@ class Model(pl.LightningModule):
         Parameters
         ----------
         mode
-        word_ll_score
+        ll_word_score
         constraints_str
         cweights_str
 
@@ -335,13 +336,13 @@ class Model(pl.LightningModule):
 
         """
 
-        word_scores = word_ll_score[-1]
+        word_scores = ll_word_score[-1]
         batch_loss = 0
         lll_ilabel = []
         ll_score = []
         batch_size, num_words, _ = word_scores.shape
         self.true_batch_out.lll_ilabel = self.true_batch_out.lll_ilabel.long()
-        for d, word_scores in enumerate(word_ll_score):
+        for d, word_scores in enumerate(ll_word_score):
             if mode == 'train':
                 batch_loss += self.loss_fun(
                     word_scores.reshape(batch_size * num_words, -1),
@@ -370,12 +371,12 @@ class Model(pl.LightningModule):
 
         if mode == 'train':
             if constraints_str:
-                word_ll_score = torch.cat([ws.unsqueeze(1) for
-                                           ws in word_ll_score], dim=1)
-                word_ll_score = torch.softmax(word_ll_score, dim=-1)
+                ll_word_score = torch.cat([ws.unsqueeze(1) for
+                                           ws in ll_word_score], dim=1)
+                ll_word_score = torch.softmax(ll_word_score, dim=-1)
 
                 const_loss = self._constrained_loss(
-                    word_ll_score,
+                    ll_word_score,
                     constraints_str, cweights_str) / batch_size
                 batch_loss = const_loss
 
@@ -397,9 +398,9 @@ class Model(pl.LightningModule):
             if constraints_str and \
                     'predict' not in self.params_d["mode"] and \
                     self.params_d["batch_size"] != 1:
-                word_ll_score = torch.cat([d.unsqueeze(1) for
-                                           d in word_ll_score], dim=1)
-                word_ll_score.fill_(0)
+                ll_word_score = torch.cat([d.unsqueeze(1) for
+                                           d in ll_word_score], dim=1)
+                ll_word_score.fill_(0)
 
                 # for checking test set
                 # labels = copy(self.lll_label)
@@ -408,8 +409,8 @@ class Model(pl.LightningModule):
 
                 ilabels = ilabels.unsqueeze(-1)
                 ilabels_depth = ilabels.shape[1]
-                word_ll_score = word_ll_score[:, :ilabels_depth, :, :]
-                word_ll_score.scatter_(3, ilabels.long(), 1)
+                ll_word_score = ll_word_score[:, :ilabels_depth, :, :]
+                ll_word_score.scatter_(3, ilabels.long(), 1)
 
                 constraints_str = 'posm_hvc_hvr_hve'
                 cweights_str = '1_1_1_1'
@@ -421,7 +422,7 @@ class Model(pl.LightningModule):
                 for constraint, weight in \
                         zip(l_constraint, l_cweight):
                     const_loss = self._constrained_loss(pos_locs,
-                                                        word_ll_score,
+                                                        ll_word_score,
                                                         constraint,
                                                         float(weight))
                     if constraint not in self.constraints_str_d:
@@ -430,7 +431,7 @@ class Model(pl.LightningModule):
 
         return lll_ilabel, ll_score, batch_loss
 
-    def _constrained_loss(self, pos_locs, word_ll_score,
+    def _constrained_loss(self, pos_locs, ll_word_score,
                           constraints_str, cweights_str):
         """
         similar to model.constrained_loss()
@@ -439,7 +440,7 @@ class Model(pl.LightningModule):
 
         Parameters
         ----------
-        word_ll_score
+        ll_word_score
         constraints_str
         cweights_str
 
@@ -447,11 +448,11 @@ class Model(pl.LightningModule):
         -------
 
         """
-        batch_size, depth, num_words, num_ilabels = word_ll_score.shape
+        batch_size, depth, num_words, num_ilabels = ll_word_score.shape
         hinge_loss = 0
         bat = self.verb_locs.unsqueeze(1).unsqueeze(3). \
             repeat(1, depth, 1, num_ilabels)
-        verb_scores = torch.gather(word_ll_score, 2, bat)
+        verb_scores = torch.gather(ll_word_score, 2, bat)
         verb_rel_scores = verb_scores[:, :, :, 2]
         # (batch_size, depth, num_words)
         verb_rel_scores = verb_rel_scores * (self.verb_locs != 0). \
@@ -479,7 +480,7 @@ class Model(pl.LightningModule):
         if 'posm' in constraints_str:
             bat = pos_locs.unsqueeze(1).unsqueeze(3). \
                 repeat(1, depth, 1, num_ilabels)
-            pos_scores = torch.gather(word_ll_score, 2, bat)
+            pos_scores = torch.gather(ll_word_score, 2, bat)
             pos_nnone_scores = \
                 torch.max(pos_scores[:, :, :, 1:], dim=-1)[0]
             column_loss = (1 - torch.max(pos_nnone_scores, dim=1)[0]) * \

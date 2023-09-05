@@ -9,6 +9,7 @@ class MInput:
         self.use_spacy_model = use_spacy_model
         
         self.num_samples = None
+        self.l_sample = None #shape=(num_samples,)
         self.l_orig_sent = [] #shape=(num_samples,)
         self.lll_ilabel = []#shape=(num_samples, max_depth=num_ex, num_ilabels)
 
@@ -17,8 +18,8 @@ class MInput:
         # it's not (num_samples, max_depth=num_ex)
         # each word of orig_sent may be encoded with more than one ilabel
         # os = original sentence
-        self.l_os_word_start_locs = [] # shape=(num_samples, encoding len)
-        self.l_os_ilabels = []  # shape=(num_samples, encoding len
+        # self.l_os_word_start_locs = [] # shape=(num_samples, encoding len)
+        # self.l_os_ilabels = []  # shape=(num_samples, encoding len
 
 
         self.use_spacy_model = use_spacy_model
@@ -29,24 +30,24 @@ class MInput:
         # spacy_model.pipe()
         # spacy_model usually abbreviated as nlp
 
-        self.l_os_pos_mask = []  # shape=(num_samples, num_words)
-        self.l_os_pos_locs = []  # shape=(num_samples, num_words)
-        self.l_os_verb_mask = []  # shape=(num_samples, num_words)
-        self.l_os_verb_locs = []  # shape=(num_samples, num_words)
+        # self.l_os_pos_mask = []  # shape=(num_samples, num_words)
+        # self.l_os_pos_locs = []  # shape=(num_samples, num_words)
+        # self.l_os_verb_mask = []  # shape=(num_samples, num_words)
+        # self.l_os_verb_locs = []  # shape=(num_samples, num_words)
         
 
-    # def absorb_l_orig_sent(self, l_orig_sent):
-    #     for k, orig_sent in enumerate(l_orig_sent):
-    #         self.l_sample[k].orig_sent = orig_sent
-    #
-    # def absorb_lll_ilabel(self, lll_ilabel):
-    #     for sample_id, ll_ilabel in enumerate(lll_ilabel):
-    #         self.l_sample[sample_id].absorb_children(ll_ilabel)
-    #
-    # def absorb_all_possible(self):
-    #     self.num_samples = len(self.lll_ilabel)
-    #     self.absorb_l_orig_sent(self.l_orig_sent)
-    #     self.absorb_lll_ilabel(self.lll_ilabel)
+    def absorb_l_orig_sent(self, l_orig_sent):
+        for k, orig_sent in enumerate(l_orig_sent):
+            self.l_sample[k].orig_sent = orig_sent
+
+    def absorb_lll_ilabel(self, lll_ilabel):
+        for sample_id, ll_ilabel in enumerate(lll_ilabel):
+            self.l_sample[sample_id].absorb_children(ll_ilabel)
+
+    def absorb_all_possible(self):
+        self.num_samples = len(self.lll_ilabel)
+        self.absorb_l_orig_sent(self.l_orig_sent)
+        self.absorb_lll_ilabel(self.lll_ilabel)
 
     @staticmethod
     def remerge_sent(tokens):
@@ -158,14 +159,14 @@ class MInput:
                 l_os_verb_locs.append(verb_locs)
             else:
                 l_os_verb_locs.append([0])
+        for k in range(self.num_samples):
+            self.l_sample[k].pos_mask = l_os_pos_mask[k]
+            self.l_sample[k].pos_locs = l_os_pos_locs[k]
+            self.l_sample[k].verb_mask = l_os_verb_mask[k]
+            self.l_sample[k].verb_locs = l_os_verb_locs[k]
 
-        self.l_os_pos_mask = l_os_pos_mask
-        self.l_os_pos_locs = l_os_pos_locs
-        self.l_os_verb_mask = l_os_verb_mask
-        self.l_os_verb_locs = l_os_verb_locs
 
-
-    def read_input_extags_file(self, in_fp):
+    def absorb_input_extags_file(self, in_fp):
         """
         similar to data._process_data()
 
@@ -257,8 +258,13 @@ class MInput:
         self.l_orig_sent = l_orig_sent
         self.lll_ilabel = ll_ex_ilabels
 
-        self.l_os_ilabels = l_os_ilabels
-        self.l_os_word_start_locs = l_os_word_start_locs
+        self.num_samples = len(self.lll_ilabel)
+        self.l_sample = []
+        for k in range(self.num_samples):
+            sample = Sample(self.task)
+            self.l_sample.append(sample)
+            sample.ilabels = l_os_ilabels[k]
+            sample.word_start_locs = l_os_word_start_locs[k]
 
 
         # so far, we haven't assumed any spacy derived data nanalysis

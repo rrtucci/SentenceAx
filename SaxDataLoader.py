@@ -41,11 +41,6 @@ class SaxDataLoader:
         self.test_fp = test_fp
         self.use_spacy_model = use_spacy_model
 
-        self.predict_padder = None
-        self.train_padder = None
-        self.val_padder = None
-        self.test_padder = None
-
     def get_m_input(self, in_fp):
         m_input = MInput(TASK, self.auto_tokenizer, self.use_spacy_model)
         m_input.read_input_extags_file(in_fp)
@@ -114,7 +109,6 @@ class SaxDataLoader:
 
             x = [predict_m_input, self.pad_icode, self.use_spacy_model]
             predict_dataset = SaxDataSet(*x)
-            self.predict_padder = SaxDataPadder(*x)
 
             
             train_dataset, val_dataset, test_dataset = \
@@ -146,15 +140,12 @@ class SaxDataLoader:
     
             x = [train_m_input, self.pad_icode, self.use_spacy_model]
             train_dataset = SaxDataSet(*x)
-            self.train_padder = SaxDataPadder(*x)
 
             x = [val_m_input, self.pad_icode, self.use_spacy_model]
             val_dataset = SaxDataSet(*x)
-            self.val_padder = SaxDataPadder(*x)
 
             x = [test_m_input, self.pad_icode, self.use_spacy_model]
             test_dataset = SaxDataSet(*x)
-            self.test_padder = SaxDataPadder(*x)
             
             train_dataset.sort()  # to simulate bucket sort (along with pad_data)
 
@@ -181,18 +172,18 @@ class SaxDataLoader:
         if type == "train":
             return DataLoader(train_dataset,
                               batch_size=self.params_d["batch_size"],
-                              collate_fn=self.train_padder.get_padded_data_d,
+                              #collate_fn=None,
                               shuffle=True,
                               num_workers=1)
         elif type == "val":
             return DataLoader(val_dataset,
                               batch_size=self.params_d["batch_size"],
-                              collate_fn=self.val_padder.get_padded_data_d,
+                              #collate_fn=None,
                               num_workers=1)
         elif type == "test":
             return DataLoader(test_dataset,
                               batch_size=self.params_d["batch_size"],
-                              collate_fn=self.test_padder.get_padded_data_d,
+                              #collate_fn=None,
                               num_workers=1)
         else:
             assert False

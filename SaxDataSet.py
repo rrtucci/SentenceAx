@@ -29,17 +29,18 @@ class SaxDataSet(Dataset):
 
         x = []
         num_xtypes = -1
-        for name, sub_x in padded_data_d.items():
-            if name != "lll_icode":
-                num_xtypes +=1
-                x.append(sub_x)
+        for sam in range(self.num_samples):
+            sam_x = []
+            for name, sub_x in padded_data_d.items():
+                if name != "lll_icode":
+                    num_xtypes +=1
+                    sam_x.append(sub_x[sam])
+            x.append(sam_x)
         self.num_xtypes = num_xtypes
-        x = np.array(x)
-        self.x = torch.from_numpy(x)
+        self.x = torch.tensor(x)
 
         y = padded_data_d["lll_icode"]
-        y = np.array(y)
-        self.y = torch.from_numpy(y)
+        self.y = torch.tensor(y)
 
         def __getitem__(self, sample_id):
             return self.x[sample_id], self.y[sample_id]

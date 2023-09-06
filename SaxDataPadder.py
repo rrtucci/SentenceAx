@@ -1,6 +1,7 @@
 from copy import deepcopy
 from sax_globals import *
 import torch
+from collections import OrderedDict
 
 
 # from torchtext.data.utils import get_tokenizer
@@ -76,10 +77,10 @@ class SaxDataPadder:
     #
     #     return vocab
 
-    def get_padded_data_d(self, dummy_input):
+    def get_padded_data_d(self):
         """
         similar to data.pad_data()
-        `dummy_input` is not used. All info in self
+
 
 
 
@@ -114,10 +115,10 @@ class SaxDataPadder:
             SaxDataPadder.get_padded_ll_x(self.m_input.l_os_word_start_locs,
                                           0)
 
-        padded_data_d = {'l_os_icodes': padded_l_os_icodes,
+        padded_data_d = OrderedDict({'l_os_icodes': padded_l_os_icodes,
                        'lll_icode': padded_lll_icode,
                        'l_os_word_start_locs': padded_l_os_word_start_locs,
-                       'l_orig_sent': torch.tensor(self.m_input.l_orig_sent)}
+                       'l_orig_sent': torch.tensor(self.m_input.l_orig_sent)})
 
         if self.use_spacy_model:
             padded_data_d["l_os_pos_mask"]  =\

@@ -20,20 +20,19 @@ class SaxDataSet(Dataset):
         #                'l_word_start_locs': padded_l_word_start_locs,
         #                'l_orig_sent': l_orig_sent}
 
-        padder = SaxDataPadder(pad_icode, use_spacy_model)
-        padded_data_d = padder.pad_data(m_input)
+        padder = SaxDataPadder(m_input, pad_icode, use_spacy_model)
+        padded_data_d = padder.get_padded_data_d()
 
-        self.num_samples = len(padded_data_d["ll_sentL_icode"])
-        self.num_words =  len(padded_data_d["ll_sentL_icode"][0])
-        self.depth = len(padded_data_d["lll_icode"])
+        self.num_samples, self.max_depth, self.num_words=\
+            padded_data_d["lll_icode"].shape
 
 
         x = []
         num_xtypes = -1
-        for name, li in padded_data_d.items():
+        for name, sub_x in padded_data_d.items():
             if name != "lll_icode":
                 num_xtypes +=1
-                x.append(li)
+                x.append(sub_x)
         self.num_xtypes = num_xtypes
         x = np.array(x)
         self.x = torch.from_numpy(x)

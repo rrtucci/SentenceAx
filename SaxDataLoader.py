@@ -34,15 +34,17 @@ class SaxDataLoader:
         self.params_d = PARAMS_D
         self.auto_tokenizer = auto_tokenizer
         self.pad_icode = pad_icode
+
+        self.predict_fp = PRED_IN_FP
         self.train_fp = train_fp
         self.val_fp = val_fp
         self.test_fp = test_fp
         self.use_spacy_model = use_spacy_model
 
-        self.train_m_input = None
-        self.val_m_input = None
-        self.test_m_input = None
-        self.predict_m_input = None
+        self.predict_padder = None
+        self.train_padder = None
+        self.val_padder = None
+        self.test_padder = None
 
     def get_m_input(self, in_fp):
         m_input = MInput(TASK, self.auto_tokenizer, self.use_spacy_model)
@@ -107,12 +109,14 @@ class SaxDataLoader:
             # process_data() which is get_samples() for us.
             # get_samples()
             # returns: examples, orig_sents
-            predict_m_input = self.get_m_input(PRED_IN_FP)
+            predict_m_input = self.get_m_input(self.predict_fp)
             #vocab = build_vocab(predict_m_input)
 
-            predict_dataset = SaxDataSet(predict_m_input,
-                                      self.pad_icode,
-                                      self.use_spacy_model)
+            x = [predict_m_input, self.pad_icode, self.use_spacy_model]
+            predict_dataset = SaxDataSet(*x)
+            self.predict_padder = SaxDataPadder(*x)
+
+            
             train_dataset, val_dataset, test_dataset = \
                 predict_dataset, predict_dataset, predict_dataset
         else: # 'predict' not in self.params_d["mode"]
@@ -139,16 +143,19 @@ class SaxDataLoader:
 
             # vocab = self.build_vocab(
             #     train_m_input + val_m_input + test_m_input)
+    
+            x = [train_m_input, self.pad_icode, self.use_spacy_model]
+            train_dataset = SaxDataSet(*x)
+            self.train_padder = SaxDataPadder(*x)
 
-            train_dataset = SaxDataSet(train_m_input,
-                                       self.pad_icode,
-                                       self.use_spacy_model)
-            val_dataset = SaxDataSet(val_m_input,
-                                     self.pad_icode,
-                                     self.use_spacy_model)
-            test_dataset = SaxDataSet(test_m_input,
-                                      self.pad_icode,
-                                      self.use_spacy_model)
+            x = [val_m_input, self.pad_icode, self.use_spacy_model]
+            val_dataset = SaxDataSet(*x)
+            self.val_padder = SaxDataPadder(*x)
+
+            x = [test_m_input, self.pad_icode, self.use_spacy_model]
+            test_dataset = SaxDataSet(*x)
+            self.test_padder = SaxDataPadder(*x)
+            
             train_dataset.sort()  # to simulate bucket sort (along with pad_data)
 
         return train_dataset, val_dataset, test_dataset # , vocab, orig_sents
@@ -170,21 +177,22 @@ class SaxDataLoader:
             self.get_ttt_datasets(pred_in_sents)
         # this method calls DataLoader
 
+
         if type == "train":
             return DataLoader(train_dataset,
                               batch_size=self.params_d["batch_size"],
-                              # collate_fn=self.pad_data,
+                              collate_fn=self.train_padder.get_padded_data_d,
                               shuffle=True,
                               num_workers=1)
         elif type == "val":
             return DataLoader(val_dataset,
                               batch_size=self.params_d["batch_size"],
-                              # collate_fn=self.pad_data,
+                              collate_fn=self.val_padder.get_padded_data_d,
                               num_workers=1)
         elif type == "test":
             return DataLoader(test_dataset,
                               batch_size=self.params_d["batch_size"],
-                              # collate_fn=self.pad_data,
+                              collate_fn=self.test_padder.get_padded_data_d,
                               num_workers=1)
         else:
             assert False

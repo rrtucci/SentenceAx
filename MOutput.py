@@ -49,13 +49,4 @@ class MOutput:
     #         self.num_samples = len(self.ll_score)
     #         self.absorb_ll_score(self.ll_score)
 
-    def write_tags_file(self, path, with_scores=False):
-        with_unused_tokens = False
-        if self.task == "ex":
-            with_unused_tokens = True
-
-        write_samples_file(self.l_sample,
-                           path,
-                           with_scores=with_scores,
-                           with_unused_tokens=with_unused_tokens)
 

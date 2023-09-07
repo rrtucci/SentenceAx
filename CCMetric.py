@@ -9,15 +9,16 @@ class CCMetric():
 
 
     """
+
     def __init__(self, dump_dir=None, fix_d=None):
         self.report_whole = CCReport("whole")
         self.report_outer = CCReport("outer")
         self.report_inner = CCReport("inner")
         self.report_exact = CCReport("exact")
-        self.complete = 0
-        self.sentence = 0
+        # self.n_complete = 0 # not used
+        # self.n_sentence = 0 # not used
         self.dump_dir = dump_dir
-        if self.dump_dir :
+        if self.dump_dir:
             if os.path.exists(dump_dir + '/tokens.pkl'):
                 os.remove(dump_dir + '/tokens.pkl')
             if os.path.exists(dump_dir + '/pred_it_ccnodes.pkl'):
@@ -27,14 +28,18 @@ class CCMetric():
 
         self.fix_d = fix_d
 
-    def __call__(self, ll_pred_ccnode, ll_truth_ccnode, meta_data=None,
-                 ccnodes=None):
+    def __call__(self,
+                 ll_pred_ccnode,
+                 ll_truth_ccnode,
+                 meta_data=None,
+                 ccnodes=None,
+                 tokens=None):
         # ccnodes  when we give it the complete ccnodes
         # happens when we want to evaluate on the original system outputs
         for i in range(len(ll_pred_ccnode)):
             if not ccnodes:
-                pred_ccnodes = get_ccnodes(
-                    ll_pred_ccnode[i], meta_data[i], correct=True)
+                pred_ccnodes = CCTree(
+                    ll_pred_ccnode[i], meta_data[i], correct=True).ccnodes
                 true_ccnodes = get_ccnodes(ll_truth_ccnode[i], meta_data[i])
             else:
                 pred_ccnodes = ll_pred_ccnode[i]
@@ -51,45 +56,40 @@ class CCMetric():
                     self.dump_dir + '/pred_it_ccnodes.pkl', 'ab'))
                 pickle.dump(true_ccnodes, open(
                     self.dump_dir + '/gt_it_ccnodes.pkl', 'ab'))
-        return
 
     def reset(self):
         self.report_whole.reset()
         self.report_outer.reset()
         self.report_inner.reset()
         self.report_exact.reset()
-        self.complete = 0
-        self.sentence = 0
+        # self.n_complete = 0
+        # self.n_sentence = 0
 
-    def get_metric_values(self, reset: bool = False, mode=None):
+    def get_metric_values(self, reset = False):
         # similar to metric.Conjunction.get_metric()
-        pairs = [("whole", self.report_whole),
-                    ("outer", self.report_outer),
-                    ("inner", self.report_inner),
-                    ("exact", self.report_exact)]
 
-        l_metric_value = dict()
-        l_metric_value['P_exact'] = pairs[3][1].overall_scorer.precision()
-        l_metric_value['R_exact'] = pairs[3][1].overall_scorer.recall()
-        l_metric_value['F1_whole'] = pairs[0][1].overall_scorer.f1_score()
-        l_metric_value['F1_outer'] = pairs[1][1].overall_scorer.f1_score()
-        l_metric_value['F1_inner'] = pairs[1][1].overall_scorer.f1_score()
-        l_metric_value['F1_exact'] = pairs[3][1].overall_scorer.f1_score()
+        name_to_score = dict()
+        name_to_score['P_exact'] = self.report_exact.overall_scorer.precision()
+        name_to_score['R_exact'] = self.report_exact.overall_scorer.recall()
+        name_to_score['F1_whole'] = self.report_whole.overall_scorer.f1_score()
+        name_to_score['F1_outer'] = self.report_outer.overall_scorer.f1_score()
+        name_to_score['F1_inner'] = self.report_inner.overall_scorer.f1_score()
+        name_to_score['F1_exact'] = self.report_exact.overall_scorer.f1_score()
         if reset:
             self.reset()
-        return l_metric_value
+        return name_to_score
 
-    def get_overall_score(self, metric='exact'):
-        if metric == 'whole':
+    def get_overall_score(self, report_name='exact'):
+        if report_name == 'whole':
             report = self.report_whole
-        elif metric == 'outer':
+        elif report_name == 'outer':
             report = self.report_outer
-        elif metric == 'inner':
+        elif report_name == 'inner':
             report = self.report_inner
-        elif metric == 'exact':
+        elif report_name == 'exact':
             report = self.report_exact
         else:
-            raise ValueError('invalid metric: {}'.format(metric))
+            raise ValueError('invalid report_name: {}'.format(report_name))
         return report.overall_scorer.f1_score
 
     @staticmethod

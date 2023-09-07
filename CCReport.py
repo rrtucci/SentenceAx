@@ -70,7 +70,8 @@ class CCReport:
         self.depth_scorer = None
 
 
-    def append(self, pred_ccnodes, true_ccnodes):
+    def grow(self, pred_ccnodes, true_ccnodes):
+        # similar to metric.Counter.append()
         for ccloc in sorted([ccnode.ccloc for ccnode in true_ccnodes]):
             pred_ccnode = CCTree.get_ccnode_from_ccloc(ccloc, pred_ccnodes)
             true_ccnode = CCTree.get_ccnode_from_ccloc(ccloc, true_ccnodes)

@@ -73,7 +73,7 @@ class CCTree:
             ccnode = None
             start_loc = -1
             is_CP = False  # CP stands for coordinating phrase
-            predictions = self.ll_icode[depth]
+            pred_l_icode = self.ll_icode[depth]
 
             # cctag_to_int = {
             #   'NONE': 0
@@ -84,14 +84,14 @@ class CCTree:
             #    'OTHERS': 5
             # }
 
-            for i, prediction in enumerate(predictions):
-                if prediction != 1:  # CP
+            for i, icode in enumerate(pred_l_icode):
+                if icode != 1:  # CP
                     if is_CP and ccnode :
                         is_CP = False
                         if not ccnode.spans:
                             ccnode.spans = []
                         ccnode.spans.append((start_loc, i - 1))
-                if prediction == 0 or prediction == 2:  # NONE or CP_START
+                if icode == 0 or icode == 2:  # NONE or CP_START
                     # ccnode phrase can end
                     if ccnode and \
                             len(ccnode.spans) >= 2 and \
@@ -99,28 +99,28 @@ class CCTree:
                             ccnode.ccloc < ccnode.spans[-1][0]:
                         self.ccnodes.append(deepcopy(ccnode))
                         ccnode = None
-                if prediction == 0:  # NONE
+                if icode == 0:  # NONE
                     continue
-                if prediction == 1:  # CP
+                if icode == 1:  # CP
                     if not is_CP:
                         is_CP = True
                         start_loc = i
-                if prediction == 2:  # CP_START
+                if icode == 2:  # CP_START
                     words = get_words(self.orig_sent)
                     ccnode = CCNode(depth)
                     is_CP = True
                     start_loc = i
-                if prediction == 3:  # CC
+                if icode == 3:  # CC
                     if ccnode :
                         ccnode.ccloc = i
                     else:
                         # ccnode words which do not have associated spans
                         self.ccnodes[i] = None
-                if prediction == 4 and ccnode :  # SEP
+                if icode == 4 and ccnode :  # SEP
                     if not ccnode.seplocs:
                         ccnode.seplocs = []
                     ccnode.seplocs.append(i)
-                if prediction == 5:  # OTHERS
+                if icode == 5:  # OTHERS
                     continue
         self.fix_ccnodes()
         for ccnode in self.ccnodes:

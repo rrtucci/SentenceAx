@@ -1,6 +1,7 @@
 from CCReport import *
 import os
 import pickle
+from sax_utils import *
 
 
 class CCMetric():
@@ -21,41 +22,41 @@ class CCMetric():
         if self.dump_dir:
             if os.path.exists(dump_dir + '/tokens.pkl'):
                 os.remove(dump_dir + '/tokens.pkl')
-            if os.path.exists(dump_dir + '/pred_it_ccnodes.pkl'):
-                os.remove(dump_dir + '/pred_it_ccnodes.pkl')
-            if os.path.exists(dump_dir + '/gt_it_ccnodes.pkl'):
-                os.remove(dump_dir + '/gt_it_ccnodes.pkl')
+            if os.path.exists(dump_dir + '/pred_ccnodes.pkl'):
+                os.remove(dump_dir + '/pred_ccnodes.pkl')
+            if os.path.exists(dump_dir + '/true_ccnodes.pkl'):
+                os.remove(dump_dir + '/true_ccnodes.pkl')
 
         self.fix_d = fix_d
 
     def __call__(self,
-                 ll_pred_ccnode,
-                 ll_truth_ccnode,
-                 meta_data=None,
-                 ccnodes=None,
-                 tokens=None):
+                 pred_ll_icode,
+                 true_ll_icode,
+                 orig_sent,
+                 ccnodes=None):
         # ccnodes  when we give it the complete ccnodes
         # happens when we want to evaluate on the original system outputs
-        for i in range(len(ll_pred_ccnode)):
-            if not ccnodes:
-                pred_ccnodes = CCTree(
-                    ll_pred_ccnode[i], meta_data[i], correct=True).ccnodes
-                true_ccnodes = get_ccnodes(ll_truth_ccnode[i], meta_data[i])
-            else:
-                pred_ccnodes = ll_pred_ccnode[i]
-                true_ccnodes = ll_truth_ccnode[i]
+        # meta_data same as tokens
 
-            self.report_whole.append(pred_ccnodes, true_ccnodes)
-            self.report_outer.append(pred_ccnodes, true_ccnodes)
-            self.report_inner.append(pred_ccnodes, true_ccnodes)
-            self.report_exact.append(pred_ccnodes, true_ccnodes)
+        if not ccnodes:
+            pred_ccnodes = CCTree(orig_sent, pred_ll_icode).ccnodes
+            true_ccnodes = CCTree(orig_sent, true_ll_icode).ccnodes
+        else:
+            pred_ccnodes = pred_ll_icode
+            true_ccnodes = true_ll_icode
 
-            if self.dump_dir:
-                pickle.dump(tokens, open(self.dump_dir + '/tokens.pkl', 'ab'))
-                pickle.dump(pred_ccnodes, open(
-                    self.dump_dir + '/pred_it_ccnodes.pkl', 'ab'))
-                pickle.dump(true_ccnodes, open(
-                    self.dump_dir + '/gt_it_ccnodes.pkl', 'ab'))
+        self.report_whole.grow(pred_ccnodes, true_ccnodes)
+        self.report_outer.grow(pred_ccnodes, true_ccnodes)
+        self.report_inner.grow(pred_ccnodes, true_ccnodes)
+        self.report_exact.grow(pred_ccnodes, true_ccnodes)
+
+        if self.dump_dir:
+            tokens = get_words(orig_sent)
+            pickle.dump(tokens, open(self.dump_dir + '/tokens.pkl', 'ab'))
+            pickle.dump(pred_ccnodes, open(
+                self.dump_dir + '/pred_ccnodes.pkl', 'ab'))
+            pickle.dump(true_ccnodes, open(
+                self.dump_dir + '/true_ccnodes.pkl', 'ab'))
 
     def reset(self):
         self.report_whole.reset()
@@ -65,7 +66,7 @@ class CCMetric():
         # self.n_complete = 0
         # self.n_sentence = 0
 
-    def get_metric_values(self, reset = False):
+    def get_metric_values(self, reset=False):
         # similar to metric.Conjunction.get_metric()
 
         name_to_score = dict()

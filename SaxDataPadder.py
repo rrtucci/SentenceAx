@@ -105,29 +105,29 @@ class SaxDataPadder:
         #     'verb_locs': verb_locs
         # }
 
-        padded_l_os_icodes = SaxDataPadder.get_padded_ll_x(
-            self.m_input.l_os_icodes, self.pad_icode)
+        padded_l_osent_icodes = SaxDataPadder.get_padded_ll_x(
+            self.m_input.l_osent_icodes, self.pad_icode)
 
         padded_lll_icode =\
             SaxDataPadder.get_padded_lll_icode(self.m_input.lll_icode)
 
-        padded_l_os_word_start_locs =\
-            SaxDataPadder.get_padded_ll_x(self.m_input.l_os_word_start_locs,
+        padded_l_osent_word_start_locs =\
+            SaxDataPadder.get_padded_ll_x(self.m_input.l_osent_word_start_locs,
                                           0)
 
-        padded_data_d = OrderedDict({'l_os_icodes': padded_l_os_icodes,
+        padded_data_d = OrderedDict({'l_osent_icodes': padded_l_osent_icodes,
                        'lll_icode': padded_lll_icode,
-                       'l_os_word_start_locs': padded_l_os_word_start_locs,
+                       'l_osent_word_start_locs': padded_l_osent_word_start_locs,
                        'l_orig_sent': torch.tensor(self.m_input.l_orig_sent)})
 
         if self.use_spacy_model:
-            padded_data_d["l_os_pos_mask"]  =\
-                SaxDataPadder.get_padded_ll_x(self.m_input.l_os_pos_mask, 0)
-            padded_data_d["l_os_pos_locs"] = \
-                SaxDataPadder.get_padded_ll_x(self.m_input.l_os_pos_locs, 0)
-            padded_data_d["l_os_verb_mask"] = \
-                SaxDataPadder.get_padded_ll_x(self.m_input.l_os_verb_mask, 0)
-            padded_data_d["l_os_verb_locs"] = \
-                SaxDataPadder.get_padded_ll_x(self.m_input.l_os_verb_locs, 0)
+            padded_data_d["l_osent_pos_mask"]  =\
+                SaxDataPadder.get_padded_ll_x(self.m_input.l_osent_pos_mask, 0)
+            padded_data_d["l_osent_pos_locs"] = \
+                SaxDataPadder.get_padded_ll_x(self.m_input.l_osent_pos_locs, 0)
+            padded_data_d["l_osent_verb_mask"] = \
+                SaxDataPadder.get_padded_ll_x(self.m_input.l_osent_verb_mask, 0)
+            padded_data_d["l_osent_verb_locs"] = \
+                SaxDataPadder.get_padded_ll_x(self.m_input.l_osent_verb_locs, 0)
 
         return padded_data_d

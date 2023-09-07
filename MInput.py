@@ -17,8 +17,8 @@ class MInput:
         # it's not (num_samples, max_depth=num_ex)
         # each word of orig_sent may be encoded with more than one icode
         # os = original sentence
-        self.l_os_word_start_locs = [] # shape=(num_samples, encoding len)
-        self.l_os_icodes = []  # shape=(num_samples, encoding len
+        self.l_osent_word_start_locs = [] # shape=(num_samples, encoding len)
+        self.l_osent_icodes = []  # shape=(num_samples, encoding len
 
 
         self.use_spacy_model = use_spacy_model
@@ -29,10 +29,10 @@ class MInput:
         # spacy_model.pipe()
         # spacy_model usually abbreviated as nlp
 
-        self.l_os_pos_mask = []  # shape=(num_samples, num_words)
-        self.l_os_pos_locs = []  # shape=(num_samples, num_words)
-        self.l_os_verb_mask = []  # shape=(num_samples, num_words)
-        self.l_os_verb_locs = []  # shape=(num_samples, num_words)
+        self.l_osent_pos_mask = []  # shape=(num_samples, num_words)
+        self.l_osent_pos_locs = []  # shape=(num_samples, num_words)
+        self.l_osent_verb_mask = []  # shape=(num_samples, num_words)
+        self.l_osent_verb_locs = []  # shape=(num_samples, num_words)
         
 
     # def absorb_l_orig_sent(self, l_orig_sent):
@@ -134,10 +134,10 @@ class MInput:
         return verb_mask, verb_locs, verb_words
 
     def fill_pos_and_verb_info(self):
-        l_os_pos_mask = []
-        l_os_pos_locs = []
-        l_os_verb_mask = []
-        l_os_verb_locs = []
+        l_osent_pos_mask = []
+        l_osent_pos_locs = []
+        l_osent_verb_mask = []
+        l_osent_verb_locs = []
         if not self.use_spacy_model:
             return
         for sent_id, spacy_tokens in enumerate(
@@ -148,21 +148,21 @@ class MInput:
 
             pos_mask, pos_locs, pos_words = \
                 MInput.pos_info(spacy_tokens)
-            l_os_pos_mask.append(pos_mask)
-            l_os_pos_locs.append(pos_locs)
+            l_osent_pos_mask.append(pos_mask)
+            l_osent_pos_locs.append(pos_locs)
 
             verb_mask, verb_locs, verb_words = \
                 MInput.verb_info(spacy_tokens)
-            l_os_verb_mask.append(verb_mask)
+            l_osent_verb_mask.append(verb_mask)
             if verb_locs:
-                l_os_verb_locs.append(verb_locs)
+                l_osent_verb_locs.append(verb_locs)
             else:
-                l_os_verb_locs.append([0])
+                l_osent_verb_locs.append([0])
 
-        self.l_os_pos_mask = l_os_pos_mask
-        self.l_os_pos_locs = l_os_pos_locs
-        self.l_os_verb_mask = l_os_verb_mask
-        self.l_os_verb_locs = l_os_verb_locs
+        self.l_osent_pos_mask = l_osent_pos_mask
+        self.l_osent_pos_locs = l_osent_pos_locs
+        self.l_osent_verb_mask = l_osent_verb_mask
+        self.l_osent_verb_locs = l_osent_verb_locs
 
 
     def read_input_extags_file(self, in_fp):
@@ -188,8 +188,8 @@ class MInput:
         each original sentence and its tag sequences constitute a new example
         """
         l_orig_sent = []
-        l_os_word_start_locs = [] # similar to l_word_starts
-        l_os_icodes = [] # similar to l_input_ids
+        l_osent_word_start_locs = [] # similar to l_word_starts
+        l_osent_icodes = [] # similar to l_input_ids
         ll_ex_icodes = []  # similar to l_targets target=extraction
         sentL = None # similar to `sentence`
 
@@ -237,18 +237,18 @@ class MInput:
             else:
                 assert False
             if is_end_of_sample(prev_line, line):
-                if len(l_os_icodes) == 0:
-                    l_os_icodes = [[0]]
+                if len(l_osent_icodes) == 0:
+                    l_osent_icodes = [[0]]
 
                 if len(sentL.split()) <= 100:
-                    l_os_icodes.append(os_icodes)
+                    l_osent_icodes.append(os_icodes)
                     orig_sent = sentL.split('[unused1]')[0].strip()
                     l_orig_sent.append(orig_sent)
 
                     # note that if li=[2,3]
                     # then li[:100] = [2,3]
                     ll_ex_icodes.append(l_ex_icodes)
-                    l_os_word_start_locs.append(os_word_start_locs)
+                    l_osent_word_start_locs.append(os_word_start_locs)
 
                 os_icodes = []
                 os_word_start_locs = []
@@ -257,8 +257,8 @@ class MInput:
         self.l_orig_sent = l_orig_sent
         self.lll_icode = ll_ex_icodes
 
-        self.l_os_icodes = l_os_icodes
-        self.l_os_word_start_locs = l_os_word_start_locs
+        self.l_osent_icodes = l_osent_icodes
+        self.l_osent_word_start_locs = l_osent_word_start_locs
 
 
         # so far, we haven't assumed any spacy derived data nanalysis

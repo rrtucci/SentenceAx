@@ -5,7 +5,6 @@ from carb_subset.oie_readers.extraction import Extraction
 from sax_globals import *
 
 
-
 def contains_extraction(ex, l_ex):
     """
 
@@ -32,6 +31,7 @@ class ExMetric():
 
 
     """
+
     def __init__(self, fix_d=None):
         self.dev_benchmark = Benchmark('carb/data/gold/dev.tsv')
         self.test_benchmark = Benchmark('carb/data/gold/test.tsv')
@@ -50,7 +50,7 @@ class ExMetric():
                  verb_mask=None):
         num_samples, num_extractions, max_sentence_len = \
             sent_to_extractions.shape
-        assert num_samples== len(l_orig_sent)
+        assert num_samples == len(l_orig_sent)
 
         for sam, orig_sent in enumerate(l_orig_sent):
             words = orig_sent.split() + UNUSED_TOKENS
@@ -61,9 +61,9 @@ class ExMetric():
             else:
                 if orig_sent not in self.sent_to_extractions:
                     self.sent_to_extractions[orig_sent] = []
-            if pos_mask :
+            if pos_mask:
                 self.osent_to_pos_mask[orig_sent] = pos_mask[sam]
-            if verb_mask :
+            if verb_mask:
                 self.osent_to_verb_mask[orig_sent] = verb_mask[sam]
 
             for depth in range(num_extractions):
@@ -75,7 +75,8 @@ class ExMetric():
                 if ex0.args[0] != '' and ex0.pred != '':
                     if self.fix_d:
                         if not contains_extraction(ex0,
-                            self.sent_to_extractions[self.fix_d[orig_sent]]):
+                                                   self.sent_to_extractions[
+                                                       self.fix_d[orig_sent]]):
                             self.sent_to_extractions[
                                 self.fix_d[orig_sent]].append(ex0)
                     else:
@@ -96,7 +97,6 @@ class ExMetric():
         self.sent_to_extractions = {}
         self.score_d = {'carb_auc': 0.0, 'carb_f1': 0.0, 'carb_sum': 0.0}
 
-
     def get_metric_values(self, reset, mode):
         # similar to metric.Carb.get_metric()
         if MAX_EX_DEPTH:
@@ -108,7 +108,7 @@ class ExMetric():
 
         out_fp = "/dev/null"
         if mode == 'dev':
-            auc, optimal_f1_point, last_f1_point =\
+            auc, optimal_f1_point, last_f1_point = \
                 self.dev_benchmark.compare(
                     predicted=self.sent_to_extractions,
                     matchingFunc=self.matchingFunc,
@@ -120,14 +120,14 @@ class ExMetric():
                 self.test_benchmark.compare(
                     predicted=self.sent_to_extractions,
                     matchingFunc=self.matchingFunc,
-                    output_fn=out_fp, 
+                    output_fn=out_fp,
                     error_file=None,
                     binary=False)
         else:
             assert False
 
         self.score_d = {
-            'carb_auc': auc, 
+            'carb_auc': auc,
             'carb_f1': optimal_f1_point[2],
             'carb_lastf1': last_f1_point[2]}
         score_d = self.score_d
@@ -136,12 +136,11 @@ class ExMetric():
             self.reset()
         return score_d
 
-
     def get_extraction(self, l_icode, osentL_words, score):
-        rel=[]
-        arg1=[]
-        arg2=[]
-        loc_time=[]
+        rel = []
+        arg1 = []
+        arg2 = []
+        loc_time = []
         args = []
         tag_mode = 'none'
         rel_case = 0
@@ -176,10 +175,10 @@ class ExMetric():
         orig_sentL = ' '.join(osentL_words).strip()
 
         extraction = Extraction(
-            pred=rel, 
-            head_pred_index=None, 
+            pred=rel,
+            head_pred_index=None,
             sent=orig_sentL,
-            confidence=score, 
+            confidence=score,
             index=0)
         extraction.addArg(arg1)
         extraction.addArg(arg2)

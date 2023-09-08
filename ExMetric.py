@@ -136,7 +136,7 @@ class ExMetric():
             self.reset()
         return score_d
 
-    def get_extraction(self, l_icode, osentL_words, score):
+    def get_extraction(self, l_ilabel, osentL_words, score):
         rel = []
         arg1 = []
         arg2 = []
@@ -146,17 +146,17 @@ class ExMetric():
         rel_case = 0
         for i, word in enumerate(osentL_words):
             if '[unused' in word:
-                if l_icode[i].item() == 2:
+                if l_ilabel[i].item() == 2:
                     rel_case = int(re.search(
                         '\[unused(.*)\]', word).group(1))
                 continue
-            if l_icode[i] == 1:
+            if l_ilabel[i] == 1:
                 arg1.append(word)
-            if l_icode[i] == 2:
+            if l_ilabel[i] == 2:
                 rel.append(word)
-            if l_icode[i] == 3:
+            if l_ilabel[i] == 3:
                 arg2.append(word)
-            if l_icode[i] == 4:
+            if l_ilabel[i] == 4:
                 loc_time.append(word)
 
         rel = ' '.join(rel).strip()

@@ -30,8 +30,8 @@ class CCMetric():
         self.fix_d = fix_d
 
     def __call__(self,
-                 pred_ll_icode,
-                 true_ll_icode,
+                 pred_ll_ilabel,
+                 true_ll_ilabel,
                  orig_sent,
                  ccnodes=None):
         # ccnodes  when we give it the complete ccnodes
@@ -39,11 +39,11 @@ class CCMetric():
         # meta_data same as tokens
 
         if not ccnodes:
-            pred_ccnodes = CCTree(orig_sent, pred_ll_icode).ccnodes
-            true_ccnodes = CCTree(orig_sent, true_ll_icode).ccnodes
+            pred_ccnodes = CCTree(orig_sent, pred_ll_ilabel).ccnodes
+            true_ccnodes = CCTree(orig_sent, true_ll_ilabel).ccnodes
         else:
-            pred_ccnodes = pred_ll_icode
-            true_ccnodes = true_ll_icode
+            pred_ccnodes = pred_ll_ilabel
+            true_ccnodes = true_ll_ilabel
 
         self.report_whole.grow(pred_ccnodes, true_ccnodes)
         self.report_outer.grow(pred_ccnodes, true_ccnodes)

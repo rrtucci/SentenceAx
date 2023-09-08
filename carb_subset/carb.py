@@ -407,7 +407,7 @@ class Benchmark:
 
     @staticmethod
     def normalizeKey(k):
-        # return Benchmark.removePunct(unicode(Benchmark.PTB_unescape(k.replace(' ','')), errors = 'ignore'))
+        # return Benchmark.removePunct(unilabel(Benchmark.PTB_unescape(k.replace(' ','')), errors = 'ignore'))
         return Benchmark.removePunct(
             str(Benchmark.PTB_unescape(k.replace(' ', ''))))
 

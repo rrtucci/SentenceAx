@@ -5,11 +5,11 @@ from copy import deepcopy
 
 
 class CCTree:
-    def __init__(self, orig_sent, ll_icode):
+    def __init__(self, orig_sent, ll_ilabel):
         # orig_sent is a coordinated sentence, the full original sentence
         # before extractions
         self.orig_sent = orig_sent
-        self.ll_icode = ll_icode
+        self.ll_ilabel = ll_ilabel
         self.extra_locs = []
 
         self.ccnodes = None
@@ -69,11 +69,11 @@ class CCTree:
         """
         self.ccnodes = []
 
-        for depth in range(len(self.ll_icode)):
+        for depth in range(len(self.ll_ilabel)):
             ccnode = None
             start_loc = -1
             is_CP = False  # CP stands for coordinating phrase
-            pred_l_icode = self.ll_icode[depth]
+            pred_l_ilabel = self.ll_ilabel[depth]
 
             # cctag_to_int = {
             #   'NONE': 0
@@ -84,14 +84,14 @@ class CCTree:
             #    'OTHERS': 5
             # }
 
-            for i, icode in enumerate(pred_l_icode):
-                if icode != 1:  # CP
+            for i, ilabel in enumerate(pred_l_ilabel):
+                if ilabel != 1:  # CP
                     if is_CP and ccnode :
                         is_CP = False
                         if not ccnode.spans:
                             ccnode.spans = []
                         ccnode.spans.append((start_loc, i - 1))
-                if icode == 0 or icode == 2:  # NONE or CP_START
+                if ilabel == 0 or ilabel == 2:  # NONE or CP_START
                     # ccnode phrase can end
                     if ccnode and \
                             len(ccnode.spans) >= 2 and \
@@ -99,28 +99,28 @@ class CCTree:
                             ccnode.ccloc < ccnode.spans[-1][0]:
                         self.ccnodes.append(deepcopy(ccnode))
                         ccnode = None
-                if icode == 0:  # NONE
+                if ilabel == 0:  # NONE
                     continue
-                if icode == 1:  # CP
+                if ilabel == 1:  # CP
                     if not is_CP:
                         is_CP = True
                         start_loc = i
-                if icode == 2:  # CP_START
+                if ilabel == 2:  # CP_START
                     words = get_words(self.orig_sent)
                     ccnode = CCNode(depth)
                     is_CP = True
                     start_loc = i
-                if icode == 3:  # CC
+                if ilabel == 3:  # CC
                     if ccnode :
                         ccnode.ccloc = i
                     else:
                         # ccnode words which do not have associated spans
                         self.ccnodes[i] = None
-                if icode == 4 and ccnode :  # SEP
+                if ilabel == 4 and ccnode :  # SEP
                     if not ccnode.seplocs:
                         ccnode.seplocs = []
                     ccnode.seplocs.append(i)
-                if icode == 5:  # OTHERS
+                if ilabel == 5:  # OTHERS
                     continue
         self.fix_ccnodes()
         for ccnode in self.ccnodes:

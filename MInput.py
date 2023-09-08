@@ -10,15 +10,15 @@ class MInput:
         
         self.num_samples = None
         self.l_orig_sent = [] #shape=(num_samples,)
-        self.lll_icode = []#shape=(num_samples, max_depth=num_ex, num_icodes)
+        self.lll_ilabel = []#shape=(num_samples, max_depth=num_ex, num_ilabels)
 
         # following lists have
         # shape is (num_samples, encoding length =100)
         # it's not (num_samples, max_depth=num_ex)
-        # each word of orig_sent may be encoded with more than one icode
+        # each word of orig_sent may be encoded with more than one ilabel
         # os = original sentence
         self.l_osent_word_start_locs = [] # shape=(num_samples, encoding len)
-        self.l_osent_icodes = []  # shape=(num_samples, encoding len
+        self.l_osent_ilabels = []  # shape=(num_samples, encoding len
 
 
         self.use_spacy_model = use_spacy_model
@@ -39,14 +39,14 @@ class MInput:
     #     for k, orig_sent in enumerate(l_orig_sent):
     #         self.l_sample[k].orig_sent = orig_sent
     #
-    # def absorb_lll_icode(self, lll_icode):
-    #     for sample_id, ll_icode in enumerate(lll_icode):
-    #         self.l_sample[sample_id].absorb_children(ll_icode)
+    # def absorb_lll_ilabel(self, lll_ilabel):
+    #     for sample_id, ll_ilabel in enumerate(lll_ilabel):
+    #         self.l_sample[sample_id].absorb_children(ll_ilabel)
     #
     # def absorb_all_possible(self):
-    #     self.num_samples = len(self.lll_icode)
+    #     self.num_samples = len(self.lll_ilabel)
     #     self.absorb_l_orig_sent(self.l_orig_sent)
-    #     self.absorb_lll_icode(self.lll_icode)
+    #     self.absorb_lll_ilabel(self.lll_ilabel)
 
 
     @staticmethod
@@ -190,8 +190,8 @@ class MInput:
         """
         l_orig_sent = []
         l_osent_word_start_locs = [] # similar to l_word_starts
-        l_osent_icodes = [] # similar to l_input_ids
-        ll_ex_icodes = []  # similar to l_targets target=extraction
+        l_osent_ilabels = [] # similar to l_input_ids
+        ll_ex_ilabels = []  # similar to l_targets target=extraction
         sentL = None # similar to `sentence`
 
         with(in_fp, "r") as f:
@@ -216,49 +216,49 @@ class MInput:
                 sentL = line
                 encoding_d = self.auto_tokenizer.batch_encode_plus(
                     sentL.split())
-                os_icodes = [BOS_ICODE]
+                os_ilabels = [BOS_ILABEL]
                 os_word_start_locs = []
-                # encoding_d['input_ids'] is a ll_icode
-                for l_icode0 in encoding_d['input_ids']:
+                # encoding_d['input_ids'] is a ll_ilabel
+                for l_ilabel0 in encoding_d['input_ids']:
                     # special spacy tokens like \x9c have zero length
-                    if len(l_icode0) == 0:
-                        l_icode0 = [100]
+                    if len(l_ilabel0) == 0:
+                        l_ilabel0 = [100]
                     # note os_word_start_locs[0]=1 because first
-                    # icodes =[BOS_ICODE]
-                    os_word_start_locs.append(len(os_icodes))
-                    # same as icodes.extend(l_icode0)
-                    os_icodes += l_icode0
-                os_icodes.append(EOS_ICODE)
+                    # ilabels =[BOS_ILABEL]
+                    os_word_start_locs.append(len(os_ilabels))
+                    # same as ilabels.extend(l_ilabel0)
+                    os_ilabels += l_ilabel0
+                os_ilabels.append(EOS_ILABEL)
                 assert len(sentL.split())==len(os_word_start_locs)
-                l_ex_icodes = []
+                l_ex_ilabels = []
             elif is_tag_line_of_sample(line):
-                ex_icodes = [TAG_TO_ICODE[tag] for tag in line.split()]
-                assert ex_icodes ==len(os_word_start_locs)
-                l_ex_icodes.append(ex_icodes)
+                ex_ilabels = [TAG_TO_ILABEL[tag] for tag in line.split()]
+                assert ex_ilabels ==len(os_word_start_locs)
+                l_ex_ilabels.append(ex_ilabels)
             else:
                 assert False
             if is_end_of_sample(prev_line, line):
-                if len(l_osent_icodes) == 0:
-                    l_osent_icodes = [[0]]
+                if len(l_osent_ilabels) == 0:
+                    l_osent_ilabels = [[0]]
 
                 if len(sentL.split()) <= 100:
-                    l_osent_icodes.append(os_icodes)
+                    l_osent_ilabels.append(os_ilabels)
                     orig_sent = sentL.split('[unused1]')[0].strip()
                     l_orig_sent.append(orig_sent)
 
                     # note that if li=[2,3]
                     # then li[:100] = [2,3]
-                    ll_ex_icodes.append(l_ex_icodes)
+                    ll_ex_ilabels.append(l_ex_ilabels)
                     l_osent_word_start_locs.append(os_word_start_locs)
 
-                os_icodes = []
+                os_ilabels = []
                 os_word_start_locs = []
-                l_ex_icodes = []
+                l_ex_ilabels = []
             prev_line = line
         self.l_orig_sent = l_orig_sent
-        self.lll_icode = ll_ex_icodes
+        self.lll_ilabel = ll_ex_ilabels
 
-        self.l_osent_icodes = l_osent_icodes
+        self.l_osent_ilabels = l_osent_ilabels
         self.l_osent_word_start_locs = l_osent_word_start_locs
 
 
@@ -268,7 +268,7 @@ class MInput:
             self.fill_pos_and_verb_info()
 
         # example_d = {
-        #     'l_icode': l_icode,
+        #     'l_ilabel': l_ilabel,
         #     'll_label': labels_for_each_ex[:MAX_EX_DEPTH],
         #     'l_word_start_loc': l_word_start_loc,
         #     'orig_sent': orig_sent,

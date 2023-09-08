@@ -9,10 +9,10 @@ from collections import OrderedDict
 
 class SaxDataPadder:
 
-    def __init__(self, m_input, pad_icode, use_spacy_model):
+    def __init__(self, m_input, pad_ilabel, use_spacy_model):
 
         self.m_input = m_input
-        self.pad_icode = pad_icode
+        self.pad_ilabel = pad_ilabel
         self.use_spacy_model = use_spacy_model
 
     @staticmethod
@@ -32,27 +32,27 @@ class SaxDataPadder:
         return torch.tensor(padded_ll_x)
 
     @staticmethod
-    def get_padded_lll_icode(unpadded_lll_icode):
-        lll_icode = deepcopy(unpadded_lll_icode)
-        for sam in range(len(lll_icode)):
-            pad_depth = MAX_DEPTH - len(lll_icode[sam])
-            num_words = len(lll_icode[sam][0])
-            # icode = 0 for extag=NONE
-            lll_icode[sam] = lll_icode[sam] + [[0] * num_words] * pad_depth
+    def get_padded_lll_ilabel(unpadded_lll_ilabel):
+        lll_ilabel = deepcopy(unpadded_lll_ilabel)
+        for sam in range(len(lll_ilabel)):
+            pad_depth = MAX_DEPTH - len(lll_ilabel[sam])
+            num_words = len(lll_ilabel[sam][0])
+            # ilabel = 0 for extag=NONE
+            lll_ilabel[sam] = lll_ilabel[sam] + [[0] * num_words] * pad_depth
 
         max_num_words = -1
-        for ll_icode in lll_icode:
-            if (len(ll_icode[0]) > max_num_words):
-                max_num_words = len(ll_icode[0])
-        padded_lll_icode = []
-        for ll_icode in lll_icode:
-            padded_ll_icode = []
-            for l_icode in ll_icode:
-                padding_len = max_num_words - len(l_icode)
-                l_icode += [-100] * padding_len
-                padded_ll_icode.append(l_icode)
-            padded_lll_icode.append(padded_ll_icode)
-        return torch.tensor(padded_lll_icode)
+        for ll_ilabel in lll_ilabel:
+            if (len(ll_ilabel[0]) > max_num_words):
+                max_num_words = len(ll_ilabel[0])
+        padded_lll_ilabel = []
+        for ll_ilabel in lll_ilabel:
+            padded_ll_ilabel = []
+            for l_ilabel in ll_ilabel:
+                padding_len = max_num_words - len(l_ilabel)
+                l_ilabel += [-100] * padding_len
+                padded_ll_ilabel.append(l_ilabel)
+            padded_lll_ilabel.append(padded_ll_ilabel)
+        return torch.tensor(padded_lll_ilabel)
         
     # def build_vocab(self, self.m_input):
     #     """
@@ -105,18 +105,18 @@ class SaxDataPadder:
         #     'verb_locs': verb_locs
         # }
 
-        padded_l_osent_icodes = SaxDataPadder.get_padded_ll_x(
-            self.m_input.l_osent_icodes, self.pad_icode)
+        padded_l_osent_ilabels = SaxDataPadder.get_padded_ll_x(
+            self.m_input.l_osent_ilabels, self.pad_ilabel)
 
-        padded_lll_icode =\
-            SaxDataPadder.get_padded_lll_icode(self.m_input.lll_icode)
+        padded_lll_ilabel =\
+            SaxDataPadder.get_padded_lll_ilabel(self.m_input.lll_ilabel)
 
         padded_l_osent_word_start_locs =\
             SaxDataPadder.get_padded_ll_x(self.m_input.l_osent_word_start_locs,
                                           0)
 
-        padded_data_d = OrderedDict({'l_osent_icodes': padded_l_osent_icodes,
-                       'lll_icode': padded_lll_icode,
+        padded_data_d = OrderedDict({'l_osent_ilabels': padded_l_osent_ilabels,
+                       'lll_ilabel': padded_lll_ilabel,
                        'l_osent_word_start_locs': padded_l_osent_word_start_locs,
                        'l_orig_sent': torch.tensor(self.m_input.l_orig_sent)})
 

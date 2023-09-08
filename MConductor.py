@@ -82,10 +82,10 @@ class MConductor:
         # decode()
         # replaces vocab.itos() (itos=integer to string)
         self.decode = self.auto_tokenizer.decode
-        self.pad_icode = self.encode(self.auto_tokenizer.pad_token)
+        self.pad_ilabel = self.encode(self.auto_tokenizer.pad_token)
 
         self.dloader = SaxDataLoader(self.auto_tokenizer,
-                                  self.pad_icode,
+                                  self.pad_ilabel,
                                   self.train_fp,
                                   self.val_fp,
                                   self.test_fp)
@@ -451,94 +451,94 @@ class MConductor:
         # Does same thing as Openie6's run.get_labels()
         self.write_extags_file_from_predictions()
 
-    def splitpredict_do_rescoring(self):
-        self.params_d["write_allennlp"] = True
-        print()
-        print("Starting re-scoring ...")
-        print()
-
-        sentence_line_nums = set()
-        prev_line_num = 0
-        no_extractions = {}
-        curr_line_num = 0
-        for sentence_str in self.all_predictions_oie:
-            sentence_str = sentence_str.strip('\n')
-            num_extrs = len(sentence_str.split('\n')) - 1
-            if num_extrs == 0:
-                if curr_line_num not in no_extractions:
-                    no_extractions[curr_line_num] = []
-                no_extractions[curr_line_num].append(sentence_str)
-                continue
-            curr_line_num = prev_line_num + num_extrs
-            sentence_line_nums.add(
-                curr_line_num)  # check extra empty lines,
-            # example with no extractions
-            prev_line_num = curr_line_num
-
-        # testing rescoring
-        in_fp = self.model.predictions_f_allennlp
-        rescored = self.rescore(in_fp,
-                                model_dir=RESCORE_DIR,
-                                batch_size=256)
-
-        all_predictions = []
-        sentence_str = ''
-        for line_i, line in enumerate(rescored):
-            fields = line.split('\t')
-            sentence = fields[0]
-            score = float(fields[2])
-
-            if line_i == 0:
-                sentence_str = f'{sentence}\n'
-                exts = []
-            if line_i in sentence_line_nums:
-                exts = sorted(exts, reverse=True,
-                              key=lambda x: float(x.split()[0][:-1]))
-                exts = exts[:self.params_d["num_extractions"]]
-                all_predictions.append(sentence_str + ''.join(exts))
-                sentence_str = f'{sentence}\n'
-                exts = []
-            if line_i in no_extractions:
-                for no_extraction_sentence in no_extractions[line_i]:
-                    all_predictions.append(f'{no_extraction_sentence}\n')
-
-            arg1 = re.findall("<arg1>.*</arg1>", fields[1])[0].strip(
-                '<arg1>').strip('</arg1>').strip()
-            rel = re.findall("<rel>.*</rel>", fields[1])[0].strip(
-                '<rel>').strip('</rel>').strip()
-            arg2 = re.findall("<arg2>.*</arg2>", fields[1])[0].strip(
-                '<arg2>').strip('</arg2>').strip()
-
-            # why must score be exponentiated?
-
-            extraction = SaxExtraction(orig_sentL=orig_senL,
-                                       arg1=arg1,
-                                       rel=rel,
-                                       arg2=arg2,
-                                       score=math.exp(score))
-            extraction.arg1 = arg1
-            extraction.arg2 = arg2
-            if self.params_d["type"] == 'sentences':
-                ext_str = extraction.get_simple_sent() + '\n'
-            else:
-                ext_str = extraction.get_simple_sent() + '\n'
-            exts.append(ext_str)
-
-        exts = sorted(exts, reverse=True,
-                      key=lambda x: float(x.split()[0][:-1]))
-        exts = exts[:self.params_d["num_extractions"]]
-        all_predictions.append(sentence_str + ''.join(exts))
-
-        if line_i + 1 in no_extractions:
-            for no_extraction_sentence in no_extractions[line_i + 1]:
-                all_predictions.append(f'{no_extraction_sentence}\n')
-
-        if self.pred_fname:
-            fpath = PREDICTIONS_DIR + "/" + self.pred_fname
-            print('Predictions written to ', fpath)
-            predictions_f = open(fpath, 'w')
-            predictions_f.write('\n'.join(all_predictions) + '\n')
-            predictions_f.close()
+    # def splitpredict_do_rescoring(self):
+    #     self.params_d["write_allennlp"] = True
+    #     print()
+    #     print("Starting re-scoring ...")
+    #     print()
+    #
+    #     sentence_line_nums = set()
+    #     prev_line_num = 0
+    #     no_extractions = {}
+    #     curr_line_num = 0
+    #     for sentence_str in self.all_predictions_oie:
+    #         sentence_str = sentence_str.strip('\n')
+    #         num_extrs = len(sentence_str.split('\n')) - 1
+    #         if num_extrs == 0:
+    #             if curr_line_num not in no_extractions:
+    #                 no_extractions[curr_line_num] = []
+    #             no_extractions[curr_line_num].append(sentence_str)
+    #             continue
+    #         curr_line_num = prev_line_num + num_extrs
+    #         sentence_line_nums.add(
+    #             curr_line_num)  # check extra empty lines,
+    #         # example with no extractions
+    #         prev_line_num = curr_line_num
+    #
+    #     # testing rescoring
+    #     in_fp = self.model.predictions_f_allennlp
+    #     rescored = self.rescore(in_fp,
+    #                             model_dir=RESCORE_DIR,
+    #                             batch_size=256)
+    #
+    #     all_predictions = []
+    #     sentence_str = ''
+    #     for line_i, line in enumerate(rescored):
+    #         fields = line.split('\t')
+    #         sentence = fields[0]
+    #         score = float(fields[2])
+    #
+    #         if line_i == 0:
+    #             sentence_str = f'{sentence}\n'
+    #             exts = []
+    #         if line_i in sentence_line_nums:
+    #             exts = sorted(exts, reverse=True,
+    #                           key=lambda x: float(x.split()[0][:-1]))
+    #             exts = exts[:self.params_d["num_extractions"]]
+    #             all_predictions.append(sentence_str + ''.join(exts))
+    #             sentence_str = f'{sentence}\n'
+    #             exts = []
+    #         if line_i in no_extractions:
+    #             for no_extraction_sentence in no_extractions[line_i]:
+    #                 all_predictions.append(f'{no_extraction_sentence}\n')
+    #
+    #         arg1 = re.findall("<arg1>.*</arg1>", fields[1])[0].strip(
+    #             '<arg1>').strip('</arg1>').strip()
+    #         rel = re.findall("<rel>.*</rel>", fields[1])[0].strip(
+    #             '<rel>').strip('</rel>').strip()
+    #         arg2 = re.findall("<arg2>.*</arg2>", fields[1])[0].strip(
+    #             '<arg2>').strip('</arg2>').strip()
+    #
+    #         # why must score be exponentiated?
+    #
+    #         extraction = SaxExtraction(orig_sentL=orig_senL,
+    #                                    arg1=arg1,
+    #                                    rel=rel,
+    #                                    arg2=arg2,
+    #                                    score=math.exp(score))
+    #         extraction.arg1 = arg1
+    #         extraction.arg2 = arg2
+    #         if self.params_d["type"] == 'sentences':
+    #             ext_str = extraction.get_simple_sent() + '\n'
+    #         else:
+    #             ext_str = extraction.get_simple_sent() + '\n'
+    #         exts.append(ext_str)
+    #
+    #     exts = sorted(exts, reverse=True,
+    #                   key=lambda x: float(x.split()[0][:-1]))
+    #     exts = exts[:self.params_d["num_extractions"]]
+    #     all_predictions.append(sentence_str + ''.join(exts))
+    #
+    #     if line_i + 1 in no_extractions:
+    #         for no_extraction_sentence in no_extractions[line_i + 1]:
+    #             all_predictions.append(f'{no_extraction_sentence}\n')
+    #
+    #     if self.pred_fname:
+    #         fpath = PREDICTIONS_DIR + "/" + self.pred_fname
+    #         print('Predictions written to ', fpath)
+    #         predictions_f = open(fpath, 'w')
+    #         predictions_f.write('\n'.join(all_predictions) + '\n')
+    #         predictions_f.close()
 
     def splitpredict(self):
         """
@@ -562,7 +562,7 @@ class MConductor:
     def write_extags_file_from_predictions(self):
         """
         similar to run.get_labels()
-        ICODE_TO_EXTAG={0: 'NONE', 1: 'ARG1', 2: 'REL', 3: 'ARG2',
+        ILABEL_TO_EXTAG={0: 'NONE', 1: 'ARG1', 2: 'REL', 3: 'ARG2',
                  4: 'ARG2', 5: 'NONE'}
 
 
@@ -579,50 +579,53 @@ class MConductor:
         num_samples = len(bout.l_orig_sent)
         l_sentL= [bout.l_orig_sent[k] + UNUSED_TOKENS_STR
                   for k in range(num_samples)]
-        lll_icode = bout.lll_icode
-        l_word_locs = []
+        lll_ilabel = bout.lll_ilabel
+        lll_word_loc = []
 
 
         lines = []
-        sam_id = 0
-        ex_id = 0
-        word_id = 0
+        sam_id0 = 0
+        ex_id0 = 0
+        word_id0 = 0
 
         for sam_id in range(num_samples):
             words = get_words(l_sentL[sam_id].split('[unused1]')[0])
-            l_word_locs[sam_id].append(list(range(len(words))))
+            lll_word_loc[sam_id].append(list(range(len(words))))
 
             lines.append(
                 '\n' + l_sentL[sam_id].split('[unused1]')[0].strip())
-            for ex_id in range(len(l_word_locs[sam_id])):
-                sentL = l_sentL[sam_id].strip() + UNUSED_TOKENS_STR
-                ll_icode = lll_icode[sam_id]
-                for icodes in ll_icode:
+            for ex_id in range(len(lll_word_loc[sam_id])):
+                assert len(lll_word_loc[sam_id][ex_id])==\
+                    len(bout.l_orig_sent[sam_id0])
+
+                sentL = l_sentL[sam_id0].strip() + UNUSED_TOKENS_STR
+                ll_ilabel = lll_ilabel[sam_id]
+                for ilabels in ll_ilabel:
                     # You can use x.item() to get a Python number
                     # from a torch tensor that has one element
-                    if pred_icodes.sum().item() == 0:
+                    if pred_ilabels.sum().item() == 0:
                         break
 
-                    icodes = [0] * len(get_words(sentL))
-                    pred_icodes = pred_icodes[:len(sentL.split())].tolist()
+                    ilabels = [0] * len(get_words(sentL))
+                    pred_ilabels = pred_ilabels[:len(sentL.split())].tolist()
                     for k, loc in enumerate(
-                            sorted(l_word_locs[sam_id][ex_id])):
-                        icodes[loc] = pred_icodes[k]
+                            sorted(lll_word_loc[sam_id][ex_id])):
+                        ilabels[loc] = pred_ilabels[k]
 
-                    icodes = icodes[:-3]
+                    ilabels = ilabels[:-3]
                     # 1: arg1, 2: rel
-                    if 1 not in pred_icodes and 2 not in pred_icodes:
+                    if 1 not in pred_ilabels and 2 not in pred_ilabels:
                         continue
 
                     str_extags = \
-                        ' '.join([ICODE_TO_EXTAG[i] for i in icodes])
+                        ' '.join([ILABEL_TO_EXTAG[i] for i in ilabels])
                     lines.append(str_extags)
 
-                word_id += 1
-                ex_id += 1
-                if ex_id == num_samples:
-                    ex_id = 0
-                    sam_id += 1
+                word_id0 += 1
+                ex_id0 += 1
+                if ex_id0 == len(bout.l_orig_sent[sam_id0]):
+                    ex_id0 = 0
+                    sam_id0 += 1
 
         lines.append('\n')
         assert self.pred_fname

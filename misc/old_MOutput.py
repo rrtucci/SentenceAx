@@ -7,7 +7,7 @@ class MOutput:
         self.num_samples = None
         self.l_sample = []
         self.l_orig_sent = []
-        self.lll_icode = []
+        self.lll_ilabel = []
 
         self.ll_score= []
         self.loss = None
@@ -22,14 +22,14 @@ class MOutput:
         return l_orig_sent
 
 
-    def set_lll_icode(self, lll_icode):
-        for sample_id, ll_icode in enumerate(lll_icode):
-            self.l_sample[sample_id].absorb_children(ll_icode)
+    def set_lll_ilabel(self, lll_ilabel):
+        for sample_id, ll_ilabel in enumerate(lll_ilabel):
+            self.l_sample[sample_id].absorb_children(ll_ilabel)
 
-    def get_lll_icode(self):
-        lll_icode = []
+    def get_lll_ilabel(self):
+        lll_ilabel = []
         for sample_id in range(self.num_samples):
-            ll_icode = []
+            ll_ilabel = []
             for depth in range(MAX_DEPTH):
                 for words in range(self.l_sample[sample_id].
 
@@ -40,12 +40,12 @@ class MOutput:
     def absorb_all_possible(self):
         if self.l_orig_sent:
             self.set_l_orig_sent(self.l_orig_sent)
-        if self.lll_icode:
-            self.num_samples = len(self.lll_icode)
+        if self.lll_ilabel:
+            self.num_samples = len(self.lll_ilabel)
             self.l_sample = []
             for k in range(self.num_samples):
                 self.l_sample.append(Sample(self.task))
-            self.set_lll_icode(self.lll_icode)
+            self.set_lll_ilabel(self.lll_ilabel)
         if self.ll_score:
             self.num_samples = len(self.ll_score)
             self.absorb_ll_score(self.ll_score)

@@ -28,12 +28,12 @@ class SaxDataLoader:
     https://colab.research.google.com/github/pytorch/text/blob/master/examples/legacy_tutorial/migration_tutorial.ipynb#scrollTo=kBV-Wvlo07ye
     """
 
-    def __init__(self, auto_tokenizer, pad_icode,
+    def __init__(self, auto_tokenizer, pad_ilabel,
                  train_fp, val_fp, test_fp, use_spacy_model=True):
 
         self.params_d = PARAMS_D
         self.auto_tokenizer = auto_tokenizer
-        self.pad_icode = pad_icode
+        self.pad_ilabel = pad_ilabel
 
         self.predict_fp = PRED_IN_FP
         self.train_fp = train_fp
@@ -107,7 +107,7 @@ class SaxDataLoader:
             predict_m_input = self.get_m_input(self.predict_fp)
             #vocab = build_vocab(predict_m_input)
 
-            x = [predict_m_input, self.pad_icode, self.use_spacy_model]
+            x = [predict_m_input, self.pad_ilabel, self.use_spacy_model]
             predict_dataset = SaxDataSet(*x)
 
             
@@ -138,13 +138,13 @@ class SaxDataLoader:
             # vocab = self.build_vocab(
             #     train_m_input + val_m_input + test_m_input)
     
-            x = [train_m_input, self.pad_icode, self.use_spacy_model]
+            x = [train_m_input, self.pad_ilabel, self.use_spacy_model]
             train_dataset = SaxDataSet(*x)
 
-            x = [val_m_input, self.pad_icode, self.use_spacy_model]
+            x = [val_m_input, self.pad_ilabel, self.use_spacy_model]
             val_dataset = SaxDataSet(*x)
 
-            x = [test_m_input, self.pad_icode, self.use_spacy_model]
+            x = [test_m_input, self.pad_ilabel, self.use_spacy_model]
             test_dataset = SaxDataSet(*x)
             
             train_dataset.sort()  # to simulate bucket sort (along with pad_data)

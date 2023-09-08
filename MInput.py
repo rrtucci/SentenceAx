@@ -48,6 +48,7 @@ class MInput:
     #     self.absorb_l_orig_sent(self.l_orig_sent)
     #     self.absorb_lll_icode(self.lll_icode)
 
+
     @staticmethod
     def remerge_sent(tokens):
         """

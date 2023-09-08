@@ -129,7 +129,8 @@ class Model(pl.LightningModule):
         elif TASK == "cc":
             self.metric = CCMetric()
 
-
+        self.pos_mask = None
+        self.pos_locs = None
         self.verb_mask = None
         self.verb_locs = None
         self.l_word_start_loc = None
@@ -281,9 +282,9 @@ class Model(pl.LightningModule):
             # a chaptgpt generated explanation of this transformation
             # is given in misc/hidden_states_transformation2.txt
             #
-            bat = self.l_word_start_loc.unsqueeze(2). \
+            xx = self.l_word_start_loc.unsqueeze(2). \
                 repeat(1, 1, hidden_states.shape[2])
-            word_hidden_states = torch.gather(hidden_states, 1, bat)
+            word_hidden_states = torch.gather(hidden_states, 1, xx)
 
             if d != 0:
                 greedy_icodes = torch.argmax(word_scores, dim=-1)
@@ -414,24 +415,24 @@ class Model(pl.LightningModule):
 
                 constraints_str = 'posm_hvc_hvr_hve'
                 cweights_str = '1_1_1_1'
-                l_constraint = constraints_str.split('_')
-                l_cweight = cweights_str.split('_')
-                if len(l_constraint) != len(l_cweight):
-                    l_cweight = [cweights_str] * len(l_constraint)
+                l_constraint_str = constraints_str.split('_')
+                l_cweight_str = cweights_str.split('_')
+                if len(l_constraint_str) != len(l_cweight_str):
+                    l_cweight_str = [cweights_str] * len(l_constraint_str)
 
-                for constraint, weight in \
-                        zip(l_constraint, l_cweight):
-                    const_loss = self._constrained_loss(pos_locs,
+                for constraint_str, weight_str in \
+                        zip(l_constraint_str, l_cweight_str):
+                    const_loss = self._constrained_loss(self.pos_locs,
                                                         ll_word_score,
-                                                        constraint,
-                                                        float(weight))
-                    if constraint not in self.constraints_str_d:
-                        self.constraints_str_d[constraint] = []
-                    self.constraints_str_d[constraint].append(const_loss)
+                                                        constraint_str,
+                                                        weight_str)
+                    if constraint_str not in self.constraints_str_d:
+                        self.constraints_str_d[constraint_str] = []
+                    self.constraints_str_d[constraint_str].append(const_loss)
 
         return lll_icode, ll_score, batch_loss
 
-    def _constrained_loss(self, pos_locs, ll_word_score,
+    def _constrained_loss(self, ll_word_score,
                           constraints_str, cweights_str):
         """
         similar to model.constrained_loss()
@@ -450,9 +451,9 @@ class Model(pl.LightningModule):
         """
         batch_size, depth, num_words, num_icodes = ll_word_score.shape
         hinge_loss = 0
-        bat = self.verb_locs.unsqueeze(1).unsqueeze(3). \
+        xx = self.verb_locs.unsqueeze(1).unsqueeze(3). \
             repeat(1, depth, 1, num_icodes)
-        verb_scores = torch.gather(ll_word_score, 2, bat)
+        verb_scores = torch.gather(ll_word_score, 2, xx)
         verb_rel_scores = verb_scores[:, :, :, 2]
         # (batch_size, depth, num_words)
         verb_rel_scores = verb_rel_scores * (self.verb_locs != 0). \
@@ -478,13 +479,13 @@ class Model(pl.LightningModule):
             hinge_loss += cweights_str * ex_loss.sum()
 
         if 'posm' in constraints_str:
-            bat = pos_locs.unsqueeze(1).unsqueeze(3). \
+            xx = self.pos_locs.unsqueeze(1).unsqueeze(3). \
                 repeat(1, depth, 1, num_icodes)
-            pos_scores = torch.gather(ll_word_score, 2, bat)
+            pos_scores = torch.gather(ll_word_score, 2, xx)
             pos_nnone_scores = \
                 torch.max(pos_scores[:, :, :, 1:], dim=-1)[0]
             column_loss = (1 - torch.max(pos_nnone_scores, dim=1)[0]) * \
-                          (pos_locs != 0).float()
+                          (self.pos_locs != 0).float()
             hinge_loss += cweights_str * column_loss.sum()
             
         return hinge_loss
@@ -583,32 +584,28 @@ class Model(pl.LightningModule):
         """
         eval_out_d = None
         if self.params_d["mode"] == 'test':
-            samples = self.batch_out.l_sample
-            true_samples = self.true_batch_out.l_sample
-            for k, sam in enumerate(samples):
-                true_sam = true_samples[k]
-                sam.ll_icode = sam.ll_icode.cpu()
-                sam.l_score = sam.l_score.cpu()
-                sam.l_score = \
-                    (sam.l_score * 100).round() / 100
-                true_sam.ll_icode = true_sam.cpu()
-                sam.orig_sent = sam.orig_sent.cpu()
+            self.batch_out.to_cpu()
+            self.true_batch_out.to_cpu()
+            lll_icode = self.batch_out.lll_icode
+            ll_score = self.batch_out.ll_score
+            l_orig_sent = self.batch_out.l_orig_sent
+            true_lll_icode = self.true_batch_out.lll_icode
+            ll_score = (ll_score * 100).round() / 100
+
         if self.params_d["task"] == "cc":
             if 'predict' in self.params_d["mode"]:
                 metrics_d = {'P_exact': 0, 'R_exact': 0, 'F1_exact': 0}
             else:
-                samples = self.batch_out.l_sample
-                true_samples = self.true_batch_out.l_sample
-                for k, sample in enumerate(samples):
-                    true_sample = true_samples[k]
-                    if type(sample.orig_sent[0]) != str:
-                        sample.orig_sent = [self.auto_tokenizer.decode[m]
-                                                 for m in
-                                                 sample.orig_sent]
-                    self.metric(sample.ll_icode,
-                                true_sample.ll_icode,
-                                meta_data=sample.orig_sent)
-                metrics_d = self.metric.get_metric_values(reset=True, mode=mode)
+                num_samples = len(lll_icode)
+                for k in enumerate(num_samples):
+                    if type(l_orig_sent[k][0]) != str:
+                        l_orig_sent[k] = [self.auto_tokenizer.decode[m] for
+                                          m in l_orig_sent]
+                    self.metric(lll_icode[k],
+                                true_lll_icode[k],
+                                l_orig_sent[k])
+                metrics_d = self.metric.get_metric_values(
+                    reset=True, mode=mode)
 
             val_acc = metrics_d["F1_exact"]
             eval_out_d = {"eval_f1": val_acc,
@@ -619,16 +616,17 @@ class Model(pl.LightningModule):
             if 'predict' in self.params_d["mode"]:
                 metrics_d = {'carb_f1': 0, 'carb_auc': 0, 'carb_lastf1': 0}
             else:
-                samples = self.batch_out.l_sample
-                for sample in samples:
-                    if type(sample.orig_sent[0]) != str:
-                        sample.orig_sent = [self.auto_tokenizer.decode[m]
+                num_samples = len(self.batch_out.lll_icode)
+                for k in range(num_samples):
+                    if type(l_orig_sent[k][0]) != str:
+                        l_orig_sent[k] = [self.auto_tokenizer.decode[m]
                                                  for m in
-                                                 sample.orig_sent]
-                    self.metric(sample.ll_icode,
-                                sample.orig_sent,
-                                sample.l_score)
-                metrics_d = self.metric.get_metric_values(reset=True, mode=mode)
+                                                 l_orig_sent[k]]
+                    self.metric(lll_icode[k],
+                                true_lll_icode[k],
+                                l_orig_sent[k])
+                metrics_d = self.metric.get_metric_values(
+                    reset=True, mode=mode)
 
             eval_out_d = {"eval_f1": metrics_d["carb_f1"],
                               "eval_auc": metrics_d["carb_auc"],
@@ -790,7 +788,7 @@ class Model(pl.LightningModule):
         ll_score = self.batch_out.ll_score
         num_samples, max_depth, _= lll_icode.shape
 
-        l_orig_sentL = [self.batch_out.l_sample[k].orig_sent
+        l_orig_sentL = [self.batch_out.l_orig_sent[k]
                         + UNUSED_TOKENS_STR for
                         k in range(num_samples)]
 
@@ -854,7 +852,7 @@ class Model(pl.LightningModule):
         lll_icode = self.batch_out.lll_icode
         num_samples, max_depth, _ = lll_icode.shape
         # true_lll_icode = self.true_batch_out.lll_label
-        l_orig_sent = [self.batch_out.l_sample[k].orig_sent for
+        l_orig_sent = [self.batch_out.l_orig_sent for
                         k in range(num_samples)]
         l_pred_str = []
         ll_spanned_word = []
@@ -900,15 +898,13 @@ class Model(pl.LightningModule):
         -------
 
         """
-        self.batch_out.lll_icode = self.batch_out.lll_icode.cpu()
-        self.batch_out.ll_score = self.batch_out.ll_score.cpu()
-        self.true_batch_out.lll_icode = self.true_batch_out.lll_icode.cpu()
+        self.batch_out.to_cpu()
+        self.true_batch_out.lll_icode.to_cpu()
         num_samples = len(self.batch_out.lll_icode)
+        l_orig_sent = self.batch_out.l_orig_sent
         for k in range(num_samples):
-            sample = self.batch_out.l_sample[k]
-            sample.orig_sent = sample.orig_sent.cpu()
-            sample.orig_sent = [self.auto_tokenizer.decode[m] for m
-                                 in sample.orig_sent]
+            l_orig_sent = [self.auto_tokenizer.decode[m] for m
+                                 in l_orig_sent[k]]
         if task == "ex":
             l_pred_str, l_pred_allen_str = \
                 self._write_if_task_ex()

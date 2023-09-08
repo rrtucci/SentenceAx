@@ -1,4 +1,4 @@
-from sample_classes import *
+import torch
 
 
 class MOutput:
@@ -50,3 +50,7 @@ class MOutput:
     #         self.absorb_ll_score(self.ll_score)
 
 
+    def to_cpu(self):
+        self.l_orig_sent= self.l_orig_sent.cpu()
+        self.ll_score = self.ll_score.cpu()
+        self.lll_icode = self.lll_icode.cpu()

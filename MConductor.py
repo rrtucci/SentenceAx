@@ -12,7 +12,6 @@ from Model import *
 from SaxDataLoader import *
 from sax_utils import *
 from sax_globals import *
-from sample_classes import *
 
 
 class MConductor:
@@ -97,14 +96,11 @@ class MConductor:
         self.cc_ll_spanned_loc = []
         self.cc_l_pred_str = []
 
-        self.l_pred_sentL = None
-        self.l_orig_sentL = None
-
         self.ex_l_pred_str = None
 
         self.model = None
-        self.ex_fit_d = None
-        self.cc_fit_d = None
+        self.ex_fit_d = {}
+        self.cc_fit_d = {}
 
     def get_checkpoint_callback(self):
         """
@@ -449,13 +445,11 @@ class MConductor:
 
         self.predict(test_dloader=pred_test_dataloader)
 
-        samples = self.model.batch_out.l_sample
-        samples.absorb_all_possible()
+
         path = PREDICTIONS_DIR + "/" + self.pred_fname +"-extags.txt"
         with_scores = False
         # Does same thing as Openie6's run.get_labels()
-        # this replaces self.write_extags_file_from_predictions()
-        write_extags_file(samples, path, with_scores)
+        self.write_extags_file_from_predictions()
 
     def splitpredict_do_rescoring(self):
         self.params_d["write_allennlp"] = True
@@ -565,9 +559,7 @@ class MConductor:
         if self.params_d["rescoring"]:
             self.splitpredict_do_rescoring()
 
-    def write_extags_file_from_predictions(self,
-                                           l_sentL,  # original sentences
-                                           ll_sent_loc):
+    def write_extags_file_from_predictions(self):
         """
         similar to run.get_labels()
         ICODE_TO_EXTAG={0: 'NONE', 1: 'ARG1', 2: 'REL', 3: 'ARG2',
@@ -577,35 +569,35 @@ class MConductor:
         Parameters
         ----------
         l_sentL
-        ll_sent_loc
+        l_word_locs
 
         Returns
         -------
 
         """
+        bout = self.model.batch_out
+        num_samples = len(bout.l_orig_sent)
+        l_sentL= [bout.l_orig_sent[k] + UNUSED_TOKENS_STR
+                  for k in range(num_samples)]
+        lll_icode = bout.lll_icode
+        l_word_locs = []
+
 
         lines = []
-        sample_id = 0
+        sam_id = 0
         ex_id = 0
         word_id = 0
-        l_sample = self.model.batch_out.l_sample
-        num_samples = len(l_sample)
 
-        for sample_id in range(num_samples):
-            l_child = l_sample[sample_id].l_child
-            if len(ll_sent_loc[sample_id]) == 0:
-                words = get_words(l_sentL[sample_id].split('[unused1]')[0])
-                ll_sent_loc[sample_id].append(list(range(len(words))))
+        for sam_id in range(num_samples):
+            words = get_words(l_sentL[sam_id].split('[unused1]')[0])
+            l_word_locs[sam_id].append(list(range(len(words))))
 
             lines.append(
-                '\n' + l_sentL[sample_id].split('[unused1]')[0].strip())
-            for ex_id in range(len(ll_sent_loc[sample_id])):
-                assert len(ll_sent_loc[sample_id][ex_id]) == len(
-                    get_words(l_child[ex_id].orig_sent))
-                sentL = l_child[ex_id].strip() + UNUSED_TOKENS_STR
-                assert sentL == l_sentL[sample_id]
-                ll_icode = l_child[ex_id].icodes
-                for l_icode in ll_icode:
+                '\n' + l_sentL[sam_id].split('[unused1]')[0].strip())
+            for ex_id in range(len(l_word_locs[sam_id])):
+                sentL = l_sentL[sam_id].strip() + UNUSED_TOKENS_STR
+                ll_icode = lll_icode[sam_id]
+                for icodes in ll_icode:
                     # You can use x.item() to get a Python number
                     # from a torch tensor that has one element
                     if pred_icodes.sum().item() == 0:
@@ -614,7 +606,7 @@ class MConductor:
                     icodes = [0] * len(get_words(sentL))
                     pred_icodes = pred_icodes[:len(sentL.split())].tolist()
                     for k, loc in enumerate(
-                            sorted(ll_sent_loc[sample_id][ex_id])):
+                            sorted(l_word_locs[sam_id][ex_id])):
                         icodes[loc] = pred_icodes[k]
 
                     icodes = icodes[:-3]
@@ -628,12 +620,92 @@ class MConductor:
 
                 word_id += 1
                 ex_id += 1
-                if ex_id == len(l_sample):
+                if ex_id == num_samples:
                     ex_id = 0
-                    sample_id += 1
+                    sam_id += 1
 
         lines.append('\n')
         assert self.pred_fname
         with open(PREDICTIONS_DIR + "/" + self.pred_fname +
-                  "-extags.txt") as f:
+                  "-extags.txt", "w") as f:
             f.writelines(lines)
+# NOTE
+# run.prepare_test_dataset() never used
+# def prepare_test_dataset(hparams, model, sentences, orig_sentences,
+#                          sentence_indices_list):
+#     label_dict = {0: 'NONE', 1: 'ARG1', 2: 'REL', 3: 'ARG2',
+#                   4: 'LOC', 5: 'TYPE'}
+#
+#     lines = []
+#
+#     outputs = model.outputs
+#
+#     idx1, idx2, idx3 = 0, 0, 0
+#     count = 0
+#     for i in range(0, len(sentence_indices_list)):
+#         if len(sentence_indices_list[i]) == 0:
+#             sentence = orig_sentences[i].split('[unused1]')[0].strip().split()
+#             sentence_indices_list[i].append(list(range(len(sentence))))
+#
+#         for j in range(0, len(sentence_indices_list[i])):
+#             try:
+#                 assert len(sentence_indices_list[i][j]) == len(
+#                     outputs[idx1]['meta_data'][
+#                         idx2].strip().split()), ipdb.set_trace()
+#             except:
+#                 ipdb.set_trace()
+#             sentence = outputs[idx1]['meta_data'][
+#                            idx2].strip() + ' [unused1] [unused2] [unused3]'
+#             assert sentence == sentences[idx3]
+#             original_sentence = orig_sentences[i]
+#             predictions = outputs[idx1]['predictions'][idx2]
+#
+#             all_extractions, all_str_labels, len_exts = [], [], []
+#             for prediction in predictions:
+#                 if prediction.sum().item() == 0:
+#                     break
+#
+#                 if hparams.rescoring != 'others':
+#                     lines.append(original_sentence)
+#
+#                 labels = [0] * len(original_sentence.strip().split())
+#                 prediction = prediction[:len(sentence.split())].tolist()
+#                 for idx, value in enumerate(sorted(sentence_indices_list[i][j])):
+#                     labels[value] = prediction[idx]
+#                 labels[-3:] = prediction[-3:]
+#                 str_labels = ' '.join([label_dict[x] for x in labels])
+#                 if hparams.rescoring == 'first':
+#                     lines.append(str_labels)
+#                 elif hparams.rescoring == 'max':
+#                     for _ in range(0, 5):
+#                         lines.append(str_labels)
+#                 elif hparams.rescoring == 'others':
+#                     all_str_labels.append(str_labels)
+#                     labels_3 = np.array(labels[:-3])
+#                     extraction = ' '.join(np.array(original_sentence.split())[
+#                                               np.where(labels_3 != 0)])
+#                     all_extractions.append(extraction)
+#                     len_exts.append(len(extraction.split()))
+#                 else:
+#                     assert False
+#
+#             if hparams.rescoring == 'others':
+#                 for ext_i, extraction in enumerate(all_extractions):
+#                     other_extractions = ' '.join(
+#                         all_extractions[:ext_i] + all_extractions[ext_i + 1:])
+#                     other_len_exts = sum(len_exts[:ext_i]) + sum(
+#                         len_exts[ext_i + 1:])
+#                     input = original_sentence + ' ' + other_extractions
+#                     lines.append(input)
+#                     output = all_str_labels[ext_i] + ' ' + ' '.join(
+#                         ['NONE'] * other_len_exts)
+#                     lines.append(output)
+#
+#             idx3 += 1
+#             idx2 += 1
+#             if idx2 == len(outputs[idx1]['meta_data']):
+#                 idx2 = 0
+#                 idx1 += 1
+#
+#     lines.append('\n')
+#     return lines

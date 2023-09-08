@@ -557,7 +557,8 @@ class MConductor:
         self.splitpredict_do_cc_first()
         self.splitpredict_do_ex_second()
         if self.params_d["rescoring"]:
-            self.splitpredict_do_rescoring()
+            # self.splitpredict_do_rescoring()
+            print("rescoring not implented yet")
 
     def write_extags_file_from_predictions(self):
         """

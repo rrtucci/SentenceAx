@@ -23,6 +23,7 @@ class AllenTool:
         # ex =extraction sent=sentence
         self.sentL_to_exs = self.read_allen_file()
         self.num_sents = len(self.sentL_to_exs)
+        # print("lkop", self.num_sents)
 
     @staticmethod
     def get_ex_from_allen_line(line):
@@ -69,7 +70,7 @@ class AllenTool:
         for line in lines:
             # print("bnhk", line)
             ex = AllenTool.get_ex_from_allen_line(line)
-            if ex.orig_sentL != prev_in_sentL:
+            if prev_in_sentL and ex.orig_sentL != prev_in_sentL:
                 sentL_to_exs[prev_in_sentL] = exs
                 exs = []
             exs.append(ex)
@@ -107,6 +108,7 @@ class AllenTool:
 
         with open(out_fp, 'w', encoding='utf-8') as f:
             sample_id = 0
+            num_sams = 0
             for sent, l_ex in self.sentL_to_exs.items():
                 sample_id += 1
                 if sample_id < first_sample_id:
@@ -115,15 +117,18 @@ class AllenTool:
                     continue
                 if numbered:
                     f.write(str(sample_id) + ".\n")
+                num_sams += 1
                 f.write(sent + "\n")
                 for ex in l_ex:
                     if ftype == "ex": # extags file
                         ex.set_extags()
-                        f.write(" ".join(ex.extags))
+                        f.write(" ".join(ex.extags)+ "\n")
                     elif ftype == "ss": # simple sentences file
                         f.write(ex.get_simple_sent() + "\n")
                     else:
                         assert False
+            print("finished file " + out_fp + ":    "+
+                  str(num_sams) + " samples.")
 
                 # if ex.name_is_tagged["ARG1"] and \
                 #         ex.name_is_tagged["REL"] and \
@@ -160,11 +165,13 @@ class AllenTool:
             1,
             num_train_sents)
         val_first_last = (
-            num_train_sents + 1,
+            num_train_sents+1,
             num_train_sents + num_val_sents)
         test_first_last = (
-            num_train_sents + num_val_sents + 1,
+            num_train_sents + num_val_sents+1,
             num_train_sents + num_val_sents + num_test_sents)
+
+        # print("ghjy", train_first_last, val_first_last, test_first_last)
 
         train_fp = out_dir + "/extags_train.txt"
         val_fp = out_dir + "/extags_val.txt"
@@ -178,15 +185,28 @@ class AllenTool:
 if __name__ == "__main__":
     def main1(ftype):
         allen_fp = "testing_files/small-allen.tsv"
-        ex_out_fp = "testing_files/small_extags.txt"
-        ss_out_fp = "testing_files/small_simple_sents.txt"
+        if ftype=="ex":
+            out_fp = "testing_files/small_extags.txt"
+        elif ftype=="ss":
+            out_fp = "testing_files/small_simple_sents.txt"
+        else:
+            assert False
         at = AllenTool(allen_fp)
         at.read_allen_file()
-        at.write_allen_alternative_file(ex_out_fp,
+        at.write_allen_alternative_file(out_fp,
                                         first_sample_id=1,
                                         last_sample_id=-1,
                                         ftype=ftype,
                                         numbered=True)
+    def main2():
+        allen_fp = "testing_files/small-allen.tsv"
+        out_dir = "testing_files"
+        at = AllenTool(allen_fp)
+        at.read_allen_file()
+        at.write_extags_ttt_files(out_dir)
+
+
 
     main1("ss")
-    #main1("ex")
+    # main1("ex")
+    # main2()

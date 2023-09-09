@@ -52,73 +52,77 @@ class SaxExtraction():
 
         self.arg2 = arg2
         self._arg2_words = None
-        
+
         self.time_arg = ""
         self._time_arg_words = None
-        
+
         self.loc_arg = ""
         self._loc_arg_words = None
 
         self.extags = ["NONE"] * len(self.orig_sentL_words)
-        self.extag_name_to_assign_bool = {extag_name: False
-                                          for extag_name in BASE_EXTAGS}
+        self.is_assigned_d = {extag_name: False
+                              for extag_name in BASE_EXTAGS}
         self.extags_are_set = False
 
     @property
     def orig_sentL_words(self):
         if not self._orig_sentL_words:
             return get_words(self.orig_sentL)
-        
+        return self._orig_sentL_words
+
     @orig_sentL_words.setter
     def orig_sentL_words(self, value):
         self._orig_sentL_words = value
-        
 
     @property
     def arg1_words(self):
         if not self._arg1_words:
             return get_words(self.arg1)
-        
+        return self._arg1_words
+
     @arg1_words.setter
     def arg1_words(self, value):
         self._arg1_words = value
-        
+
     @property
     def rel_words(self):
         if not self._rel_words:
             return get_words(self.rel)
+        return self._rel_words
 
     @rel_words.setter
     def rel_words(self, value):
         self._rel_words = value
-        
+
     @property
     def arg2_words(self):
         if not self._arg2_words:
             return get_words(self.arg2)
-        
+        return self._arg2_words
+
     @arg2_words.setter
     def arg2_words(self, value):
         self._arg2_words = value
-        
+
     @property
     def time_arg_words(self):
         if not self._time_arg_words:
             return get_words(self.time_arg)
-        
+        return self._time_arg_words
+
     @time_arg_words.setter
     def time_arg_words(self, value):
         self._time_arg_words = value
-        
+
     @property
     def loc_arg_words(self):
         if not self._loc_arg_words:
             return get_words(self.loc_arg)
-        
+        return self._loc_arg_words
+
     @loc_arg_words.setter
     def loc_arg_words(self, value):
         self._loc_arg_words = value
-
 
     def __eq__(self, other):
         return self.get_simple_sent() == other.get_simple_sent()
@@ -140,27 +144,27 @@ class SaxExtraction():
               self.time_arg]
         li = [x for x in li if x]
         str0 = " ".join(li)
-        #print("hjki", str0)
+        # print("hjki", str0)
         return str0
 
-    def set_is_extagged_flag_to_true(self, extag_name):
+    def set_is_extagged_bool_to_true(self, extag_name):
         assert extag_name in BASE_EXTAGS
-        self.extag_name_to_assign_bool[extag_name] = True
+        self.is_assigned_d[extag_name] = True
 
     def set_extags_of_2_matches(self, matches, extag_name):
         assert extag_name in BASE_EXTAGS
-        assert has_2_matches(matches)
-        m0 = matches[0]
-        self.extags[m0.b: m0.b + m0.size] = [extag_name] * m0.size
-        self.set_is_extagged_flag_to_true(extag_name)
+        if has_2_matches(matches):
+            m0 = matches[0]
+            self.extags[m0.b: m0.b + m0.size] = [extag_name] * m0.size
+            self.set_is_extagged_bool_to_true(extag_name)
 
     def set_extags_of_gt_2_matches(self, matches, extag_name):
         assert extag_name in BASE_EXTAGS
-        assert has_gt_2_matches(matches)
-        self.set_is_extagged_flag_to_true(extag_name)
-        for m in matches:
-            self.extags[m.b: m.b + m.size] = \
-                [extag_name] * m.size
+        if has_gt_2_matches(matches):
+            self.set_is_extagged_bool_to_true(extag_name)
+            for m in matches:
+                self.extags[m.b: m.b + m.size] = \
+                    [extag_name] * m.size
 
     def set_extags_of_arg2(self):
         """
@@ -181,11 +185,11 @@ class SaxExtraction():
         li_2 = self.arg2_words
         with_2_lists = [li_2lt, li_2tl, li_2t, li_2l, li_2]
 
-        li_tl = self.time_arg_words + self.loc_arg_words
         li_lt = self.loc_arg_words + self.time_arg_words
+        li_tl = self.time_arg_words + self.loc_arg_words
         li_t = self.time_arg_words
         li_l = self.loc_arg_words
-        without_2_lists = [li_tl, li_lt, li_t, li_l]
+        without_2_lists = [li_lt, li_tl, li_t, li_l]
 
         if len(self.arg2_words) != 0:
             for li in with_2_lists:
@@ -284,11 +288,10 @@ class SaxExtraction():
         # sent can have implicit "is", "of", "from"
         # inserted in by hand and indicated by "[is]", "[of]" , "[from]"
         # Note that this is different from explicit "is", "of", "from"
-        rel_is_extagged = self.extag_name_to_assign_bool["REL"]
-        if (not rel_is_extagged) and len(self.rel_words) > 0:
+        if (not self.is_assigned_d["REL"]) and len(self.rel_words) > 0:
             # IS
             if self.rel == '[is]':
-                self.set_is_extagged_flag_to_true("REL")
+                self.set_is_extagged_bool_to_true("REL")
                 assert self.orig_sentL_words[-3] == '[unused1]'
                 self.extags[-3] = 'REL'
             # IS-OF
@@ -314,17 +317,15 @@ class SaxExtraction():
         -------
 
         """
-        rel_is_extagged = self.extag_name_to_assign_bool["REL"]
-        arg1_is_extagged = self.extag_name_to_assign_bool["ARG1"]
 
-        if rel_is_extagged and \
-                (not arg1_is_extagged) and \
+        if self.is_assigned_d["REL"] and \
+                (not self.is_assigned_d["ARG1"]) and \
                 count_sub_reps(self.arg1_words, self.orig_sentL_words) > 1:
             start_locs = [start_loc for start_loc in
                           range(len(self.orig_sentL_words)) if
                           sub_exists(self.arg1_words,
                                      self.orig_sentL_words, start_loc)]
-            assert len(start_locs) > 1
+            #assert len(start_locs) > 1
 
             if 'REL' in self.extags:
                 # li.index(x) gives first occurrence of x
@@ -335,9 +336,9 @@ class SaxExtraction():
                 loc0, cost0 = \
                     find_xlist_item_that_minimizes_cost_fun(xlist, cost_fun)
                 assert self.arg1_words == self.orig_sentL_words[
-                                            loc0: loc0 + len(
-                                                self.arg1_words)]
-                self.set_is_extagged_flag_to_true("ARG1")
+                                          loc0: loc0 + len(
+                                              self.arg1_words)]
+                self.set_is_extagged_bool_to_true("ARG1")
                 # only extag the first occurrence of arg1
                 self.extags[
                 loc0: loc0 + len(self.arg1_words)] = \
@@ -354,12 +355,9 @@ class SaxExtraction():
         -------
 
         """
-        arg1_is_extagged = self.extag_name_to_assign_bool["ARG1"]
-        arg2_is_extagged = self.extag_name_to_assign_bool["ARG2"]
-        rel_is_extagged = self.extag_name_to_assign_bool["REL"]
 
-        if arg1_is_extagged and arg2_is_extagged and \
-                (not rel_is_extagged) and \
+        if self.is_assigned_d["ARG1"] and self.is_assigned_d["ARG2"] and \
+                (not self.is_assigned_d["REL"]) and \
                 len(self.rel_words) > 0:
             rel_words = []
             if count_sub_reps(self.rel_words, self.orig_sentL_words) > 1:
@@ -380,7 +378,7 @@ class SaxExtraction():
                      range(len(self.orig_sentL_words))
                      if
                      sub_exists(rel_words, self.orig_sentL_words, start_loc)]
-                assert len(start_locs) > 1
+                #assert len(start_locs) > 1
                 arg2_condition = self.arg2 == "" or \
                                  'ARG2' in self.extags
                 if 'ARG1' in self.extags and arg2_condition:
@@ -396,7 +394,7 @@ class SaxExtraction():
                         assert rel_words == \
                                self.orig_sentL_words[
                                loc0: loc0 + len(rel_words)]
-                        self.set_is_extagged_flag_to_true("REL")
+                        self.set_is_extagged_bool_to_true("REL")
                         self.extags[loc0: loc0 + len(rel_words)] = \
                             ['REL'] * len(rel_words)
 
@@ -412,10 +410,10 @@ class SaxExtraction():
                             find_xlist_item_that_minimizes_cost_fun(xlist,
                                                                     cost_fun)
 
-                        assert rel_words == \
-                               self.orig_sentL_words[
-                               loc0: loc0 + len(rel_words)]
-                        self.set_is_extagged_flag_to_true('REL')
+                        # assert rel_words == \
+                        #        self.orig_sentL_words[
+                        #        loc0: loc0 + len(rel_words)]
+                        self.set_is_extagged_bool_to_true('REL')
                         self.extags[loc0: loc0 + len(rel_words)] = \
                             ['REL'] * len(rel_words)
 

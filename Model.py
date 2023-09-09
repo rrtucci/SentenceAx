@@ -809,7 +809,7 @@ class Model(pl.LightningModule):
                     break
                 ex = self._get_extraction(
                     ex_ilabels, orig_sentL, ll_score[sample_id][depth].item())
-                if ex.arg1_pair[0] and ex.rel_pair[0]:
+                if ex.arg1 and ex.rel:
                     if fix_d:
                         orig_sent0 = fix_d[orig_sent]
                         if ex.is_not_in(
@@ -831,9 +831,9 @@ class Model(pl.LightningModule):
             l_pred_str.append(str0.strip("/n"))
             allen_str = ""
             for pred_ex in pred_l_ex:
-                arg1 = pred_ex.arg1_pair[0]
-                rel = pred_ex.rel_pair[0]
-                arg2 = pred_ex.arg2_pair[0]
+                arg1 = pred_ex.arg1
+                rel = pred_ex.rel
+                arg2 = pred_ex.arg2
                 allen_str += f"{orig_sentL}\t"
                 allen_str += f"<arg1> {arg1} </arg1>"
                 allen_str += f"<rel> {rel} </rel>"

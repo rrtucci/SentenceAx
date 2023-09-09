@@ -52,7 +52,7 @@ class AllenTool:
 
     @staticmethod
     def get_allen_line_from_ex(ex):
-        str0 = ex.orig_sentL_pair[0] + "\t"
+        str0 = ex.orig_sentL + "\t"
         str0 += " <arg1> " + ex.arg1 + r" <\arg1> "
         str0 += " <rel> " + ex.pred + r" <\rel> "
         str0 += " <arg2> " + ex.arg2 + r" <\arg2> \t"
@@ -69,11 +69,11 @@ class AllenTool:
         for line in lines:
             # print("bnhk", line)
             ex = AllenTool.get_ex_from_allen_line(line)
-            if ex.orig_sentL_pair[0] != prev_in_sentL:
+            if ex.orig_sentL != prev_in_sentL:
                 sentL_to_exs[prev_in_sentL] = exs
                 exs = []
             exs.append(ex)
-            prev_in_sentL = ex.orig_sentL_pair[0]
+            prev_in_sentL = ex.orig_sentL
 
         # print("zlpd", sentL_to_exs)
         return sentL_to_exs
@@ -102,7 +102,8 @@ class AllenTool:
 
         """
 
-        assert 1 <= first_sample_id <= last_sample_id <= self.num_sents
+        if last_sample_id != -1:
+            assert 1 <= first_sample_id <= last_sample_id <= self.num_sents
 
         with open(out_fp, 'w', encoding='utf-8') as f:
             sample_id = 0
@@ -118,7 +119,7 @@ class AllenTool:
                 for ex in l_ex:
                     if ftype == "ex": # extags file
                         ex.set_extags()
-                        f.write(" ".join(ex.extags()))
+                        f.write(" ".join(ex.extags))
                     elif ftype == "ss": # simple sentences file
                         f.write(ex.get_simple_sent() + "\n")
                     else:
@@ -175,7 +176,7 @@ class AllenTool:
 
 
 if __name__ == "__main__":
-    def main1():
+    def main1(ftype):
         allen_fp = "testing_files/small-allen.tsv"
         ex_out_fp = "testing_files/small_extags.txt"
         ss_out_fp = "testing_files/small_simple_sents.txt"
@@ -183,8 +184,9 @@ if __name__ == "__main__":
         at.read_allen_file()
         at.write_allen_alternative_file(ex_out_fp,
                                         first_sample_id=1,
-                                        last_sample_id=10,
-                                        ftype="ss",
+                                        last_sample_id=-1,
+                                        ftype=ftype,
                                         numbered=True)
 
-    main1()
+    # main1("ss")
+    main1("ex")

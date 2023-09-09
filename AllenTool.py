@@ -177,12 +177,14 @@ class AllenTool:
 if __name__ == "__main__":
     def main1():
         allen_fp = "testing_files/small-allen.tsv"
-        ex_out_fp = "small_extags.txt"
-        ss_out_fp = "small_simple_sents.txt"
+        ex_out_fp = "testing_files/small_extags.txt"
+        ss_out_fp = "testing_files/small_simple_sents.txt"
         at = AllenTool(allen_fp)
         at.read_allen_file()
         at.write_allen_alternative_file(ex_out_fp,
                                         first_sample_id=1,
                                         last_sample_id=10,
-                                        ftype="ex",
+                                        ftype="ss",
                                         numbered=True)
+
+    main1()

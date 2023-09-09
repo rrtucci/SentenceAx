@@ -116,13 +116,21 @@ UNBREAKABLE_WORDS = \
 # when doing "cc" only
 # MODE in ("train_test", "resume", "test", "predict", "splitpredict")
 
-assert "TASK" in globals()
-TASK = globals()["TASK"]
-print('you\'ve entered TASK= "' + TASK + '"')
+if "TASK" not in globals():
+    TASK = ""
+    print("******************************TASK is empty")
+else:
+    TASK = globals()["TASK"]
+    assert TASK in ["ex", "cc"]
 
-assert "MODE" in globals()
-MODE = globals()["MODE"]
-print('you\'ve entered MODE= "' + MODE + '"')
+if "MODE" not in globals():
+    MODE = ""
+    print("******************************MODE is empty")
+else:
+    MODE = globals()["MODE"]
+    assert MODE in ["predict", "train_test", "splitpredict",
+                    "resume", "test"]
+
 
 if TASK == "ex":
     TAG_TO_ILABEL = EXTAG_TO_ILABEL
@@ -132,11 +140,8 @@ elif TASK == "cc":
     TAG_TO_ILABEL = CCTAG_TO_ILABEL
     MAX_DEPTH = MAX_CC_DEPTH
     LOG_DIR = WEIGHTS_DIR + '/cc_logs'
-else:
-    assert False
 
-assert MODE in ["predict", "train_test", "splitpredict",
-                "resume", "test"]
+
 
 # Do not define capitalized global and PARAMS_D key for the same
 # parameter. Define one or the other but not both
@@ -314,7 +319,8 @@ elif TASK == "ex" and MODE == "splitpredict":
         "task": "ex"
     }
 else:
-    assert False
+    PARAMS_D = {}
+    print("***********************PARAMS_D is empty")
 
 
 DEFAULT_PARAMS_D=\

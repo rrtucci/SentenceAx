@@ -48,8 +48,8 @@ class SaxExtraction():
         self.loc_arg_pair = ("", [])
 
         self.extags = ["NONE"] * len(self.orig_sentL_pair[1])
-        self.base_extag_is_assigned = {extag_name: False
-                                       for extag_name in BASE_EXTAGS}
+        self.extag_name_to_assign_bool = {extag_name: False
+                                          for extag_name in BASE_EXTAGS}
         self.extags_are_set = False
 
     def __eq__(self, other):
@@ -80,17 +80,19 @@ class SaxExtraction():
         self.loc_arg_pair = (str0, get_words(str0))
 
     def get_simple_sent(self):
-        li = [self.arg1_pair[1],
-              self.rel_pair[1],
-              self.arg2_pair[1],
-              self.loc_arg_pair[1],
-              self.time_arg_pair[1]]
+        li = [self.arg1_pair[0],
+              self.rel_pair[0],
+              self.arg2_pair[0],
+              self.loc_arg_pair[0],
+              self.time_arg_pair[0]]
         li = [x for x in li if x]
-        return " ".join(li)
+        str0 = " ".join(li)
+        #print("hjki", str0)
+        return str0
 
     def set_is_extagged_flag_to_true(self, extag_name):
         assert extag_name in BASE_EXTAGS
-        self.base_extag_is_assigned[extag_name] = True
+        self.extag_name_to_assign_bool[extag_name] = True
 
     def set_extags_of_2_matches(self, matches, extag_name):
         assert extag_name in BASE_EXTAGS
@@ -229,7 +231,7 @@ class SaxExtraction():
         # sent can have implicit "is", "of", "from"
         # inserted in by hand and indicated by "[is]", "[of]" , "[from]"
         # Note that this is different from explicit "is", "of", "from"
-        rel_is_extagged = self.base_extag_is_assigned["rel"]
+        rel_is_extagged = self.extag_name_to_assign_bool["REL"]
         if (not rel_is_extagged) and len(self.rel_pair[1]) > 0:
             # IS
             if self.rel_pair[0] == '[is]':
@@ -259,8 +261,8 @@ class SaxExtraction():
         -------
 
         """
-        rel_is_extagged = self.base_extag_is_assigned["REL"]
-        arg1_is_extagged = self.base_extag_is_assigned["ARG1"]
+        rel_is_extagged = self.extag_name_to_assign_bool["REL"]
+        arg1_is_extagged = self.extag_name_to_assign_bool["ARG1"]
 
         if rel_is_extagged and \
                 (not arg1_is_extagged) and \
@@ -299,9 +301,9 @@ class SaxExtraction():
         -------
 
         """
-        arg1_is_extagged = self.base_extag_is_assigned["ARG1"]
-        arg2_is_extagged = self.base_extag_is_assigned["ARG2"]
-        rel_is_extagged = self.base_extag_is_assigned["REL"]
+        arg1_is_extagged = self.extag_name_to_assign_bool["ARG1"]
+        arg2_is_extagged = self.extag_name_to_assign_bool["ARG2"]
+        rel_is_extagged = self.extag_name_to_assign_bool["REL"]
 
         if arg1_is_extagged and arg2_is_extagged and \
                 (not rel_is_extagged) and \

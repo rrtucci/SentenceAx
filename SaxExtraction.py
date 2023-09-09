@@ -53,7 +53,7 @@ class SaxExtraction():
         self.arg2 = arg2
         self._arg2_words = None
         
-        self.time = ""
+        self.time_arg = ""
         self._time_arg_words = None
         
         self.loc_arg = ""
@@ -76,7 +76,7 @@ class SaxExtraction():
 
     @property
     def arg1_words(self):
-        if not self.arg1_words:
+        if not self._arg1_words:
             return get_words(self.arg1)
         
     @arg1_words.setter
@@ -85,7 +85,7 @@ class SaxExtraction():
         
     @property
     def rel_words(self):
-        if not self.rel_words:
+        if not self._rel_words:
             return get_words(self.rel)
 
     @rel_words.setter
@@ -94,7 +94,7 @@ class SaxExtraction():
         
     @property
     def arg2_words(self):
-        if not self.arg2_words:
+        if not self._arg2_words:
             return get_words(self.arg2)
         
     @arg2_words.setter
@@ -103,7 +103,7 @@ class SaxExtraction():
         
     @property
     def time_arg_words(self):
-        if not self.time_arg_words:
+        if not self._time_arg_words:
             return get_words(self.time_arg)
         
     @time_arg_words.setter
@@ -112,7 +112,7 @@ class SaxExtraction():
         
     @property
     def loc_arg_words(self):
-        if not self.loc_arg_words:
+        if not self._loc_arg_words:
             return get_words(self.loc_arg)
         
     @loc_arg_words.setter

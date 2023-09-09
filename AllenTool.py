@@ -188,5 +188,5 @@ if __name__ == "__main__":
                                         ftype=ftype,
                                         numbered=True)
 
-    # main1("ss")
-    main1("ex")
+    main1("ss")
+    #main1("ex")

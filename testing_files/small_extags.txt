@@ -2,7 +2,1942 @@
 
 2.
 Simon is quoted as saying `` if you 'd ever seen Widnes , then you 'd know why I was keen to get back to London as quickly as possible '' .
-ARG1 REL REL ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 NONE NONENONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE ARG1 NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONENONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONEARG1 NONE NONE REL REL NONE NONE NONE NONE NONE NONE NONE NONE ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 NONE NONE3.
+Simon is quoted as saying `` if you 'd ever seen Widnes , then you 'd know why I was keen to get back to London as quickly as possible
+I to get back as quickly
+you 'd seen Widnes ever
+Simon as saying then you 'd know why I was keen to get back to London as quickly as possible
+3.
 The couple had no children .
-ARG1 ARG1 REL ARG2 ARG2 NONE4.
+The couple had no children
+4.
 Hercule Poirot is a fictional Belgian detective , created by Agatha Christie .
+Hercule Poirot is a fictional Belgian detective , created by Agatha Christie
+a fictional Belgian detective created by Agatha Christie
+5.
+A more obvious influence on the early Hercule Poirot stories is that of Arthur Conan Doyle .
+A more obvious influence on the early Hercule Poirot stories is that of Arthur Conan Doyle
+6.
+Hercule Poirot also bears a striking resemblance to A. E. W. Mason 's fictional detective -- Inspector Hanaud of the French Surete -- who , first appearing in the 1910 novel At the Villa Rose , predates the writing of the first Hercule Poirot novel by six years .
+Hercule Poirot bears a striking resemblance to A. E. W. Mason 's fictional detective
+7.
+In chapter four of the second Inspector Hanaud novel , The House of the Arrow ( 1924 ) , Hanaud declares sanctimoniously to the heroine , `` You are wise , Mademoiselle ... For , after all , I am Hanaud .
+Hanaud declares sanctimoniously to the heroine You are wise , Mademoiselle ... For , after all , I am Hanaud In chapter four of the second Inspector Hanaud novel
+8.
+Christie 's Hercule Poirot was a francophone Belgian .
+Christie 's Hercule Poirot was a francophone Belgian
+9.
+Hercule Poirot first appearance was in The Mysterious Affair at Styles ( published 1920 ) and his last in Curtain ( published 1975 , the year before Christie died ) .
+Christie died
+Hercule Poirot first appearance was in The Mysterious Affair at Styles ( published 1920
+10.
+On publication of the latter , Hercule Poirot was the only fictional character to be given an obituary in the New York Times ; 6 August 1975 `` Hercule Poirot is Dead ; Famed Belgian Detective '' .
+the only fictional character to be given an obituary in the New York Times 6 August 1975
+Hercule Poirot is Dead
+Hercule Poirot was the only fictional character to be given an obituary in the New York Times 6 August 1975 On publication of the latter
+11.
+Yet this quaint dandified little man who , I was sorry to see , now limped badly , had been in his time one of the most celebrated members of the Belgian police '' .
+I to see
+this quaint dandified little man had been in his time one of the most celebrated members of the Belgian police
+I was sorry to see
+12.
+In the later books , the limp is not mentioned , which suggests Hercule Poirot may have been a temporary wartime injury .
+the limp is not mentioned In the later books
+13.
+Frequent mention is made of his patent-leather shoes , damage to which is frequently a subject of ( for the reader , comical ) misery on his part .
+Frequent mention is made of his patent-leather shoes
+damage to which is frequently a subject of
+14.
+Eating was not only a physical pleasure , Hercule Poirot was also an intellectual research '' .
+Hercule Poirot was also an intellectual research
+Eating was not only a physical pleasure
+15.
+Hercule Poirot , as mentioned in Curtain and The Clocks , is extremely fond of classical music , particularly Mozart and Bach .
+Hercule Poirot is extremely fond of classical music
+16.
+Irritating to Hastings is the fact that Hercule Poirot will sometimes conceal from him important details of his plans , as in The Big Four where Hastings is kept in the dark throughout the climax .
+Irritating to Hastings is the fact that Hercule Poirot will sometimes conceal from him important details of his plans , as in The Big Four
+Hercule Poirot will conceal from him important details of his plans , as in The Big Four sometimes
+Hastings is kept in the dark throughout the climax The Big Four
+17.
+This aspect of Hercule Poirot is less evident in the later novels , partly because there is rarely a narrator so there is no one for Hercule Poirot to mislead .
+This aspect of Hercule Poirot is less evident in the later novels partly because there is rarely a narrator so there is no one
+Hercule Poirot to mislead
+18.
+Hercule Poirot methods focus on getting people to talk .
+Hercule Poirot methods focus on getting people to talk
+19.
+`` To this day Harold is not quite sure what made him suddenly pour out the whole story to a little man to whom he had only spoken a few minutes before '' .
+Harold is not quite sure what made him suddenly pour out the whole story to a little man To this day
+he had only spoken a few minutes before
+20.
+Hercule Poirot leads people to despise you .
+Hercule Poirot leads people to despise you
+people to despise you
+21.
+In chapter 21 of The Murder of Roger Ackroyd , for example , Hercule Poirot talks about a mentally disabled nephew : this proves to be a ruse so that he can find out about homes for the mentally unfit , and in Dumb Witness , Hercule Poirot tells of an elderly invalid mother as a pretence to investigate the local nurses .
+this proves
+Hercule Poirot talks about a mentally disabled nephew In chapter 21 of The Murder of Roger Ackroyd
+this to be a ruse
+he can find out about homes for the mentally unfit
+Hercule Poirot tells of an elderly invalid mother in Dumb Witness
+22.
+Hercule Poirot was in the Brussels police force by 1893 .
+Hercule Poirot was in the Brussels police force by 1893
+23.
+Christie strongly implies that this `` quiet retreat in the Ardennes '' near Spa is the Hercule Poirot family home .
+Christie strongly implies that this `` quiet retreat in the Ardennes '' near Spa is the Hercule Poirot family home
+this `` quiet retreat in the Ardennes '' near Spa is the Hercule Poirot family home
+24.
+Christie is purposefully vague , as Poirot is thought to be elderly even in the early Hercule Poirot novels , and in An Autobiography '' she admitted that she already imagined him to be an old man in 1920 .
+she to be an old man in 1920
+Poirot is thought
+Poirot to be elderly even in the early Hercule Poirot novels , and in An Autobiography
+she admitted that she already imagined him to be an old man in 1920
+Christie is purposefully vague
+she imagined him to be an old man in 1920 already
+25.
+Christie wrote little of Hercule Poirot childhood though in Three Act Tragedy she writes that he comes from a large family with little wealth .
+Christie wrote little of Hercule Poirot childhood
+she writes that he comes from a large family with little wealth in Three Act Tragedy
+he comes from a large family with little wealth
+26.
+`` Gustave ... was not a policeman .
+Gustave was not a policeman
+27.
+As an adult , Hercule Poirot joined the Belgian police force .
+Hercule Poirot joined the Belgian police force
+28.
+Very little mention is made in Christie 's work about this part of his life , but in `` The Nemean Lion '' ( 1939 ) Hercule Poirot himself refers to a Belgian case of his in which `` a wealthy soap manufacturer ... poisoned his wife in order to be free to marry his secretary '' .
+Very little mention is made in Christie 's work about this part of his life
+a wealthy soap manufacturer poisoned his wife in order
+29.
+In the short story The Chocolate Box ( 1923 ) Hercule Poirot provides Captain Arthur Hastings with an account of what he considers to be his only failure .
+The Chocolate Box ( 1923 ) Hercule Poirot provides Captain Arthur Hastings with an account of what he considers to be his only failure
+he considers to be his only failure
+30.
+Nevertheless , he regards the case in `` The Chocolate Box '' , which took place in 1893 , as his only actual failure of detection .
+he regards the case as his only actual failure of detection
+The Chocolate Box took place in 1893
+31.
+Hercule Poirot was also in this period that Poirot shot a man who was firing from a roof onto the public below .
+a man was firing from a roof onto the public below
+Hercule Poirot was also in this period
+Poirot shot a man who was firing from a roof onto the public below
+32.
+Hercule Poirot had been forcibly retired from the Belgian police force prior to the time he met Hastings in 1916 as a refugee on the case retold in The Mysterious Affair at Styles .
+Hercule Poirot had been forcibly retired from the Belgian police force prior to the time
+he met Hastings in 1916 the time
+the case retold in The Mysterious Affair at Styles
+33.
+So much had he become the rage that every rich woman who had mislaid a bracelet or lost a pet kitten rushed to secure the services of the great Hercule Poirot '' .
+every rich woman had mislaid a bracelet
+every rich woman lost a pet kitten
+the rage rushed to secure the services of the great Hercule Poirot
+every rich woman who had mislaid a bracelet or lost a pet kitten to secure the services of the great Hercule Poirot
+34.
+During World War I , Hercule Poirot left Belgium for Britain as a refugee ( although he returned a few times ) .
+Hercule Poirot left Belgium for Britain as a refugee During World War I
+he returned a few times
+35.
+It is clear that Hastings and Hercule Poirot are already friends when they meet in Chapter 2 of the novel , because Hastings tells Cynthia that he has not seen him for `` some years '' .
+they meet in Chapter 2 of the novel
+Hastings tells Cynthia that he has not seen him for `` some years
+he has not seen him
+36.
+The date of 1916 for the case , and the fact that Hastings had met Hercule Poirot in Belgium , is given in Curtain : Hercule Poirot Last Case , Chapter 1 ( Someone had been shot in a village where Hastings was duck-shooting and Hercule Poirot had been called in from the Brussels police to investigate ) .
+Hastings had met Hercule Poirot in Belgium
+The date of 1916 for the case , and the fact that Hastings had met Hercule Poirot in Belgium is given in Curtain
+Someone had been shot in a village
+Hastings was a village
+duck-shooting and Hercule Poirot had been called in from the Brussels police to investigate
+37.
+Readers were told that the British authority learned about Hercule Poirot keen investigative ability from certain Belgian royals .
+Readers were told that the British authority learned about Hercule Poirot keen investigative ability from certain Belgian royals
+the British authority learned about Hercule Poirot keen investigative ability from certain Belgian royals
+38.
+( This building was in fact built in 1936 , decades later than Hercule Poirot fictionally moved in .
+fact built in 1936
+Hercule Poirot fictionally moved in decades later
+This building was in fact
+39.
+The Murder On the Links saw the Belgian pit his grey cells against a French murderer .
+The Murder On the Links saw the Belgian pit his grey cells against a French murderer
+40.
+Hercule Poirot was during this time he met the Countess Vera Rossakoff , a glamorous jewel thief .
+Hercule Poirot was during this time he met the Countess Vera Rossakoff
+he met the Countess Vera Rossakoff this time
+41.
+The history of the Countess is , like Hercule Poirot , steeped in mystery .
+The history of the Countess is like Hercule Poirot
+Hercule Poirot steeped in mystery
+42.
+She claims to have been a member of the Russian aristocracy before the Russian Revolution and suffered greatly as a result , but how much of that story is true is an open question .
+She to have been a member of the Russian aristocracy before the Russian Revolution
+43.
+Even Hercule Poirot acknowledges that Rossakoff has told several wildly varying accounts of her early life .
+Even Hercule Poirot acknowledges that Rossakoff has told several wildly varying accounts of her early life
+Rossakoff has told several wildly varying accounts of her early life
+44.
+Hercule Poirot even sent Miss Carnaby two hundred pounds as a final payoff before her dog kidnapping campaign came to an end .
+Hercule Poirot even sent Miss Carnaby two hundred pounds before her dog kidnapping campaign came to an end
+her dog kidnapping campaign came to an end
+Carnaby is even sent Miss of Hercule Poirot
+45.
+In Murder on the Orient Express , Hercule Poirot allows the murderers to escape justice as well , after he discovers that twelve different people stabbed the victim -- Mr. Ratchett -- in his sleep .
+Hercule Poirot allows the murderers to escape justice as well In Murder on the Orient Express
+the murderers to escape as well justice
+he discovers that twelve different people stabbed the victim
+twelve different people stabbed the victim
+46.
+Hercule Poirot may also be because , since 12 people stabbed the victim , none was certain who delivered the killing blow .
+Hercule Poirot may also be because , since 12 people stabbed the victim , none was certain who delivered the killing blow
+12 people stabbed the victim
+47.
+After his cases in the Middle East , Hercule Poirot returned to Britain .
+Hercule Poirot returned to Britain After his cases in the Middle East
+48.
+Hercule Poirot is also shown to have an love of steam trains , which contrasts Hasting 's love of cars : this is shown in The Mystery of the Blue Train , Murder On The Orient Express , and The ABC Murders ( in the TV series , steam trains are seen in nearly all of the episodes ) .
+Hercule Poirot to have an love of steam trains , which contrasts Hasting 's love of cars
+an love of steam trains contrasts Hasting 's love of cars
+steam trains are seen in nearly all of the episodes
+this is shown in The Mystery of the Blue Train
+Hercule Poirot is also shown
+49.
+In the Big Four , Hercule Poirot pretends to have a younger brother called Achille Poirot .
+a younger brother called Achille Poirot
+Hercule Poirot pretends to have a younger brother In the Big Four
+Hercule Poirot pretends to have a younger brother called Achille Poirot
+50.
+Most of the cases covered by Hercule Poirot private detective agency take place before his retirement to grow marrows , at which time he solves The Murder of Roger Ackroyd .
+the cases covered by Hercule Poirot private detective agency
+Most of the cases take place before his retirement to grow marrows , at which time he solves The Murder of Roger Ackroyd
+he solves The Murder of Roger Ackroyd at which time
+51.
+If the Labours precede the events in Roger Ackroyd , then the Roger Ackroyd case must have taken place around twenty years later than it was published , and so must any of the cases that refer to it .
+the Labours precede the events in Roger Ackroyd
+the Roger Ackroyd case must have taken place around twenty years later then
+it was published
+52.
+One alternative would be that having failed to grow marrows once , Hercule Poirot is determined to have another go , but this is specifically denied by Hercule Poirot himself .
+One alternative would be that having failed to grow marrows once , Hercule Poirot is determined to have another go , but this is specifically denied by Hercule Poirot
+Hercule Poirot is determined to have another go
+this is specifically denied by Hercule Poirot
+Hercule Poirot to have another go
+53.
+Also , in `` The Erymanthian Boar '' , Hercule Poirot is said to have been turned out of Austria by the Nazis , implying that the events of The Labours of Hercules took place after 1937 .
+Hercule Poirot is said in `` The Erymanthian Boar
+Hercule Poirot to have been turned out by the Nazis
+54.
+In terms of a rudimentary chronology , Hercule Poirot speaks of retiring to grow marrows in Chapter 18 of The Big Four ( 1927 ) , which places that novel out of published order before Roger Ackroyd .
+Hercule Poirot speaks of retiring In terms of a rudimentary chronology
+The Big Four places that novel out of published order before Roger Ackroyd
+55.
+The time when cases had drawn him from one end of England to the other was past '' .
+cases had drawn him from one end of England The time
+The time when cases had drawn him from one end of England to the other was past
+56.
+Beginning with Three Act Tragedy ( 1934 ) , Christie had perfected during the inter-war years a sub-genre of Hercule Poirot novel in which Hercule Poirot himself spent much of the first third of the novel on the periphery of events .
+Hercule Poirot spent much of the first third of the novel on the periphery of events Hercule Poirot novel
+Christie had perfected during the inter-war years Beginning with Three Act Tragedy ( 1934
+57.
+In Cat Among the Pigeons , Hercule Poirot entrance is so late as to be almost an afterthought .
+Hercule Poirot entrance is so late as to be almost an afterthought In Cat Among the Pigeons
+58.
+He was forced to become the murderer in Curtain , although Hercule Poirot was for the benefit of others .
+He was forced to become the murderer in Curtain
+He to become the murderer
+Hercule Poirot was for the benefit of others
+59.
+While Hercule Poirot actual death and funeral occurred in Curtain , years after his retirement from active investigation , it was not the first time Hastings attended the funeral of his best friend .
+Hercule Poirot actual death and funeral occurred in Curtain
+it was not the first time
+Hastings attended the funeral of his best friend the first time
+60.
+Hastings , a former British Army officer , first meets Hercule Poirot during Hercule Poirot years as a police officer in Belgium and almost immediately after they both arrive in England .
+Hastings meets Hercule Poirot during Hercule Poirot years as a police officer in Belgium first
+Hastings is a former British Army officer
+Hastings is a former Army officer from United Kingdom
+61.
+Hercule Poirot later emigrate to Argentina , leaving Poirot behind as a `` very unhappy old man '' .
+Hercule Poirot emigrate to Argentina leaving Poirot behind as a `` very unhappy old man later
+Hercule Poirot emigrate to Argentina leaving Poirot behind
+62.
+The detective novelist Ariadne Oliver is Agatha Christie 's humorous self-caricature .
+The detective novelist is Agatha Christie 's humorous self-caricature
+63.
+Hercule Poirot secretary , Miss Felicity Lemon , has few human weaknesses .
+Hercule Poirot secretary has few human weaknesses
+Miss Felicity Lemon is secretary of Hercule Poirot
+64.
+Whether this was during one of Hercule Poirot numerous retirements or before she entered his employment is unknown .
+this was during one of Hercule Poirot numerous retirements
+she entered his employment
+Whether this was during one of Hercule Poirot numerous retirements is unknown
+65.
+These favours usually entail Hercule Poirot being supplied with cases that would interest him .
+cases would interest him
+These favours entail Hercule Poirot being supplied with cases usually
+Hercule Poirot being supplied with cases
+66.
+In Agatha Christie 's Hercule Poirot , Japp was portrayed by Philip Jackson .
+Japp was portrayed by Philip Jackson In Agatha Christie 's Hercule Poirot
+67.
+In Hercule Poirot , Thirteen at Dinner ( 1985 ) , adapted from Lord Edgware Dies , the role of Japp was taken by the actor David Suchet , who would later star as Poirot in the ITV adaptations .
+Thirteen at Dinner adapted from Lord Edgware Dies
+Thirteen at Dinner ( 1985 ) , adapted from Lord Edgware Dies , the role of Japp was taken by the actor David Suchet In Hercule Poirot
+the actor David Suchet would star as Poirot later
+68.
+The Hercule Poirot books take readers through the whole of his life in England , from the first book ( The Mysterious Affair at Styles ) , where he is a refugee staying at Styles , to the last Hercule Poirot book ( Curtain ) , where he visits Styles once again before his death .
+The Hercule Poirot books take readers
+he is a refugee staying at Styles
+a refugee staying at Styles
+he visits Styles once again before his death
+69.
+In between , Hercule Poirot solves cases outside England as well , including his most famous case , Murder on the Orient Express ( 1934 ) .
+Hercule Poirot solves cases outside England as well In between
+70.
+Hercule Poirot became famous with the publication , in 1926 , of The Murder of Roger Ackroyd , whose surprising solution proved controversial .
+Hercule Poirot became famous with the publication , in 1926 , of The Murder of Roger Ackroyd
+71.
+The novel is still among the most famous of all detective novels : Edmund Wilson alludes to Hercule Poirot in the title of his well-known attack on detective fiction , `` Who Cares Who Killed Roger Ackroyd ?
+Who Cares Killed Roger Ackroyd
+Edmund Wilson alludes to Hercule Poirot in the title of his well-known attack on detective fiction , `` Who Cares
+The novel is still among the most famous of all detective novels
+Edmund Wilson alludes to Hercule Poirot in the title of his well-known attack on detective fiction
+72.
+The last of these , a tale of multiple homicide upon a Nile steamer , was judged by the celebrated detective novelist John Dickson Carr to be among the ten greatest mystery novels of all time .
+a tale of multiple homicide upon a Nile steamer was judged by the celebrated detective novelist The last of these , a tale of multiple homicide upon a Nile steamer , was judged by the celebrated detective novelist John Dickson Carr to be among the ten greatest mystery novels of all time
+73.
+The 1942 novel Five Little Pigs ( aka Murder in Retrospect ) , in which Hercule Poirot investigates a murder committed sixteen years before by analysing various accounts of the tragedy , is a Rashomon-like performance that critic and mystery novelist Robert Barnard called the best of the Christie novels .
+Hercule Poirot investigates a murder committed sixteen years before by analysing various accounts of the tragedy The 1942 novel
+a murder committed sixteen years before by analysing various accounts of the tragedy
+The 1942 novel Five Little Pigs ( aka Murder in Retrospect ) , in which Hercule Poirot investigates a murder is a Rashomon-like performance
+that critic and mystery novelist Robert Barnard called the best of the Christie novels
+74.
+The first actor to portray Hercule Poirot was Charles Laughton .
+The first actor to portray Hercule Poirot
+The first actor to portray Hercule Poirot was Charles Laughton
+75.
+Austin Trevor debuted the role of Hercule Poirot on screen in the 1931 British film Alibi .
+Austin Trevor debuted the role of Hercule Poirot on screen in the 1931 British film Alibi
+76.
+Hercule Poirot was based on the stage play .
+Hercule Poirot was based on the stage play
+77.
+Leslie S. Hiscott directed the first two films , with Henry Edwards taking over for the third .
+Leslie S. Hiscott directed the first two films
+Henry Edwards taking over for the third
+78.
+Albert Finney played Hercule Poirot in 1974 in the cinematic version of Murder on the Orient Express .
+Albert Finney played Hercule Poirot in 1974 in the cinematic version of Murder on the Orient Express
+79.
+Finney is the only actor to receive an Academy Award nomination for playing Hercule Poirot , though he did not win .
+Finney is the only actor to receive an Academy Award nomination for playing Hercule Poirot
+the only actor to receive an Academy Award nomination for playing Hercule Poirot
+he did not win
+80.
+Peter Ustinov played Hercule Poirot a total of six times , starting with Death on the Nile ( 1978 ) .
+Peter Ustinov played a total of six times
+81.
+When Christie 's daughter , Rosalind Hicks , observed Ustinov during a rehearsal , she said , `` That 's not Poirot !
+Christie 's daughter observed Ustinov during a rehearsal
+she said That 's not Poirot When Christie 's daughter , Rosalind Hicks , observed Ustinov during a rehearsal
+That 's not Poirot
+Rosalind Hicks is daughter of Christie
+82.
+Unlike earlier adaptations that were set during the time in which the novels were written , however , these TV movies were set in the contemporary era .
+earlier adaptations were set during the time
+the novels were written the time
+these TV movies were set in the contemporary era
+83.
+David Suchet considers his performance as Japp to be `` possibly the worst performance of his career '' .
+David Suchet considers his performance as Japp to be `` possibly the worst performance of his career
+his performance as Japp to be possibly the worst performance of his career
+84.
+David Suchet has starred as the eponymous detective in Agatha Christie 's Hercule Poirot in the ITV series since 1989 .
+David Suchet has starred as the eponymous detective in Agatha Christie 's Hercule Poirot in the ITV series since 1989
+85.
+In late 2011 , ITV announced that Hercule Poirot would be filming the remaining Poirot stories in 2012 dead link date = March 2013 .
+ITV announced that Hercule Poirot would be filming the remaining Poirot stories in 2012 dead link date In late 2011
+Hercule Poirot would be filming the remaining Poirot stories in 2012 dead link date
+86.
+As a result , Suchet will have filmed adaptations of every Hercule Poirot novel , and all but one Hercule Poirot short story .
+Suchet will have filmed adaptations of every Hercule Poirot novel
+87.
+In 2004 , NHK ( Japanese public TV network ) produced a 39 episode anime series titled Agatha Christie 's Great Detectives Hercule Poirot and Marple , as well as a manga series under the same title released in 2005 .
+NHK produced a 39 episode anime series titled Agatha Christie 's Great Detectives Hercule Poirot and Marple , as well as a manga series under the same title In 2004
+a 39 episode anime series titled Agatha Christie 's Great Detectives
+the same title released in 2005
+88.
+The series , adapting several of the best-known Hercule Poirot and Marple stories , ran from 4 July 2004 through 15 May 2005 , and has since been shown in repeated reruns on NHK and other networks in Japan .
+The series adapting several of the best-known Hercule Poirot and Marple stories
+The series , adapting several of the best-known Hercule Poirot and Marple stories ran from 4 July 2004 through 15
+May 2005 has been shown in repeated reruns on NHK and other networks in Japan since
+89.
+On 22 February 1945 , `` speaking from London , Agatha Christie introduced the initial broadcast of the Hercule Poirot series via shortwave '' .
+Agatha Christie introduced the initial broadcast of the Hercule Poirot series via shortwave On 22 February 1945
+90.
+In Neil Simon 's Murder By Death , American actor James Coco plays `` Milo Perrier '' , a parody of Hercule Poirot .
+American actor James Coco plays Milo Perrier In Neil Simon 's Murder By Death
+James Coco is actor from United States
+91.
+Tony Randall portrayed Hercule Poirot in The Alphabet Murders a 1965 film also known as The ABC Murders .
+a 1965 film known as The ABC Murders
+Tony Randall portrayed Hercule Poirot in The Alphabet
+92.
+Much of the story , set in contemporary times , was played for comedy , with Hercule Poirot investigating the murders while evading the attempts by Hastings ( Robert Morley ) and the police to get him out of England and back to Belgium .
+the story set in contemporary times
+Much of the story was played for comedy
+Hercule Poirot investigating the murders while evading the attempts by Hastings ( Robert Morley ) and the police
+Hercule Poirot investigating the murders evading the attempts by Hastings ( Robert Morley ) and the police
+93.
+Dudley Jones played Poirot in the film The Strange Case of the End of Civilization as We Know Hercule Poirot ( 1977 ) .
+Dudley Jones played Poirot in the film
+We Know Hercule Poirot
+94.
+Hercule Poirot would go on to use the `` little grey cells '' line countless times throughout Agatha Christie 's fiction .
+Hercule Poirot would go on
+Hercule Poirot to use the `` little grey cells line countless times throughout Agatha Christie 's fiction
+95.
+The Belgian brewery Brasserie Ellezelloise makes a highly rated stout called Hercule with a moustachioed caricature of Hercule Poirot on the label .
+The Belgian brewery makes a highly rated stout called Hercule with a moustachioed caricature of Hercule Poirot on the label
+a highly rated stout called Hercule
+96.
+In the final host segment of Mystery Science Theater 3000s episode `` The Rebel Set '' , Tom Servo dresses up as Hercule Poirot and impersonates him in an attempt to discover the identity of B-movie actor Merritt Stone .
+Tom Servo dresses up as Hercule Poirot In the final host segment of Mystery Science Theater
+Tom Servo impersonates him in an attempt
+97.
+Jason Alexander played Hercule Poirot in episode 108 of Muppets Tonight in a spoof called `` Murder on the Disoriented Express '' .
+Jason Alexander played Hercule Poirot in episode 108 of Muppets Tonight in a spoof
+a spoof called Murder on the Disoriented Express
+98.
+Hercule Poirot is parodied twice in sketch show That Mitchell and Webb Look , where he is played by David Mitchell ; one sketch sees him identifying a killer due to her use of `` the evil voice '' -- a voice that only murderers use -- admitting that he otherwise had no evidence , and a later sketch sees him meeting a ship captain who is also played by Mitchell .
+Hercule Poirot is parodied twice in sketch
+only murderers use a voice that only murderers use -- admitting that he otherwise had no evidence , and a later sketch sees him meeting a ship captain who is also played by Mitchell .
+a ship captain is also played by Mitchell
+a voice that only murderers use admitting that he otherwise had no evidence , and a later sketch sees him meeting a ship captain
+he otherwise had no evidence
+he is played by David Mitchell
+one sketch sees him identifying a killer due to her use of `` the evil voice
+him identifying a killer
+a later sketch sees him meeting a ship captain
+him meeting That Mitchell and Webb Look , where he is played by David Mitchell one sketch sees him identifying a killer due to her use of `` the evil voice '' -- a voice that only murderers use -- admitting that he otherwise had no evidence , and a later sketch sees him meeting a ship captain who is also played by Mitchell
+99.
+Hercule Poirot is a fictional Belgian detective .
+Hercule Poirot is a fictional Belgian detective
+100.
+Hercule Poirot is a francophone Belgian .
+Hercule Poirot is a francophone Belgian
+101.
+Hercule Poirot is the only fictional character to be given an obituary in the New York Times ; 6 August 1975 `` Hercule Poirot is Dead ; Famed Belgian Detective '' .
+the only fictional character to be given an obituary in the New York Times 6 August 1975
+Hercule Poirot is Dead
+Hercule Poirot is the only fictional character to be given an obituary in the New York Times 6 August 1975
+102.
+Hercule Poirot is Dead ; Famed Belgian Detective '' .
+Hercule Poirot is Dead
+103.
+Hercule Poirot is an intellectual research .
+Hercule Poirot is an intellectual research
+104.
+Hercule Poirot is a fairly conventional , clue-based detective .
+Hercule Poirot is a fairly conventional , clue-based detective
+105.
+Hercule Poirot is Murder on the Links .
+Hercule Poirot is Murder on the Links
+106.
+Hercule Poirot is a pretence to investigate the local nurses .
+Hercule Poirot is a pretence to investigate the local nurses
+a pretence to investigate the local nurses
+107.
+Hercule Poirot is Roman Catholic .
+Hercule Poirot is Roman Catholic
+108.
+Hercule Poirot is a Roman Catholic .
+Hercule Poirot is a Roman Catholic
+109.
+Hercule Poirot is an adult .
+Hercule Poirot is an adult
+110.
+Hercule Poirot is a refugee on the case retold in The Mysterious Affair .
+Hercule Poirot is a refugee on the case
+the case retold in The Mysterious Affair
+Hercule Poirot is a refugee on the case
+111.
+Hercule Poirot is a refugee ( although he returned a few times ) .
+Hercule Poirot is a refugee
+he returned a few times
+112.
+Hercule Poirot is a police officer in Belgium .
+Hercule Poirot is a police officer in Belgium
+113.
+Hercule Poirot is a poor private detective .
+Hercule Poirot is a poor private detective
+114.
+Emil Kraepelin ( 15 February 1856 -- 7 October 1926 ) was a German psychiatrist .
+Emil Kraepelin was a German psychiatrist
+115.
+Emil Kraepelin was first introduced to biology by Emil Kraepelin brother Karl , 10 years older and , later , the director of the Zoological Museum of Hamburg .
+Emil Kraepelin was introduced to biology by Emil Kraepelin brother Karl , 10 years older and , later first
+Karl is brother of Emil Kraepelin
+116.
+While there , Emil Kraepelin wrote a prize-winning essay , `` The Influence of Acute Illness in the Causation of Mental Disorders '' .
+Emil Kraepelin wrote a prize-winning essay While there
+117.
+Emil Kraepelin received Emil Kraepelin medical degree ( M.D. ) in 1878 .
+Emil Kraepelin received Emil Kraepelin medical degree in 1878
+118.
+In 1879 , Emil Kraepelin went to work with Bernhard von Gudden at the University of Munich , where Emil Kraepelin completed Emil Kraepelin thesis , `` The Place of Psychology in Psychiatry '' .
+Emil Kraepelin completed Emil Kraepelin thesis
+Emil Kraepelin went to work with Bernhard von Gudden at the University of Munich In 1879
+Emil Kraepelin went to work with Bernhard von Gudden at the University of Munich
+119.
+Emil Kraepelin major work , Compendium der Psychiatrie , was first published in 1883 .
+Emil Kraepelin major work was published in 1883 first
+120.
+In 1886 , at the age of 30 , Emil Kraepelin was named professor of psychiatry at the University of Dorpat ( today the University of Tartu ) in what is today Estonia ( see Burgmair et al. , Vol IV ) .
+Emil Kraepelin was named professor of psychiatry at the University of Dorpat In 1886 at the age of 30
+121.
+Four years later , Emil Kraepelin became department head at the University of Heidelberg , where Emil Kraepelin remained until 1903 .
+Emil Kraepelin became department head at the University of Heidelberg Four years later
+Emil Kraepelin remained until 1903
+122.
+Whilst at Dorpat Emil Kraepelin became the director of the eighty-bed University Clinic .
+Whilst at Dorpat Emil Kraepelin became the director of the eighty-bed University Clinic
+123.
+There Emil Kraepelin began to study and record many clinical histories in detail and `` was led to consider the importance of the course of the illness with regard to the classification of mental disorders '' .
+Emil Kraepelin began to study and record many clinical histories in detail and `` was led to consider the importance of the course of the illness with regard to the classification of mental disorders There
+Emil Kraepelin began to study
+Emil Kraepelin began to record many clinical histories
+124.
+In 1903 Emil Kraepelin moved to Munich to take up post as Professor of Clinical Psychiatry at the University of Munich .
+Emil Kraepelin moved to Munich to take up post as Professor of Clinical Psychiatry at the University of Munich In 1903
+Emil Kraepelin to take up post as Professor of Clinical Psychiatry at the University of Munich
+125.
+Emil Kraepelin was elected a member of the Royal Swedish Academy of Sciences in 1908 .
+Emil Kraepelin was elected a member of the Royal Swedish Academy of Sciences in 1908
+126.
+In 1912 at the request of the German Society of Psychiatry , Emil Kraepelin began plans to establish a centre for research .
+Emil Kraepelin began plans to establish a centre for research In 1912 at the request of the German Society of Psychiatry
+Emil Kraepelin began to establish a centre
+127.
+Following a large donation from the Jewish German American banker James Loeb who had at one time been a patient , and promises of support from ` patrons of science ' , the German Institute for Psychiatric Research was founded in 1917 in Munich .
+the German Institute for Psychiatric Research was founded in 1917 in Munich Following a large donation from the Jewish German American banker James Loeb who had at one time been a patient , and promises of support from ` patrons of science
+James Loeb is Jewish banker of German American
+128.
+The German American Rockefeller family 's Rockefeller Foundation made a large donation enabling the development of a new dedicated building for the institute , along Emil Kraepelin guidelines , which was officially opened in 1928 .
+The German American Rockefeller family 's Rockefeller Foundation made a large donation enabling the development of a new dedicated building for the institute ,
+a large donation enabling the development of a new dedicated building for the institute
+Emil Kraepelin guidelines was officially opened in 1928
+129.
+The final edition of Emil Kraepelin Textbook of Psychiatry was published in 1927 , shortly after Emil Kraepelin death .
+The final edition of Emil Kraepelin Textbook of Psychiatry was published in 1927 shortly after Emil Kraepelin death
+130.
+Kraepelin announced that Emil Kraepelin had found a new way of looking at mental illness .
+Kraepelin announced that Emil Kraepelin had found a new way of looking at mental illness
+Emil Kraepelin had found a new way of looking at mental illness
+131.
+In fact , it was precisely because of the demonstrated inadequacy of such methods that Kraepelin developed Emil Kraepelin new diagnostic system .
+it was precisely because of the demonstrated inadequacy of such methods
+Kraepelin developed Emil Kraepelin new diagnostic system
+132.
+Kraepelin is specifically credited with the classification of what was previously considered to be a unitary concept of psychosis , into two distinct forms ( known as the Kraepelinian dichotomy ) : Drawing on Emil Kraepelin long-term research , and using the criteria of course , outcome and prognosis , Emil Kraepelin developed the concept of dementia praecox , which Emil Kraepelin defined as the `` sub-acute development of a peculiar simple condition of mental weakness occurring at a youthful age '' .
+Emil Kraepelin developed the concept of dementia praecox , which Emil Kraepelin defined as the `` sub-acute development of a peculiar simple condition of mental weakness occurring at a youthful age ''
+Kraepelin is specifically credited
+the concept of dementia praecox defined as the `` sub-acute development of a peculiar simple condition of mental weakness
+a peculiar simple condition of mental weakness occurring at a youthful age
+133.
+In the sixth edition of the Lehrbuch in 1899 all three of these clinical types are treated as different expressions of one disease , dementia praecox .
+all three of these clinical types are treated as different expressions of one disease In the sixth edition of the Lehrbuch in 1899
+134.
+One of the cardinal principles of Emil Kraepelin method was the recognition that any given symptom may appear in virtually any one of these disorders ; e.g. , there is almost no single symptom occurring in dementia praecox which can not sometimes be found in manic-depression .
+dementia praecox can not be found in manic-depression sometimes
+any given symptom may appear in virtually any one of these disorders
+almost no single symptom occurring in dementia praecox
+135.
+Thus , Emil Kraepelin system is a method for pattern recognition , not grouping by common symptoms .
+Emil Kraepelin system is a method for pattern recognition , not grouping by common symptoms
+136.
+Generally speaking , there tend to be more schizophrenics among the relatives of schizophrenic patients than in the general population , while manic-depression is more frequent in the relatives of manic-depressives .
+there tend to be more schizophrenics among the relatives of schizophrenic patients than in the general population
+manic-depression is more frequent in the relatives of manic-depressives
+137.
+Emil Kraepelin believed that schizophrenia had a deteriorating course in which mental function continuously ( although perhaps erratically ) declines , while manic-depressive patients experienced a course of illness which was intermittent , where patients were relatively symptom-free during the intervals which separate acute episodes .
+Emil Kraepelin believed that schizophrenia had a deteriorating course while manic-depressive patients experienced a course of illness
+schizophrenia had a deteriorating course
+patients were relatively symptom-free during the intervals
+the intervals separate acute episodes
+manic-depressive patients experienced a course of illness which was intermittent ,
+a course of illness was intermittent
+138.
+This led Emil Kraepelin to name what we now know as schizophrenia , dementia praecox ( the dementia part signifying the irreversible mental decline ) .
+This led Emil Kraepelin to name what we now know as schizophrenia , dementia praecox
+the dementia part signifying the irreversible mental decline
+Emil Kraepelin to name what we now know as schizophrenia , dementia praecox
+we know as schizophrenia , dementia praecox now
+139.
+Emil Kraepelin attributed this mainly to degeneration .
+Emil Kraepelin attributed this mainly to degeneration
+140.
+The concept of ` psychopathic inferiorities ' had been recently popularised in Germany by Julius Ludwig August Koch , who proposed congenital and acquired types .
+The concept of ` psychopathic inferiorities had been popularised in Germany by Julius Ludwig August Koch recently
+Julius Ludwig August Koch proposed congenital
+141.
+Others , such as Gustav Aschaffenburg , argued for a varying combination of causes .
+Others , such as Gustav Aschaffenburg argued for a varying combination of causes
+142.
+Kurt Schneider criticized Kraepelin 's nosology for appearing to be a list of behaviors that Emil Kraepelin considered undesirable , rather than medical conditions , though Schneider 's alternative version has also been criticised on the same basis .
+Kurt Schneider criticized Kraepelin 's nosology for appearing to be a list of behaviors
+Emil Kraepelin considered undesirable , rather than medical conditions
+Schneider 's alternative version has also been criticised on the same basis
+143.
+The issues would today mainly be considered under the category of personality disorders , or in terms of Emil Kraepelin focus on psychopathy .
+The issues would mainly be considered under the category of personality disorders , or in terms of Emil Kraepelin
+144.
+Upon moving to become Professor of Clinical Psychiatry at the University of Munich in 1903 , Emil Kraepelin increasingly wrote on social policy issues .
+Emil Kraepelin increasingly wrote on social policy issues Upon moving to become Professor of Clinical Psychiatry at the University of Munich in 1903
+145.
+Emil Kraepelin appears to have held Lamarckian concepts of evolution , such that cultural deterioration could be inherited .
+Emil Kraepelin appears
+Emil Kraepelin to have held Lamarckian concepts of evolution
+cultural deterioration could be inherited
+146.
+Brune states that Emil Kraepelin nosological system was ` to a great deal , built on the degeneration paradigm ' .
+a great deal built on the degeneration paradigm
+Brune states that Emil Kraepelin nosological system was ` to a great deal
+Emil Kraepelin nosological system was to a great deal
+147.
+Kraepelin 's great contribution in classifying schizophrenia and manic-depression remains relatively unknown to the general public , and Emil Kraepelin work , which had neither the literary quality nor paradigmatic power of Freud 's , is little read outside scholarly circles .
+Kraepelin 's great contribution in classifying schizophrenia and manic-depression remains relatively unknown to the general public
+Emil Kraepelin work had neither the literary quality nor paradigmatic power of Freud 's
+Emil Kraepelin work is little read outside scholarly circles
+148.
+Emil Kraepelin contributions were to a large extent marginalized throughout a good part of the twentieth century , during the success of Freudian etiological theories .
+Emil Kraepelin contributions were to a large extent
+a large extent marginalized throughout a good part of the twentieth century
+149.
+Emil Kraepelin in general has been described as a ` scientific manager ' and political operator , who developed a large-scale , clinically oriented , epidemiological research programme .
+Emil Kraepelin in general has been described as a ` scientific manager ' and political operator
+150.
+Despite proclaiming high clinical standards for Emil Kraepelin to gather information ` by means of expert analysis of individual cases ' , Emil Kraepelin would also draw on the reported observations of officials not trained in psychiatry .
+Emil Kraepelin to gather information
+Emil Kraepelin would draw on the reported observations of officials
+officials not trained in psychiatry
+151.
+One of Emil Kraepelin own famous contributions to this journal also appeared in the form of a monograph ( 105 p. ) entitled Uber Sprachstorungen im Traume ( on language disturbances in dreams ) .
+a monograph entitled Uber Sprachstorungen im Traume
+One of Emil Kraepelin own famous contributions to this journal also appeared in the form of a monograph
+famous contributions to this journal also appeared in the form of a monograph
+152.
+Emil Kraepelin , on the basis on the dream-psychosis analogy , studied for more than 20 years language disorder in dreams in order to study indirectly schizophasia .
+Emil Kraepelin studied for more than 20 years language disorder in dreams in order
+153.
+The dreams Kraepelin collected are mainly Emil Kraepelin own .
+The dreams collected Kraepelin
+The dreams Kraepelin collected are mainly Emil Kraepelin own
+154.
+Emil Kraepelin is a German psychiatrist .
+Emil Kraepelin is a German psychiatrist
+155.
+Emil Kraepelin is department head .
+Emil Kraepelin is department head
+156.
+Emil Kraepelin is the director of the eighty-bed University Clinic .
+Emil Kraepelin is the director of the eighty-bed University Clinic
+Emil Kraepelin is the director of the eighty - bed University Clinic
+157.
+Emil Kraepelin is Professor of Clinical Psychiatry .
+Emil Kraepelin is Professor of Clinical Psychiatry
+Emil Kraepelin is Professor of Clinical Psychiatry
+158.
+Emil Kraepelin is the `` sub-acute development of a peculiar simple condition of mental weakness .
+Emil Kraepelin is the `` sub-acute development of a peculiar simple condition of mental weakness
+159.
+Emil Kraepelin is the Kraepelinian dichotomy .
+Emil Kraepelin is the Kraepelinian dichotomy
+160.
+Emil Kraepelin is a ` moral defect ' .
+Emil Kraepelin is a ` moral defect
+161.
+The building is unique due to Evoluon very futuristic design , resembling a landed flying saucer .
+The building is unique due to Evoluon very futuristic design
+162.
+It was designed by architect Louis Christiaan Kalff , while the exhibition was conceived by James Gardner .
+It was designed by architect Louis Christiaan Kalff
+the exhibition was conceived by James Gardner
+163.
+The building was based on an idea by Frits Philips , who originally made a sketch of the building on a paper napkin .
+The building was based on an idea by Frits Philips
+Frits Philips made a sketch of the building on a paper napkin originally
+164.
+Frits Philips wanted to give the people of Eindhoven a beautiful and educational gift to celebrate the 75th anniversary of the company that bears his family name .
+the people of Eindhoven to celebrate the 75th anniversary of the company
+the company bears his family name
+Frits Philips wanted to give the people of Eindhoven a beautiful and educational gift
+Frits Philips wanted to give the people of Eindhoven a beautiful and educational gift to celebrate the 75th anniversary of the company
+165.
+But when competing science museums opened in other cities , the number of visitors to Evoluon declined every year .
+competing science museums opened in other cities
+the number of visitors to Evoluon declined every year when competing science museums opened in other cities
+166.
+Evoluon is chiefly remembered in the UK from Bert Haanstra 's wordless short film , titled simply Evoluon .
+Evoluon is chiefly remembered in the UK from Bert Haanstra 's wordless short film
+Bert Haanstra 's wordless short film titled simply Evoluon
+167.
+Commissioned by Philips to publicise the museum , Evoluon was shown as a trade test colour film on the BBC from 1968 to 1972 .
+Evoluon was shown as a trade test colour film on the BBC
+168.
+In this philosophical school of thought , the aim is to instill students with the `` essentials '' of academic knowledge , enacting a back-to-basics approach .
+the aim is to instill students with the `` essentials '' of academic knowledge In this philosophical school of thought
+169.
+This core curriculum involves such areas that include the study of the surrounding environment , basic natural laws , and the disciplines that promote a happier , more educated living .
+This core curriculum involves such areas that include the study of the surrounding environment , basic natural laws , and the disciplines
+such areas include the study of the surrounding environment , basic natural laws , and the disciplines
+the disciplines promote a happier , more educated living
+170.
+Essentialism is the most typically enacted philosophy in American classrooms today .
+Essentialism is the most typically enacted philosophy in American classrooms today
+171.
+The role of the teacher as the leader of the classroom is a very important tenet of Educational essentialism .
+The role of the teacher as the leader of the classroom is a very important tenet of Educational essentialism
+a very important tenet is the leader of the classroom
+172.
+The Essentialist movement first began in the United States in the year 1938 .
+The Essentialist movement began in the United States in the year first
+173.
+In Atlantic City , New Jersey , a group met for the first time called `` The Essentialist 's Committee for the Advancement of Education '' .
+a group met for the first time In Atlantic City
+the first time called The Essentialist 's Committee for the Advancement of Education
+174.
+The term essentialist first appeared in the book An Introduction to the Philosophy of Education which was written by Michael John Demiashkevich .
+The term appeared in the book first
+the Philosophy of Education was written by Michael John Demiashkevich
+175.
+In his book , Demiashkevich labels some specific educators ( including William C. Bagley ) as `` essentialists '' .
+Demiashkevich labels some specific educators ( including William C. Bagley as `` essentialists In his book
+176.
+Demiashkevich compared the essentialists to the different viewpoints of the Progressive Education Association .
+Demiashkevich compared the essentialists to the different viewpoints of the Progressive Education Association
+177.
+One point that Bagley noted was that students in the U.S. were not getting an education on the same levels as students in Europe who were the same age .
+One point noted Bagley
+students in Europe were the same age
+One point that Bagley noted was that students in the U.S. were not getting an education on the same levels as students in Europe
+students in the U.S. were not getting an education
+178.
+A recent branch has emerged within the essentialist school of thought called `` neoessentialism '' .
+A recent branch has emerged within the essentialist school of thought
+thought called neoessentialism
+179.
+The most notable change within this school of thought is that Educational essentialism called for the creation of a new discipline , computer science .
+The most notable change within this school of thought is that Educational essentialism called for the creation of a new discipline
+Educational essentialism called for the creation of a new discipline
+180.
+William Bagley ( 1874 -- 1946 ) was an important historical essentialist .
+William Bagley was an important historical essentialist
+181.
+William C. Bagley completed his undergraduate degree at Michigan Agricultural College in 1895 .
+William C. Bagley completed his undergraduate degree at Michigan Agricultural College in 1895
+182.
+He believed that liberal arts material was important in teacher education .
+He believed that liberal arts material was important in teacher education
+liberal arts material was important in teacher education
+183.
+Lastly , Bagley wrote of the importance of accuracy , thoroughness and effort on part of the student in the classroom .
+Bagley wrote of the importance of accuracy , thoroughness and effort
+184.
+Another important essentialist is E.D. Hirsch ( 1928 - ) .
+Another important essentialist is E.D. Hirsch
+185.
+The Core Knowledge Schools were founded on the philosophy of essentialist E.D. Hirsch .
+The Core Knowledge Schools were founded on the philosophy of essentialist E.D. Hirsch
+186.
+Although it is difficult to maintain a pure and strict essentialist-only curriculum , these schools have the central aim of establishing a common knowledge base for all citizens .
+these schools have the central aim of establishing a common knowledge base for all citizens
+187.
+To do so , Educational essentialism follow a nation-wide , content-specific , and teacher-centered curriculum .
+Educational essentialism follow a nation-wide , content-specific , and teacher-centered curriculum
+188.
+One of the positive critiques of essentialism is the stability of the education .
+One of the positive critiques of essentialism is the stability of the education
+189.
+Because essentialism is relatively conservative and focuses on disciplines which are relatively stable , Educational essentialism is a rather consistent form of education .
+essentialism is relatively conservative
+essentialism focuses on disciplines
+disciplines are relatively stable
+Educational essentialism is a rather consistent form of education
+190.
+However , because Essentialism is largely teacher-centered , the role of the student is often called into question .
+Essentialism is largely teacher-centered
+the role of the student is called into question often
+191.
+Presumably , in an essentialist classroom , the teacher is the one designing the curriculum for the students based upon the core disciplines .
+the teacher is the one designing the curriculum for the students in an essentialist classroom
+the one designing the curriculum for the students
+the students based upon the core disciplines
+192.
+The teacher 's evaluation role undermines students ' interest in study .
+The teacher 's evaluation role undermines students ' interest in study
+193.
+This philosophy of education is very traditional in the mindset of passing on the knowledge of the culture via the academic disciplines .
+This philosophy of education is very traditional in the mindset of passing on the knowledge of the culture via the academic disciplines
+194.
+Educational essentialism is an educational philosophy whose adherents believe that children should learn the traditional basic subjects thoroughly .
+Educational essentialism is an educational philosophy whose adherents believe that children should learn the traditional basic subjects thoroughly
+195.
+Educational essentialism is a rather consistent form of education .
+Educational essentialism is a rather consistent form of education
+196.
+More recently , Progressive education has been viewed as an alternative to the test-oriented instruction legislated by the No Child Left Behind educational funding act .
+Progressive education has been viewed as an alternative to the test-oriented instruction More recently
+the test-oriented instruction legislated by the No Child
+the No Child Left Behind educational funding act
+197.
+The term `` Progressive education '' was engaged to distinguish this education from the traditional curriculum of the 19th century , which was rooted in classical preparation for the university and strongly differentiated by socioeconomic level .
+The term `` Progressive education was engaged to distinguish this education from the traditional curriculum of the 19th century
+The term `` Progressive education to distinguish this education from the traditional curriculum of the 19th century
+the traditional curriculum of the 19th century was rooted in classical preparation for the university
+the traditional curriculum of the 19th century strongly differentiated by socioeconomic level
+198.
+Locke first speculated , `` truth and knowledge ... are out of observation and experience rather than manipulation of accepted or given ideas `` ( Locke as cited in Hayes , 2007 , p. 2 ) .
+manipulation of accepted
+manipulation of given ideas
+Locke cited in Hayes , 2007
+Locke speculated truth and knowledge ... are out of observation and experience first
+truth and knowledge are out of observation and experience
+199.
+John Dewey , a principal figure in this movement from the 1880s to 1904 , set the tone for educational philosophy as well as concrete school reforms .
+John Dewey set the tone for educational philosophy as well as concrete school reforms
+John Dewey is a principal figure in this movement
+200.
+What Education Is : Education according to Dewey is the `` participation of the individual in the social consciousness of the race '' ( Dewey , 1897 , para .
+Education Is
+What Education Is : Education according to Dewey is the `` participation of the individual in the social consciousness of the race
+201.
+A child 's own instincts will help develop the material that is presented to them .
+A child 's own instincts will help develop the material
+the material is presented to them
+202.
+Knowledge is a social condition and it is important to help students construct their own learning , as stated : `` Hence it is impossible to prepare the child for any precise set of conditions .
+Knowledge is a social condition
+203.
+What the School Is `` Education fails because Progressive education neglects this fundamental principle of the school as a form of community life .
+Progressive education neglects this fundamental principle of the school as a form of community life
+the School Is
+Education fails because Progressive education neglects this fundamental principle of the school as a form of community life
+204.
+Progressive education conceives the school as a place where certain information is to be given , where certain lessons are to be learned , or where certain habits are to be formed '' ( Dewey , 1897 , para .
+Progressive education conceives the school as a place
+certain information is a place where certain information is to be given , where certain lessons are to be learned , or where certain habits are to be formed
+certain habits to be formed a place where certain information is to be given , where certain lessons are to be learned
+certain information to be given a place where certain information is to be given , where certain lessons are to be learned , or where certain habits are to be formed
+certain lessons are to be learned a place where certain information is to be given , where certain lessons are to be learned , or where certain habits are to be formed
+certain lessons to be learned a place where certain information is to be given , where certain lessons are to be learned , or where certain habits are to be formed
+205.
+The center of the school curriculum should reflect the development of humans in society .
+The center of the school curriculum should reflect the development of humans in society
+206.
+The study of the core subjects ( language , science , history ) should be coupled with Progressive education .
+The study of the core subjects should be coupled with Progressive education
+207.
+38 ) The Nature of Method Method is focused on the child 's powers and interests .
+The Nature of Method Method is focused on the child 's powers and interests
+208.
+If the child is thrown into a passive role as a student , absorbing information , the result is a waste of the child 's education .
+the child is thrown into a passive role as a student
+the result is a waste of the child 's education
+209.
+William Heard Kilpatrick ( 1871 -- 1965 ) was a pupil of Dewey and one of the most effective practitioner of the concept as well as the more adept at proliferating Progressive education and spreading word of the works of Dewey .
+William Heard Kilpatrick was a pupil of Dewey and one of the most effective practitioner of the concept
+1965 ) was a pupil of Dewey
+210.
+The most famous early practitioner of progressive education was Francis Parker ; Progressive education best-known spokesperson was the philosopher John Dewey .
+The most famous early practitioner of progressive education was Francis Parker
+Progressive education best-known spokesperson was the philosopher
+Francis Parker was The most famous early practitioner of progressive education
+211.
+In 1875 Francis Parker became superintendent of schools in Quincy , Massachusetts after spending two years in Germany studying emerging educational trends on the continent .
+Francis Parker became superintendent of schools in Quincy Massachusetts after spending two years in Germany studying emerging educational trends on the continent In 1875
+212.
+Parker 's Quincy System called for child-centered and experience-based learning .
+Parker 's Quincy System called for child-centered and experience-based learning
+213.
+He replaced the traditional curriculum with integrated learning units based on core themes related to the knowledge of different disciplines .
+He replaced the traditional curriculum with integrated learning units
+integrated learning units based on core themes
+core themes related to the knowledge of different disciplines
+214.
+In 1883 Parker left Massachusetts to become Principal of the Cook County Normal School in Chicago , a school that also served to train teachers in Parker 's methods .
+Parker left Massachusetts to become Principal of the Cook County Normal School in Chicago In 1883
+Parker to become Principal of the Cook County Normal School in Chicago
+a school also served to train teachers in Parker 's methods
+a school also served to train teachers in Parker 's methods
+215.
+( Cremin , 136 ) For Dewey the two key goals of developing a cooperative community and developing individuals ' own capacities were not at odds ; they were necessary to each other .
+they were necessary to each other
+Dewey were not at odds
+216.
+This unity of purpose lies at the heart of the progressive education philosophy .
+This unity of purpose lies at the heart of the progressive education philosophy
+217.
+( Cremin , 282 ) Based on Flexner 's demand that the modern curriculum `` include nothing for which an affirmative case can not be made out '' ( Cremin , 281 ) the new school organized its activities around four fundamental fields : science , industry , aesthetics and civics .
+Cremin Based on Flexner 's demand that the modern curriculum `` include nothing
+the modern curriculum include nothing for which an affirmative case can not be made out ''
+an affirmative case can not be made out
+the new school organized its activities
+218.
+The first and second grades carried on a study of community life in which they actually built a city .
+The first and second grades carried on a study of community life
+they actually built a city a study of community life
+219.
+A third grade project growing out of the day to day life of the nearby Hudson river became one of the most celebrated units of Progressive education , a unit on boats , which under the guidance of its legendary teacher Miss Curtis , became an entree into history , geography , reading , writing , arithmetic , science , art and literature .
+A third grade project growing out of the day to day life of the nearby Hudson river
+A third grade project growing out of the day to day life of the nearby Hudson river became one of the most celebrated units of Progressive education
+the most celebrated units of Progressive education became an entree into history , geography , reading , writing , arithmetic , science , art and literature
+220.
+Each of the units called for widely diverse student activities , and each sought to deal in depth with some critical aspect of contemporary civilization .
+Each of the units called for widely diverse student activities
+each to deal in depth
+221.
+During the Great Depression the organization conducted an Eight Year study evaluating the effects of progressive programs .
+the organization conducted an Eight Year study evaluating the effects of progressive programs During the Great Depression
+an Eight Year study evaluating the effects of progressive programs
+222.
+More than 1500 students over four years were compared to an equal number of carefully matched students at conventional schools .
+More than 1500 students over four years were compared to an equal number of carefully matched students at conventional schools
+223.
+Moreover , the study found that the more Progressive education departed from the traditional college preparatory program , the better was the record of the graduates .
+the better was the record of the graduates
+the study found that the more Progressive education departed from the traditional college preparatory program
+the more Progressive education departed from the traditional college preparatory program
+224.
+( Kohn , Schools , 232 ) By mid-century many public school programs had also adopted elements of progressive curriculum .
+Kohn , Schools , 232 ) By mid-century many public school programs had also adopted elements of progressive curriculum
+225.
+( Kohn , Schools , 6,7 ) As the influence of Progressive education pedagogy grew broader and more diffuse , practitioners began to vary their application of progressive principles .
+practitioners to vary their application of progressive principles
+practitioners began
+Kohn , Schools , 6,7 ) As the influence of Progressive education pedagogy grew broader and more diffuse
+226.
+As varying interpretations and practices made evaluation of progressive reforms more difficult to assess , critics began to propose alternative approaches .
+varying interpretations and practices made evaluation of progressive reforms more difficult to assess
+critics began to propose alternative approaches As varying interpretations and practices made evaluation of progressive reforms more difficult to assess
+critics began to propose alternative approaches
+227.
+In 1955 the publication of Rudolf Flesch 's Why Johnny Ca n't Read leveled criticism of reading programs at the progressive emphasis on reading in context .
+the publication of Rudolf Flesch 's Why Johnny Ca n't Read leveled criticism of reading programs at the progressive emphasis on reading in context In 1955
+228.
+The conservative McCarthy era raised questions about the liberal ideas at the roots of the progressive reforms .
+The conservative McCarthy era raised questions about the liberal ideas at the roots of the progressive reforms
+229.
+Against these critics eloquent spokespersons stepped forward in defense of the progressive tradition .
+eloquent spokespersons stepped forward in defense of the progressive tradition Against these critics
+230.
+The Open Classroom movement , led by Herb Kohl and George Dennison , recalled many of Parker 's child centered reforms .
+The Open Classroom movement led by Herb Kohl and George Dennison
+The Open Classroom movement recalled many of Parker 's child
+231.
+President Obama 's children both attended the University of Chicago Laboratory Schools , the progressive school started by John Dewey .
+President Obama 's children attended the University of Chicago Laboratory Schools
+the progressive school started by John Dewey
+232.
+Organizations like the Boy Scouts of America rose , even amidst concerns by opponents of the progressive movement in the United States , because some people felt that social welfare of young men should be maintained through education alone .
+Organizations like the Boy Scouts of America rose because some people felt that social welfare of young men should be maintained through education alone
+some people felt that social welfare of young men should be maintained through education alone
+social welfare of young men should be maintained
+233.
+Soon after his return to the U.S. , Boyce incorporated the Boy Scouts of America on February 8 , 1910 .
+Boyce incorporated the Boy Scouts of America on February 8 Soon after his return to the U.S.
+234.
+A rethinking of education theory following that , along with the subsequent and prevailing conservative political climate , helped to cause progressivism to fall from favor .
+A rethinking of education theory following that , along with the subsequent and prevailing conservative political climate , helped to cause progressivism to fall from favor
+235.
+Progressive education is a place where certain information is to be given , where certain lessons are to be learned , or where certain habits are to be formed '' ( Dewey , 1897 , para .
+Progressive education is a place where certain information is to be given , where certain lessons are to be learned , or where certain habits are to be formed
+certain information is
+certain habits to be formed a place where certain information is to be given , where certain lessons are to be learned , or
+certain information to be given a place where certain information is to be given , where certain lessons are to be learned , or where certain habits are to be formed
+certain lessons are
+certain lessons to be learned
+236.
+Progressive education is a place where certain information is to be given , where certain lessons are to be learned , or where certain habits are to be formed '' ( Dewey , 1897 .
+Progressive education is a place where certain information is to be given , where certain lessons are to be learned , or where certain habits are to be formed
+certain information is a place where certain information is to be given , where certain lessons are to be learned , or where certain habits are to be formed
+certain habits to be formed a place where certain information is to be given , where certain lessons are to be learned
+certain information to be given a place where certain information is to be given , where certain lessons are to be learned , or where certain habits are to be formed
+certain lessons are to be learned a place where certain information is to be given , where certain lessons are to be learned , or where certain habits are to be formed
+certain lessons to be learned a place where certain information is to be given , where certain lessons are to be learned , or where certain habits are to be formed
+237.
+Progressive education is a part of society .
+Progressive education is a part of society
+238.
+An electronic musical instrument is a musical instrument that produces Electronic musical instrument sounds using electronics .
+a musical instrument produces Electronic musical instrument
+An electronic musical instrument is a musical instrument sounds using electronics
+An electronic musical instrument is a musical instrument that produces Electronic musical instrument
+239.
+Electronic musical instrument sounds by outputting an electrical audio signal that ultimately drives a loudspeaker .
+Electronic musical instrument sounds by outputting an electrical audio signal
+an electrical audio signal ultimately drives a loudspeaker
+240.
+All electronic musical instruments can be viewed as a subset of audio signal processing applications .
+All electronic musical instruments can be viewed as a subset of audio signal processing applications
+241.
+Specialized conferences , notably the International Conference on New interfaces for musical expression , have organized to report cutting edge work , as well as to provide a showcase for artists who perform or create music with new electronic music instruments , controllers , and synthesizers .
+artists create music
+artists perform
+Specialized conferences have organized to report cutting edge work
+Specialized conferences have organized to report cutting edge work , as well as to provide a showcase for artists
+Specialized conferences have organized to report cutting edge work
+242.
+The Theremin was notable for being the first musical instrument played without touching Electronic musical instrument .
+The Theremin was notable for being the first musical instrument
+the first musical instrument played
+243.
+Composers who ultimately utilized the Theremin included Varese -- in his piece Ecuatorial ( 1934 ) -- while conductor Leopold Stokowski experimented with Electronic musical instrument use in arrangements from the classical repertory .
+Composers utilized the Theremin ultimately
+Composers who ultimately utilized the Theremin included Varese
+conductor Leopold Stokowski experimented with Electronic musical instrument use in arrangements
+244.
+The next year Henry Cowell commissioned Theremin to create the first electronic rhythm machine , called the Rhythmicon .
+the first electronic rhythm machine called the Rhythmicon
+Henry Cowell commissioned Theremin to create the first electronic rhythm machine The next year
+Henry Cowell commissioned Theremin to create the first electronic rhythm machine , called the Rhythmicon
+245.
+In 1922 , in Paris , Darius Milhaud began experiments with `` vocal transformation by phonograph speed change '' .
+Darius Milhaud began experiments with `` vocal transformation by phonograph speed change In 1922 in Paris
+246.
+The Trautonium was invented in 1928 .
+The Trautonium was invented in 1928
+247.
+In 1929 Laurens Hammond established his company for the manufacture of Electronic musical instrument .
+Laurens Hammond established his company for the manufacture of Electronic musical instrument In 1929
+248.
+He went on to produce the Hammond organ , which was based on the principles of the Telharmonium , along with other developments including early reverberation units .
+the Hammond organ was based on the principles of the Telharmonium
+He went on
+He went on to produce the Hammond organ
+249.
+Electronic musical instrument use of envelope control is significant , since this is perhaps the most significant distinction between the modern synthesizer and other electronic instruments .
+Electronic musical instrument use of envelope control is significant since this is perhaps the most significant distinction between the modern synthesizer and other electronic instruments
+this is perhaps the most significant distinction between the modern synthesizer and other electronic instruments
+250.
+The most commonly used electronic instruments are synthesizers , so-called because Electronic musical instrument artificially generate sound using a variety of techniques .
+The most commonly used electronic instruments are synthesizers because Electronic musical instrument artificially generate sound using a variety of techniques
+Electronic musical instrument artificially generate sound
+251.
+An important technological development was the invention of the Clavivox synthesizer in 1956 by Raymond Scott with subassembly by Robert Moog .
+An important technological development was the invention of the Clavivox synthesizer in 1956 by Raymond Scott with subassembly by Robert Moog
+252.
+The Mark II Music Synthesizer , housed at the Columbia-Princeton Electronic Music Center in New York City .
+The Mark II Music Synthesizer housed at the Columbia-Princeton Electronic Music Center in New York City
+253.
+Designed by Herbert Belar and Harry Olson at RCA , with contributions from Vladimir Ussachevsky and Peter Mauzey , it was installed at Columbia University in 1957 .
+it was installed at Columbia University in 1957
+254.
+The vacuum tube system had to be patched to create timbres .
+The vacuum tube system to be patched to create timbres
+The vacuum tube system to create timbres
+255.
+Buchla later produced a commercial modular synthesizer , the Buchla Music Easel .
+Buchla produced a commercial modular synthesizer later
+256.
+Robert Moog , who had been a student of Peter Mauzey and one of the RCA Mark II engineers , created a synthesizer that could reasonably be used by musicians , designing the circuits while he was at Columbia-Princeton .
+Robert Moog had been a student of Peter Mauzey and one of the RCA Mark II engineers
+Robert Moog created a synthesizer that could reasonably be used by musicians , designing the circuits while he was at Columbia-Princeton
+a synthesizer that could reasonably be used by musicians designing the circuits
+he was at Columbia-Princeton
+II is Mark of RCA
+257.
+The Moog synthesizer was first displayed at the Audio Engineering Society convention in 1964 .
+The Moog synthesizer was displayed at the Audio Engineering Society convention in 1964 first
+258.
+In 1970 , Moog designed the Minimoog , a non-modular synthesizer with a built-in keyboard .
+Moog designed the Minimoog In 1970
+259.
+The Minimoog sold 12,000 units .
+The Minimoog sold 12,000 units
+260.
+In 1935 , another significant development was made in Germany .
+another significant development was made in Germany In 1935
+261.
+Allgemeine Elektrizitats Gesellschaft ( AEG ) demonstrated the first commercially produced magnetic tape recorder , called the Magnetophon .
+Allgemeine Elektrizitats Gesellschaft demonstrated the first commercially produced magnetic tape recorder , called the Magnetophon
+the first commercially produced magnetic tape recorder called the Magnetophon
+262.
+Audio tape , which had the advantage of being fairly light as well as having good audio fidelity , ultimately replaced the bulkier wire recorders .
+Audio tape had the advantage of being fairly light as well as having good audio fidelity
+Audio tape replaced the bulkier wire recorders ultimately
+263.
+The term `` electronic music '' ( which first came into use during the 1930s ) came to include the tape recorder as an essential element : `` electronically produced sounds recorded on tape and arranged by the composer to form a musical composition '' ) Electronic musical instrument was also indispensable to Musique concrete .
+The term `` electronic music came to include the tape recorder as an essential element
+The term `` electronic music to include the tape recorder as an essential element
+Electronic musical instrument was also indispensable to Musique concrete
+electronically produced sounds recorded
+264.
+Much of this manipulation of circuits directly , especially to the point of destruction , was pioneered by Louis and Bebe Barron in the early 1950s , such as their work with John Cage on the Williams Mix and especially in the soundtrack to Forbidden Planet .
+Much of this manipulation of circuits directly , especially to the point of destruction was pioneered by Louis and Bebe Barron
+265.
+The first digital synthesizers were academic experiments in sound synthesis using digital computers .
+The first digital synthesizers were academic experiments in sound synthesis using digital computers
+academic experiments in sound synthesis using digital computers
+266.
+FM synthesis was developed for this purpose ; as a way of generating complex sounds digitally with the smallest number of computational operations per sound sample .
+FM synthesis was developed for this purpose
+267.
+In 1983 Yamaha introduced the first stand-alone digital synthesizer , the DX-7 .
+Yamaha introduced the first stand-alone digital synthesizer In 1983
+268.
+Electronic musical instrument used frequency modulation synthesis ( FM synthesis ) , first developed by John Chowning at Stanford University during the late sixties .
+Electronic musical instrument used frequency modulation synthesis ( FM synthesis ) , first developed by John Chowning at Stanford University during the late sixties
+frequency modulation synthesis developed by John Chowning at Stanford University during the late sixties first
+269.
+The DX7 was the first mass market all-digital synthesizer .
+The DX7 was the first mass market
+270.
+The Fairlight CMI ( Computer Musical Instrument ) , the first polyphonic digital sampler , was the harbinger of sample-based synthesizers .
+The Fairlight CMI was the harbinger of sample-based synthesizers
+271.
+The Synclavier from New England Digital was a similar system .
+The Synclavier from New England Digital was a similar system
+272.
+Jon Appleton ( with Jones and Alonso ) invented the Dartmouth Digital Synthesizer , later to become the New England Digital Corp 's Synclavier .
+Jon Appleton ( with Jones and Alonso invented the Dartmouth Digital Synthesizer
+273.
+Iannis Xenakis began what is called musique stochastique , or stochastic music , which is a method of composing that employs mathematical probability systems .
+stochastic music is a method of composing that employs mathematical probability systems
+Iannis Xenakis began what is called musique stochastique , or stochastic music
+274.
+Different probability algorithms were used to create a piece under a set of parameters .
+Different probability algorithms were used to create a piece under a set of parameters
+Different probability algorithms to create a piece under a set of parameters
+275.
+Lejaren Hiller and Leonard Isaacson composed Iliac Suite for string quartet , the first complete work of computer-assisted composition using algorithmic composition .
+Lejaren Hiller and Leonard Isaacson composed Iliac Suite for string quartet
+276.
+In 1957 , Max Mathews at Bell Lab wrote MUSIC-N series , a first computer program family for generating digital audio waveforms through direct synthesis .
+Max Mathews at Bell Lab wrote MUSIC-N series In 1957
+277.
+Then Barry Vercoe wrote MUSIC 11 based on MUSIC IV-BF , a next-generation music synthesis program ( later evolving into csound , which is still widely used ) .
+Barry Vercoe wrote MUSIC 11 Then
+a next-generation music synthesis program evolving into csound later
+csound is still widely used
+278.
+The primary concept of the AlphaSphere is to increase the level of expression available to electronic musicians , by allowing for the playing style of Electronic musical instrument .
+The primary concept of the AlphaSphere is to increase the level of expression available to electronic musicians , by allowing for the playing style of Electronic musical instrument
+279.
+Many chip music devices featured synthesizers in tandem with low rate sample playback .
+Many chip music devices featured synthesizers in tandem with low rate sample playback
+280.
+Circuit bending is the creative customization of the circuits within electronic devices such as low voltage , battery-powered guitar effects , children 's toys and small digital synthesizers to create new musical or visual instruments and sound generators .
+Circuit bending is the creative customization of the circuits within electronic devices such as low voltage , battery-powered guitar effects , children 's toys and small digital synthesizers
+281.
+Emphasizing spontaneity and randomness , the techniques of circuit bending have been commonly associated with noise music , though many more conventional contemporary musicians and musical groups have been known to experiment with `` bent '' instruments .
+the techniques of circuit bending have been commonly associated with noise music
+many more conventional contemporary musicians and musical groups have been known
+282.
+With the revived interest for analogue synthesizer circuit bending became a cheap solution for many experimental musicians to create their own individual analogue sound generators .
+the revived interest for analogue synthesizer circuit bending became a cheap solution for many experimental musicians to create their own individual analogue sound generators
+283.
+The modular synthesizer is a type of synthesizer consisting of separate interchangeable modules .
+The modular synthesizer is a type of synthesizer
+synthesizer consisting of separate interchangeable modules
+The modular synthesizer is a type of synthesizer consisting
+284.
+According to a forum post in December 2010 , Sixense Entertainment is working on musical control with the Sixense TrueMotion motion controller .
+Sixense Entertainment is working on musical control
+285.
+A secondary cell , for example a rechargeable battery , is one in which the chemical reactions are reversible .
+A secondary cell is one in which the chemical reactions are reversible
+the chemical reactions are reversible
+286.
+When the cell is being charged , Electrode becomes the positive and the cathode the negative electrode .
+the cell is being charged
+Electrode becomes the positive When the cell is being charged
+287.
+Many devices have other electrodes to control operation , e.g. , base , gate , control grid .
+Many devices have other electrodes to control operation , e.g. , base , gate , control grid
+Many devices have to control operation , e.g. , base , gate , control grid
+288.
+In a three-electrode cell , a counter electrode , also called Electrode , is used only to make a connection to Electrode so that a current can be applied to Electrode .
+a counter electrode also called Electrode
+a counter electrode is used only to make a connection to Electrode so that a current can be applied to Electrode In a three-electrode cell
+289.
+Electrode is the negative electrode .
+Electrode is the negative electrode
+290.
+Electrode is the positive electrode .
+Electrode is the positive electrode
+291.
+Epistolary novel is a novel written as a series of documents .
+Epistolary novel is a novel written as a series of documents
+a novel written as a series of documents
+292.
+The word is derived from Latin from the Greek word epistole epistole , meaning a letter ( see epistle ) .
+The word is derived from Latin
+the Greek word meaning a letter ( see epistle
+293.
+The epistolary form can add greater realism to a story , because Epistolary novel mimics the workings of real life .
+The epistolary form can add greater realism to a story because Epistolary novel mimics the workings of real life
+Epistolary novel mimics the workings of real life
+294.
+The first claims that Epistolary novel originated from novels with inserted letters , in which the portion containing the third person narrative in between the letters was gradually reduced .
+the portion containing the third person narrative in between the letters
+the portion containing the third person narrative in between the letters was gradually reduced novels with inserted letters
+The first claims that Epistolary novel originated from novels with inserted letters
+Epistolary novel originated from novels with inserted letters
+295.
+The other theory claims that Epistolary novel arose from miscellanies of letters and poetry : some of the letters were tied together into a ( mostly amorous ) plot .
+some of the letters were tied together
+The other theory claims that Epistolary novel arose from miscellanies of letters and poetry
+Epistolary novel arose from miscellanies of letters and poetry
+296.
+The first truly epistolary novel , the Spanish `` Prison of Love '' ( Carcel de amor ) ( c. 1485 ) by Diego de San Pedro , belongs to a tradition of novels in which a large number of inserted letters already dominated the narrative .
+The first truly epistolary novel , the Spanish `` Prison of Love '' ( Carcel de amor ) ( c. 1485 ) by Diego de San Pedro belongs to a tradition of novels
+a large number of inserted letters dominated the narrative novels already
+297.
+The immensely famous Letters of a Portuguese Nun ( Lettres portugaises ) ( 1669 ) generally attributed to Gabriel-Joseph de La Vergne , comte de Guilleragues , though a small minority still regard Marianna Alcoforado as the author , is claimed to be intended to be part of a miscellany of Guilleragues prose and poetry .
+Lettres portugaises
+a Portuguese Nun ( Lettres portugaises ) ( 1669 generally attributed to Gabriel-Joseph de La Vergne
+a small minority regard Marianna Alcoforado as the author still
+The immensely famous Letters of a Portuguese Nun ( Lettres portugaises ) ( 1669 is claimed
+298.
+The first novel to expose the complex play that the genre allows was Aphra Behn 's Love-Letters Between a Nobleman and His Sister , which appeared in three volumes in 1684 , 1685 , and 1687 .
+the complex play allows the genre
+The first novel to expose the complex play was Aphra Behn 's Love-Letters Between a Nobleman and His Sister , which appeared in three volumes in 1684 , 1685 , and 1687
+His Sister appeared in three volumes in 1684
+299.
+Starting in the 18th century , Epistolary novel was subject to much ridicule , resulting in a number of savage burlesques .
+Epistolary novel was subject to much ridicule
+Epistolary novel resulting in a number of savage burlesques
+Epistolary novel was subject to much ridicule
+300.
+The most notable example of these was Henry Fielding 's Shamela ( 1741 ) , written as a parody of Pamela .
+The most notable example of these was Henry Fielding 's Shamela
+Henry Fielding 's Shamela written
+301.
+Although Jane Austen tried her hand at the Epistolary novel in juvenile writings and her novella Lady Susan , she abandoned this structure for her later work .
+Jane Austen tried her hand at the Epistolary novel in juvenile writings and her novella Lady Susan
+she abandoned this structure for her later work
+Susan is Lady of novella
+302.
+Mary Shelley employs the epistolary form in her novel Frankenstein ( 1818 ) .
+Mary Shelley employs the epistolary form in her novel Frankenstein ( 1818
+303.
+Evidence-based medicine ( EBM ) , also called evidence-based health care ( EBHC ) or Evidence-based practice ( EBP ) to broaden Evidence-based medicine application to allied health care professionals , has been defined as `` the conscientious , explicit and judicious use of current best evidence in making decisions about the care of individual patients '' .
+Evidence-based medicine also called evidence-based health care ( EBHC ) or Evidence-based practice to broaden Evidence-based medicine application to allied health care professionals
+Evidence-based medicine ( EBM ) , also called evidence-based health care ( EBHC ) or Evidence-based practice ( EBP ) to broaden Evidence-based medicine application to allied health care professionals has been defined as `` the conscientious , explicit and judicious use of current best evidence in making decisions about the care of individual patients
+304.
+EBM recognizes that many aspects of health care depend on individual factors such as quality - and value-of-life judgments , which are only partially subject to quantitative scientific methods .
+quality - and value-of-life judgments are only partially subject to quantitative scientific methods
+EBM recognizes that many aspects of health care depend on individual factors such as quality - and value-of-life judgments
+many aspects of health care depend on individual factors such as quality - and value-of-life judgments
+305.
+Evidence-based medicine ( EBM ) has evolved from clinical epidemiology , a discipline promoted by the creation of the Journal of Clinical Epidemiology in 1988 .
+Evidence-based medicine has evolved from clinical epidemiology
+a discipline promoted by the creation of the Journal of Clinical Epidemiology in 1988
+306.
+Clinical epidemiology aims to bridge the gap between clinical practice and public health using population health sciences to inform clinical practice .
+Clinical epidemiology aims to bridge the gap between clinical practice and public health using population health sciences to inform clinical practice
+Clinical epidemiology aims to bridge the gap between clinical practice and public health
+307.
+Thus , the methodology that underpins EBM applies methods used in the field of epidemiology to the clinical context ( i.e. clinical epidemiology ) .
+methods used in the field of epidemiology
+the methodology that underpins EBM applies methods used in the field of epidemiology to the clinical context
+the methodology underpins EBM
+308.
+This definition , put forward by one of the original proponents of evidence-based medicine , has since been adopted by major organizations , including the Cochrane Collaboration and the Centre for Evidence Based Medicine .
+This definition put forward by one of the original proponents of evidence-based medicine
+This definition , put forward by one of the original proponents of evidence-based medicine has been adopted by major organizations , including the Cochrane Collaboration and the Centre for Evidence since
+Evidence Based Medicine
+309.
+This practice of evidence-based medicine requires the application of population-based data to the care of an individual patient .
+This practice of evidence-based medicine requires the application of population-based data to the care of an individual patient
+310.
+In the current information era , this approach would be suboptimal as health care workers rapidly find themselves unable to cope with the influx of a huge variety of new information , from the irrelevant to the very important .
+this approach would be suboptimal In the current information era
+health care workers rapidly find themselves unable to cope with the influx of a huge variety of new information , from the irrelevant to the very important
+311.
+Ex cathedra statements by the `` medical expert '' are considered to be the least valid form of evidence .
+Ex cathedra statements by the `` medical expert to be the least valid form of evidence
+312.
+The systematic review of published research studies is a major method used for evaluating particular treatments .
+The systematic review of published research studies is a major method used for evaluating particular treatments
+a major method used for evaluating particular treatments
+313.
+The Cochrane Collaboration is one of the best-known , respected examples of systematic reviews .
+The Cochrane Collaboration is one of the best-known , respected examples of systematic reviews
+314.
+A 2007 analysis of 1016 systematic reviews from all 50 Cochrane Collaboration Review Groups found that 44 % of the reviews concluded that the intervention was `` likely to be beneficial '' , 7 % concluded that the intervention was `` likely to be harmful '' , and 49 % concluded that evidence `` did not support either benefit or harm '' .
+the intervention to be harmful
+49 % concluded that evidence `` did not support either benefit or harm
+evidence did not support either benefit or harm
+the intervention to be beneficial
+7 % concluded that the intervention was `` likely to be harmful '' , and 49 % concluded that evidence `` did not support either benefit or harm
+A 2007 analysis of 1016 systematic reviews from all 50 Cochrane Collaboration Review Groups found that 44 % of the reviews concluded that the intervention was `` likely to be beneficial
+44 % of the reviews concluded that the intervention was `` likely to be beneficial
+the intervention was likely to be beneficial
+the intervention was likely to be harmful
+315.
+Thus , medical practitioners would select treatment options for specific cases based on the best research for each patient Evidence-based medicine treat .
+medical practitioners would select treatment options for specific cases
+specific cases based on the best research for each patient Evidence-based medicine treat
+316.
+The second area is the systematic review of medical literature to evaluate the best studies on specific topics .
+The second area is the systematic review of medical literature to evaluate the best studies on specific topics
+317.
+Increased use of information technology turns large volumes of information into practical guides .
+Increased use of information technology turns large volumes of information into practical guides
+318.
+Evidence-based medicine categorizes different types of clinical evidence and rates or grades them according to the strength of their freedom from the various biases that beset medical research .
+Evidence-based medicine categorizes different types of clinical evidence and rates or grades them
+the various biases beset medical research
+319.
+Evidence-based medicine requires users of GRADE who are performing an assessment of the quality of evidence , usually as part of a systematic review , to consider the impact of different factors on their confidence in the results .
+Evidence-based medicine requires users of GRADE
+users of GRADE are performing an assessment of the quality of evidence
+320.
+The confidence value is based on judgements assigned in five different domains in a structured manner .
+The confidence value is based on judgements
+judgements assigned in five different domains
+321.
+Systematic reviews may include Randomized Controlled trials that have low risk of bias , or , observational studies that have high risk of bias .
+Systematic reviews may include Randomized Controlled trials
+Randomized Controlled trials have low risk of bias
+observational studies have high risk of bias
+322.
+In the case of observational studies , the quality of evidence starts of lower and may be upgraded in three domains in addition to being subject to downgrading .
+the quality of evidence starts of lower may be upgraded in three domains in addition to being subject to downgrading In the case of observational studies
+323.
+Despite the differences between systems , the purposes are the same : to guide users of clinical research information on which studies are likely to be most valid .
+the purposes are the same
+studies are likely to be most valid clinical research information
+studies to be most valid
+324.
+The differences in likelihood ratio between clinical tests can be used to prioritize clinical tests according to their usefulness in a given clinical situation .
+The differences in likelihood ratio between clinical tests can be used to prioritize clinical tests according to their usefulness in a given clinical situation
+325.
+The area under the receiver operating characteristic curve ( AUC-ROC ) reflects the relationship between sensitivity and specificity for a given test .
+The area under the receiver operating characteristic curve reflects the relationship between sensitivity and specificity for a given test
+326.
+Number needed to treat or Number needed to harm are ways of expressing the effectiveness and safety of an intervention in a way that is clinically meaningful .
+Number needed to treat
+Number to treat
+a way is clinically meaningful
+Number needed to harm
+Number needed to harm to harm
+Number needed to treat or Number needed to harm are ways of expressing the effectiveness and safety of an intervention in a way
+327.
+In many cases , it is unknown whether a particular `` disease '' has one , several , or no underlying biological causes , with controversy arising over whether some diseases are merely an artifact of the attempt to construct a unified classification scheme , rather than a `` real '' disease .
+controversy arising over whether some diseases are merely an artifact of the attempt
+some diseases are merely an artifact of the attempt
+328.
+Traces of evidence-based medicine 's origin can be found in ancient Greece .
+Traces of evidence-based medicine 's origin can be found in ancient Greece
+329.
+The explicit methodologies used to determine `` best evidence '' were largely established by the McMaster University research group led by David Sackett and Gordon Guyatt .
+The explicit methodologies used to determine `` best evidence
+The explicit methodologies to determine best evidence
+The explicit methodologies used to determine `` best evidence '' were largely established by the McMaster University research group
+the McMaster University research group led by David Sackett and Gordon Guyatt
+330.
+Guyatt later coined the term `` Evidence-based medicine '' in 1990 .
+Guyatt coined the term in 1990 later
+331.
+Where approval for a drug has been given , and subsequent Evidence-based medicine findings indicating that a drug may be less safe than originally anticipated , some insurers in the U.S. have reacted very cautiously and withdrawn funding .
+approval for a drug has been given
+some insurers in the U.S. withdrawn funding
+subsequent Evidence-based medicine findings indicating that a drug may be less safe
+a drug may be less safe than originally anticipated
+some insurers in the U.S. have reacted very cautiously
+332.
+However , evidence came to light about safety concerns with the new drug which caused some insurers to stop funding Evidence-based medicine even though marketing approval was not withdrawn .
+evidence came to light
+the new drug caused some insurers to stop funding Evidence-based medicine
+some insurers to stop funding Evidence-based medicine even though marketing approval was not withdrawn
+some insurers to stop funding Evidence-based medicine
+333.
+Here again , the problem of induction plays a key role in arguments .
+the problem of induction plays a key role in arguments Here again
+334.
+In his 1996 inaugural speech as President of the Royal Statistical Society , Adrian Smith held out evidence-based medicine as an exemplar for all public policy .
+Adrian Smith held out evidence-based medicine In his 1996 inaugural speech as President of the Royal Statistical Society
+335.
+End zone is the area between the end line and goal line bounded by the sidelines .
+End zone is the area between the end line and goal line
+336.
+A similar concept exists in both rugby football codes , where End zone is known as the in-goal area .
+A similar concept exists in both rugby football codes
+End zone is known as the in-goal area both rugby football codes
+337.
+The difference between rugby and gridiron-based codes is that in rugby , the ball must be touched to the ground in the in-goal area to count as a try ( the rugby equivalent of a touchdown ) , whereas in the gridiron-based games , simply possessing the ball while End zone is in the end zone is sufficient to count End zone as a touchdown .
+The difference between rugby and gridiron-based codes is that in rugby , the ball must be touched to the ground in the in-goal area to count as a try ( the rugby equivalent of a touchdown ) , whereas in the gridiron-based games , simply possessing the ball while End zone is in the end zone is sufficient to count End zone as a touchdown
+the ball must be touched to the ground in the in-goal area to count as a try in rugby
+simply possessing the ball while End zone is in the end zone is sufficient to count End zone as a touchdown
+End zone is in the end zone
+338.
+Goal posts were placed on the goal line , and any kicks that did not result in field goals but left the field through the end lines were simply recorded as touchbacks ( or , in the Canadian game , singles ; End zone was during the pre-end zone era that Hugh Gall set the record for most singles in a game , with 8 ) .
+End zone was during the pre-end zone era
+Goal posts were placed on the goal line
+any kicks did not result in field goals
+Hugh Gall set the record
+any kicks that did not result in field goals left the field
+339.
+Thus , in 1912 , End zone was born .
+End zone was born in 1912
+340.
+Goal posts were originally kept on the goal lines , but after End zone began to interfere with play , End zone moved back to the end lines in 1927 , where End zone have remained in college football ever since .
+End zone began
+End zone to interfere with play
+End zone have remained in college football ever since
+End zone moved back to the end lines in 1927
+Goal posts were kept on the goal lines originally
+341.
+The National Football League moved the goal posts up to End zone again in 1932 , then back again to the end line in 1974 .
+The National Football League moved the goal posts up to End zone again in 1932 , then back again to the end line in 1974
+342.
+In addition , a two-point conversion may be scored after a touchdown by similar means .
+a two-point conversion may be scored after a touchdown by similar means
+343.
+The National Football League changed End zone rule in 2007 , so that a ball carrier merely touching the pylon is insufficient to score a touchdown ; the ball must actually enter the end zone .
+a ball carrier merely touching the pylon
+a ball carrier merely touching the pylon is insufficient to score a touchdown
+the ball must actually enter the end zone
+The National Football League changed End zone rule in 2007
+344.
+The end zone in Canadian football is 20 yards long by 65 yards wide , while the end zone in American football is 10 yards long by 53 1/3 yards wide ( Canadian football is played on a longer and wider field ) .
+The end zone in Canadian football is 20 yards long by 65 yards wide
+the end zone in American football is 10 yards long by 53 1/3 yards wide
+Canadian football is played on a longer and wider field
+345.
+The goal posts in Canadian football still reside on the goal line instead of the back of End zone , partly because the number of field goal attempts would dramatically decrease if the posts were moved 20 yards back in that sport .
+The goal posts in Canadian football reside on the goal line instead of the back of End zone still
+the posts were moved 20 yards back in that sport
+346.
+At the high school level , it is not uncommon to see multi-purpose goal posts that include football goal posts at the top and a soccer net at the bottom ; these are usually seen at smaller schools and in multi-purpose stadiums where facilities are used for multiple sports .
+facilities are used for multiple sports multi-purpose stadiums
+multi-purpose goal posts include football goal posts at the top and a soccer net at the bottom
+these are usually seen at smaller schools and in multi-purpose stadiums
+these seen at smaller schools and in multi-purpose stadiums usually
+347.
+When these or H-shaped goal posts are used in football , the lower portions of the posts are covered with several inches of heavy foam padding to protect the safety of the players .
+these or H-shaped goal posts are used in football
+the lower portions of the posts are covered with several inches of heavy foam padding to protect the safety of the players When these or H-shaped goal posts are used in football
+348.
+One notable use of this design in higher levels is with the Pittsburgh Steelers , who kept their diagonal-line end zone decoration at Heinz Field after positive fan reaction .
+One notable use of this design in higher levels is with the Pittsburgh Steelers
+the Pittsburgh Steelers kept their diagonal-line end zone decoration at Heinz Field after positive fan reaction
+349.
+One of the quirks of the American Football League was End zone use of unusual patterns such as argyle in End zone end zones , a tradition revived in 2009 by the Denver Broncos , End zone a former AFL team .
+One of the quirks of the American Football League was End zone
+a tradition revived in 2009 by the Denver Broncos
+350.
+Ettore Ximenes ( April 11 , 1855 , Palermo -- December 20 , 1926 , Rome ) was an Italian sculptor of mostly religious and mythological subjects .
+Ettore Ximenes ( April 11 , 1855 was an Italian sculptor of mostly religious and mythological subjects
+351.
+Ettore Ximenes also established a close relationship with Vincenzo Gemito .
+Ettore Ximenes established a close relationship with Vincenzo Gemito
+352.
+In addition to sculpture , Ettore Ximenes also produced illustrations for the works of Edmondo De Amicis published by Treves .
+Ettore Ximenes produced illustrations for the works of Edmondo De Amicis
+the works of Edmondo De Amicis published by Treves
+353.
+Edsger W. Dijkstra was a Dutch computer scientist .
+Edsger W. Dijkstra was a Dutch computer scientist
+354.
+This annual award was renamed the Dijkstra Prize the following year , in Edsger W. Dijkstra honor .
+This annual award was renamed the Dijkstra Prize the following year
+355.
+Another concept due to Edsger W. Dijkstra in the field of distributed computing is that of self-stabilization -- an alternative way to ensure the reliability of the system .
+Another concept due to Edsger W. Dijkstra in the field of distributed computing is that of self-stabilization -- an alternative way
+356.
+While Edsger W. Dijkstra had programmed extensively in machine code in the 1950s , Edsger W. Dijkstra came to the conclusion that in high-level languages frequent use of the GOTO statement was usually symptomatic of poor structure .
+Edsger W. Dijkstra had programmed extensively
+Edsger W. Dijkstra came to the conclusion that in high-level languages frequent use of the GOTO statement was usually symptomatic of poor structure While Edsger W. Dijkstra had programmed extensively in machine code in the 1950s
+frequent use of the GOTO statement was usually symptomatic of poor structure in high-level languages
+357.
+In 1968 Edsger W. Dijkstra wrote a private paper `` A Case against the GO TO Statement '' , which was then published as a letter in CACM .
+Edsger W. Dijkstra wrote a private paper In 1968
+A Case against the GO TO Statement was published as a letter in CACM then
+358.
+Editor Niklaus Wirth gave this letter the heading `` Go To Statement Considered Harmful '' , which introduced the phrase `` considered harmful '' into computing .
+Editor Niklaus Wirth gave this letter
+Statement Considered Harmful '' introduced the phrase `` considered harmful '' into computing
+359.
+Edsger W. Dijkstra also strongly opposed the teaching of BASIC .
+Edsger W. Dijkstra strongly opposed the teaching of BASIC
+360.
+Edsger W. Dijkstra was known to be a fan of ALGOL 60 , and worked on the team that implemented the first compiler for that language .
+Edsger W. Dijkstra was known
+Edsger W. Dijkstra to be a fan of ALGOL 60
+Edsger W. Dijkstra worked on the team
+the team implemented the first compiler for that language
+361.
+It was one of the first compilers supporting recursion .
+It was one of the first compilers
+the first compilers supporting recursion
+362.
+Edsger W. Dijkstra wrote two important papers in 1968 , devoted to the structure of a multiprogramming operating system called THE , and to Cooperating Sequential Processes .
+Edsger W. Dijkstra wrote two important papers in 1968
+a multiprogramming operating system called THE
+363.
+From the 1970s , Edsger W. Dijkstra chief interest was formal verification .
+Edsger W. Dijkstra chief interest was formal verification From the 1970s
+364.
+Much of Edsger W. Dijkstra later work concerns ways to streamline mathematical argument .
+Much of Edsger W. Dijkstra work concerns ways later
+365.
+The analogy Edsger W. Dijkstra made was to contrast the compositional approaches of Mozart and Beethoven .
+Edsger W. Dijkstra made
+The analogy Edsger W. Dijkstra made was to contrast the compositional approaches of Mozart and Beethoven
+366.
+Edsger W. Dijkstra was one of the early pioneers in the field of distributed computing .
+Edsger W. Dijkstra was one of the early pioneers in the field of distributed computing
+367.
+In particular , Edsger W. Dijkstra paper `` Self-stabilizing Systems in Spite of Distributed Control '' started the sub-field of self-stabilization .
+Edsger W. Dijkstra paper `` Self-stabilizing Systems in Spite of Distributed Control started the sub-field of self-stabilization
+368.
+For example , Edsger W. Dijkstra coined the programming phrase `` two or more , use a for '' , alluding to the rule of thumb that when you find yourself processing more than one instance of a data structure , it is time to consider encapsulating that logic inside a loop .
+Edsger W. Dijkstra coined the programming phrase
+Edsger W. Dijkstra coined the programming phrase alluding that when you find yourself processing more than one instance of a data structure , it is time
+it is time to consider encapsulating that logic inside a loop when you find yourself processing more than one instance of a data structure
+two or more use a for
+you find yourself processing more than one instance of a data structure
+yourself processing more than one instance of a data structure
+369.
+Edsger W. Dijkstra died in Nuenen on 6 August 2002 after a long struggle with cancer .
+Edsger W. Dijkstra died in Nuenen on 6 August 2002 after a long struggle with cancer
+370.
+The following year , the ACM ( Association for Computing Machinery ) PODC Influential Paper Award in distributed computing was renamed the Dijkstra Prize in Edsger W. Dijkstra honor .
+the ACM was renamed the Dijkstra Prize in Edsger W. Dijkstra honor The following year
+371.
+Dijkstra was known for Edsger W. Dijkstra habit of carefully composing manuscripts with Edsger W. Dijkstra fountain pen .
+Dijkstra was known for Edsger W. Dijkstra habit of carefully composing manuscripts with Edsger W. Dijkstra fountain pen
+372.
+The manuscripts are called EWDs , since Dijkstra numbered them with EWD , Edsger W. Dijkstra initials , as a prefix .
+The manuscripts are called EWDs since Dijkstra numbered them with EWD , Edsger W. Dijkstra initials , as a prefix
+373.
+According to Dijkstra Edsger W. Dijkstra , the EWDs started when Edsger W. Dijkstra moved from the Mathematical Centre in Amsterdam to the Eindhoven University of Technology ( then Technische Hogeschool Eindhoven ) .
+the EWDs started when Edsger W. Dijkstra moved from the Mathematical Centre in Amsterdam to the Eindhoven University of Technology
+Edsger W. Dijkstra moved from the Mathematical Centre in Amsterdam to the Eindhoven University of Technology
+374.
+After going to Eindhoven , Edsger W. Dijkstra experienced a writer 's block for more than a year .
+Edsger W. Dijkstra experienced a writer 's block for more than a year After going to Eindhoven
+375.
+Looking closely at Edsger W. Dijkstra Edsger W. Dijkstra realized that if Edsger W. Dijkstra wrote about things they would appreciate at the MC in Amsterdam Edsger W. Dijkstra colleagues in Eindhoven would not understand ; if Edsger W. Dijkstra wrote about things they would like in Eindhoven , Edsger W. Dijkstra former colleagues in Amsterdam would look down on Edsger W. Dijkstra .
+Edsger W. Dijkstra wrote about things
+things would like in Eindhoven
+Edsger W. Dijkstra wrote about things
+things would appreciate at the MC in Amsterdam Edsger W. Dijkstra colleagues in Eindhoven
+376.
+Dijkstra would distribute photocopies of a new EWD among Edsger W. Dijkstra colleagues ; as many recipients photocopied and forwarded their copy , the EWDs spread throughout the international computer science community .
+many recipients photocopied
+many recipients forwarded their copy
+the EWDs spread throughout the international computer science community
+Dijkstra would distribute photocopies of a new EWD among Edsger W. Dijkstra colleagues
+377.
+One of Dijkstra 's sidelines was serving as Chairman of the Board of the fictional Mathematics Inc. , a company that Edsger W. Dijkstra imagined having commercialized the production of mathematical theorems in the same way that software companies had commercialized the production of computer programs .
+One of Dijkstra 's sidelines was serving as Chairman of the Board of the fictional Mathematics Inc
+Edsger W. Dijkstra imagined having commercialized the production of mathematical theorems
+378.
+The proof itself was a trade secret .
+The proof was a trade secret
+379.
+A more successful effort was the Standard Proof for Pythagoras ' Theorem , that replaced the more than 100 incompatible existing proofs .
+that replaced the more than 100 incompatible existing proofs
+A more successful effort was the Standard Proof for Pythagoras ' Theorem
+380.
+EWD 443 ( 1974 ) describes Edsger W. Dijkstra fictional company as having over 75 percent of the world 's market share .
+EWD 443 describes Edsger W. Dijkstra fictional company as having over 75 percent of the world 's market share
+381.
+Despite having invented much of the technology of software , Dijkstra eschewed the use of computers in Edsger W. Dijkstra own work for many decades .
+Dijkstra eschewed the use of computers in Edsger W. Dijkstra own work for many decades
+382.
+Almost all EWDs appearing after 1972 were hand-written .
+Almost all EWDs appearing after 1972 were hand-written
+383.
+When lecturing , Edsger W. Dijkstra would write proofs in chalk on a blackboard rather than using overhead foils .
+Edsger W. Dijkstra would write proofs on a blackboard When lecturing
+384.
+Edsger W. Dijkstra is a Dutch computer scientist .
+Edsger W. Dijkstra is a Dutch computer scientist
+385.
+Edsger W. Dijkstra is the Schlumberger Centennial Chair of Computer Sciences at The University of Texas at Austin from 1984 .
+Edsger W. Dijkstra is the Schlumberger Centennial Chair of Computer Sciences at The University of Texas at Austin from 1984
+386.
+Edsger W. Dijkstra is one of the early pioneers in the field of distributed computing .
+Edsger W. Dijkstra is one of the early pioneers in the field of distributed computing
+387.
+Miss Marple , usually referred to as Miss Marple , is a fictional character appearing in 12 of Agatha Christie 's crime novels and in 20 short stories .
+Miss Marple referred to as Miss Marple , is a fictional character appearing in 12 of Agatha Christie 's crime novels and in 20 short stories usually
+388.
+Her first appearance was in a short story published in The Sketch magazine in 1926 , `` The Tuesday Night Club '' , which later became the first chapter of The Thirteen Problems ( 1932 ) .
+Her first appearance was in a short story
+a short story published in The Sketch magazine in 1926
+The Tuesday Night Club became the first chapter of The Thirteen Problems later
+389.
+The most common explanation suggests that the name was taken from the railway station in Marple , Stockport , through which Christie passed , with the alternative account that Christie took it from the home of a Marple family who lived at Marple Hall , near her sister Madge 's home at Abney Hall .
+Christie passed Marple
+The most common explanation suggests that the name was taken from the railway station in Marple
+the name was taken from the railway station in Marple
+Madge is sister of hers
+390.
+Agatha Christie attributed the inspiration for the character of Miss Marple to a number of sources : Miss Marple was `` the sort of old lady who would have been rather like some of my step grandmother 's Ealing cronies -- old ladies whom I have met in so many villages where I have gone to stay as a girl '' .
+Agatha Christie attributed the inspiration for the character of Miss Marple to a number of sources
+I to stay as a girl
+Miss Marple was the sort of old lady who would have been rather like some of my step grandmother 's Ealing cronies -- old ladies whom I have met in so many villages where I have gone to stay as a girl ''
+the sort of old lady would have been rather
+old ladies have met in so many villages
+I have gone to stay as a girl
+391.
+Christie also used material from her fictional creation , spinster Caroline Sheppard , who appeared in The Murder of Roger Ackroyd .
+Christie also used material from her fictional creation
+her fictional creation appeared in The Murder of Roger Ackroyd
+392.
+When Michael Morton adapted Roger Ackroyd for the stage , he removed Miss Marple replacing her with a young girl .
+Michael Morton adapted Roger Ackroyd for the stage
+he removed Miss Marple When Michael Morton adapted Roger Ackroyd for the stage
+he removed Miss Marple replacing her with a young girl
+393.
+The character of Miss Marple in the first Miss Marple book , The Murder at the Vicarage , is markedly different from how she appears in later books .
+The character of Miss Marple in the first Miss Marple book is markedly different from how she appears in later books
+she appears in later books
+394.
+Her nephew , the `` well-known author '' Raymond West appears in Vicarage , his wife Joan ( initially Joyce ) , a modern artist , in The Thirteen Problems .
+Raymond West appears in Vicarage
+Joyce ) is a modern artist
+Joan is wife of him
+395.
+Miss Marple also employs young women from a nearby orphanage , whom she trains for service as general housemaids after the retirement of her long-time maid-housekeeper faithful Florence .
+Miss Marple employs young women from a nearby orphanage
+a nearby orphanage trains for service as general housemaids after the retirement of her long-time maid-housekeeper faithful Florence
+396.
+In her later years , companion Cherry Baker , first introduced in The Mirror Crack 'd From Side to Side , lives in .
+companion Cherry Baker introduced in The Mirror Crack first
+companion Cherry Baker lives in In her later years
+397.
+Miss Marple solves difficult crimes because of her shrewd intelligence , and St. Mary Mead , over her lifetime , has given her seemingly infinite examples of the negative side of human nature .
+Miss Marple solves difficult crimes because of her shrewd intelligence
+St. Mary Mead has given her seemingly infinite examples of the negative side of human nature over her lifetime
+398.
+Acquaintances may be bored by analogies that often lead her to a deeper realization about the true nature of a crime .
+Acquaintances may be bored by analogies
+analogies lead her to a deeper realization about the true nature of a crime often
+399.
+An example would be the Vicar 's son .
+An example would be the Vicar 's son
+400.
+At the end of The Murder at the Vicarage , the Vicar 's wife is pregnant .
+the Vicar 's wife is pregnant At the end of The Murder at the Vicarage
+401.
+Miss Marple also appears in Greenshaw 's Folly , a short story traditionally included as part of the Poirot collection The Adventure of the Christmas Pudding ( 1960 ) .
+a short story traditionally included as part of the Poirot collection
+Miss Marple also appears in Greenshaw 's Folly
+402.
+Although popular from her first appearance in 1930 , Miss Marple had to wait thirty-two years for her first big-screen appearance .
+Miss Marple to wait thirty-two years for her first big-screen appearance
+403.
+When she made Miss Marple , the results , starring Margaret Rutherford , were popular and successful light comedies , but were disappointing to Christie herself ; nevertheless , Agatha Christie dedicated the novel The Mirror Crack 'd from Side to Side to Rutherford .
+she made Miss Marple
+popular and successful light comedies were disappointing to Christie When she made Miss Marple
+Agatha Christie dedicated the novel
+404.
+Murder , She Said ( 1961 , directed by George Pollock ) was the first of four British MGM productions starring Rutherford .
+She Said directed by George Pollock
+She Said was the first of four British MGM productions Murder
+405.
+This first film was based on the 1957 novel 4:50 from Paddington ( U.S. title , What Mrs. McGillicuddy Saw ! )
+This first film was based on the 1957 novel 4:50 from Paddington ( U.S. title
+Mrs. McGillicuddy Saw
+406.
+, and the changes made in the plot were typical of the series .
+the changes made in the plot were typical of the series
+407.
+In Miss Marple , Mrs. McGillicuddy does not see anything because there is no Mrs.
+Mrs. McGillicuddy does not see anything because there is no Mrs. In Miss Marple
+408.
+Miss Marple herself sees an apparent murder committed on a train running alongside hers .
+Miss Marple sees an apparent murder committed on a train
+an apparent murder committed on a train
+a train running alongside hers
+409.
+Likewise , Miss Marple is Miss Marple herself who poses as a maid to find out the facts of the case , not a young friend of hers who has made a business of Miss Marple .
+Miss Marple is Miss Marple
+a young friend of hers has made a business of Miss Marple
+herself poses as a maid
+herself who poses as a maid to find out the facts of the case , not
+410.
+The other Rutherford films ( all directed by George Pollock ) were Murder at the Gallop ( 1963 ) , based on the 1953 Hercule Poirot novel After the Funeral ( In this film , she is identified as Miss JTV Marple , though there was no indication as to what the extra initials might stand for ) ; Murder Most Foul ( 1964 ) , based on the 1952 Poirot novel Mrs McGinty 's Dead ; and Murder Ahoy !
+The other Rutherford films directed by George Pollock
+the extra initials might stand
+she is identified as Miss JTV Marple
+The other Rutherford films ( all directed by George Pollock were Murder at the Gallop ( 1963 ) , based on the 1953 Hercule Poirot novel After the Funeral ( In this film
+411.
+The same theme is used on all four films with slight variations on each .
+The same theme is used on all four films with slight variations on each
+412.
+The score was written within a couple of weeks by Goodwin who was approached by George Pollock after Pollock had heard about him from Stanley Black .
+The score was written within a couple of weeks by Goodwin
+Goodwin was approached
+Pollock had heard about him from Stanley Black
+413.
+Rutherford , who was 70 years old when the first film was made , insisted that she wear her own clothes during the filming of the movie , as well as having her real-life husband , Stringer Davis appear alongside her as Miss Marple ` Mr Stringer ' .
+Rutherford was 70 years old when the first film was made
+the first film was made
+Rutherford insisted that she wear her own clothes during the filming of the movie , as well as having her real-life husband
+she wear her own clothes during the filming of the movie
+she wear her own clothes having her real-life husband
+Stringer Davis appear alongside her
+414.
+In 1980 , Angela Lansbury played Miss Marple in The Mirror Crack 'd ( EMI , directed by Guy Hamilton ) , based on Christie 's 1962 novel .
+Angela Lansbury played Miss Marple in The Mirror Crack In 1980
+EMI directed by Guy Hamilton
+415.
+Edward Fox appeared as Inspector Craddock , who did Miss Marple legwork .
+Edward Fox appeared as Inspector Craddock
+Inspector Craddock did Miss Marple legwork
+416.
+Lansbury went on to star in the TV series Murder , She Wrote as Jessica Fletcher , a mystery novelist who also solves crimes .
+Lansbury to star in the TV series Murder
+a mystery novelist solves crimes
+She Wrote as Jessica Fletcher
+Lansbury went on
+Jessica Fletcher is a novelist of mystery
+417.
+American TV was the setting for the first dramatic portrayal of Miss Marple with Gracie Fields , the legendary British actress , playing her in a 1956 episode of Goodyear TV Playhouse based on A Murder Is Announced , the 1950 Christie novel .
+American TV was the setting for the first dramatic portrayal of Miss Marple with Gracie Fields
+a 1956 episode of Goodyear TV Playhouse based on A Murder
+Gracie Fields is the legendary British actress
+Gracie Fields is the legendary actress from United Kingdom
+418.
+In 1970 , the character of Miss Marple was portrayed by Inge Langen in a West German television adaptation of The Murder at the Vicarage ( Mord im Pfarrhaus ) .
+the character of Miss Marple was portrayed by Inge Langen in a West German television adaptation of The Murder at the Vicarage In 1970
+419.
+Sue Grafton contributed to the screenplay of the former .
+Sue Grafton contributed to the screenplay of the former
+420.
+From 1984 to 1992 , the BBC adapted all of the original Miss Marple novels as a series titled Miss Marple .
+the BBC adapted all of the original Miss Marple novels as a series From 1984 to 1992
+a series titled Miss Marple
+421.
+Joan Hickson played the lead role .
+Joan Hickson played the lead role
+422.
+In the 1940s , Joan appeared on-stage in an Agatha Christie play , Appointment with Death , which was seen by Christie who wrote in a note to her , `` I hope one day you will play my dear Miss Marple '' .
+Joan appeared In the 1940s
+on-stage in an Agatha Christie play was seen by Christie
+Christie wrote in a note to her
+I hope one day you will play my dear Miss Marple
+you will play my dear Miss Marple one day
+Marple is dear Miss of mine
+423.
+( Coincidentally , Hickson had played a housekeeper in the first film in which Margaret Rutherford played Miss Marple .
+Hickson had played a housekeeper in the first film
+Margaret Rutherford played Miss Marple the first film
+424.
+As well as portraying Miss Marple on television , Hickson also narrated a number of Miss Marple stories on audio books .
+Hickson narrated a number of Miss Marple stories on audio books
+425.
+Geraldine McEwan starred in the first three series .
+Geraldine McEwan starred in the first three series
+426.
+Julia McKenzie took over the role in the fourth season .
+Julia McKenzie took over the role in the fourth season
+427.
+Miss Marple voice is provided by Kaoru Yachigusa .
+Miss Marple voice is provided by Kaoru Yachigusa
+428.
+Listing of the TV series episodes featuring Kaoru Yachigusa : In 1974 , Barbara Mullen played Miss Marple in Murder at the Vicarage at the Savoy Theatre , London .
+the TV series episodes featuring Kaoru Yachigusa
+Barbara Mullen played Miss Marple in Murder at the Vicarage at the Savoy Theatre Listing of the TV series episodes In 1974
+429.
+BBC Radio 4 dramatised all of the novels from 1993-2001 with June Whitfield as Miss Marple .
+BBC Radio 4 dramatised all of the novels from 1993-2001 with June Whitfield as Miss Marple
+430.
+Miss Marple was also referenced multiple times in the episode `` Paris '' of the BBC Radio 4 program Cabin Pressure .
+Miss Marple was referenced multiple times in the episode `` Paris '' of the BBC Radio 4 program Cabin Pressure
+431.
+Miss Marple is the sort of old lady who would have been rather like some of my step grandmother 's Ealing cronies -- old ladies whom I have met in so many villages where I have gone to stay as a girl '' .
+Miss Marple is the sort of old lady who would have been rather like some of my step grandmother 's Ealing cronies -- old ladies whom I have met in so many villages
+the sort of old lady who would have been rather like some of my step grandmother 's Ealing cronies -- old ladies have met in so many villages
+I have gone to stay as a girl so many villages
+I to stay as a girl
+Miss Marple is the sort of old lady
+432.
+Miss Marple is a bold and eccentric old lady , different from the prim and birdlike character Christie created in her novels .
+Miss Marple is a bold and eccentric old lady , different from the prim and birdlike character
+the prim and birdlike character created in her novels
+433.
+Miss Marple is Miss Marple .
+Miss Marple is Miss Marple
+434.
+Miss Marple is Miss Marple herself .
+Miss Marple is Miss Marple
+435.
+Miss Marple is a young friend of hers who has made a business of it .
+Miss Marple is a young friend of hers who has made a business of it
+a young friend of hers has made a business of it
+436.
+Educational perennialism believe that the most important topics develop a person .
+Educational perennialism believe that the most important topics develop a person
+437.
+A particular strategy with modern perennialists is to teach scientific reasoning , not facts .
+A particular strategy with modern perennialists is to teach scientific reasoning
+438.
+Educational perennialism may illustrate the reasoning with original accounts of famous experiments .
+Educational perennialism may illustrate the reasoning with original accounts of famous experiments
+439.
+However , since the teachers associated with perennialism are in a sense the authors of the Western masterpieces themselves , these teachers may be open to student criticism through the associated Socratic method , which , if carried out as true dialogue , is a balance between students , including the teacher promoting the discussion .
+the teachers associated with perennialism
+the associated Socratic method is a balance between students , including the teacher
+the teachers associated with perennialism are in a sense
+the teacher promoting the discussion
+these teachers may be open to student criticism through the associated Socratic method
+440.
+As promoted primarily by Robert Hutchins and Mortimer Adler , a universal curriculum based upon the common and essential nature of all human beings is recommended .
+a universal curriculum based upon the common and essential nature of all human beings
+441.
+Hutchins and Adler implemented these ideas with great success at the University of Chicago , where they still strongly influence the curriculum in the form of the undergraduate Common Core .
+Hutchins and Adler implemented these ideas
+they strongly influence the curriculum still
+442.
+Our political institutions can not thrive , Educational perennialism may not even survive , if we do not produce a greater number of thinking citizens , from whom some statesmen of the type we had in the 18th century might eventually emerge .
+we do not produce a greater number of thinking citizens , from whom some statesmen of the type we had in the 18th century might eventually emerge
+the type had in the 18th century
+some statesmen of the type might emerge a greater number of thinking citizens eventually
+Our political institutions can not thrive
+Educational perennialism may not even survive
+443.
+Hutchins writes in the same vein : The business of saying ... that people are not capable of achieving a good education is too strongly reminiscent of the opposition of every extension of democracy .
+people of achieving a good education
+The business of saying ... that people are not capable of achieving a good education is too strongly reminiscent of the opposition of every extension of democracy
+Hutchins writes in the same vein
+444.
+This opposition has always rested on the allegation that the people were incapable of exercising the power Educational perennialism demanded .
+the people were incapable of exercising the power Educational perennialism
+the people of exercising the power Educational perennialism
+445.
+Adler states : `` The three R 's , which always signified the formal disciplines , are the essence of liberal or general education '' .
+The three R 's signified the formal disciplines always
+Adler states The three R 's , which always signified the formal disciplines , are the essence of liberal or general education
+The three R 's , which always signified the formal disciplines are the essence of liberal or general education
+446.
+Great books are great teachers ; Educational perennialism are showing us every day what ordinary people are capable of .
+ordinary people are capable of
+Educational perennialism are showing us every day what ordinary people are capable of
+Great books are great teachers
+447.
+Educational perennialism are usually the first announcements for success in learning .
+Educational perennialism are usually the first announcements for success in learning
+448.
+In the course of history ... new books have been written that have won their place in the list .
+new books have been written In the course of history
+449.
+Perennialism was a solution proposed in response to what was considered by many to be a failing educational system .
+Perennialism was a solution proposed in response to what was considered by many to be a failing educational system
+a solution proposed
+450.
+One of the most remarkable features of American society is that the difference between the `` uneducated '' and the `` educated '' is so slight .
+One of the most remarkable features of American society is that the difference between the `` uneducated '' and the `` educated '' is so slight
+the difference between the `` uneducated '' and the `` educated is so slight
+451.
+In a highly negative review of the book , Dewey wrote a series of articles in The Social Frontier which began by applauding Hutchins ' attack on `` the aimlessness of our present educational scheme .
+Dewey wrote a series of articles in The Social Frontier In a highly negative review of the book
+articles in The Social Frontier began by applauding Hutchins ' attack on `` the aimlessness of our present educational scheme
+452.
+Educational perennialism freely acknowledge that any particular selection of great books will disagree on many topics ; however , they see this as an advantage , rather than a detriment .
+they see this
+Educational perennialism freely acknowledge that any particular selection of great books will disagree on many topics
+any particular selection of great books will disagree on many topics
+453.
+In the nineteenth century , John Henry Newman presented a detailed defense of educational perennialism in The Idea of a University .
+John Henry Newman presented a detailed defense of educational perennialism in The Idea of a University In the nineteenth century
+454.
+Discourse 5 of that work , `` Knowledge Educational perennialism Own End , is still relevant as a clear statement of a Christian educational perennialism .
+Discourse 5 of that work , `` Knowledge Educational perennialism Own End is still relevant as a clear statement of a Christian educational perennialism
+455.
+Educational perennialism is the first announcements for success in learning .
+Educational perennialism is the first announcements for success in learning
+456.
+Many studies , particularly in the fields of psychology and cognitive therapy , have suggested MDMA has therapeutic benefits and facilitates therapy sessions in certain individuals , a practice for which MDMA had formally been used in the past .
+MDMA facilitates therapy sessions
+a practice had formally been used in the past
+Many studies , particularly in the fields of psychology and cognitive therapy have suggested MDMA has therapeutic benefits and facilitates therapy sessions in certain individuals , a practice
+MDMA has therapeutic benefits
+457.
+For 2008 , the UN estimated between 10 and 25 million people globally used MDMA once in the past year .
+the UN estimated between 10 and 25 million people globally used MDMA once in the past year For 2008
+people globally used MDMA once in the past year
+458.
+Recently , two randomized , controlled trials of MDMA-assisted psychotherapy for post-traumatic stress disorder were published .
+controlled trials of MDMA-assisted psychotherapy for post-traumatic stress disorder were published Recently
+two randomized
+459.
+The term `` flipping '' may come from the subjective effects of using MDMA with a psychedelic in which the user may shift rapidly between a more lucid state and a more psychedelic state several times during the course of MDMA experiences .
+The term `` flipping may come from the subjective effects of using MDMA with a psychedelic
+the user may shift rapidly during the course of MDMA experiences a psychedelic
+460.
+In general , users begin reporting subjective effects within 30 -- 60 minutes of consumption , hitting a peak at about 75 -- 120 minutes , reaching a plateau that lasts about 3.5 hours .
+a plateau lasts about 3.5 hours
+users begin reporting subjective effects within 30
+users begin reporting subjective effects hitting a peak at about 75
+users begin reporting subjective effects reaching a plateau that lasts about 3.5 hours
+461.
+After the drug has run MDMA course , many users report feeling fatigue .
+the drug has run MDMA course
+many users report feeling fatigue After the drug has run MDMA course
+462.
+In January 2001 , an overview of the subjective side effects of MDMA based on clinical research conducted over several years involving 74 healthy volunteers .
+the subjective side effects of MDMA based on clinical research
+In January 2001 , an overview of the subjective side effects of MDMA based on clinical research conducted over several years involving 74 healthy volunteers
+463.
+The top side effects reported were difficulty concentrating , jaw clenching , grinding of the teeth during sleep , lack of appetite , and dry mouth/thirst ( all occurring in more than 50 % of the 74 volunteers ) .
+The top side effects reported
+The top side effects reported were difficulty concentrating , jaw clenching
+jaw clenching grinding of the teeth during sleep
+all occurring in more than 50 % of the 74 volunteers
+464.
+In rats , high doses and in high temperatures , serotonergic neurotoxicity is limited and dopaminergic neurotoxicity occurs .
+serotonergic neurotoxicity is limited and dopaminergic neurotoxicity occurs In rats , high doses and in high temperatures
+neurotoxicity occurs
+465.
+Moreover , this research shows the amount of doses consumed does not significantly predict memory performance .
+doses consumed
+this research shows the amount of doses consumed does not significantly predict memory performance
+the amount of doses does not significantly predict memory performance
+466.
+Other meta analyses have reported possibility of impairment of executive functioning .
+Other meta analyses have reported possibility of impairment of executive functioning
+467.
+Despite these findings , many factors , including total lifetime MDMA consumption , the duration of abstinence between uses , dosage , the environment of use , multiple drug use/abuse , quality of mental health , various lifestyle choices , and predispositions to develop clinical depression and other disorders , have made the results of many studies difficult to verify .
+many factors , including total lifetime MDMA consumption have made the results of many studies difficult to verify
+468.
+A study that attempted to eliminate these confounding factors found few differences in the cognitive functioning of MDMA-using ravers versus non-MDMA-using ravers , `` In a study designed to minimize limitations found in many prior investigations , we failed to demonstrate marked residual cognitive effects in ecstasy users .
+limitations found in many prior investigations
+A study that attempted to eliminate these confounding factors found few differences in the cognitive functioning of MDMA-using ravers versus non-MDMA-using ravers
+A study attempted to eliminate these confounding factors
+A study attempted to eliminate these confounding factors
+we failed to demonstrate marked residual cognitive effects in ecstasy users In a study
+we to demonstrate marked residual cognitive effects in ecstasy users
+a study designed to minimize limitations
+469.
+This finding contrasts with many previous findings-including our own-and emphasizes the need for continued caution in interpreting field studies of cognitive function in illicit ecstasy users '' .
+This finding contrasts with many previous findings-including our own-and emphasizes the need for continued caution in interpreting field studies of cognitive function in illicit ecstasy users
+470.
+Diuretics such as alcohol may exacerbate these risks further .
+Diuretics such as alcohol may exacerbate further these risks
+471.
+The rate at which the brain recovers from serotonergic changes is unclear .
+the brain recovers from serotonergic changes is unclear The rate
+472.
+One study demonstrated lasting serotonergic changes in some animals exposed to MDMA .
+One study demonstrated lasting serotonergic changes in some animals
+serotonergic changes in some animals exposed to MDMA
+473.
+Some studies show MDMA may be neurotoxic in humans .
+Some studies show MDMA may be neurotoxic in humans
+MDMA may be neurotoxic in humans
+474.
+Other studies , however , suggest that any potential brain damage may be at least partially reversible following prolonged abstinence from MDMA .
+Other studies suggest that any potential brain damage may be at least partially reversible following prolonged abstinence from MDMA
+any potential brain damage may be at least partially reversible following prolonged abstinence from MDMA

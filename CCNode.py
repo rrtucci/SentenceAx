@@ -13,7 +13,7 @@ class CCNode:
 
     """
 
-    def __init__(self, depth):
+    def __init__(self, ccloc, osent_words):
         """
         e.g. "difference between apples and oranges"
         ccloc = 3
@@ -36,27 +36,27 @@ class CCNode:
         seplocs:
             separator (like commas) locations
         spans
-        depth
         """
-        self.depth=depth
-        self.ccloc = -1
+        self.osent_words = osent_words
+        self.ccloc = ccloc
+        self.spanned_locs = []
+        self.unspanned_locs = []
         self.seplocs = []
         self.spans = []
 
 
     def check_spans(self):
-        last_b = 0
+        last_b = -1
         for a, b in self.spans:
             assert a < b
             assert last_b <= a
-            last_b = a
+            last_b = b
 
     def check_all(self):
         self.check_spans()
-        spanned_locs = self.get_spanned_locs()
-        assert self.ccloc in spanned_locs
+        assert self.ccloc in self.spanned_locs
         for loc in self.seplocs:
-            assert loc in spanned_locs
+            assert loc in self.spanned_locs
             
     def get_span_pair(self, index, check=False):
         """
@@ -110,24 +110,23 @@ class CCNode:
         return sorted(spanned_locs)
 
     def get_unspanned_locs(self):
-        spanned_locs = self.get_spanned_locs()
-        mini = min(spanned_locs)
-        maxi = max(spanned_locs)
+        mini = min(self.spanned_locs)
+        maxi = max(self.spanned_locs)
         unspanned_locs = []
         for i in range(mini, maxi + 1):
-            if i not in spanned_locs:
+            if i not in self.spanned_locs:
                 unspanned_locs.append(i)
         return unspanned_locs
 
 
-    def omits_unbreakable_words(self, orig_words):
+    def omits_unbreakable_words(self):
         """
         similar to data.remove_unbreakable_conjuncts()
 
 
         Parameters
         ----------
-        orig_words
+        osent_words
 
         Returns
         -------
@@ -135,23 +134,20 @@ class CCNode:
         """
 
         unbreakable_locs = []
-        spanned_locs = self.get_spanned_locs()
-        words = [orig_words[loc] for loc in spanned_locs]
+        words = [self.osent_words[loc] for loc in self.spanned_locs]
         for i, word in enumerate(words):
             if word.lower() in UNBREAKABLE_WORDS:
                 unbreakable_locs.append(i)
-                
-        unspanned_locs = self.get_unspanned_locs()
+
         for i in unbreakable_locs:
-            if i in unspanned_locs:
+            if i in self.unspanned_locs:
                 return True
         return False
 
-    def get_cc_sent(self, orig_words):
-        spanned_locs = self.get_spanned_locs()
+    def get_cc_sent(self):
         words = []
-        for i in spanned_locs:
-            words.append(orig_words[i])
+        for i in self.spanned_locs:
+            words.append(self.osent_words[i])
         return " ".join(words)
 
 

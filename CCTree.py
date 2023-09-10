@@ -9,6 +9,7 @@ class CCTree:
         # orig_sent is a coordinated sentence, the full original sentence
         # before extractions
         self.orig_sent = orig_sent
+        self.osent_words = get_words(orig_sent)
         self.ll_ilabel = ll_ilabel
         self.extra_locs = []
 
@@ -47,10 +48,9 @@ class CCTree:
         return ccnodes[unique_k]
 
     def fix_ccnodes(self):
-        words = get_words(self.orig_sent)
         for ccnode in self.ccnodes:
-            if not words[ccnode.ccloc] or \
-                    words[ccnode.ccloc] in ['nor', '&'] or \
+            if not self.osent_words[ccnode.ccloc] or \
+                    self.osent_words[ccnode.ccloc] in ['nor', '&'] or \
                     ccnode.omits_unbreakable_words():
                 k = self.ccnodes.index(ccnode)
                 self.ccnodes.pop(k)
@@ -106,16 +106,10 @@ class CCTree:
                         is_CP = True
                         start_loc = i
                 if ilabel == 2:  # CP_START
-                    words = get_words(self.orig_sent)
-                    ccnode = CCNode(depth)
                     is_CP = True
                     start_loc = i
                 if ilabel == 3:  # CC
-                    if ccnode :
-                        ccnode.ccloc = i
-                    else:
-                        # ccnode words which do not have associated spans
-                        self.ccnodes[i] = None
+                    ccnode = CCNode(i, self.osent_words)
                 if ilabel == 4 and ccnode :  # SEP
                     if not ccnode.seplocs:
                         ccnode.seplocs = []
@@ -251,11 +245,11 @@ class CCTree:
         """
         # self.fix_ccnodes()  was called at the end of get_ccnodes()
 
-        orig_words = get_words(self.orig_sent)
         spanned_sents = []
         for ccnode in self.ccnodes:
             for span in ccnode.spans:
-                spanned_sents.append(' '.join(orig_words[span[0]:span[1]]))
+                spanned_sents.append(
+                    ' '.join(self.osent_words[span[0]:span[1]]))
 
         l_spanned_locs = []
         root_count = len(self.root_cclocs)

@@ -42,8 +42,8 @@ the others are trivial.
 """
 
 
-def translate_words_to_extags(ex, set_extags):
-    if set_extags:
+def translate_words_to_extags(ex):
+    if not ex.extags_are_set:
         ex.set_extags()
     return ex.extags
 
@@ -117,8 +117,8 @@ def translate_extags_to_words(extags, orig_sentL):
     -------
 
     """
-    all_words = get_words(orig_sentL)
-    max_len = len(all_words)
+    orig_sentL_words = get_words(orig_sentL)
+    max_len = len(orig_sentL_words)
     l_arg1 = []
     l_rel = []
     l_arg2 = []
@@ -126,19 +126,19 @@ def translate_extags_to_words(extags, orig_sentL):
         # extags may be padded
         if k < max_len:
             if extag == "ARG1":
-                l_arg1.append(all_words[k])
+                l_arg1.append(orig_sentL_words[k])
             elif extag == "REL":
-                l_rel.append(all_words[k])
+                l_rel.append(orig_sentL_words[k])
             elif extag in ["ARG2", "LOC", "TIME"]:
-                l_arg2.append(all_words[k])
-            if l_rel[-1] == "[unused1]":
-                l_rel = ["[is]"] + l_rel[:-1]
-            elif l_rel[-1] == "[unused2]":
-                l_rel = ["[is]"] + l_rel[:-1] + ["[of]"]
-            elif l_rel[-1] == "[unused3]":
-                l_rel = ["[is]"] + l_rel[:-1] + ["[from]"]
+                l_arg2.append(orig_sentL_words[k])
+    if l_rel[-1] == "[unused1]":
+        l_rel = ["[is]"] + l_rel[:-1]
+    elif l_rel[-1] == "[unused2]":
+        l_rel = ["[is]"] + l_rel[:-1] + ["[of]"]
+    elif l_rel[-1] == "[unused3]":
+        l_rel = ["[is]"] + l_rel[:-1] + ["[from]"]
 
-        return l_arg1 + l_rel + l_arg2
+    return l_arg1 + l_rel + l_arg2
 
 
 def translate_cctags_to_ilabels(cctags):
@@ -149,13 +149,13 @@ def translate_cctags_to_ilabels(cctags):
 
 
 def translate_cctags_to_words(cctags, orig_sentL):
-    all_words = get_words(orig_sentL)
-    max_len = len(all_words)
+    orig_senL_words = get_words(orig_sentL)
+    max_len = len(orig_senL_words)
     cc_words = []
     for k, cctag in enumerate(cctags):
         # cctags may be padded
         if k < max_len and cctag not in "NONE":
-            cc_words.append(all_words[k])
+            cc_words.append(orig_senL_words[k])
     return cc_words
 
 
@@ -198,3 +198,24 @@ def translate_ilabels_to_words_via_cctags(ilabels, orig_sentL):
     return translate_cctags_to_words(cctags, orig_sentL)
 
 
+if __name__ == "__main__":
+    from AllenTool import *
+
+
+    def main1():
+        at = AllenTool("testing_files/one_sample_allen.tsv")
+        # print("llkm", at.sentL_to_exs)
+        orig_sentL = list(at.sentL_to_exs.keys())[0]
+        exs = at.sentL_to_exs[orig_sentL]
+        for ex in exs:
+            extags = translate_words_to_extags(ex)
+            ilabels = translate_extags_to_ilabels(extags)
+            words = translate_extags_to_words(extags, orig_sentL)
+            print()
+            print(" ".join(extags))
+            print(" ".join(str(k) for k in ilabels))
+            print(" ".join(words))
+            print(ex.get_simple_sent())
+
+
+    main1()

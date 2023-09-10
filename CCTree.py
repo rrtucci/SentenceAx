@@ -1,5 +1,5 @@
 from CCNode import *
-from numpy import np
+import numpy as np
 from sax_utils import get_words
 from copy import deepcopy
 

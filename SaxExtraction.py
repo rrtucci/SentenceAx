@@ -147,7 +147,7 @@ class SaxExtraction():
         # print("hjki", str0)
         return str0
 
-    def set_is_extagged_bool_to_true(self, extag_name):
+    def set_is_extagged_flag_to_true(self, extag_name):
         assert extag_name in BASE_EXTAGS
         self.is_assigned_d[extag_name] = True
 
@@ -156,12 +156,12 @@ class SaxExtraction():
         if has_2_matches(matches):
             m0 = matches[0]
             self.extags[m0.b: m0.b + m0.size] = [extag_name] * m0.size
-            self.set_is_extagged_bool_to_true(extag_name)
+            self.set_is_extagged_flag_to_true(extag_name)
 
     def set_extags_of_gt_2_matches(self, matches, extag_name):
         assert extag_name in BASE_EXTAGS
         if has_gt_2_matches(matches):
-            self.set_is_extagged_bool_to_true(extag_name)
+            self.set_is_extagged_flag_to_true(extag_name)
             for m in matches:
                 self.extags[m.b: m.b + m.size] = \
                     [extag_name] * m.size
@@ -291,7 +291,7 @@ class SaxExtraction():
         if (not self.is_assigned_d["REL"]) and len(self.rel_words) > 0:
             # IS
             if self.rel == '[is]':
-                self.set_is_extagged_bool_to_true("REL")
+                self.set_is_extagged_flag_to_true("REL")
                 assert self.orig_sentL_words[-3] == '[unused1]'
                 self.extags[-3] = 'REL'
             # IS-OF
@@ -338,7 +338,7 @@ class SaxExtraction():
                 assert self.arg1_words == self.orig_sentL_words[
                                           loc0: loc0 + len(
                                               self.arg1_words)]
-                self.set_is_extagged_bool_to_true("ARG1")
+                self.set_is_extagged_flag_to_true("ARG1")
                 # only extag the first occurrence of arg1
                 self.extags[
                 loc0: loc0 + len(self.arg1_words)] = \
@@ -394,7 +394,7 @@ class SaxExtraction():
                         assert rel_words == \
                                self.orig_sentL_words[
                                loc0: loc0 + len(rel_words)]
-                        self.set_is_extagged_bool_to_true("REL")
+                        self.set_is_extagged_flag_to_true("REL")
                         self.extags[loc0: loc0 + len(rel_words)] = \
                             ['REL'] * len(rel_words)
 
@@ -413,7 +413,7 @@ class SaxExtraction():
                         # assert rel_words == \
                         #        self.orig_sentL_words[
                         #        loc0: loc0 + len(rel_words)]
-                        self.set_is_extagged_bool_to_true('REL')
+                        self.set_is_extagged_flag_to_true('REL')
                         self.extags[loc0: loc0 + len(rel_words)] = \
                             ['REL'] * len(rel_words)
 
@@ -456,7 +456,7 @@ class SaxExtraction():
         self.extags_are_set = True
 
     @staticmethod
-    def convert_to_sax_extraction(carb_ext):
+    def convert_to_sax_ex(carb_ext):
         """
         class Extraction:
         def __init__(self, pred, head_pred_index, sent,
@@ -505,7 +505,7 @@ class SaxExtraction():
                              arg2=arg2,
                              score=carb_ext.confidence)
 
-    def convert_to_carb_extraction(self):
+    def convert_to_carb_ex(self):
         """
         openie6.model.write_to_files
 

@@ -22,6 +22,7 @@ class AllenTool:
         self.allen_fp = allen_fp
         # ex =extraction sent=sentence
         self.sentL_to_exs = self.read_allen_file()
+        #print("mklop", self.sentL_to_exs)
         self.num_sents = len(self.sentL_to_exs)
         # print("lkop", self.num_sents)
 
@@ -70,12 +71,13 @@ class AllenTool:
         for line in lines:
             # print("bnhk", line)
             ex = AllenTool.get_ex_from_allen_line(line)
-            if prev_in_sentL and ex.orig_sentL != prev_in_sentL:
+            if (prev_in_sentL and ex.orig_sentL != prev_in_sentL) :
                 sentL_to_exs[prev_in_sentL] = exs
                 exs = []
             exs.append(ex)
             prev_in_sentL = ex.orig_sentL
-
+        # last sample
+        sentL_to_exs[prev_in_sentL] = exs
         # print("zlpd", sentL_to_exs)
         return sentL_to_exs
 
@@ -184,7 +186,7 @@ class AllenTool:
 
 if __name__ == "__main__":
     def main1(ftype):
-        allen_fp = "testing_files/small-allen.tsv"
+        allen_fp = "testing_files/small_allen.tsv"
         if ftype=="ex":
             out_fp = "testing_files/small_extags.txt"
         elif ftype=="ss":
@@ -192,21 +194,19 @@ if __name__ == "__main__":
         else:
             assert False
         at = AllenTool(allen_fp)
-        at.read_allen_file()
         at.write_allen_alternative_file(out_fp,
                                         first_sample_id=1,
                                         last_sample_id=-1,
                                         ftype=ftype,
                                         numbered=True)
     def main2():
-        allen_fp = "testing_files/small-allen.tsv"
+        allen_fp = "testing_files/small_allen.tsv"
         out_dir = "testing_files"
         at = AllenTool(allen_fp)
-        at.read_allen_file()
         at.write_extags_ttt_files(out_dir)
 
 
 
-    main1("ss")
-    # main1("ex")
-    # main2()
+    # main1("ss")
+    main1("ex")
+    #main2()

@@ -1,5 +1,3 @@
-Despite having invented much of the technology of software , Dijkstra eschewed the use of computers in Edsger W. Dijkstra own work for many decades .
-NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE ARG1 REL ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 NONE
 Almost all EWDs appearing after 1972 were hand-written .
 ARG1 ARG1 ARG1 REL ARG2 ARG2 ARG2 ARG2 NONE
 When lecturing , Edsger W. Dijkstra would write proofs in chalk on a blackboard rather than using overhead foils .
@@ -296,3 +294,6 @@ NONE NONE NONE ARG1 REL REL ARG2 ARG2 ARG2 NONE
 Other studies , however , suggest that any potential brain damage may be at least partially reversible following prolonged abstinence from MDMA .
 ARG1 ARG1 NONE NONE NONE REL ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 NONE
 NONE NONE NONE NONE NONE NONE NONE ARG1 ARG1 ARG1 ARG1 REL REL ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 NONE
+However , some recent studies have suggested MDMA use may not be associated with chronic depression .
+NONE NONE ARG1 ARG1 ARG1 REL REL ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 NONE
+NONE NONE NONE NONE NONE NONE NONE ARG1 ARG1 REL REL REL REL ARG2 ARG2 ARG2 NONE

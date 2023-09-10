@@ -26,7 +26,7 @@ def delete_lines_from_file(fp, start_line):
 
 
 # Specify the file path and line number to start deleting from
-fp = 'small-allen.tsv'
+fp = 'small_allen.tsv'
 start_line = 1001
 
 delete_lines_from_file(fp, start_line)

@@ -58,14 +58,14 @@ class CCNode:
         for loc in self.seplocs:
             assert loc in self.spanned_locs
             
-    def get_span_pair(self, index, check=False):
+    def get_span_pair(self, mid_pair_id, throw_exception=False):
         """
         similar to metric.Coordination.get_pair()
         
         Parameters
         ----------
-        index
-        check
+        mid_pair_id
+        throw_exception
 
         Returns
         -------
@@ -73,14 +73,17 @@ class CCNode:
         """
         span_pair = None
         for i in range(1, len(self.spans)):
-            if index < self.spans[i][0]:
+            if mid_pair_id < self.spans[i][0]:
                 span_pair = (self.spans[i - 1], self.spans[i])
-                assert index >= span_pair[0][1]  and \
-                       index < span_pair[1][0]
+                # there must be at least one point between the
+                # 2 spans, or else the 2 spans would be 1
+                assert mid_pair_id >= span_pair[0][1] and \
+                       mid_pair_id < span_pair[1][0]
                 break
-        if check and span_pair is None:
+        if throw_exception and span_pair is None:
             raise LookupError(
-                "Could not find any span_pair for index={}".format(index))
+                "Could not find any span_pair for index={}".
+                format(mid_pair_id))
         return span_pair
 
 
@@ -92,7 +95,7 @@ class CCNode:
         # self is parent iff at least one span in self.spans
         # contains all spans of the child
         for span in self.spans:
-            if span[0] <= ch_min and span[1] - 1 >= ch_max:
+            if span[0] <= ch_min and ch_max <= span[1] - 1:
                 return True
         return False
 
@@ -110,16 +113,14 @@ class CCNode:
         return sorted(spanned_locs)
 
     def get_unspanned_locs(self):
-        mini = min(self.spanned_locs)
-        maxi = max(self.spanned_locs)
         unspanned_locs = []
-        for i in range(mini, maxi + 1):
+        for i in range(len(self.osent_words)):
             if i not in self.spanned_locs:
                 unspanned_locs.append(i)
         return unspanned_locs
 
 
-    def omits_unbreakable_words(self):
+    def an_unbreakable_word_is_not_spanned(self):
         """
         similar to data.remove_unbreakable_conjuncts()
 
@@ -134,8 +135,8 @@ class CCNode:
         """
 
         unbreakable_locs = []
-        words = [self.osent_words[loc] for loc in self.spanned_locs]
-        for i, word in enumerate(words):
+        spanned_words = [self.osent_words[loc] for loc in self.spanned_locs]
+        for i, word in enumerate(spanned_words):
             if word.lower() in UNBREAKABLE_WORDS:
                 unbreakable_locs.append(i)
 

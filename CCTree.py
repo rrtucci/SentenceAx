@@ -48,10 +48,11 @@ class CCTree:
         return ccnodes[unique_k]
 
     def fix_ccnodes(self):
+        # similar tocoords_to_sentences
         for ccnode in self.ccnodes:
             if not self.osent_words[ccnode.ccloc] or \
                     self.osent_words[ccnode.ccloc] in ['nor', '&'] or \
-                    ccnode.omits_unbreakable_words():
+                    ccnode.an_unbreakable_word_is_not_spanned():
                 k = self.ccnodes.index(ccnode)
                 self.ccnodes.pop(k)
 

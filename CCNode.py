@@ -1,5 +1,6 @@
 from sax_utils import *
 
+
 class CCNode:
     """
     similar to metric.Coordination
@@ -13,7 +14,13 @@ class CCNode:
 
     """
 
-    def __init__(self, ccloc, osent_words):
+    def __init__(self,
+                 ccloc,
+                 depth,
+                 osent_locs,
+                 osent_words,
+                 seplocs,
+                 spans):
         """
         e.g. "difference between apples and oranges"
         ccloc = 3
@@ -37,13 +44,17 @@ class CCNode:
             separator (like commas) locations
         spans
         """
-        self.osent_words = osent_words
         self.ccloc = ccloc
-        self.spanned_locs = []
-        self.unspanned_locs = []
-        self.seplocs = []
-        self.spans = []
+        self.depth = depth
+        self.osent_locs = osent_locs
+        self.osent_words = osent_words
+        self.seplocs = seplocs
+        self.spans = spans
+        # depth is just a label
+        # for distinguishing between CCNodes. Not used for anything
 
+        self.spanned_locs = self.get_spanned_locs()
+        self.unspanned_locs = self.get_unspanned_locs()
 
     def check_spans(self):
         last_b = -1
@@ -57,10 +68,12 @@ class CCNode:
         assert self.ccloc in self.spanned_locs
         for loc in self.seplocs:
             assert loc in self.spanned_locs
-            
+
     def get_span_pair(self, mid_pair_id, throw_exception=False):
         """
         similar to metric.Coordination.get_pair()
+
+        used in CCReport.grow()
         
         Parameters
         ----------
@@ -86,7 +99,6 @@ class CCNode:
                 format(mid_pair_id))
         return span_pair
 
-
     def is_parent(self, child):
         # parent, child are instances of CCNode
         ch_min = child.spans[0][0]
@@ -99,15 +111,15 @@ class CCNode:
                 return True
         return False
 
-    def get_spanned_locs(self, extra_locs=None):
+    def get_spanned_locs(self):
         spanned_locs = []
         for span in self.spans:
             for i in range(span[0], span[1]):
                 spanned_locs.append(i)
         min = self.spans[0][0]
         max = self.spans[-1][1] - 1
-        if extra_locs:
-            for i in extra_locs:
+        if self.osent_locs:
+            for i in self.osent_locs:
                 if i < min or i > max:
                     spanned_locs.append(i)
         return sorted(spanned_locs)
@@ -119,10 +131,10 @@ class CCNode:
                 unspanned_locs.append(i)
         return unspanned_locs
 
-
     def an_unbreakable_word_is_not_spanned(self):
         """
         similar to data.remove_unbreakable_conjuncts()
+        used in CCTree.fix_ccnodes()
 
 
         Parameters
@@ -150,5 +162,3 @@ class CCNode:
         for i in self.spanned_locs:
             words.append(self.osent_words[i])
         return " ".join(words)
-
-

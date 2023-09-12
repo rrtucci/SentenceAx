@@ -2,6 +2,7 @@ from CCNode import *
 import numpy as np
 from sax_utils import get_words
 from copy import deepcopy
+import treelib as tr
 
 
 class CCTree:
@@ -11,6 +12,7 @@ class CCTree:
         self.orig_sent = orig_sent
         self.osent_words = get_words(orig_sent)
         self.ll_ilabel = ll_ilabel
+
         self.osent_locs = range(len(self.osent_words))
 
         self.ccnodes = None
@@ -103,8 +105,7 @@ class CCTree:
                                         depth,
                                         self.osent_words,
                                         seplocs,
-                                        spans,
-                                        self.osent_locs)
+                                        spans)
                         self.ccnodes.append(ccnode)
                         ccloc = -1
                         seplocs = []
@@ -166,6 +167,22 @@ class CCTree:
             ccloc = ccnode.ccloc
             if not self.child_ccloc_to_par_cclocs[ccloc]:
                 self.root_cclocs.append(ccloc)
+
+    def draw_tree(self):
+
+
+        tree = tr.Tree()
+        for child_ccloc, par_cclocs in self.child_ccloc_to_par_cclocs.items():
+            ccnode = self.get_ccnode_from_ccloc(child_ccloc, self.ccnodes)
+            child_name = " ".join(ccnode.osent_words)
+            for par_ccloc in par_cclocs:
+                ccnode = self.get_ccnode_from_ccloc(par_ccloc, self.ccnodes)
+                par_name = " ".join(ccnode.osent_words)
+                if par_name:
+                    tree.create_node(child_name, child_name, parent=par_name)
+                else:
+                    tree.create_node(child_name, child_name)
+        tree.show()
 
     @staticmethod
     def get_fat_spanned_locs(ccnode, spanned_locs):

@@ -17,7 +17,6 @@ class CCNode:
     def __init__(self,
                  ccloc,
                  depth,
-                 osent_locs,
                  osent_words,
                  seplocs,
                  spans):
@@ -46,13 +45,13 @@ class CCNode:
         """
         self.ccloc = ccloc
         self.depth = depth
-        self.osent_locs = osent_locs
         self.osent_words = osent_words
         self.seplocs = seplocs
         self.spans = spans
         # depth is just a label
         # for distinguishing between CCNodes. Not used for anything
 
+        self.osent_locs = range(len(osent_words))
         self.spanned_locs = self.get_spanned_locs()
         self.unspanned_locs = self.get_unspanned_locs()
 

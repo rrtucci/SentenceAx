@@ -794,7 +794,7 @@ class Model(pl.LightningModule):
 
         orig_sent_to_pred_l_ex = {}
         for sample_id, orig_sentL in enumerate(l_orig_sentL):
-            orig_sent = orig_sentL.split('[unused1]')[0].strip()
+            orig_sent = unL(orig_sentL)
             if fix_d:
                 orig_sent0 = fix_d[orig_sent]
                 if orig_sent0 not in orig_sent_to_pred_l_ex:

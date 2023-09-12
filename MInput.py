@@ -243,7 +243,7 @@ class MInput:
 
                 if len(sentL.split()) <= 100:
                     l_osent_ilabels.append(os_ilabels)
-                    orig_sent = sentL.split('[unused1]')[0].strip()
+                    orig_sent = unL(sentL)
                     l_orig_sent.append(orig_sent)
 
                     # note that if li=[2,3]

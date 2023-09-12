@@ -88,6 +88,12 @@ def get_num_ttt_sents(num_sents, ttt_fractions):
     # print("nnmk", num_train_sents, num_val_sents, num_test_sents)
     return num_train_sents, num_val_sents, num_test_sents
 
+def unL(osentL):
+    return osentL.split("[unused")[0].strip()
+
+def get_l_str(l_int):
+    return [str(i) for i in l_int]
+
 
 
 

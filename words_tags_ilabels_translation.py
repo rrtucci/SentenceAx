@@ -48,7 +48,7 @@ def translate_words_to_extags(ex):
     return ex.extags
 
 
-def translate_words_to_cctags(orig_sent, ll_ilabel):
+def translate_words_to_cctags(ll_ilabel, orig_sentL):
     """
     CCTree ilabels not same as those provided by AutoEncoder.
 
@@ -66,8 +66,9 @@ def translate_words_to_cctags(orig_sent, ll_ilabel):
     -------
 
     """
-    words = get_words(orig_sent)
-    cctree = CCTree(orig_sent, ll_ilabel)
+    osent = orig_sentL.split("[unused1]")[0].strip()
+    osent_words = get_words(osent)
+    cctree = CCTree(osent, ll_ilabel)
     l_spanned_locs = cctree.l_spanned_locs
     max_depth = len(l_spanned_locs)
     nodes = cctree.ccnodes
@@ -82,7 +83,7 @@ def translate_words_to_cctags(orig_sent, ll_ilabel):
                 cclocs.append(node.ccloc)
         depth_to_seplocs[depth] = seplocs
         depth_to_cclocs[depth] = cclocs
-    l_cctags = [["NONE"] * len(words)]
+    l_cctags = [["NONE"] * len(osent_words)]
     for depth, locs in enumerate(l_spanned_locs):
         cctags = l_cctags[depth]
         for k, loc in enumerate(sorted(locs)):

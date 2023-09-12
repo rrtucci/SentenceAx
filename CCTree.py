@@ -3,7 +3,7 @@ import numpy as np
 from sax_utils import get_words
 from copy import deepcopy
 import treelib as tr
-
+from words_tags_ilabels_translation import *
 
 class CCTree:
     def __init__(self, orig_sent, ll_ilabel):
@@ -182,7 +182,7 @@ class CCTree:
                     tree.create_node(child_name, child_name, parent=par_name)
                 else:
                     tree.create_node(child_name, child_name)
-        tree.show()
+        return tree.show()
 
     @staticmethod
     def get_fat_spanned_locs(ccnode, spanned_locs):
@@ -327,3 +327,61 @@ class CCTree:
     #         ccnode = CCNode(ccloc, spans, seps_locs, ccnode.tag)
     #         new_ccnodes.append(ccnode)
     #     return new_ccnodes
+
+if __name__ == "__main__":
+    def main1():
+        in_fp = "testing_files/small_cctags.txt"
+        out1_fp = "testing_files/out/small_cc_sents.txt"
+        out2_fp = "testing_files/out/small_cc_ilabels.txt"
+        with open(in_fp, "r", encoding="utf-8") as f:
+            in_lines = f.readlines()
+
+        out1_lines = []
+        out2_lines = []
+        for in_line in in_lines:
+            if "NONE" in in_line:
+                out1_line = " ".join(translate_cctags_to_words(
+                    get_words(in_line), osent+ UNUSED_TOKENS_STR))
+                out2_line = get_l_str(translate_cctags_to_ilabels(
+                    get_words(in_line)))
+                out2_line = " ".join(out2_line)
+            else:
+                out1_line = in_line.strip()
+                out2_line = out1_line
+                if in_line:
+                    osent= in_line.strip()
+            out1_lines.append(out1_line)
+            out2_lines.append(out2_line)
+            with open(out1_fp, "w", encoding="utf-8") as f:  
+                for out1_line in out1_lines:
+                    f.write(out1_line + "\n")
+            with open(out2_fp, "w", encoding="utf-8") as f:  
+                for out2_line in out2_lines:
+                    f.write(out2_line + "\n")
+    def main2():
+        in_fp = "testing_files/out/small_cc_ilabels.txt"
+        # out_fp = "testing_files/out/small_cc_trees.txt"
+        with open(in_fp, "r", encoding="utf-8") as f:
+            in_lines = f.readlines()
+
+        l_osent = []
+        lll_ilabel=[]
+        ll_ilabel =[]
+        for in_line in in_lines:
+            if in_line and in_line[0].isalpha():
+                l_osent.append(in_line.strip())
+                if ll_ilabel:
+                    lll_ilabel.append(ll_ilabel)
+                ll_ilabel =[]
+            elif in_line and in_line[0].isdigit():
+                words = get_words(in_line)
+                ll_ilabel.append([int(x) for x in words])
+        for k in range(len(l_osent)):
+            osent = l_osent[k]
+            print(osent)
+            tree = CCTree(osent, lll_ilabel[k])
+            tree.draw_tree()
+            print()
+
+    # main1()
+    main2()

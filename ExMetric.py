@@ -53,8 +53,7 @@ class ExMetric():
         assert num_samples == len(l_orig_sent)
 
         for sam, orig_sent in enumerate(l_orig_sent):
-            words = orig_sent.split() + UNUSED_TOKENS
-            orig_sent = orig_sent.split('[unused1]')[0].strip()
+            osentL_words = orig_sent.split() + UNUSED_TOKENS
             if self.fix_d:
                 if self.fix_d[orig_sent] not in self.sent_to_extractions:
                     self.sent_to_extractions[self.fix_d[orig_sent]] = []
@@ -67,11 +66,11 @@ class ExMetric():
                 self.osent_to_verb_mask[orig_sent] = verb_mask[sam]
 
             for depth in range(num_extractions):
-                l_ex = sent_to_extractions[sam][depth][:len(words)]
+                l_ex = sent_to_extractions[sam][depth][:len(osentL_words)]
                 if sum(l_ex) == 0:  # extractions completed
                     break
                 ex0 = self.get_extraction(
-                    l_ex, words, ll_score[sam][depth])
+                    l_ex, osentL_words, ll_score[sam][depth])
                 if ex0.args[0] != '' and ex0.pred != '':
                     if self.fix_d:
                         if not contains_extraction(ex0,

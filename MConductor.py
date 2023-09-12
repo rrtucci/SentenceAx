@@ -590,11 +590,10 @@ class MConductor:
         word_id0 = 0
 
         for sam_id in range(num_samples):
-            words = get_words(l_sentL[sam_id].split('[unused1]')[0])
+            words = get_words(unL(l_sentL[sam_id]))
             lll_word_loc[sam_id].append(list(range(len(words))))
 
-            lines.append(
-                '\n' + l_sentL[sam_id].split('[unused1]')[0].strip())
+            lines.append('\n' + unL(l_sentL[sam_id]))
             for ex_id in range(len(lll_word_loc[sam_id])):
                 assert len(lll_word_loc[sam_id][ex_id])==\
                     len(bout.l_orig_sent[sam_id0])

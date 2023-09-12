@@ -7,7 +7,6 @@ params_d = parameters dictionary
 
 
 """
-from sax_utils import none_dd, merge_dicts
 
 # global paths
 
@@ -339,4 +338,10 @@ DEFAULT_PARAMS_D=\
     "val_check_interval": 1.0,
     "wreg": 0
 }
+from copy import copy
+def merge_dicts(dominant_d, default_d):
+    new_dict = copy(default_d)
+    for key in dominant_d:
+        new_dict[key] = dominant_d[key]
+    return new_dict
 PARAMS_D = merge_dicts(PARAMS_D, DEFAULT_PARAMS_D)

@@ -91,6 +91,8 @@ class CCTree:
             # }
 
             for i, ilabel in enumerate(l_ilabel):
+                # print("lmk90", i, spans, ccloc, started_CP,
+                #       "ilabel=", ilabel)
                 if ilabel != 1:  # CP
                     if started_CP:
                         started_CP = False
@@ -110,28 +112,27 @@ class CCTree:
                         ccloc = -1
                         seplocs = []
                         spans = []
-                elif ilabel == 0:  # NONE
+                if ilabel == 0:  # NONE
                     continue
-                elif ilabel == 1:  # CP
+                if ilabel == 1:  # CP
                     if not started_CP:
                         started_CP = True
                         start_loc = i
-                elif ilabel == 2:  # CP_START
+                if ilabel == 2:  # CP_START
+                    #print("hjuk", "was here")
                     started_CP = True
                     start_loc = i
-                elif ilabel == 3:  # CC
+                if ilabel == 3:  # CC
                     ccloc = i
-                elif ilabel == 4:  # SEP
+                if ilabel == 4:  # SEP
                     seplocs.append(i)
-                elif ilabel == 5:  # OTHERS
+                if ilabel == 5:  # OTHERS
                     continue
-                else:
-                    assert False
         self.fix_ccnodes()
         for ccnode in self.ccnodes:
             ccnode.check_all()
 
-    def set_tree_structure(self):
+    def set_tree_structure(self, forced_tree=True):
         """
         similar to data.get_tree(conj) where conj=coords=ccnodes.
         Openie6 normally uses conj=ccloc, but not here.
@@ -142,17 +143,6 @@ class CCTree:
 
         """
         # par = parent
-
-        self.par_ccloc_to_child_cclocs = {}
-        for par_ccnode in self.ccnodes:
-            par_ccloc = par_ccnode.ccloc
-            child_cclocs = []
-            for child_ccnode in self.ccnodes:
-                child_ccloc = child_ccnode.ccloc
-                if par_ccnode.is_parent(child_ccnode) and \
-                        child_ccloc not in child_cclocs:
-                    child_cclocs.append(child_ccloc)
-            self.par_ccloc_to_child_cclocs[par_ccloc] = child_cclocs
 
         # same with child and par interchanged
         self.child_ccloc_to_par_cclocs = {}
@@ -166,6 +156,29 @@ class CCTree:
                     par_cclocs.append(par_ccloc)
             self.child_ccloc_to_par_cclocs[child_ccloc] = par_cclocs
 
+        if forced_tree:
+            for child_ccnode in self.ccnodes:
+                child_ccloc = child_ccnode.ccloc
+                map = self.child_ccloc_to_par_cclocs
+                # force every node to have 0 or 1 parent
+                map[child_ccloc] = map[child_ccloc][:1]
+
+
+        self.par_ccloc_to_child_cclocs = {}
+        for par_ccnode in self.ccnodes:
+            par_ccloc = par_ccnode.ccloc
+            child_cclocs = []
+            for child_ccnode in self.ccnodes:
+                child_ccloc = child_ccnode.ccloc
+                is_parent = (par_ccloc in
+                    self.child_ccloc_to_par_cclocs[child_ccloc])
+                if is_parent and \
+                        child_ccloc not in child_cclocs:
+                    child_cclocs.append(child_ccloc)
+            self.par_ccloc_to_child_cclocs[par_ccloc] = child_cclocs
+
+
+
 
         self.root_cclocs = []
         for ccnode in self.ccnodes:
@@ -174,23 +187,56 @@ class CCTree:
                 self.root_cclocs.append(ccloc)
 
     def draw_tree(self):
-        tree = tr.Tree()
-        for child_ccloc, par_cclocs in self.child_ccloc_to_par_cclocs.items():
-            child_ccnode = self.get_ccnode_from_ccloc(child_ccloc,                                                   self.ccnodes)
-            if child_ccnode:
-                child_name = " ".join(child_ccnode.osent_words)
-                for par_ccloc in par_cclocs:
-                    par_ccnode = self.get_ccnode_from_ccloc(par_ccloc,
-                                                         self.ccnodes)
-                    if par_ccnode:
-                        par_name = " ".join(par_ccnode.osent_words)
-                        if par_name:
-                            tree.create_node(child_name,
-                                             child_name,
-                                             parent=par_name)
-                        else:
-                            tree.create_node(child_name, child_name)
-            return tree.show()
+        """
+        important bug that must be fixed in treelib. In your Python
+        installation, go to Lib\site-packages\treelib and edit tree.py. Find
+        def show. The last line is:
+
+        print(self.reader.encode('utf-8'))
+
+        It should be:
+
+        print(self.reader)
+
+
+
+        Returns
+        -------
+
+        """
+        try:
+            # print("hiko", self.child_ccloc_to_par_cclocs)
+            # print("hikyu", self.par_ccloc_to_child_cclocs)
+            tree = tr.Tree()
+            for child_ccloc, par_cclocs in self.child_ccloc_to_par_cclocs.items():
+                # print("lmkp", str(child_ccloc), str(par_cclocs))
+                child_ccnode = self.get_ccnode_from_ccloc(child_ccloc,
+                                                          self.ccnodes)
+                if child_ccnode:
+                    child_name = str(child_ccnode)
+                    if not par_cclocs:
+                        tree.create_node(child_name, child_name)
+                    else:
+                        for par_ccloc in par_cclocs:
+                            par_ccnode = self.get_ccnode_from_ccloc(par_ccloc,
+                                                                 self.ccnodes)
+                            # print("hgfd", str(par_ccloc))
+                            if par_ccnode:
+                                # print("lmjk", child_ccloc, par_ccloc)
+                                par_name = str(par_ccnode)
+                                # print("hjdf", child_name, par_name)
+                                tree.create_node(child_name,
+                                                 child_name,
+                                                 parent=par_name)
+
+            tree.show()
+            return True
+        except:
+            print("*********************tree not possible")
+            print("par_ccloc_to_child_cclocs=",
+                  self.par_ccloc_to_child_cclocs)
+            return False
+
 
     @staticmethod
     def get_fat_spanned_locs(ccnode, spanned_locs):

@@ -1,4 +1,4 @@
-On the screens , only two forlorn blue figures remained , but the index had recovered a few points and was off about 140 .
-2 1 1 1 1 1 1 1 1 1 5 3 1 1 1 1 1 1 1 1 1 1 1 1 0
-0 0 0 0 0 0 0 0 0 0 0 0 0 0 2 1 1 1 1 3 1 1 1 1 0
-0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+Moreover , it says the RTC 's total obligations may not exceed $ 50 billion , but that figure is derived after including notes and other debt , and subtracting from it the market value of the assets the RTC holds .
+0 0 2 1 1 1 1 1 1 1 1 1 1 1 1 5 3 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 2 1 1 1 1 5 3 1 1 1 1 1 1 1 1 1 1 1 1 0
+0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 2 3 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0

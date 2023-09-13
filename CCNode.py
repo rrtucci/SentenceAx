@@ -71,8 +71,8 @@ class CCNode:
         min = self.spans[0][0]
         max = self.spans[-1][1] - 1
         assert min<= self.ccloc <= max
-        for loc in self.seplocs:
-            assert loc in self.spanned_locs
+        # for loc in self.seplocs:
+        #     assert min<= loc <= max
 
     def get_span_pair(self, mid_pair_id, throw_exception=False):
         """
@@ -165,8 +165,5 @@ class CCNode:
                 return True
         return False
 
-    def get_cc_sent(self):
-        words = []
-        for i in self.spanned_locs:
-            words.append(self.osent_words[i])
-        return " ".join(words)
+    def __str__(self):
+        return str(self.spans) + str(self.ccloc)

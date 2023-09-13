@@ -43,12 +43,12 @@ class CCTree:
             else:
                 one_hot.append(0)
         if sum(one_hot) == 0:
-            print(str(ccloc) + " is not a location of a cc.")
-            assert False
-        if sum(one_hot) > 1:
+            return None
+        elif sum(one_hot) > 1:
             print("more than one ccnode with cc at " + str(ccloc))
             assert False
-        return ccnodes[unique_k]
+        else:
+            return ccnodes[unique_k]
 
     def fix_ccnodes(self):
         # similar to data.coords_to_sentences
@@ -149,18 +149,23 @@ class CCTree:
             child_cclocs = []
             for child_ccnode in self.ccnodes:
                 child_ccloc = child_ccnode.ccloc
-                if par_ccnode.is_parent(child_ccnode):
+                if par_ccnode.is_parent(child_ccnode) and \
+                        child_ccloc not in child_cclocs:
                     child_cclocs.append(child_ccloc)
             self.par_ccloc_to_child_cclocs[par_ccloc] = child_cclocs
 
-        # this is tree so allow only one parent for each node
+        # same with child and par interchanged
         self.child_ccloc_to_par_cclocs = {}
-        for child_ccloc in self.ccnodes:
-            self.child_ccloc_to_par_cclocs[child_ccloc] = []
-            for par_ccloc, child_cclocs in self.par_ccloc_to_child_cclocs:
-                if child_ccloc in child_cclocs:
-                    self.child_ccloc_to_par_cclocs[child_ccloc]. \
-                        append(par_ccloc)
+        for child_ccnode in self.ccnodes:
+            child_ccloc = child_ccnode.ccloc
+            par_cclocs = []
+            for par_ccnode in self.ccnodes:
+                par_ccloc = par_ccnode.ccloc
+                if child_ccnode.is_child(par_ccnode) and \
+                        par_ccloc not in par_cclocs:
+                    par_cclocs.append(par_ccloc)
+            self.child_ccloc_to_par_cclocs[child_ccloc] = par_cclocs
+
 
         self.root_cclocs = []
         for ccnode in self.ccnodes:
@@ -169,20 +174,23 @@ class CCTree:
                 self.root_cclocs.append(ccloc)
 
     def draw_tree(self):
-
-
         tree = tr.Tree()
         for child_ccloc, par_cclocs in self.child_ccloc_to_par_cclocs.items():
-            ccnode = self.get_ccnode_from_ccloc(child_ccloc, self.ccnodes)
-            child_name = " ".join(ccnode.osent_words)
-            for par_ccloc in par_cclocs:
-                ccnode = self.get_ccnode_from_ccloc(par_ccloc, self.ccnodes)
-                par_name = " ".join(ccnode.osent_words)
-                if par_name:
-                    tree.create_node(child_name, child_name, parent=par_name)
-                else:
-                    tree.create_node(child_name, child_name)
-        return tree.show()
+            child_ccnode = self.get_ccnode_from_ccloc(child_ccloc,                                                   self.ccnodes)
+            if child_ccnode:
+                child_name = " ".join(child_ccnode.osent_words)
+                for par_ccloc in par_cclocs:
+                    par_ccnode = self.get_ccnode_from_ccloc(par_ccloc,
+                                                         self.ccnodes)
+                    if par_ccnode:
+                        par_name = " ".join(par_ccnode.osent_words)
+                        if par_name:
+                            tree.create_node(child_name,
+                                             child_name,
+                                             parent=par_name)
+                        else:
+                            tree.create_node(child_name, child_name)
+            return tree.show()
 
     @staticmethod
     def get_fat_spanned_locs(ccnode, spanned_locs):
@@ -230,7 +238,7 @@ class CCTree:
         """
         for ccnode in eqlevel_ccnodes:
             if len(eqlevel_ll_spanned_loc) == 0:
-                spanned_locs = ccnode.get_spanned_locs(self.osent_locs)
+                spanned_locs = ccnode.get_spanned_locs()
                 eqlevel_ll_spanned_loc.append(spanned_locs)
             else:
                 to_be_added_ll_loc = []
@@ -331,8 +339,8 @@ class CCTree:
 if __name__ == "__main__":
     def main1():
         in_fp = "testing_files/small_cctags.txt"
-        out1_fp = "testing_files/out/small_cc_sents.txt"
-        out2_fp = "testing_files/out/small_cc_ilabels.txt"
+        out1_fp = "testing_files/cc_sents.txt"
+        out2_fp = "testing_files/cc_ilabels.txt"
         with open(in_fp, "r", encoding="utf-8") as f:
             in_lines = f.readlines()
 
@@ -359,8 +367,8 @@ if __name__ == "__main__":
                 for out2_line in out2_lines:
                     f.write(out2_line + "\n")
     def main2():
-        in_fp = "testing_files/out/small_cc_ilabels.txt"
-        # out_fp = "testing_files/out/small_cc_trees.txt"
+        in_fp = "testing_files/cc_ilabels.txt"
+        # out_fp = "testing_files/cc_trees.txt"
         with open(in_fp, "r", encoding="utf-8") as f:
             in_lines = f.readlines()
 
@@ -368,14 +376,22 @@ if __name__ == "__main__":
         lll_ilabel=[]
         ll_ilabel =[]
         for in_line in in_lines:
-            if in_line and in_line[0].isalpha():
-                l_osent.append(in_line.strip())
-                if ll_ilabel:
-                    lll_ilabel.append(ll_ilabel)
-                ll_ilabel =[]
-            elif in_line and in_line[0].isdigit():
-                words = get_words(in_line)
-                ll_ilabel.append([int(x) for x in words])
+            if in_line:
+                if in_line[0].isalpha():
+                    l_osent.append(in_line.strip())
+                    if ll_ilabel:
+                        lll_ilabel.append(ll_ilabel)
+                    ll_ilabel =[]
+                elif in_line[0].isdigit():
+                    words = get_words(in_line)
+                    # print("lkll", words)
+                    ll_ilabel.append([int(x) for x in words])
+        # last one
+        if ll_ilabel:
+            lll_ilabel.append(ll_ilabel)
+        #
+        # print("lklo", l_osent)
+        # print("lklo", lll_ilabel)
         for k in range(len(l_osent)):
             osent = l_osent[k]
             print(osent)

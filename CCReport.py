@@ -75,7 +75,7 @@ class CCReport:
         for ccloc in sorted([ccnode.ccloc for ccnode in true_ccnodes]):
             pred_ccnode = CCTree.get_ccnode_from_ccloc(ccloc, pred_ccnodes)
             true_ccnode = CCTree.get_ccnode_from_ccloc(ccloc, true_ccnodes)
-            if pred_ccnode is not None and true_ccnode is not None:
+            if pred_ccnode and true_ccnode:
                 pred_spans = pred_ccnode.spans
                 true_spans = true_ccnode.spans
                 depth = true_ccnode.depth
@@ -101,11 +101,11 @@ class CCReport:
                 else:
                     self.overall_scorer.N1L1_f += 1
                     self.depth_scorer.N1L1_f += 1
-            if pred_ccnode is not None and true_ccnode is None:
+            if pred_ccnode and true_ccnode:
                 self.overall_scorer.N1L0 += 1
-            if pred_ccnode is None and true_ccnode is not None:
+            if pred_ccnode and true_ccnode:
                 depth = true_ccnode.ilabel
                 self.overall_scorer.N0L1 += 1
                 self.depth_scorer.N0L1 += 1
-            if pred_ccnode is None and true_ccnode is None:
+            if pred_ccnode and true_ccnode:
                 self.overall_scorer.N0L0 += 1

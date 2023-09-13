@@ -188,9 +188,9 @@ if __name__ == "__main__":
     def main1(ftype):
         allen_fp = "testing_files/small_allen.tsv"
         if ftype=="ex":
-            out_fp = "testing_files/out/small_extags.txt"
+            out_fp = "testing_files/small_extags.txt"
         elif ftype=="ss":
-            out_fp = "testing_files/out/small_simple_sents.txt"
+            out_fp = "testing_files/small_simple_sents.txt"
         else:
             assert False
         at = AllenTool(allen_fp)

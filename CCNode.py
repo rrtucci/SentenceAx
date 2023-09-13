@@ -64,7 +64,13 @@ class CCNode:
 
     def check_all(self):
         self.check_spans()
-        assert self.ccloc in self.spanned_locs
+        # print("by56x", self.osent_words)
+        # print("lkou", self.spans)
+        # print("bnhj", self.ccloc)
+        # print("bxxx", self.seplocs)
+        min = self.spans[0][0]
+        max = self.spans[-1][1] - 1
+        assert min<= self.ccloc <= max
         for loc in self.seplocs:
             assert loc in self.spanned_locs
 
@@ -109,6 +115,9 @@ class CCNode:
             if span[0] <= ch_min and ch_max <= span[1] - 1:
                 return True
         return False
+
+    def is_child(self, parent):
+        return parent.is_parent(self)
 
     def get_spanned_locs(self):
         spanned_locs = []

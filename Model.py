@@ -215,7 +215,7 @@ class Model(pl.LightningModule):
         """
         running_train_loss = self.trainer.running_loss.mean()
         avg_training_loss = running_train_loss.cpu().item() if \
-            running_train_loss is not None else float('NaN')
+            running_train_loss else float('NaN')
         if type(self.trainer.checkpoint_callback.kth_value) != type(0.0):
             best = self.trainer.checkpoint_callback.kth_value.item()
         else:

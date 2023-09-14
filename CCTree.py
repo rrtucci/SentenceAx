@@ -5,15 +5,17 @@ from copy import deepcopy
 import treelib as tr
 from words_tags_ilabels_translation import *
 
+
 class CCTree:
-    def __init__(self, orig_sent, ll_ilabel):
+    def __init__(self, orig_sent, ll_ilabel, forced_tree=True):
         # orig_sent is a coordinated sentence, the full original sentence
         # before extractions
         self.orig_sent = orig_sent
         self.osent_words = get_words(orig_sent)
         self.ll_ilabel = ll_ilabel
+        self.forced_tree = forced_tree
 
-        self.osent_locs = range(len(self.osent_words))
+        # self.osent_locs = range(len(self.osent_words))
 
         self.ccnodes = None
         # This must be called before calling self.set_tree_structure()
@@ -27,7 +29,6 @@ class CCTree:
 
         self.cc_sents = None
         self.l_spanned_text_chunk = None
-        self.fat_l_spanned_locs = None
 
         # this fills the 3 previous None's
         self.set_cc_sents()
@@ -119,7 +120,7 @@ class CCTree:
                         started_CP = True
                         start_loc = i
                 if ilabel == 2:  # CP_START
-                    #print("hjuk", "was here")
+                    # print("hjuk", "was here")
                     started_CP = True
                     start_loc = i
                 if ilabel == 3:  # CC
@@ -132,7 +133,7 @@ class CCTree:
         for ccnode in self.ccnodes:
             ccnode.check_all()
 
-    def set_tree_structure(self, forced_tree=True):
+    def set_tree_structure(self):
         """
         similar to data.get_tree(conj) where conj=coords=ccnodes.
         Openie6 normally uses conj=ccloc, but not here.
@@ -156,13 +157,12 @@ class CCTree:
                     par_cclocs.append(par_ccloc)
             self.child_ccloc_to_par_cclocs[child_ccloc] = par_cclocs
 
-        if forced_tree:
+        if self.forced_tree:
             for child_ccnode in self.ccnodes:
                 child_ccloc = child_ccnode.ccloc
                 map = self.child_ccloc_to_par_cclocs
                 # force every node to have 0 or 1 parent
                 map[child_ccloc] = map[child_ccloc][:1]
-
 
         self.par_ccloc_to_child_cclocs = {}
         for par_ccnode in self.ccnodes:
@@ -171,14 +171,11 @@ class CCTree:
             for child_ccnode in self.ccnodes:
                 child_ccloc = child_ccnode.ccloc
                 is_parent = (par_ccloc in
-                    self.child_ccloc_to_par_cclocs[child_ccloc])
+                             self.child_ccloc_to_par_cclocs[child_ccloc])
                 if is_parent and \
                         child_ccloc not in child_cclocs:
                     child_cclocs.append(child_ccloc)
             self.par_ccloc_to_child_cclocs[par_ccloc] = child_cclocs
-
-
-
 
         self.root_cclocs = []
         for ccnode in self.ccnodes:
@@ -219,7 +216,7 @@ class CCTree:
                     else:
                         for par_ccloc in par_cclocs:
                             par_ccnode = self.get_ccnode_from_ccloc(par_ccloc,
-                                                                 self.ccnodes)
+                                                                    self.ccnodes)
                             # print("hgfd", str(par_ccloc))
                             if par_ccnode:
                                 # print("lmjk", child_ccloc, par_ccloc)
@@ -237,24 +234,9 @@ class CCTree:
                   self.par_ccloc_to_child_cclocs)
             return False
 
-
-    @staticmethod
-    def get_fat_spanned_locs(ccnode, spanned_locs):
-        spanned_locs.sort()
-        min = ccnode.spans[0][0]
-        max = ccnode.spans[-1][1] - 1
-        fat_spanned_locs = []
-        for span in ccnode.spans:
-            fat_spanned_locs = []
-            for i in spanned_locs:
-                if i in range(span[0], span[1]) or \
-                        i < min or i > max:
-                    fat_spanned_locs.append(i)
-        return fat_spanned_locs
-
-    def refresh_eqlevel_ll_spanned_loc(self,
-                                       eqlevel_ll_spanned_loc,
-                                       eqlevel_ccnodes):
+    def refresh_ll_spanned_loc(self,
+                               ll_spanned_loc,
+                               level_ccnodes):
         """
         similar to  data.get_sentences(sentences,
                   conj_same_level,
@@ -263,49 +245,44 @@ class CCTree:
         doesn't return anything but changes  sentences
 
         conj = ccloc, conjunct = spans, coord = ccnode
-        sentences = eqlevel_ll_spanned_loc
-        sentence = eqlevel_spanned_locs
-        conj_same_level = eqlevel_cclocs
+        sentences = ll_spanned_loc
+        sentence = level_spanned_locs
+        conj_same_level = level_cclocs
         conj_coords = swaps
         sentence_indices = osent_locs
 
-        eqlevel = same/equal level
+        level = same/equal level
         li = list
 
 
         Parameters
         ----------
-        eqlevel_ccnodes
+        level_ccnodes
         osent_locs
 
         Returns
         -------
 
         """
-        for ccnode in eqlevel_ccnodes:
-            if len(eqlevel_ll_spanned_loc) == 0:
-                spanned_locs = ccnode.get_spanned_locs()
-                eqlevel_ll_spanned_loc.append(spanned_locs)
+        for ccnode in level_ccnodes:
+            fat_spanned_locs = ccnode.get_spanned_locs(fat=True)
+            if not ll_spanned_loc:  # only fat_spanned_locs
+                ll_spanned_loc.append(fat_spanned_locs)
             else:
                 to_be_added_ll_loc = []
                 to_be_removed_ll_loc = []
-                for spanned_locs in eqlevel_ll_spanned_loc:
+                for spanned_locs in ll_spanned_loc:
+                    # only ccnodes that satisfy this have fat-spanned_locs
                     if ccnode.spans[0][0] in spanned_locs:
-                        fat_spanned_locs = \
-                            CCTree.get_fat_spanned_locs(ccnode,
-                                                        spanned_locs)
-
                         to_be_added_ll_loc.append(fat_spanned_locs)
-
                         to_be_removed_ll_loc.append(spanned_locs)
 
                 for l_loc in to_be_removed_ll_loc:
-                    eqlevel_ll_spanned_loc.remove(l_loc)
+                    ll_spanned_loc.remove(l_loc)
                 for l_loc in to_be_added_ll_loc:
-                    eqlevel_ll_spanned_loc.append(l_loc)
+                    ll_spanned_loc.append(l_loc)
 
-        return eqlevel_ll_spanned_loc
-
+        return ll_spanned_loc
 
     def set_cc_sents(self):
         """
@@ -323,45 +300,49 @@ class CCTree:
                 l_spanned_text_chunk.append(
                     ' '.join(self.osent_words[span[0]:span[1]]))
 
-        fat_l_spanned_locs = []
-        root_count = len(self.root_cclocs)
-        new_child_count = 0
+        level_nd_count = len(self.root_cclocs)
+        rooty_cclocs = copy(self.root_cclocs)
+        next_level_nd_count = 0
 
-        eqlevel_ccnodes = []
+        level_ccnodes = []
+        ll_spanned_loc = []
+        level_to_ll_spanned_loc = {}
 
         # self.root_cclocs was filled by __init__
-        while len(self.root_cclocs) > 0:
+        level = 0
+        while len(rooty_cclocs) > 0:
 
-            root_ccloc = self.root_cclocs.pop(0)
-            root_ccnode = CCTree.get_ccnode_from_ccloc(root_ccloc,
-                                                       self.ccnodes)
-            root_count -= 1
-            eqlevel_ccnodes.append(root_ccnode)
+            rooty_ccloc = rooty_cclocs.pop(0)
+            rooty_ccnode = CCTree.get_ccnode_from_ccloc(rooty_ccloc,
+                                                        self.ccnodes)
+            level_nd_count -= 1
+            level_ccnodes.append(rooty_ccnode)
 
             for child_ccloc in \
-                    self.par_ccloc_to_child_cclocs[root_ccloc]:
+                    self.par_ccloc_to_child_cclocs[rooty_ccloc]:
                 # child becomes new root as tree is pared down
-                self.root_cclocs.append(child_ccloc)
-                new_child_count += 1
+                rooty_cclocs.append(child_ccloc)
+                next_level_nd_count += 1
 
-            if root_count == 0:
-                fat_l_spanned_locs = \
-                    self.refresh_eqlevel_ll_spanned_loc(
-                        eqlevel_ll_spanned_loc=[],
-                        eqlevel_ccnodes= eqlevel_ccnodes)
-                root_count = new_child_count
-                new_child_count = 0
-                eqlevel_ccnodes = []
-        cc_sents = []
-        for spanned_locs in fat_l_spanned_locs:
-            cc_sent = \
-                ' '.join([self.osent_words[i] for i in sorted(
-                    spanned_locs)])
+            if level_nd_count == 0:
+                ll_spanned_loc = \
+                    self.refresh_ll_spanned_loc(
+                        ll_spanned_loc,
+                        level_ccnodes)
+                level_to_ll_spanned_loc[level] =ll_spanned_loc
+                level += 1
+                level_nd_count = next_level_nd_count
+                next_level_nd_count = 0
+                level_ccnodes = []
+
+        # print("bnnnn", ll_spanned_loc)
+        cc_sents=[]
+        for spanned_locs in ll_spanned_loc:
+            cc_sent = ' '.join([self.osent_words[i]
+                for i in sorted(spanned_locs)])
             cc_sents.append(cc_sent)
         self.cc_sents = cc_sents
         self.l_spanned_text_chunk = l_spanned_text_chunk
-        self.fat_l_spanned_locs = fat_l_spanned_locs
-
 
     # def get_shifted_ccnodes(self, arr):  # post_process()
     #     new_ccnodes = []
@@ -382,6 +363,7 @@ class CCTree:
     #         new_ccnodes.append(ccnode)
     #     return new_ccnodes
 
+
 if __name__ == "__main__":
     def main1():
         in_fp = "testing_files/small_cctags.txt"
@@ -395,7 +377,7 @@ if __name__ == "__main__":
         for in_line in in_lines:
             if "NONE" in in_line:
                 out1_line = " ".join(translate_cctags_to_words(
-                    get_words(in_line), osent+ UNUSED_TOKENS_STR))
+                    get_words(in_line), osent + UNUSED_TOKENS_STR))
                 out2_line = get_l_str(translate_cctags_to_ilabels(
                     get_words(in_line)))
                 out2_line = " ".join(out2_line)
@@ -403,31 +385,33 @@ if __name__ == "__main__":
                 out1_line = in_line.strip()
                 out2_line = out1_line
                 if in_line:
-                    osent= in_line.strip()
+                    osent = in_line.strip()
             out1_lines.append(out1_line)
             out2_lines.append(out2_line)
-            with open(out1_fp, "w", encoding="utf-8") as f:  
+            with open(out1_fp, "w", encoding="utf-8") as f:
                 for out1_line in out1_lines:
                     f.write(out1_line + "\n")
-            with open(out2_fp, "w", encoding="utf-8") as f:  
+            with open(out2_fp, "w", encoding="utf-8") as f:
                 for out2_line in out2_lines:
                     f.write(out2_line + "\n")
-    def main2():
+
+
+    def main2(forced_tree=True):
         in_fp = "testing_files/cc_ilabels.txt"
         # out_fp = "testing_files/cc_trees.txt"
         with open(in_fp, "r", encoding="utf-8") as f:
             in_lines = f.readlines()
 
         l_osent = []
-        lll_ilabel=[]
-        ll_ilabel =[]
+        lll_ilabel = []
+        ll_ilabel = []
         for in_line in in_lines:
             if in_line:
                 if in_line[0].isalpha():
                     l_osent.append(in_line.strip())
                     if ll_ilabel:
                         lll_ilabel.append(ll_ilabel)
-                    ll_ilabel =[]
+                    ll_ilabel = []
                 elif in_line[0].isdigit():
                     words = get_words(in_line)
                     # print("lkll", words)
@@ -441,9 +425,12 @@ if __name__ == "__main__":
         for k in range(len(l_osent)):
             osent = l_osent[k]
             print(osent)
-            tree = CCTree(osent, lll_ilabel[k])
+            tree = CCTree(osent, lll_ilabel[k], forced_tree)
             tree.draw_tree()
+            for k, sent in enumerate(tree.cc_sents):
+                print(str(k + 1) + ". " + sent)
             print()
+
 
     # main1()
     main2()

@@ -51,8 +51,8 @@ class CCNode:
         # depth is just a label
         # for distinguishing between CCNodes. Not used for anything
 
-        self.osent_locs = range(len(osent_words))
         self.spanned_locs = self.get_spanned_locs()
+        #print("lobhj", self.spanned_locs)
         self.unspanned_locs = self.get_unspanned_locs()
 
     def check_spans(self):
@@ -119,15 +119,15 @@ class CCNode:
     def is_child(self, parent):
         return parent.is_parent(self)
 
-    def get_spanned_locs(self):
+    def get_spanned_locs(self, fat=False):
         spanned_locs = []
         for span in self.spans:
             for i in range(span[0], span[1]):
                 spanned_locs.append(i)
         min = self.spans[0][0]
         max = self.spans[-1][1] - 1
-        if self.osent_locs:
-            for i in self.osent_locs:
+        if fat:
+            for i in range(len(self.osent_words)):
                 if i < min or i > max:
                     spanned_locs.append(i)
         return sorted(spanned_locs)

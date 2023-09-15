@@ -94,12 +94,18 @@ def unL(osentL):
 def get_l_str(l_int):
     return [str(i) for i in l_int]
 
+def replace_in_list(l_x, x, new_x):
+    assert l_x.count(x)==1
+    k = l_x.index(x)
+    l_x[k] = new_x
+
+
 
 
 
 
 if __name__ == "__main__":
-    def main():
+    def main1():
         h = {"x": 5, "y": 3}
         H = ClassFromDict(h)
         print(H.x)  # Output: 5
@@ -112,4 +118,9 @@ if __name__ == "__main__":
 
         print(F(**h))  # Output: 8
 
-    main()
+    def main2():
+        l_x = [ 1, 2, 3, 4]
+        replace_in_list(l_x, 3, 33)
+        print("l_x=", l_x)
+    main1()
+    main2()

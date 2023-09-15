@@ -52,7 +52,7 @@ class MInput:
     @staticmethod
     def remerge_sent(tokens):
         """
-        similar to data.remerge_sent()
+        similar to Openie6.data.remerge_sent()
 
         Parameters
         ----------
@@ -82,7 +82,7 @@ class MInput:
     @staticmethod
     def pos_info(tokens):
         """
-        similar to data.pos_tags()
+        similar to Openie6.data.pos_tags()
 
         Parameters
         ----------
@@ -110,7 +110,7 @@ class MInput:
     @staticmethod
     def verb_info(tokens):
         """
-        similar to data.verb_tags()
+        similar to Openie6.data.verb_tags()
 
         Parameters
         ----------
@@ -168,7 +168,7 @@ class MInput:
 
     def absorb_input_extags_file(self, in_fp):
         """
-        similar to data._process_data()
+        similar to Openie6.data._process_data()
 
 
         this reads a file of the form
@@ -189,9 +189,9 @@ class MInput:
         each original sentence and its tag sequences constitute a new example
         """
         l_orig_sent = []
-        l_osent_word_start_locs = [] # similar to l_word_starts
-        l_osent_ilabels = [] # similar to l_input_ids
-        ll_ex_ilabels = []  # similar to l_targets target=extraction
+        l_osent_word_start_locs = [] # similar to word_starts
+        l_osent_ilabels = [] # similar to input_ids
+        ll_ex_ilabels = []  # similar to targets target=extraction
         sentL = None # similar to `sentence`
 
         with(in_fp, "r") as f:

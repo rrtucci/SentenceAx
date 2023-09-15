@@ -27,7 +27,7 @@ def contains_extraction(ex, l_ex):
 
 class ExMetric():
     """
-    similar to metric.Carb
+    similar to Openie6.metric.Carb
 
 
     """
@@ -97,7 +97,7 @@ class ExMetric():
         self.score_d = {'carb_auc': 0.0, 'carb_f1': 0.0, 'carb_sum': 0.0}
 
     def get_metric_values(self, reset, mode):
-        # similar to metric.Carb.get_metric()
+        # similar to Openie6.metric.Carb.get_metric()
         if MAX_EX_DEPTH:
             for sent in self.sent_to_extractions:
                 self.sent_to_extractions[sent] = sorted(

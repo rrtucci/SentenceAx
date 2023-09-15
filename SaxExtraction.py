@@ -5,7 +5,7 @@ from sax_extraction_utils import *
 
 class SaxExtraction():
     """
-    similar to data_processing.py
+    similar to Openie6.data_processing.py
     
     important
     carb has its own Extraction class at
@@ -168,7 +168,7 @@ class SaxExtraction():
 
     def set_extags_of_arg2(self):
         """
-        similar to data_processing.label_arg2()
+        similar to Openie6.data_processing.label_arg2()
 
 
         Returns
@@ -209,7 +209,7 @@ class SaxExtraction():
 
     def set_extags_of_arg1_or_rel(self, arg_name):
         """
-        similar to data_processing.label_arg(),
+        similar to Openie6.data_processing.label_arg(),
 
 
         Parameters
@@ -279,7 +279,7 @@ class SaxExtraction():
 
     def set_extags_of_IS_OF_FROM(self):
         """
-        similar to data_processing.label_is_of_relations()
+        similar to Openie6.data_processing.label_is_of_relations()
 
         Returns
         -------
@@ -310,7 +310,7 @@ class SaxExtraction():
 
     def set_extags_of_repeated_arg1(self):
         """
-        similar to data_processing.label_multiple_arg1()
+        similar to Openie6.data_processing.label_multiple_arg1()
 
 
         Returns
@@ -348,7 +348,7 @@ class SaxExtraction():
 
     def set_extags_of_repeated_rel(self):
         """
-        similar to data_processing.label_multiple_rel()
+        similar to Openie6.data_processing.label_multiple_rel()
 
 
         Returns
@@ -419,8 +419,8 @@ class SaxExtraction():
 
     def set_extags_of_loc_or_time(self, arg_name):
         """
-        similar to data_processing.label_time(),
-        similar to data_processing.label_loc()
+        similar to Openie6.data_processing.label_time(),
+        similar to Openie6.data_processing.label_loc()
 
 
 

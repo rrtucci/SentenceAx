@@ -6,7 +6,7 @@ from sax_utils import *
 
 class CCMetric():
     """
-    similar to metric.Conjunction
+    similar to Openie6.metric.Conjunction
 
 
     """
@@ -67,7 +67,7 @@ class CCMetric():
         # self.n_sentence = 0
 
     def get_metric_values(self, reset=False):
-        # similar to metric.Conjunction.get_metric()
+        # similar to Openie6.metric.Conjunction.get_metric()
 
         name_to_score = dict()
         name_to_score['P_exact'] = self.report_exact.overall_scorer.precision()
@@ -96,8 +96,8 @@ class CCMetric():
     @staticmethod
     def load_fix_d(fix_fp):
         """
-        similar to data_processing.load_conj_mapping()
-        Our fix_d is similar to mapping and conj_mapping.
+        similar to Openie6.data_processing.load_conj_mapping()
+        Our fix_d is similar to Openie6 mapping and conj_mapping.
         This method works equally well for ExMetric.fix_d and CCMetric.fix_d
 
         Returns

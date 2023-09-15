@@ -254,7 +254,7 @@ class Model(pl.LightningModule):
             init_params_d = deepcopy(
                 dict(self.named_parameters()))
 
-        # lll_label is similar to (in openie6, labels)
+        # lll_label is similar to openie6 labels
         # first (outer) list over batch/sample of events
         # second list over extractions
         # third (inner) list over number of labels in a line
@@ -435,7 +435,7 @@ class Model(pl.LightningModule):
     def _constrained_loss(self, ll_word_score,
                           constraints_str, cweights_str):
         """
-        similar to model.constrained_loss()
+        similar to Openie6.model.constrained_loss()
         not inherited method
         called by forward()
 
@@ -569,7 +569,7 @@ class Model(pl.LightningModule):
     def _eval_metrics_at_epoch_end(self,
                                    mode):
         """
-        similar to model.evaluation_end()
+        similar to Openie6.model.evaluation_end()
         not inherited method, used in *_epoch_end methods
         note that both `mode` and self.params_d["mode"] are used
 
@@ -706,7 +706,7 @@ class Model(pl.LightningModule):
 
     def _get_extraction(self, ex_ilabels, orig_sentL, score):
         """
-        similar to model.process_extraction()
+        similar to Openie6.model.process_extraction()
 
         ILABEL_TO_EXTAG={
             0: 'NONE',
@@ -886,7 +886,7 @@ class Model(pl.LightningModule):
 
     def _write_output(self, batch_id, task):
         """
-        similar to model.write_to_file()
+        similar to Openie6.model.write_to_file()
 
         Parameters
         ----------

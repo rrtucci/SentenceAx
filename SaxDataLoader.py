@@ -49,7 +49,7 @@ class SaxDataLoader:
 
     def get_ttt_datasets(self, pred_in_sents=None):
         """
-        similar to data.process_data()
+        similar to Openie6.data.process_data()
 
         Parameters
         ----------

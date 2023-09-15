@@ -16,7 +16,7 @@ from sax_globals import *
 
 class MConductor:
     """
-    similar to run.py
+    similar to Openie6.run.py
     
     
     Torch lightning
@@ -121,7 +121,7 @@ class MConductor:
 
     def get_all_checkpoint_paths(self):
         """
-        similar to run.get_checkpoint_path()
+        similar to Openie6.run.get_checkpoint_path()
 
         Returns
         -------
@@ -146,7 +146,7 @@ class MConductor:
 
     def get_logger(self):
         """
-        similar to run.get_logger()
+        similar to Openie6.run.get_logger()
 
         Parameters
         ----------
@@ -221,7 +221,7 @@ class MConductor:
 
     def update_params_d(self, checkpoint_path):
         """
-        similar to in run.test() and data.override_args()
+        similar to Openie6.run.test() and data.override_args()
 
 
         Parameters
@@ -244,7 +244,7 @@ class MConductor:
 
     def train(self):
         """
-        similar to run.train()
+        similar to Openie6.run.train()
 
         Returns
         -------
@@ -265,7 +265,7 @@ class MConductor:
 
     def resume(self):
         """
-        similar to run.resume()
+        similar to Openie6.run.resume()
 
 
         Parameters
@@ -294,7 +294,7 @@ class MConductor:
 
     def test(self):
         """
-        similar to run.test()
+        similar to Openie6.run.test()
 
 
         Parameters
@@ -336,7 +336,7 @@ class MConductor:
 
     def predict(self, test_dloader=None):
         """
-        similar to run.predict()
+        similar to Openie6.run.predict()
 
         Parameters
         ----------
@@ -542,7 +542,7 @@ class MConductor:
 
     def splitpredict(self):
         """
-        similar to run.splitpredict()
+        similar to Openie6.run.splitpredict()
 
 
         Returns
@@ -562,7 +562,7 @@ class MConductor:
 
     def write_extags_file_from_predictions(self):
         """
-        similar to run.get_labels()
+        similar to Openie6.run.get_labels()
         ILABEL_TO_EXTAG={0: 'NONE', 1: 'ARG1', 2: 'REL', 3: 'ARG2',
                  4: 'ARG2', 5: 'NONE'}
 

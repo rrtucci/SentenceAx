@@ -79,7 +79,7 @@ class SaxDataPadder:
 
     def get_padded_data_d(self):
         """
-        similar to data.pad_data()
+        similar to Openie6.data.pad_data()
 
 
 

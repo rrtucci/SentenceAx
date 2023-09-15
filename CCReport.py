@@ -3,7 +3,7 @@ from CCTree import *
 
 class CCScorer:
     """
-    similar to metric.Record
+    similar to Openie6.metric.Record
     Refs:
     See my book Bayesuvius, chapter "ROC curves
 
@@ -51,11 +51,11 @@ class CCScorer:
 
 class CCReport:
     """
-    similar to  metric.Counter
+    similar to Openie6.metric.Counter
 
 
-    CCScorer similar to metric.Record
-    CCReport similar to metric.Counter
+    CCScorer similar to Openie6.metric.Record
+    CCReport similar to Openie6.metric.Counter
     `category` similar to `criteria` in ["whole", "outer", "inner", "exact"]
 
     """
@@ -71,7 +71,7 @@ class CCReport:
 
 
     def grow(self, pred_ccnodes, true_ccnodes):
-        # similar to metric.Counter.append()
+        # similar to Openie6.metric.Counter.append()
         for ccloc in sorted([ccnode.ccloc for ccnode in true_ccnodes]):
             pred_ccnode = CCTree.get_ccnode_from_ccloc(ccloc, pred_ccnodes)
             true_ccnode = CCTree.get_ccnode_from_ccloc(ccloc, true_ccnodes)

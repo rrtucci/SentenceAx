@@ -5,7 +5,7 @@ from carb_subset.oie_readers.extraction import Extraction
 
 def count_sub_reps(sub, full):
     """
-    similar to data_processing.seq_in_seq()
+    similar to Openie6.data_processing.seq_in_seq()
 
     Parameters
     ----------
@@ -28,7 +28,7 @@ def count_sub_reps(sub, full):
 
 def sub_exists(sub, full, start_loc):
     """
-    similar to data_processing.starts_with()
+    similar to Openie6.data_processing.starts_with()
 
 
     """

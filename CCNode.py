@@ -3,13 +3,13 @@ from sax_utils import *
 
 class CCNode:
     """
-    similar to metric.Coordination
+    similar to Openie6.metric.Coordination
 
     loc = location of a word in orig_sent
     cc = coordinating conjunction.
     cc are FANBOYS = for , and, nor, but, or, yet, so
 
-    CCNode is similar to metric.Coordination
+    CCNode is similar to Openie6.metric.Coordination
     span is similar to a conjunct
 
     """
@@ -76,7 +76,7 @@ class CCNode:
 
     def get_span_pair(self, mid_pair_id, throw_exception=False):
         """
-        similar to metric.Coordination.get_pair()
+        similar to Openie6.metric.Coordination.get_pair()
 
         used in CCReport.grow()
         
@@ -141,7 +141,7 @@ class CCNode:
 
     def an_unbreakable_word_is_not_spanned(self):
         """
-        similar to data.remove_unbreakable_conjuncts()
+        similar to Openie6.data.remove_unbreakable_conjuncts()
         used in CCTree.fix_ccnodes()
 
 

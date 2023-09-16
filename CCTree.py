@@ -120,7 +120,7 @@ class CCTree:
                         seplocs = []
                         spans = []
                 if ilabel == 0:  # NONE
-                    continue
+                    pass
                 if ilabel == 1:  # CP
                     if not started_CP:
                         started_CP = True
@@ -134,7 +134,7 @@ class CCTree:
                 if ilabel == 4:  # SEP
                     seplocs.append(i)
                 if ilabel == 5:  # OTHERS
-                    continue
+                    pass
         if fix_it:
             self.fix_ccnodes()
         # print("llm", len(self.ccnodes))

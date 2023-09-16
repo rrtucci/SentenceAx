@@ -199,6 +199,49 @@ def translate_ilabels_to_words_via_cctags(ilabels, orig_sentL):
     return translate_cctags_to_words(cctags, orig_sentL)
 
 
+def file_translate_tags_to_ilabels(tag_type,
+                                   in_fp,
+                                   out_fp):
+    with open(in_fp, "r", encoding="utf-8") as f:
+        lines = f.readlines()
+    with open(out_fp, "w", encoding="utf-8") as f:
+        for line in lines:
+            if tag_type == "ex":
+                if "NONE" not in line and "REL" not in line:
+                    f.write(line)
+                else:
+                    ilabels = translate_extags_to_ilabels(get_words(line))
+                    f.write(" ".join(ilabels) + "\n")
+            elif tag_type == "cc":
+                if "NONE" not in line and "CC" not in line:
+                    f.write(line)
+                else:
+                    ilabels = translate_cctags_to_ilabels(get_words(line))
+                    f.write(" ".join(ilabels) + "\n")
+            else:
+                assert False
+
+
+def file_translate_ilabels_to_tags(tag_type,
+                                   in_fp,
+                                   out_fp):
+    with open(in_fp, "r", encoding="utf-8") as f:
+        lines = f.readlines()
+    with open(out_fp, "w", encoding="utf-8") as f:
+        for line in lines:
+            words = get_words(line)
+            if all([word.isdigit() for word in words[0:3]]):
+                f.write(line)
+            else:
+                if tag_type == "ex":
+                    ilabels = translate_extags_to_ilabels(words)
+                elif tag_type == "cc":
+                    ilabels = translate_cctags_to_ilabels(words)
+                else:
+                    assert False
+                f.write(" ".join(ilabels) + "\n")
+
+
 if __name__ == "__main__":
     from AllenTool import *
 

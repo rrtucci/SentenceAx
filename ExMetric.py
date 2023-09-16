@@ -1,28 +1,12 @@
 from carb_subset.matcher import Matcher
 from carb_subset.carb import Benchmark
 import re
-from carb_subset.oie_readers.extraction import Extraction
 from sax_globals import *
-
-
-def contains_extraction(ex, l_ex):
-    """
-
-    Parameters
-    ----------
-    ex: Extraction
-        This is a carb class, not SaxExtraction
-    l_ex: list[Extraction]
-
-    Returns
-    -------
-
-    """
-    ex_str = ' '.join(ex.args) + ' ' + ex.pred
-    for ex0 in l_ex:
-        if ex_str == ' '.join(ex0.args) + ' ' + ex0.pred:
-            return True
-    return False
+from sax_utils import *
+from SaxExtraction import *
+from sax_extraction_utils import get_extraction
+from words_tags_ilabels_translation import *
+from MOutput import *
 
 
 class ExMetric():
@@ -33,153 +17,101 @@ class ExMetric():
     """
 
     def __init__(self, fix_d=None):
-        self.dev_benchmark = Benchmark('carb/data/gold/dev.tsv')
-        self.test_benchmark = Benchmark('carb/data/gold/test.tsv')
+        self.dev_benchmark = Benchmark('carb-data/gold/dev.tsv')
+        self.test_benchmark = Benchmark('carb-data/gold/test.tsv')
         self.matchingFunc = Matcher.binary_linient_tuple_match
-        self.sent_to_extractions = {}
-        self.osent_to_pos_mask = {}
-        self.osent_to_verb_mask = {}
+        self.osent_to_exs = {}
+        # self.l_osent_pos_mask = [] # not used
+        # self.l_osent_verb_mask = [] # not used
         self.score_d = {'carb_auc': 0.0, 'carb_f1': 0.0, 'carb_sum': 0.0}
         self.fix_d = fix_d
 
     def __call__(self,
-                 sent_to_extractions,
+                 osent_to_exs,
                  l_orig_sent,
-                 ll_score,
-                 pos_mask=None,
-                 verb_mask=None):
-        num_samples, num_extractions, max_sentence_len = \
-            sent_to_extractions.shape
-        assert num_samples == len(l_orig_sent)
+                 ll_score):
 
-        for sam, orig_sent in enumerate(l_orig_sent):
-            osentL_words = orig_sent.split() + UNUSED_TOKENS
+        for sam_id, orig_sent in enumerate(l_orig_sent):
+            osentL_words = get_words(orig_sent) + UNUSED_TOKENS
             if self.fix_d:
-                if self.fix_d[orig_sent] not in self.sent_to_extractions:
-                    self.sent_to_extractions[self.fix_d[orig_sent]] = []
+                if self.fix_d[orig_sent] not in self.osent_to_exs:
+                    self.osent_to_exs[self.fix_d[orig_sent]] = []
             else:
-                if orig_sent not in self.sent_to_extractions:
-                    self.sent_to_extractions[orig_sent] = []
-            if pos_mask:
-                self.osent_to_pos_mask[orig_sent] = pos_mask[sam]
-            if verb_mask:
-                self.osent_to_verb_mask[orig_sent] = verb_mask[sam]
+                if orig_sent not in self.osent_to_exs:
+                    self.osent_to_exs[orig_sent] = []
 
-            for depth in range(num_extractions):
-                l_ex = sent_to_extractions[sam][depth][:len(osentL_words)]
-                if sum(l_ex) == 0:  # extractions completed
+            num_exs = len(osent_to_exs[orig_sent])
+            for depth in range(num_exs):
+                ex = osent_to_exs[orig_sent][depth]
+                extags = translate_words_to_extags(ex)
+                ilabels = translate_extags_to_ilabels(extags)
+                # all ilabels=0 once no more extractions
+                if sum(ilabels) == 0:
                     break
-                ex0 = self.get_extraction(
-                    l_ex, osentL_words, ll_score[sam][depth])
-                if ex0.args[0] != '' and ex0.pred != '':
+                ex0 = get_extraction(
+                    ilabels,
+                    orig_sent + UNUSED_TOKENS_STR,
+                    ll_score[sam_id][depth])
+                if ex0.arg1 and ex0.rel:
                     if self.fix_d:
-                        if not contains_extraction(ex0,
-                                                   self.sent_to_extractions[
-                                                       self.fix_d[orig_sent]]):
-                            self.sent_to_extractions[
+                        if ex0.is_not_in(self.osent_to_exs[
+                                             self.fix_d[orig_sent]]):
+                            self.osent_to_exs[
                                 self.fix_d[orig_sent]].append(ex0)
                     else:
-                        if not contains_extraction(
-                                ex0,
-                                self.sent_to_extractions[orig_sent]):
-                            self.sent_to_extractions[orig_sent].append(ex0)
-
-        # if self.fix_d or self.conj_word_mapping:
-        #     for sentence in self.sent_to_extractions:
-        #         dextractions = dedup_extractions(
-        #             self.sent_to_extractions[sentence], self.conj_word_mapping[sentence])
-        #         self.sent_to_extractions[sentence] = dextractions
-
-        return
+                        if ex0.is_not_in(self.osent_to_exs[
+                                             self.osent_to_exs[orig_sent]]):
+                            self.osent_to_exs[orig_sent].append(ex0)
 
     def reset(self):
-        self.sent_to_extractions = {}
+        self.osent_to_exs = {}
         self.score_d = {'carb_auc': 0.0, 'carb_f1': 0.0, 'carb_sum': 0.0}
 
-    def get_metric_values(self, reset, mode):
+    def get_metric_values(self, mode, do_reset=True):
         # similar to Openie6.metric.Carb.get_metric()
         if MAX_EX_DEPTH:
-            for sent in self.sent_to_extractions:
-                self.sent_to_extractions[sent] = sorted(
-                    self.sent_to_extractions[sent],
-                    key=lambda x: x.score, reverse=True)[
-                                                 :MAX_EX_DEPTH]
+            for sent in self.osent_to_exs:
+                self.osent_to_exs[sent] = \
+                    sorted(self.osent_to_exs[sent],
+                           key=lambda x: x.score,
+                           reverse=True)[:MAX_EX_DEPTH]
+        openie6_osent_to_exs = {}
+        for osent, sax_exs in self.osent_to_exs.items():
+            openie6_osent_to_exs[osent] = [sax_ex.convert_to_carb_ex
+                                           for sax_ex in sax_exs]
 
         out_fp = "/dev/null"
         if mode == 'dev':
-            auc, optimal_f1_point, last_f1_point = \
-                self.dev_benchmark.compare(
-                    predicted=self.sent_to_extractions,
-                    matchingFunc=self.matchingFunc,
-                    output_fn=out_fp,
-                    error_file=None,
-                    binary=False)
+            bmark = self.dev_benchmark
         elif mode == 'test':
-            auc, optimal_f1_point, last_f1_point = \
-                self.test_benchmark.compare(
-                    predicted=self.sent_to_extractions,
-                    matchingFunc=self.matchingFunc,
-                    output_fn=out_fp,
-                    error_file=None,
-                    binary=False)
+            bmark = self.test_benchmark
         else:
             assert False
+        auc, optimal_f1_point, last_f1_point = \
+            bmark.compare(
+                predicted=openie6_osent_to_exs,
+                matchingFunc=self.matchingFunc,
+                output_fn=out_fp,
+                error_file=None,
+                binary=False)
 
         self.score_d = {
             'carb_auc': auc,
             'carb_f1': optimal_f1_point[2],
             'carb_lastf1': last_f1_point[2]}
         score_d = self.score_d
-        if mode == 'dev' and reset:
+        if mode == 'dev' and do_reset:
             # this resets score_d
             self.reset()
         return score_d
 
-    def get_extraction(self, l_ilabel, osentL_words, score):
-        rel = []
-        arg1 = []
-        arg2 = []
-        loc_time = []
-        args = []
-        tag_mode = 'none'
-        rel_case = 0
-        for i, word in enumerate(osentL_words):
-            if '[unused' in word:
-                if l_ilabel[i].item() == 2:
-                    rel_case = int(re.search(
-                        '\[unused(.*)\]', word).group(1))
-                continue
-            if l_ilabel[i] == 1:
-                arg1.append(word)
-            if l_ilabel[i] == 2:
-                rel.append(word)
-            if l_ilabel[i] == 3:
-                arg2.append(word)
-            if l_ilabel[i] == 4:
-                loc_time.append(word)
+if __name__ == "__main__":
 
-        rel = ' '.join(rel).strip()
-        if rel_case == 1:
-            rel = 'is ' + rel
-        elif rel_case == 2:
-            rel = 'is ' + rel + ' of'
-        elif rel_case == 3:
-            rel = 'is ' + rel + ' from'
+    def main():
+        em = ExMetric()
+        m_out = MOutput(task="ex")
 
-        arg1 = ' '.join(arg1).strip()
-        arg2 = ' '.join(arg2).strip()
-        args = ' '.join(args).strip()
-        loc_time = ' '.join(loc_time).strip()
-        arg2 = (arg2 + ' ' + loc_time + ' ' + args).strip()
-        orig_sentL = ' '.join(osentL_words).strip()
+        em(m_out.lll_ilabel, m_out.l_orig_sent, m_out.ll_score)
+        score_d = em.get_metric_values(mode="dev", do_reset=True)
 
-        extraction = Extraction(
-            pred=rel,
-            head_pred_index=None,
-            sent=orig_sentL,
-            confidence=score,
-            index=0)
-        extraction.addArg(arg1)
-        extraction.addArg(arg2)
 
-        return extraction

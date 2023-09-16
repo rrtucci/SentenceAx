@@ -7,19 +7,15 @@ class SaxExtraction():
     """
     similar to Openie6.data_processing.py
     
-    important
-    carb has its own Extraction class at
-    carb_subset.oie_readers.extraction
-    call ours SaxExtraction
-    sax = sentence ax
-    
-    
+    Important: carb has its own extraction class called `Extraction` at
+    carb_subset.oie_readers.extraction. We call ours `SaxExtraction`. sax =
+    sentence ax.
     extag = extraction tag
     pred=predicate same as rel=relation
     
     
-    assume only one: arg1, rel, arg2, time_arg, loc_arg
-    assume args list is empty
+    assume only one of: `arg1, rel, arg2, time_arg, loc_arg`
+    assume `args` list is empty
     
     `orig_sent` will represent the original sentence. commas and periods 
     will be assumed to be isolated (i.e., with blank space before and after)
@@ -30,6 +26,27 @@ class SaxExtraction():
     does not contain unused tokens but may contain "is", "of", "from". which 
     do not appear in orig_sent.
     ex_sent = arg1 + rel + arg2
+
+    Attributes
+    ----------
+    _arg1_words: list[str]
+    _arg2_words: list[str]
+    _loc_arg_words: list[str]
+    _orig_sentL_words: list[str]
+    _rel_words: list[str]
+    _time_arg_words: list[str]
+    arg1: str
+    arg2: str
+    arg2_is_extagged: bool
+    extags: list[str]
+    extags_are_set: bool
+    is_assigned_d: dict[str, bool]
+    loc_arg: str
+    orig_sentL: str
+    rel: str
+    score: int
+    time_arg: str
+
     """
 
     def __init__(self,
@@ -38,6 +55,16 @@ class SaxExtraction():
                  rel="",
                  arg2="",
                  score=None):
+        """
+
+        Parameters
+        ----------
+        orig_sentL: str
+        arg1: str
+        rel: str
+        arg2: str
+        score: int
+        """
 
         self.score = score
 
@@ -66,77 +93,225 @@ class SaxExtraction():
 
     @property
     def orig_sentL_words(self):
+        """
+
+        Returns
+        -------
+        list[str]
+
+        """
         if not self._orig_sentL_words:
             return get_words(self.orig_sentL)
         return self._orig_sentL_words
 
     @orig_sentL_words.setter
     def orig_sentL_words(self, value):
+        """
+
+        Parameters
+        ----------
+        value: list[str]
+
+        Returns
+        -------
+        list[str]
+
+        """
         self._orig_sentL_words = value
 
     @property
     def arg1_words(self):
+        """
+
+        Returns
+        -------
+        list[str]
+
+        """
         if not self._arg1_words:
             return get_words(self.arg1)
         return self._arg1_words
 
     @arg1_words.setter
     def arg1_words(self, value):
+        """
+
+        Parameters
+        ----------
+        value: list[str]
+
+        Returns
+        -------
+        list[str]
+
+        """
         self._arg1_words = value
 
     @property
     def rel_words(self):
+        """
+
+        Returns
+        -------
+        list[str]
+
+        """
         if not self._rel_words:
             return get_words(self.rel)
         return self._rel_words
 
     @rel_words.setter
     def rel_words(self, value):
+        """
+
+        Parameters
+        ----------
+        value: list[str]
+
+        Returns
+        -------
+        list[str]
+
+        """
         self._rel_words = value
 
     @property
     def arg2_words(self):
+        """
+
+        Returns
+        -------
+        list[str]
+
+        """
         if not self._arg2_words:
             return get_words(self.arg2)
         return self._arg2_words
 
     @arg2_words.setter
     def arg2_words(self, value):
+        """
+
+        Parameters
+        ----------
+        value: list[str]
+
+        Returns
+        -------
+        list[str]
+
+        """
         self._arg2_words = value
 
     @property
     def time_arg_words(self):
+        """
+
+        Returns
+        -------
+        list[str]
+
+        """
         if not self._time_arg_words:
             return get_words(self.time_arg)
         return self._time_arg_words
 
     @time_arg_words.setter
     def time_arg_words(self, value):
+        """
+
+        Parameters
+        ----------
+        value: list[str]
+
+        Returns
+        -------
+        list[str]
+
+        """
         self._time_arg_words = value
 
     @property
     def loc_arg_words(self):
+        """
+
+        Returns
+        -------
+        list[str]
+
+        """
         if not self._loc_arg_words:
             return get_words(self.loc_arg)
         return self._loc_arg_words
 
     @loc_arg_words.setter
     def loc_arg_words(self, value):
+        """
+
+        Parameters
+        ----------
+        value: list[str]
+
+        Returns
+        -------
+        list[str]
+
+        """
         self._loc_arg_words = value
 
     def __eq__(self, other):
+        """
+
+        Parameters
+        ----------
+        other: SaxExtraction
+
+        Returns
+        -------
+        bool
+
+        """
         return self.get_simple_sent() == other.get_simple_sent()
 
     def is_in(self, l_ex):
+        """
+
+        Parameters
+        ----------
+        l_ex: list[SaxExtraction]
+
+        Returns
+        -------
+        bool
+
+        """
         for ex in l_ex:
             if ex == self:
                 return True
         return False
 
     def is_not_in(self, l_ex):
+        """
+
+        Parameters
+        ----------
+        l_ex: list[SaxExtraction]
+
+        Returns
+        -------
+        bool
+
+        """
         return not self.is_in(l_ex)
 
     def get_simple_sent(self):
+        """
+
+        Returns
+        -------
+        str
+
+        """
         li = [self.arg1,
               self.rel,
               self.arg2,
@@ -147,21 +322,55 @@ class SaxExtraction():
         # print("hjki", str0)
         return str0
 
-    def set_is_extagged_flag_to_true(self, extag_name):
+    def set_the_is_extagged_flag_to_true(self, extag_name):
+        """
+
+        Parameters
+        ----------
+        extag_name: str
+
+        Returns
+        -------
+        None
+
+        """
         assert extag_name in BASE_EXTAGS
         self.is_assigned_d[extag_name] = True
 
     def set_extags_of_2_matches(self, matches, extag_name):
+        """
+
+        Parameters
+        ----------
+        matches: list[Match]
+        extag_name: str
+
+        Returns
+        -------
+        None
+
+        """
         assert extag_name in BASE_EXTAGS
         if has_2_matches(matches):
             m0 = matches[0]
             self.extags[m0.b: m0.b + m0.size] = [extag_name] * m0.size
-            self.set_is_extagged_flag_to_true(extag_name)
+            self.set_the_is_extagged_flag_to_true(extag_name)
 
     def set_extags_of_gt_2_matches(self, matches, extag_name):
+        """
+
+        Parameters
+        ----------
+        matches: list[Match]
+        extag_name: str
+
+        Returns
+        -------
+
+        """
         assert extag_name in BASE_EXTAGS
         if has_gt_2_matches(matches):
-            self.set_is_extagged_flag_to_true(extag_name)
+            self.set_the_is_extagged_flag_to_true(extag_name)
             for m in matches:
                 self.extags[m.b: m.b + m.size] = \
                     [extag_name] * m.size
@@ -173,6 +382,7 @@ class SaxExtraction():
 
         Returns
         -------
+        None
 
         """
 
@@ -214,7 +424,7 @@ class SaxExtraction():
 
         Parameters
         ----------
-        arg_name
+        arg_name: str
 
         Returns
         -------
@@ -238,6 +448,17 @@ class SaxExtraction():
                 self.set_extags_of_gt_2_matches(matches, arg_name.upper())
 
     def set_extags_for_unused_num(self, unused_num):
+        """
+
+        Parameters
+        ----------
+        unused_num: int
+
+        Returns
+        -------
+        None
+
+        """
         assert unused_num in [1, 2, 3]
         unused_str = '[unused' + unused_num + ']'
         # this equals -3, -2, -1 for 1, 2, 3
@@ -283,6 +504,7 @@ class SaxExtraction():
 
         Returns
         -------
+        None
 
         """
         # sent can have implicit "is", "of", "from"
@@ -291,7 +513,7 @@ class SaxExtraction():
         if (not self.is_assigned_d["REL"]) and len(self.rel_words) > 0:
             # IS
             if self.rel == '[is]':
-                self.set_is_extagged_flag_to_true("REL")
+                self.set_the_is_extagged_flag_to_true("REL")
                 assert self.orig_sentL_words[-3] == '[unused1]'
                 self.extags[-3] = 'REL'
             # IS-OF
@@ -315,6 +537,7 @@ class SaxExtraction():
 
         Returns
         -------
+        None
 
         """
 
@@ -338,7 +561,7 @@ class SaxExtraction():
                 assert self.arg1_words == self.orig_sentL_words[
                                           loc0: loc0 + len(
                                               self.arg1_words)]
-                self.set_is_extagged_flag_to_true("ARG1")
+                self.set_the_is_extagged_flag_to_true("ARG1")
                 # only extag the first occurrence of arg1
                 self.extags[
                 loc0: loc0 + len(self.arg1_words)] = \
@@ -353,6 +576,7 @@ class SaxExtraction():
 
         Returns
         -------
+        None
 
         """
 
@@ -394,7 +618,7 @@ class SaxExtraction():
                         assert rel_words == \
                                self.orig_sentL_words[
                                loc0: loc0 + len(rel_words)]
-                        self.set_is_extagged_flag_to_true("REL")
+                        self.set_the_is_extagged_flag_to_true("REL")
                         self.extags[loc0: loc0 + len(rel_words)] = \
                             ['REL'] * len(rel_words)
 
@@ -413,7 +637,7 @@ class SaxExtraction():
                         # assert rel_words == \
                         #        self.orig_sentL_words[
                         #        loc0: loc0 + len(rel_words)]
-                        self.set_is_extagged_flag_to_true('REL')
+                        self.set_the_is_extagged_flag_to_true('REL')
                         self.extags[loc0: loc0 + len(rel_words)] = \
                             ['REL'] * len(rel_words)
 
@@ -427,10 +651,11 @@ class SaxExtraction():
 
         Parameters
         ----------
-        arg_name
+        arg_name: str
 
         Returns
         -------
+        None
 
         """
         if arg_name == "time":
@@ -443,6 +668,13 @@ class SaxExtraction():
             self.set_extags_of_2_matches(matches, arg_name.upper())
 
     def set_extags(self):
+        """
+
+        Returns
+        -------
+        None
+
+        """
 
         self.set_extags_of_arg2()
         self.set_extags_of_arg1_or_rel("arg1")
@@ -487,10 +719,11 @@ class SaxExtraction():
     
         Parameters
         ----------
-        carb_ext
+        carb_ext: carb_subset.oie_readers.extraction.Extraction
     
         Returns
         -------
+        SaxExtraction
     
         """
         arg1 = ' '.join(carb_ext.args[0].words)
@@ -511,6 +744,7 @@ class SaxExtraction():
 
         Returns
         -------
+        carb_subset.oie_readers.extraction.Extraction
 
         """
         carb_ext = Extraction(pred=self.rel,

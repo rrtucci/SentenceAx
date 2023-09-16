@@ -704,83 +704,6 @@ class Model(pl.LightningModule):
         """
         return None
 
-    def _get_extraction(self, ex_ilabels, orig_sentL, score):
-        """
-        similar to Openie6.model.process_extraction()
-
-        ILABEL_TO_EXTAG={
-            0: 'NONE',
-            1: 'ARG1',
-            2: 'REL',
-            3: 'ARG2',
-            4: 'ARG2',
-            5: 'NONE'
-        }
-
-
-        Parameters
-        ----------
-        ex_labels:
-        orig_sentL
-        score
-
-        Returns
-        -------
-
-        """
-        ex_ilabels = ex_ilabels.to_list()  # change from torch tensor to list
-
-        l_rel = []
-        l_arg1 = []
-        l_arg2 = []
-        # l_loc_time=[]
-        # l_args = []
-        rel_case = 0
-        for i, word in enumerate(get_words(orig_sentL)):
-            if '[unused' in word:
-                if ex_ilabels[i] == 2:  # REL
-                    rel_case = int(
-                        re.search('\[unused(.*)\]', word).group(1)
-                    )  # this returns either 1, 2 or 3
-                continue
-            if ex_ilabels[i] == 0:  # NONE
-                pass
-            elif ex_ilabels[i] == 1:  # ARG1
-                l_arg1.append(word)
-            elif ex_ilabels[i] == 2:  # REL
-                l_rel.append(word)
-            elif ex_ilabels[i] == 3:  # ARG2
-                l_arg2.append(word)
-            elif ex_ilabels[i] == 4:  # ARG2
-                # l_loc_time.append(word)
-                l_arg2.append(word)
-            else:
-                assert False
-
-        rel = ' '.join(l_rel).strip()
-        if rel_case == 1:
-            rel = 'is ' + rel
-        elif rel_case == 2:
-            rel = 'is ' + rel + ' of'
-        elif rel_case == 3:
-            rel = 'is ' + rel + ' from'
-
-        arg1 = ' '.join(l_arg1).strip()
-        arg2 = ' '.join(l_arg2).strip()
-
-        # args = ' '.join(l_args).strip()
-        # loc_time = ' '.join(l_loc_time).strip()
-        # if not self.params_d["no_lt"]: # no_lt = no loc time
-        #     arg2 = (arg2 + ' ' + loc_time + ' ' + args).strip()
-
-        extraction = SaxExtraction(orig_sentL,
-                                   arg1,
-                                   rel,
-                                   arg2,
-                                   score=score)
-
-        return extraction
-
     def _write_if_task_ex(self):
         fix_d = self.metric.fix_d
 
@@ -807,7 +730,7 @@ class Model(pl.LightningModule):
                 ex_ilabels = lll_ilabel[sample_id][depth][:num_words]
                 if sum(ex_ilabels) == 0:  # extractions completed
                     break
-                ex = self._get_extraction(
+                ex = get_extraction(
                     ex_ilabels, orig_sentL, ll_score[sample_id][depth].item())
                 if ex.arg1 and ex.rel:
                     if fix_d:

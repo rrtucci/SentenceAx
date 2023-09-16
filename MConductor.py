@@ -615,7 +615,7 @@ class MConductor:
                     ilabels = ilabels[:-3]
                     # 1: arg1, 2: rel
                     if 1 not in pred_ilabels and 2 not in pred_ilabels:
-                        continue
+                        continue # not a pass
 
                     str_extags = \
                         ' '.join([ILABEL_TO_EXTAG[i] for i in ilabels])

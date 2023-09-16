@@ -210,7 +210,7 @@ class MInput:
             line = line.strip()
             if line == "":
                 # this skips blank lines
-                continue
+                continue # skip to next line
 
             if is_first_line_of_sample(line):
                 sentL = line

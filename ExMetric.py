@@ -90,5 +90,3 @@ if __name__ == "__main__":
         em(l_osentL, lll_ilabel, ll_score)
         score_d = em.get_metric_values(mode, do_reset=True)
         print(score_d)
-
-

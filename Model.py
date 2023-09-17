@@ -730,7 +730,7 @@ class Model(pl.LightningModule):
                 ex_ilabels = lll_ilabel[sample_id][depth][:num_words]
                 if sum(ex_ilabels) == 0:  # extractions completed
                     break
-                ex = get_extraction(
+                ex = get_ex_from_ilabels(
                     ex_ilabels, orig_sentL, ll_score[sample_id][depth].item())
                 if ex.arg1 and ex.rel:
                     if fix_d:

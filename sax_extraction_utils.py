@@ -88,7 +88,7 @@ def find_xlist_item_that_minimizes_cost_fun(xlist, cost_fun):
     return x0, y0
 
 
-def get_extraction(ex_ilabels, orig_sentL, score):
+def get_ex_from_ilabels(ex_ilabels, orig_sentL, score):
     """
     similar to Openie6.model.process_extraction()
 

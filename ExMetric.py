@@ -4,9 +4,10 @@ import re
 from sax_globals import *
 from sax_utils import *
 from SaxExtraction import *
-from sax_extraction_utils import get_extraction
+from sax_extraction_utils import get_ex_from_ilabels
 from words_tags_ilabels_translation import *
 from MOutput import *
+from AllenTool import *
 
 
 class ExMetric():
@@ -17,67 +18,38 @@ class ExMetric():
     """
 
     def __init__(self, fix_d=None):
-        self.dev_benchmark = Benchmark('carb-data/gold/dev.tsv')
-        self.test_benchmark = Benchmark('carb-data/gold/test.tsv')
+        self.dev_benchmark = Benchmark('carb_subset/data/gold/dev.tsv')
+        self.test_benchmark = Benchmark('carb_subset/data/gold/test.tsv')
         self.matchingFunc = Matcher.binary_linient_tuple_match
-        self.osent_to_exs = {}
+        self.osentL_to_exs = {}
         # self.l_osent_pos_mask = [] # not used
         # self.l_osent_verb_mask = [] # not used
         self.score_d = {'carb_auc': 0.0, 'carb_f1': 0.0, 'carb_sum': 0.0}
         self.fix_d = fix_d
 
-    def __call__(self,
-                 osent_to_exs,
-                 l_orig_sent,
-                 ll_score):
-
-        for sam_id, orig_sent in enumerate(l_orig_sent):
-            osentL_words = get_words(orig_sent) + UNUSED_TOKENS
-            if self.fix_d:
-                if self.fix_d[orig_sent] not in self.osent_to_exs:
-                    self.osent_to_exs[self.fix_d[orig_sent]] = []
-            else:
-                if orig_sent not in self.osent_to_exs:
-                    self.osent_to_exs[orig_sent] = []
-
-            num_exs = len(osent_to_exs[orig_sent])
-            for depth in range(num_exs):
-                ex = osent_to_exs[orig_sent][depth]
-                extags = translate_words_to_extags(ex)
-                ilabels = translate_extags_to_ilabels(extags)
-                # all ilabels=0 once no more extractions
-                if sum(ilabels) == 0:
-                    break
-                ex0 = get_extraction(
-                    ilabels,
-                    orig_sent + UNUSED_TOKENS_STR,
-                    ll_score[sam_id][depth])
-                if ex0.arg1 and ex0.rel:
-                    if self.fix_d:
-                        if ex0.is_not_in(self.osent_to_exs[
-                                             self.fix_d[orig_sent]]):
-                            self.osent_to_exs[
-                                self.fix_d[orig_sent]].append(ex0)
-                    else:
-                        if ex0.is_not_in(self.osent_to_exs[
-                                             self.osent_to_exs[orig_sent]]):
-                            self.osent_to_exs[orig_sent].append(ex0)
-
+    def __call__(self, l_osentL, lll_ilabel, ll_score):
+        self.osentL_to_exs = \
+            AllenTool.get_osentL_to_exs_from_lll_ilabel(l_osentL,
+                                                        lll_ilabel,
+                                                        ll_score,
+                                                        self.fix_d)
+ 
+ 
     def reset(self):
-        self.osent_to_exs = {}
+        self.osentL_to_exs = {}
         self.score_d = {'carb_auc': 0.0, 'carb_f1': 0.0, 'carb_sum': 0.0}
 
     def get_metric_values(self, mode, do_reset=True):
         # similar to Openie6.metric.Carb.get_metric()
         if MAX_EX_DEPTH:
-            for sent in self.osent_to_exs:
-                self.osent_to_exs[sent] = \
-                    sorted(self.osent_to_exs[sent],
+            for osentL in self.osentL_to_exs:
+                self.osentL_to_exs[osentL] = \
+                    sorted(self.osentL_to_exs[osentL],
                            key=lambda x: x.score,
                            reverse=True)[:MAX_EX_DEPTH]
-        openie6_osent_to_exs = {}
-        for osent, sax_exs in self.osent_to_exs.items():
-            openie6_osent_to_exs[osent] = [sax_ex.convert_to_carb_ex
+        openie6_osentL_to_exs = {}
+        for osentL, sax_exs in self.osentL_to_exs.items():
+            openie6_osentL_to_exs[osentL] = [sax_ex.convert_to_carb_ex
                                            for sax_ex in sax_exs]
 
         out_fp = "/dev/null"
@@ -89,7 +61,7 @@ class ExMetric():
             assert False
         auc, optimal_f1_point, last_f1_point = \
             bmark.compare(
-                predicted=openie6_osent_to_exs,
+                predicted=openie6_osentL_to_exs,
                 matchingFunc=self.matchingFunc,
                 output_fn=out_fp,
                 error_file=None,
@@ -108,10 +80,15 @@ class ExMetric():
 if __name__ == "__main__":
 
     def main():
+        mode = "test"
         em = ExMetric()
-        m_out = MOutput(task="ex")
-
-        em(m_out.lll_ilabel, m_out.l_orig_sent, m_out.ll_score)
-        score_d = em.get_metric_values(mode="dev", do_reset=True)
+        pred_in_fp = "carb_subset/data/test_gold_allennlp_format.txt"
+        at = AllenTool(pred_in_fp)
+        osentL_to_exs = at.osentL_to_exs
+        l_osentL, lll_ilabel, ll_score =\
+            AllenTool.get_lll_ilabel_from_osentL_to_exs(osentL_to_exs)
+        em(l_osentL, lll_ilabel, ll_score)
+        score_d = em.get_metric_values(mode, do_reset=True)
+        print(score_d)
 
 

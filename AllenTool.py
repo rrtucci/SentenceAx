@@ -2,6 +2,9 @@ import re
 from unidecode import unidecode
 from collections import OrderedDict
 from SaxExtraction import *
+from words_tags_ilabels_translation import translate_words_to_extags
+from words_tags_ilabels_translation import translate_extags_to_ilabels
+from sax_extraction_utils import get_ex_from_ilabels
 
 
 class AllenTool:
@@ -35,7 +38,7 @@ class AllenTool:
         Allen file path
     num_sents: int
         number of sentences
-    sentL_to_exs: dict[str,list[SaxExtraction]]
+    osentL_to_exs: dict[str,list[SaxExtraction]]
         sentenceLong to extraction list mapping
     
     """
@@ -44,7 +47,7 @@ class AllenTool:
         """
         Constructor. Note that it automatically reads the Allen file with
         path `allen_fp` and stores its information in the attribute
-        `self.sentL_to_exs`.
+        `self.osentL_to_exs`.
 
         Parameters
         ----------
@@ -52,10 +55,99 @@ class AllenTool:
         """
         self.allen_fp = allen_fp
         # ex =extraction sent=sentence
-        self.sentL_to_exs = self.read_allen_file()
-        # print("mklop", self.sentL_to_exs)
-        self.num_sents = len(self.sentL_to_exs)
+        self.osentL_to_exs = self.read_allen_file()
+        # print("mklop", self.osentL_to_exs)
+        self.num_sents = len(self.osentL_to_exs)
         # print("lkop", self.num_sents)
+
+    @staticmethod
+    def get_lll_ilabel_from_osentL_to_exs(osentL_to_exs):
+        """
+        This static method takes as input `osentL_to_exs` (one of the
+        attributes of class AllenTool). It returns as output
+
+        `l_osentL, lll_ilabel, ll_score`
+
+        Parameters
+        ----------
+        osentL_to_exs: dict[str, list[SaxExtraction]]
+
+        Returns
+        -------
+        list[str], list[list[list[int]]], list[list[float]]
+
+        """
+        l_osentL, l_exs = osentL_to_exs.items()
+
+        def get_ilabels(ex):
+            extags = translate_words_to_extags(ex)
+            ilabels = translate_extags_to_ilabels(extags)
+            return ilabels
+
+        lll_ilabel = [[get_ilabels(ex) for ex in exs] for exs in l_exs]
+        ll_score = [[ex.score for ex in exs] for exs in l_exs]
+        return l_osentL, lll_ilabel, ll_score
+    
+    @staticmethod
+    def get_osentL_to_exs_from_lll_ilabel(l_osentL, 
+                                          lll_ilabel, 
+                                          ll_score, 
+                                          fix_d):
+        """
+        similar to Openie6.metric.Carb.__call__()
+
+        This method takes as `lll_ilabel` and other variables and returns
+
+        `osentL_to_exs`
+
+        osentL = original sentence + UNUSED_TOKEN_STR
+
+        Parameters
+        ----------
+        l_osentL: list[str]
+        lll_ilabel: list[list[list[int]]]
+        ll_score: list[list[float]]
+        fix_d: dict[str, str]
+            a dictionary that makes small fixes on osentL
+
+        Returns
+        -------
+        dict[str, list[SaxExtraction]]
+
+        """
+
+        osentL_to_exs = {}
+        for sam_id, osentL in enumerate(l_osentL):
+            if fix_d:
+                if fix_d[osentL] not in osentL_to_exs:
+                    osentL_to_exs[fix_d[osentL]] = []
+            else:
+                if osentL not in osentL_to_exs:
+                    osentL_to_exs[osentL] = []
+
+            num_exs = len(ll_score[sam_id])
+            for depth in range(num_exs):
+                ilabels = lll_ilabel[sam_id][depth]
+                # all ilabels=0 once no more extractions
+                if sum(ilabels) == 0:
+                    break
+                ex0 = get_ex_from_ilabels(
+                    ilabels,
+                    osentL,
+                    ll_score[sam_id][depth])
+                if ex0.arg1 and ex0.rel:
+                    if fix_d:
+                        if ex0.is_not_in(osentL_to_exs[
+                                             fix_d[osentL]]):
+                            osentL_to_exs[
+                                fix_d[osentL]].append(ex0)
+                    else:
+                        if ex0.is_not_in(osentL_to_exs[
+                                             osentL_to_exs[osentL]]):
+                            osentL_to_exs[osentL].append(ex0)
+        return osentL_to_exs
+
+    
 
     @staticmethod
     def get_ex_from_allen_line(line):
@@ -135,21 +227,21 @@ class AllenTool:
         with open(self.allen_fp, 'r', encoding='utf-8') as f:
             lines = f.readlines()
         lines = [unidecode(line) for line in lines]
-        sentL_to_exs = OrderedDict()
+        osentL_to_exs = OrderedDict()
         exs = []
         prev_in_sentL = ''
         for line in lines:
             # print("bnhk", line)
             ex = AllenTool.get_ex_from_allen_line(line)
             if prev_in_sentL and ex.orig_sentL != prev_in_sentL:
-                sentL_to_exs[prev_in_sentL] = exs
+                osentL_to_exs[prev_in_sentL] = exs
                 exs = []
             exs.append(ex)
             prev_in_sentL = ex.orig_sentL
         # last sample
-        sentL_to_exs[prev_in_sentL] = exs
-        # print("zlpd", sentL_to_exs)
-        return sentL_to_exs
+        osentL_to_exs[prev_in_sentL] = exs
+        # print("zlpd", osentL_to_exs)
+        return osentL_to_exs
 
     def write_allen_alternative_file(self,
                                      out_fp,
@@ -210,7 +302,7 @@ class AllenTool:
         with open(out_fp, 'w', encoding='utf-8') as f:
             sample_id = 0
             num_sams = 0
-            for sent, l_ex in self.sentL_to_exs.items():
+            for sent, l_ex in self.osentL_to_exs.items():
                 sample_id += 1
                 if sample_id < first_sample_id or sample_id > last_sample_id:
                     continue

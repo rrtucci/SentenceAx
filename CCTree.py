@@ -413,33 +413,8 @@ class CCTree:
 if __name__ == "__main__":
     def main1():
         in_fp = "testing_files/small_cctags.txt"
-        out1_fp = "testing_files/cc_sents.txt"
-        out2_fp = "testing_files/cc_ilabels.txt"
-        with open(in_fp, "r", encoding="utf-8") as f:
-            in_lines = f.readlines()
-
-        out1_lines = []
-        out2_lines = []
-        for in_line in in_lines:
-            if "NONE" in in_line:
-                out1_line = " ".join(translate_cctags_to_words(
-                    get_words(in_line), osent + UNUSED_TOKENS_STR))
-                out2_line = get_l_str(translate_cctags_to_ilabels(
-                    get_words(in_line)))
-                out2_line = " ".join(out2_line)
-            else:
-                out1_line = in_line.strip()
-                out2_line = out1_line
-                if in_line:
-                    osent = in_line.strip()
-            out1_lines.append(out1_line)
-            out2_lines.append(out2_line)
-            with open(out1_fp, "w", encoding="utf-8") as f:
-                for out1_line in out1_lines:
-                    f.write(out1_line + "\n")
-            with open(out2_fp, "w", encoding="utf-8") as f:
-                for out2_line in out2_lines:
-                    f.write(out2_line + "\n")
+        out_fp = "testing_files/cc_ilabels.txt"
+        file_translate_tags_to_ilabels("cc", in_fp, out_fp)
 
 
     def main2(forced_tree=True):
@@ -478,5 +453,5 @@ if __name__ == "__main__":
             print()
 
 
-    # main1()
-    main2()
+    main1()
+    # main2()

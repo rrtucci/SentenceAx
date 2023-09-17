@@ -208,15 +208,17 @@ def file_translate_tags_to_ilabels(tag_type,
         for line in lines:
             if tag_type == "ex":
                 if "NONE" not in line and "REL" not in line:
-                    f.write(line)
+                    f.write(line.strip() + "\n")
                 else:
                     ilabels = translate_extags_to_ilabels(get_words(line))
+                    ilabels = [str(x) for x in ilabels]
                     f.write(" ".join(ilabels) + "\n")
             elif tag_type == "cc":
                 if "NONE" not in line and "CC" not in line:
-                    f.write(line)
+                    f.write(line.strip() + "\n")
                 else:
                     ilabels = translate_cctags_to_ilabels(get_words(line))
+                    ilabels = [str(x) for x in ilabels]
                     f.write(" ".join(ilabels) + "\n")
             else:
                 assert False
@@ -229,17 +231,16 @@ def file_translate_ilabels_to_tags(tag_type,
         lines = f.readlines()
     with open(out_fp, "w", encoding="utf-8") as f:
         for line in lines:
-            words = get_words(line)
-            if all([word.isdigit() for word in words[0:3]]):
-                f.write(line)
-            else:
+            words= get_words(line)
+            if all([word.isdigit() for word in words[0:5]]):
+                ilabels = [int(x) for x in words()]
                 if tag_type == "ex":
-                    ilabels = translate_extags_to_ilabels(words)
+                    tags = translate_ilabels_to_extags(ilabels)
                 elif tag_type == "cc":
-                    ilabels = translate_cctags_to_ilabels(words)
+                    tags = translate_ilabels_to_cctags(ilabels)
                 else:
-                    assert False
-                f.write(" ".join(ilabels) + "\n")
+                    assert  False
+                f.write(" ".join(tags) + "\n")
 
 
 if __name__ == "__main__":
@@ -248,9 +249,9 @@ if __name__ == "__main__":
 
     def main1():
         at = AllenTool("testing_files/one_sample_allen.tsv")
-        # print("llkm", at.sentL_to_exs)
-        orig_sentL = list(at.sentL_to_exs.keys())[0]
-        exs = at.sentL_to_exs[orig_sentL]
+        # print("llkm", at.osentL_to_exs)
+        orig_sentL = list(at.osentL_to_exs.keys())[0]
+        exs = at.osentL_to_exs[orig_sentL]
         for ex in exs:
             extags = translate_words_to_extags(ex)
             ilabels = translate_extags_to_ilabels(extags)

@@ -81,12 +81,12 @@ if __name__ == "__main__":
 
     def main():
         mode = "test"
-        em = ExMetric()
+        ex_met = ExMetric()
         pred_in_fp = "carb_subset/data/test_gold_allennlp_format.txt"
         at = AllenTool(pred_in_fp)
         osentL_to_exs = at.osentL_to_exs
         l_osentL, lll_ilabel, ll_score =\
             AllenTool.get_lll_ilabel_from_osentL_to_exs(osentL_to_exs)
-        em(l_osentL, lll_ilabel, ll_score)
-        score_d = em.get_metric_values(mode, do_reset=True)
+        ex_met(l_osentL, lll_ilabel, ll_score)
+        score_d = ex_met.get_metric_values(mode, do_reset=True)
         print(score_d)

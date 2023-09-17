@@ -20,10 +20,10 @@ class CCScorer:
     """
 
     def __init__(self):
-        self.N1L1 = 0 # TP
-        self.N0L0 = 0  # TN
-        self.N1L0 = 0  # FP
-        self.N0L1 = 0  # FN
+        self.N1L1 = 0 # True Positive (TP)
+        self.N0L0 = 0  # True Negative (TN)
+        self.N1L0 = 0  # False Positive (FP)
+        self.N0L1 = 0  # False Negative (FN)
 
     def accuracy(self):
         total = self.N1L1 + self.N1L0 + self.N0L1 + self.N0L0
@@ -90,7 +90,7 @@ class CCReport:
                     true_pair = true_ccnode.get_pair(ccloc, check=True)
                     is_correct = (pred_pair == true_pair)
                 elif self.category == "exact":
-                    is_correct = pred_spans == true_spans
+                    is_correct = (pred_spans == true_spans)
                 else:
                     assert False
                 self.overall_scorer.N1L1 += 1
@@ -101,11 +101,11 @@ class CCReport:
                 else:
                     self.overall_scorer.N1L1_f += 1
                     self.depth_scorer.N1L1_f += 1
-            if pred_ccnode and true_ccnode:
+            if pred_ccnode and not true_ccnode:
                 self.overall_scorer.N1L0 += 1
-            if pred_ccnode and true_ccnode:
+            if not pred_ccnode and true_ccnode:
                 depth = true_ccnode.ilabel
                 self.overall_scorer.N0L1 += 1
                 self.depth_scorer.N0L1 += 1
-            if pred_ccnode and true_ccnode:
+            if not pred_ccnode and not true_ccnode:
                 self.overall_scorer.N0L0 += 1

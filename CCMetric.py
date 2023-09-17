@@ -20,8 +20,8 @@ class CCMetric():
         # self.n_sentence = 0 # not used
         self.dump_dir = dump_dir
         if self.dump_dir:
-            if os.path.exists(dump_dir + '/tokens.pkl'):
-                os.remove(dump_dir + '/tokens.pkl')
+            if os.path.exists(dump_dir + '/l_osent.pkl'):
+                os.remove(dump_dir + '/l_osent.pkl')
             if os.path.exists(dump_dir + '/pred_ccnodes.pkl'):
                 os.remove(dump_dir + '/pred_ccnodes.pkl')
             if os.path.exists(dump_dir + '/true_ccnodes.pkl'):
@@ -30,20 +30,20 @@ class CCMetric():
         self.fix_d = fix_d
 
     def __call__(self,
-                 pred_ll_ilabel,
-                 true_ll_ilabel,
-                 orig_sent,
+                 l_osent,
+                 pred_lll_ilabel,
+                 true_lll_ilabel,
                  ccnodes=None):
         # ccnodes  when we give it the complete ccnodes
         # happens when we want to evaluate on the original system outputs
-        # meta_data same as tokens
+        # meta_data same as l_osent
 
         if not ccnodes:
-            pred_ccnodes = CCTree(orig_sent, pred_ll_ilabel).ccnodes
-            true_ccnodes = CCTree(orig_sent, true_ll_ilabel).ccnodes
+            pred_ccnodes = CCTree(l_osent, pred_lll_ilabel).ccnodes
+            true_ccnodes = CCTree(l_osent, true_lll_ilabel).ccnodes
         else:
-            pred_ccnodes = pred_ll_ilabel
-            true_ccnodes = true_ll_ilabel
+            pred_ccnodes = pred_lll_ilabel
+            true_ccnodes = true_lll_ilabel
 
         self.report_whole.grow(pred_ccnodes, true_ccnodes)
         self.report_outer.grow(pred_ccnodes, true_ccnodes)
@@ -51,8 +51,8 @@ class CCMetric():
         self.report_exact.grow(pred_ccnodes, true_ccnodes)
 
         if self.dump_dir:
-            tokens = get_words(orig_sent)
-            pickle.dump(tokens, open(self.dump_dir + '/tokens.pkl', 'ab'))
+            pickle.dump(l_osent,
+                        open(self.dump_dir + '/l_osent.pkl', 'ab'))
             pickle.dump(pred_ccnodes, open(
                 self.dump_dir + '/pred_ccnodes.pkl', 'ab'))
             pickle.dump(true_ccnodes, open(
@@ -66,19 +66,19 @@ class CCMetric():
         # self.n_complete = 0
         # self.n_sentence = 0
 
-    def get_metric_values(self, reset=False):
+    def get_metric_values(self, do_reset=False):
         # similar to Openie6.metric.Conjunction.get_metric()
 
-        name_to_score = dict()
-        name_to_score['P_exact'] = self.report_exact.overall_scorer.precision()
-        name_to_score['R_exact'] = self.report_exact.overall_scorer.recall()
-        name_to_score['F1_whole'] = self.report_whole.overall_scorer.f1_score()
-        name_to_score['F1_outer'] = self.report_outer.overall_scorer.f1_score()
-        name_to_score['F1_inner'] = self.report_inner.overall_scorer.f1_score()
-        name_to_score['F1_exact'] = self.report_exact.overall_scorer.f1_score()
-        if reset:
+        score_d = dict()
+        score_d['P_exact'] = self.report_exact.overall_scorer.precision()
+        score_d['R_exact'] = self.report_exact.overall_scorer.recall()
+        score_d['F1_whole'] = self.report_whole.overall_scorer.f1_score()
+        score_d['F1_outer'] = self.report_outer.overall_scorer.f1_score()
+        score_d['F1_inner'] = self.report_inner.overall_scorer.f1_score()
+        score_d['F1_exact'] = self.report_exact.overall_scorer.f1_score()
+        if do_reset:
             self.reset()
-        return name_to_score
+        return score_d
 
     def get_overall_score(self, report_name='exact'):
         if report_name == 'whole':
@@ -115,3 +115,10 @@ class CCMetric():
                     else:
                         fix_d[line] = fixed_sent
         return fix_d
+
+if __name__ == "__main__":
+    def main():
+        cc_met = CCMetric()
+        cc_met(l_osent, pred_lll_ilabel, true_lll_ilabel)
+        score_d = cc_met.get_metric_values(do_reset=True)
+        print(score_d)

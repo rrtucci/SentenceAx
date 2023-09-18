@@ -2,6 +2,7 @@ from CCReport import *
 import os
 import pickle
 from sax_utils import *
+from AllenTool import *
 
 
 class CCMetric():
@@ -22,41 +23,43 @@ class CCMetric():
         if self.dump_dir:
             if os.path.exists(dump_dir + '/l_osent.pkl'):
                 os.remove(dump_dir + '/l_osent.pkl')
-            if os.path.exists(dump_dir + '/pred_ccnodes.pkl'):
-                os.remove(dump_dir + '/pred_ccnodes.pkl')
-            if os.path.exists(dump_dir + '/true_ccnodes.pkl'):
-                os.remove(dump_dir + '/true_ccnodes.pkl')
+            if os.path.exists(dump_dir + '/l_pred_ccnodes.pkl'):
+                os.remove(dump_dir + '/l_pred_ccnodes.pkl')
+            if os.path.exists(dump_dir + '/l_true_ccnodes.pkl'):
+                os.remove(dump_dir + '/l_true_ccnodes.pkl')
 
         self.fix_d = fix_d
 
     def __call__(self,
                  l_osent,
                  pred_lll_ilabel,
-                 true_lll_ilabel,
-                 ccnodes=None):
+                 true_lll_ilabel):
         # ccnodes  when we give it the complete ccnodes
         # happens when we want to evaluate on the original system outputs
-        # meta_data same as l_osent
+        # meta_data same as osent
 
-        if not ccnodes:
-            pred_ccnodes = CCTree(l_osent, pred_lll_ilabel).ccnodes
-            true_ccnodes = CCTree(l_osent, true_lll_ilabel).ccnodes
-        else:
-            pred_ccnodes = pred_lll_ilabel
-            true_ccnodes = true_lll_ilabel
+        num_samples = len(true_lll_ilabel)
+        print("number of samples=", num_samples)
+        for k in range(num_samples):
+            pred_ccnodes = CCTree(l_osent[k],
+                                  pred_lll_ilabel[k],
+                                  just_nodes=True).ccnodes
+            true_ccnodes = CCTree(l_osent[k],
+                                  true_lll_ilabel[k],
+                                  just_nodes=True).ccnodes
 
-        self.report_whole.grow(pred_ccnodes, true_ccnodes)
-        self.report_outer.grow(pred_ccnodes, true_ccnodes)
-        self.report_inner.grow(pred_ccnodes, true_ccnodes)
-        self.report_exact.grow(pred_ccnodes, true_ccnodes)
+            self.report_whole.absorb_new_sample(pred_ccnodes, true_ccnodes)
+            self.report_outer.absorb_new_sample(pred_ccnodes, true_ccnodes)
+            self.report_inner.absorb_new_sample(pred_ccnodes, true_ccnodes)
+            self.report_exact.absorb_new_sample(pred_ccnodes, true_ccnodes)
 
-        if self.dump_dir:
-            pickle.dump(l_osent,
-                        open(self.dump_dir + '/l_osent.pkl', 'ab'))
-            pickle.dump(pred_ccnodes, open(
-                self.dump_dir + '/pred_ccnodes.pkl', 'ab'))
-            pickle.dump(true_ccnodes, open(
-                self.dump_dir + '/true_ccnodes.pkl', 'ab'))
+            if self.dump_dir:
+                pickle.dump(l_osent[k],
+                            open(self.dump_dir + '/l_osent.pkl', 'ab'))
+                pickle.dump(pred_ccnodes, open(
+                    self.dump_dir + '/l_pred_ccnodes.pkl', 'ab'))
+                pickle.dump(true_ccnodes, open(
+                    self.dump_dir + '/l_true_ccnodes.pkl', 'ab'))
 
     def reset(self):
         self.report_whole.reset()
@@ -80,18 +83,20 @@ class CCMetric():
             self.reset()
         return score_d
 
-    def get_overall_score(self, report_name='exact'):
-        if report_name == 'whole':
+    def get_overall_score(self, report_category='exact'):
+        if report_category == 'whole':
             report = self.report_whole
-        elif report_name == 'outer':
+        elif report_category == 'outer':
             report = self.report_outer
-        elif report_name == 'inner':
+        elif report_category == 'inner':
             report = self.report_inner
-        elif report_name == 'exact':
+        elif report_category == 'exact':
             report = self.report_exact
         else:
-            raise ValueError('invalid report_name: {}'.format(report_name))
-        return report.overall_scorer.f1_score
+            raise ValueError(
+                'invalid report_category: {}'.format(report_category))
+        # print("mkcd", report, self.report_inner.overall_scorer)
+        return report.overall_scorer.f1_score()
 
     @staticmethod
     def load_fix_d(fix_fp):
@@ -118,7 +123,33 @@ class CCMetric():
 
 if __name__ == "__main__":
     def main():
+        # dump file just saves all pred_ccnodes and true_ccnodes
         cc_met = CCMetric()
-        cc_met(l_osent, pred_lll_ilabel, true_lll_ilabel)
-        score_d = cc_met.get_metric_values(do_reset=True)
+        in_fp = "testing_files/cc_ilabels.txt"
+        with open(in_fp, "r", encoding="utf-8") as f:
+            in_lines = f.readlines()
+
+        l_osent = []
+        lll_ilabel = []
+        ll_ilabel = []
+        for in_line in in_lines:
+            if in_line:
+                if in_line[0].isalpha():
+                    l_osent.append(in_line.strip())
+                    if ll_ilabel:
+                        lll_ilabel.append(ll_ilabel)
+                    ll_ilabel = []
+                elif in_line[0].isdigit():
+                    words = get_words(in_line)
+                    # print("lkll", words)
+                    ll_ilabel.append([int(x) for x in words])
+        # last one
+        if ll_ilabel:
+            lll_ilabel.append(ll_ilabel)
+        cc_met(l_osent, lll_ilabel, lll_ilabel)
+        score_d = cc_met.get_metric_values(do_reset=False)
         print(score_d)
+        # this gives nan if do_reset = True
+        print("overall-exact\n", cc_met.get_overall_score("exact"))
+
+    main()

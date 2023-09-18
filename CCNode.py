@@ -74,7 +74,7 @@ class CCNode:
         # for loc in self.seplocs:
         #     assert min<= loc <= max
 
-    def get_span_pair(self, mid_pair_id, throw_exception=False):
+    def get_span_pair(self, mid_pair_id, assert_answer=False):
         """
         similar to Openie6.metric.Coordination.get_pair()
 
@@ -98,7 +98,7 @@ class CCNode:
                 assert mid_pair_id >= span_pair[0][1] and \
                        mid_pair_id < span_pair[1][0]
                 break
-        if throw_exception and span_pair is None:
+        if assert_answer and span_pair is None:
             raise LookupError(
                 "Could not find any span_pair for index={}".
                 format(mid_pair_id))

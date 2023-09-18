@@ -24,6 +24,16 @@ class CCScorer:
         self.N0L0 = 0  # True Negative (TN)
         self.N1L0 = 0  # False Positive (FP)
         self.N0L1 = 0  # False Negative (FN)
+        self.N1L1_t = 0
+        self.N1L1_f =0
+
+    def reset(self):
+        self.N1L1 = 0 # True Positive (TP)
+        self.N0L0 = 0  # True Negative (TN)
+        self.N1L0 = 0  # False Positive (FP)
+        self.N0L1 = 0  # False Negative (FN)
+        self.N1L1_t = 0
+        self.N1L1_f =0
 
     def accuracy(self):
         total = self.N1L1 + self.N1L0 + self.N0L1 + self.N0L0
@@ -62,15 +72,16 @@ class CCReport:
     def __init__(self, category):
         assert category in ["whole", "outer", "inner", "exact"]
         self.category = category
-        self.overall_scorer = None
-        self.depth_scorer = None
+        self.overall_scorer = CCScorer()
+        self.depth_scorer = CCScorer()
+        # print("vbgn", self.overall_scorer, self.depth_scorer)
 
     def reset(self):
-        self.overall_scorer = None
-        self.depth_scorer = None
+        self.overall_scorer.reset()
+        self.depth_scorer.reset()
 
 
-    def grow(self, pred_ccnodes, true_ccnodes):
+    def absorb_new_sample(self, pred_ccnodes, true_ccnodes):
         # similar to Openie6.metric.Counter.append()
         for ccloc in sorted([ccnode.ccloc for ccnode in true_ccnodes]):
             pred_ccnode = CCTree.get_ccnode_from_ccloc(ccloc, pred_ccnodes)
@@ -86,8 +97,10 @@ class CCReport:
                     is_correct = (pred_spans[0] == true_spans[0]
                         and pred_spans[-1] == true_spans[-1])
                 elif self.category == "inner":
-                    pred_pair = pred_ccnode.get_pair(ccloc, check=True)
-                    true_pair = true_ccnode.get_pair(ccloc, check=True)
+                    pred_pair = pred_ccnode.get_span_pair(
+                        ccloc, assert_answer=True)
+                    true_pair = true_ccnode.get_span_pair(
+                        ccloc, assert_answer=True)
                     is_correct = (pred_pair == true_pair)
                 elif self.category == "exact":
                     is_correct = (pred_spans == true_spans)

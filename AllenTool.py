@@ -77,7 +77,7 @@ class AllenTool:
         list[str], list[list[list[int]]], list[list[float]]
 
         """
-        l_osentL, l_exs = osentL_to_exs.items()
+        l_osentL, l_exs = zip(*osentL_to_exs.items())
 
         def get_ilabels(ex):
             extags = translate_words_to_extags(ex)

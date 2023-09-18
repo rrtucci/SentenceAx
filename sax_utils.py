@@ -91,8 +91,12 @@ def get_num_ttt_sents(num_sents, ttt_fractions):
 def unL(osentL):
     return osentL.split("[unused")[0].strip()
 
-def get_l_str(l_int):
-    return [str(i) for i in l_int]
+def unL_l(l_osentL):
+    return [unL(osentL) for osentL in l_osentL]
+
+def unL_lll(lll_ilabel):
+    return [[l_ilabel[:-3] for l_ilabel in ll_ilabel]
+            for ll_ilabel in lll_ilabel]
 
 def replace_in_list(l_x, x, new_x):
     assert l_x.count(x)==1

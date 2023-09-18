@@ -7,13 +7,15 @@ from words_tags_ilabels_translation import *
 
 
 class CCTree:
-    def __init__(self, orig_sent, ll_ilabel, forced_tree=True):
+    def __init__(self, orig_sent, ll_ilabel, forced_tree=True,
+                 just_nodes=False):
         # orig_sent is a coordinated sentence, the full original sentence
         # before extractions
         self.orig_sent = orig_sent
         self.osent_words = get_words(orig_sent)
         self.ll_ilabel = ll_ilabel
         self.forced_tree = forced_tree
+        self.just_nodes = just_nodes
 
         # self.osent_locs = range(len(self.osent_words))
 
@@ -25,13 +27,15 @@ class CCTree:
         self.par_ccloc_to_child_cclocs = None
         self.child_ccloc_to_par_cclocs = None
         # this fill the 3 previous None's
-        self.set_tree_structure()
+        if not just_nodes:
+            self.set_tree_structure()
 
         self.cc_sents = None
         # self.l_spanned_text_chunk = None
 
         # this fills the 3 previous None's
-        self.set_cc_sents()
+        if not just_nodes:
+            self.set_cc_sents()
 
     @staticmethod
     def get_ccnode_from_ccloc(ccloc, ccnodes):
@@ -46,6 +50,7 @@ class CCTree:
         if sum(one_hot) == 0:
             return None
         elif sum(one_hot) > 1:
+            print("kghj", one_hot)
             print("more than one ccnode with cc at " + str(ccloc))
             assert False
         else:

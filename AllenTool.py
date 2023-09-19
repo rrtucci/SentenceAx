@@ -4,7 +4,6 @@ from collections import OrderedDict
 from SaxExtraction import *
 from words_tags_ilabels_translation import translate_words_to_extags
 from words_tags_ilabels_translation import translate_extags_to_ilabels
-from sax_extraction_utils import get_ex_from_ilabels
 
 
 class AllenTool:
@@ -61,54 +60,69 @@ class AllenTool:
         # print("lkop", self.num_sents)
 
     @staticmethod
-    def get_lll_ilabel_from_osentL_to_exs(osentL_to_exs):
+    def get_lll_ilabel_from_osent2_to_exs(osent2_to_exs):
         """
-        This static method takes as input `osentL_to_exs` (one of the
+        This static method takes as input `osent2_to_exs` (one of the
         attributes of class AllenTool). It returns as output
 
-        `l_osentL, lll_ilabel, ll_score`
+        `l_osent2, lll_ilabel, ll_score`
+
+        osent = original sentence
+        osentL = osent + UNUSED_TOKEN_STR
+        
+        This method does not care internally whether we are using `osentL, 
+        lll_ilabels` or `osent, lll_ilabels`. that is why we are introducing 
+        the symbol `osent2`, which can stand for `osent` or `osentL`
 
         Parameters
         ----------
-        osentL_to_exs: dict[str, list[SaxExtraction]]
+        osent2_to_exs: dict[str, list[SaxExtraction]]
 
         Returns
         -------
         list[str], list[list[list[int]]], list[list[float]]
 
         """
-        l_osentL, l_exs = zip(*osentL_to_exs.items())
+        l_osent2, l_exs = zip(*osent2_to_exs.items())
 
-        def get_ilabels(ex):
+        def get_ilabels(ex, sam_id):
             extags = translate_words_to_extags(ex)
             ilabels = translate_extags_to_ilabels(extags)
+            ilabels = ilabels[0: len(l_osent2[sam_id])]
             return ilabels
 
-        lll_ilabel = [[get_ilabels(ex) for ex in exs] for exs in l_exs]
+        lll_ilabel = [[get_ilabels(ex, sam_id) for ex in exs] for sam_id,
+        exs in enumerate(l_exs)]
         ll_score = [[ex.score for ex in exs] for exs in l_exs]
-        return l_osentL, lll_ilabel, ll_score
-    
+        return l_osent2, lll_ilabel, ll_score
+
     @staticmethod
-    def get_osentL_to_exs_from_lll_ilabel(l_osentL, 
-                                          lll_ilabel, 
-                                          ll_score, 
+    def get_osent2_to_exs_from_lll_ilabel(l_osent2,
+                                          lll_ilabel,
+                                          ll_score,
                                           fix_d):
         """
         similar to Openie6.metric.Carb.__call__()
 
         This method takes as `lll_ilabel` and other variables and returns
 
-        `osentL_to_exs`
+        `osent2_to_exs`
 
-        osentL = original sentence + UNUSED_TOKEN_STR
+        osent = original sentence
+        osentL = osent + UNUSED_TOKEN_STR
+
+        This method does not care internally whether we are using `osentL,
+        lll_ilabels` or `osent, lll_ilabels`. that is why we are introducing
+        the symbol `osent2`, which can stand for `osent` or `osentL`
+
 
         Parameters
         ----------
-        l_osentL: list[str]
+        l_osent2: list[str]
         lll_ilabel: list[list[list[int]]]
         ll_score: list[list[float]]
         fix_d: dict[str, str]
-            a dictionary that makes small fixes on osentL
+            a dictionary that makes small fixes on osent2
 
         Returns
         -------
@@ -116,14 +130,14 @@ class AllenTool:
 
         """
 
-        osentL_to_exs = {}
-        for sam_id, osentL in enumerate(l_osentL):
+        osent2_to_exs = {}
+        for sam_id, osent2 in enumerate(l_osent2):
             if fix_d:
-                if fix_d[osentL] not in osentL_to_exs:
-                    osentL_to_exs[fix_d[osentL]] = []
+                if fix_d[osent2] not in osent2_to_exs:
+                    osent2_to_exs[fix_d[osent2]] = []
             else:
-                if osentL not in osentL_to_exs:
-                    osentL_to_exs[osentL] = []
+                if osent2 not in osent2_to_exs:
+                    osent2_to_exs[osent2] = []
 
             num_exs = len(ll_score[sam_id])
             for depth in range(num_exs):
@@ -131,23 +145,20 @@ class AllenTool:
                 # all ilabels=0 once no more extractions
                 if sum(ilabels) == 0:
                     break
-                ex0 = get_ex_from_ilabels(
+                ex0 = SaxExtraction.get_ex_from_ilabels(
                     ilabels,
-                    osentL,
+                    osent2,
                     ll_score[sam_id][depth])
                 if ex0.arg1 and ex0.rel:
                     if fix_d:
-                        if ex0.is_not_in(osentL_to_exs[
-                                             fix_d[osentL]]):
-                            osentL_to_exs[
-                                fix_d[osentL]].append(ex0)
+                        if ex0.is_not_in(osent2_to_exs[
+                                             fix_d[osent2]]):
+                            osent2_to_exs[
+                                fix_d[osent2]].append(ex0)
                     else:
-                        if ex0.is_not_in(osentL_to_exs[
-                                             osentL_to_exs[osentL]]):
-                            osentL_to_exs[osentL].append(ex0)
-        return osentL_to_exs
-
-    
+                        if ex0.is_not_in(osent2_to_exs[osent2]):
+                            osent2_to_exs[osent2].append(ex0)
+        return osent2_to_exs
 
     @staticmethod
     def get_ex_from_allen_line(line):

@@ -688,7 +688,7 @@ class SaxExtraction():
         self.extags_are_set = True
 
     @staticmethod
-    def convert_to_sax_ex(carb_ext):
+    def convert_to_sax_ex(carb_ex):
         """
         class Extraction:
         def __init__(self, pred, head_pred_index, sent,
@@ -719,24 +719,31 @@ class SaxExtraction():
     
         Parameters
         ----------
-        carb_ext: carb_subset.oie_readers.extraction.Extraction
+        carb_ex: carb_subset.oie_readers.extraction.Extraction
     
         Returns
         -------
         SaxExtraction
     
         """
-        arg1 = ' '.join(carb_ext.args[0].words)
+        arg1 = carb_ex.args[0]
         arg2 = ""
-        for k, arg in enumerate(carb_ext.args):
+        for k, arg in enumerate(carb_ex.args):
             if k > 0:
-                arg2 += ' '.join(arg.words)
+                arg2 += arg
+                
+        # print("lklder", carb_ex.sent)
+        # print("arg1", carb_ex.sent)
+        # print("arg1", arg1)
+        # print("rel", carb_ex.pred)
+        # print("arg2", arg2)
+        
 
-        return SaxExtraction(orig_sentL=carb_ext.sent,
+        return SaxExtraction(orig_sentL=carb_ex.sent,
                              arg1=arg1,
-                             rel=carb_ext.rel,
+                             rel=carb_ex.pred,
                              arg2=arg2,
-                             score=carb_ext.confidence)
+                             score=carb_ex.confidence)
 
     def convert_to_carb_ex(self):
         """
@@ -747,10 +754,110 @@ class SaxExtraction():
         carb_subset.oie_readers.extraction.Extraction
 
         """
-        carb_ext = Extraction(pred=self.rel,
+        carb_ex = Extraction(pred=self.rel,
                               head_pred_index=None,
                               sent=self.orig_sentL,
                               confidence=self.score)
-        carb_ext.addArg(self.arg1)
-        carb_ext.addArg(self.arg2)
-        return carb_ext
+        carb_ex.addArg(self.arg1)
+        carb_ex.addArg(self.arg2)
+        # print("llkt34", carb_ex.confidence)
+        return carb_ex
+
+    @staticmethod
+    def get_ex_from_ilabels(ex_ilabels, orig_sentL, score):
+        """
+        similar to Openie6.model.process_extraction()
+
+        ILABEL_TO_EXTAG={
+            0: 'NONE',
+            1: 'ARG1',
+            2: 'REL',
+            3: 'ARG2',
+            4: 'ARG2',
+            5: 'NONE'
+        }
+
+
+        Parameters
+        ----------
+        ex_labels:
+        orig_sentL
+        score
+
+        Returns
+        -------
+
+        """
+        # ex_ilabels = ex_ilabels.to_list()  # change from torch tensor to list
+
+        l_rel = []
+        l_arg1 = []
+        l_arg2 = []
+        # l_loc_time=[]
+        # l_args = []
+        rel_case = 0
+        for i, word in enumerate(get_words(orig_sentL)):
+            if '[unused' in word:
+                if ex_ilabels[i] == 2:  # REL
+                    rel_case = int(
+                        re.search('\[unused(.*)\]', word).group(1)
+                    )  # this returns either 1, 2 or 3
+                continue
+            if ex_ilabels[i] == 0:  # NONE
+                pass
+            elif ex_ilabels[i] == 1:  # ARG1
+                l_arg1.append(word)
+            elif ex_ilabels[i] == 2:  # REL
+                l_rel.append(word)
+            elif ex_ilabels[i] == 3:  # ARG2
+                l_arg2.append(word)
+            elif ex_ilabels[i] == 4:  # ARG2
+                # l_loc_time.append(word)
+                l_arg2.append(word)
+            else:
+                assert False
+
+        rel = ' '.join(l_rel).strip()
+        if rel_case == 1:
+            rel = 'is ' + rel
+        elif rel_case == 2:
+            rel = 'is ' + rel + ' of'
+        elif rel_case == 3:
+            rel = 'is ' + rel + ' from'
+
+        arg1 = ' '.join(l_arg1).strip()
+        arg2 = ' '.join(l_arg2).strip()
+
+        # args = ' '.join(l_args).strip()
+        # loc_time = ' '.join(l_loc_time).strip()
+        # if not self.params_d["no_lt"]: # no_lt = no loc time
+        #     arg2 = (arg2 + ' ' + loc_time + ' ' + args).strip()
+
+        extraction = SaxExtraction(orig_sentL,
+                                   arg1,
+                                   rel,
+                                   arg2,
+                                   score=score)
+
+        return extraction
+
+if __name__==  "__main__":
+    from AllenTool import *
+    def main():
+        in_fp = "testing_files/one_sample_allen.tsv"
+        at = AllenTool(in_fp)
+        for osentL, sax_exs in at.osentL_to_exs.items():
+            carb_exs = [sax_ex.convert_to_carb_ex() for sax_ex in sax_exs]
+            new_sax_exs = [SaxExtraction.convert_to_sax_ex(carb_ex)
+                           for carb_ex in carb_exs]
+            for k, sax_ex in enumerate(sax_exs):
+                new_sax_ex = new_sax_exs[k]
+                print(sax_ex.arg1 + "/" + new_sax_ex.arg1)
+                print(sax_ex.rel + "/" + new_sax_ex.rel)
+                print(sax_ex.arg2 + "/" + new_sax_ex.arg2)
+                print(str(sax_ex.score) + "/" + str(new_sax_ex.score))
+                assert sax_ex == new_sax_ex
+
+
+    main()
+

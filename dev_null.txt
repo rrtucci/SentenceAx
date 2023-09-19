@@ -1,0 +1,2 @@
+Precision	Recall	Confidence
+0.9924882629107982	0.4054489945979014	1.0

@@ -32,19 +32,19 @@ from _collections import defaultdict
 
 logging.basicConfig(level=logging.INFO)
 
-from oie_readers.stanfordReader import StanfordReader
-from oie_readers.ollieReader import OllieReader
-from oie_readers.reVerbReader import ReVerbReader
-from oie_readers.clausieReader import ClausieReader
-from oie_readers.openieFourReader import OpenieFourReader
-from oie_readers.openieFiveReader import OpenieFiveReader
-from oie_readers.propsReader import PropSReader
-from oie_readers.tabReader import TabReader
-from oie_readers.benchmarkGoldReader import BenchmarkGoldReader
-from oie_readers.allennlpReader import AllennlpReader
-from oie_readers.goldReader import GoldReader
+from carb_subset.oie_readers.stanfordReader import StanfordReader
+from carb_subset.oie_readers.ollieReader import OllieReader
+from carb_subset.oie_readers.reVerbReader import ReVerbReader
+from carb_subset.oie_readers.clausieReader import ClausieReader
+from carb_subset.oie_readers.openieFourReader import OpenieFourReader
+from carb_subset.oie_readers.openieFiveReader import OpenieFiveReader
+from carb_subset.oie_readers.propsReader import PropSReader
+from carb_subset.oie_readers.tabReader import TabReader
+from carb_subset.oie_readers.benchmarkGoldReader import BenchmarkGoldReader
+from carb_subset.oie_readers.allennlpReader import AllennlpReader
+from carb_subset.oie_readers.goldReader import GoldReader
 
-from matcher import Matcher
+from carb_subset.matcher import Matcher
 from operator import itemgetter
 import pprint
 from copy import deepcopy, copy

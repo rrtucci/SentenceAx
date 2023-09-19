@@ -4,7 +4,6 @@ import re
 from sax_globals import *
 from sax_utils import *
 from SaxExtraction import *
-from sax_extraction_utils import get_ex_from_ilabels
 from words_tags_ilabels_translation import *
 from MOutput import *
 from AllenTool import *
@@ -28,13 +27,31 @@ class ExMetric():
         self.fix_d = fix_d
 
     def __call__(self, l_osentL, lll_ilabel, ll_score):
+        """
+        This method works with L or unL parameters
+        __call__(self, l_osent, lll_ilabel, ll_score)
+        is fine as long as osent and lll_ilabel have the same length in the
+        innermost dimension.
+
+        Parameters
+        ----------
+        l_osentL
+        lll_ilabel
+        ll_score
+
+        Returns
+        -------
+
+        """
         self.osentL_to_exs = \
             AllenTool.get_osentL_to_exs_from_lll_ilabel(l_osentL,
                                                         lll_ilabel,
                                                         ll_score,
                                                         self.fix_d)
- 
- 
+        print("Just enetered samples into ExMetric instance via its "
+              "__call__() method.")
+        print("number of samples=", len(lll_ilabel))
+
     def reset(self):
         self.osentL_to_exs = {}
         self.score_d = {'carb_auc': 0.0, 'carb_f1': 0.0, 'carb_sum': 0.0}
@@ -47,12 +64,15 @@ class ExMetric():
                     sorted(self.osentL_to_exs[osentL],
                            key=lambda x: x.score,
                            reverse=True)[:MAX_EX_DEPTH]
-        openie6_osentL_to_exs = {}
+        carb_osentL_to_exs = {}
         for osentL, sax_exs in self.osentL_to_exs.items():
-            openie6_osentL_to_exs[osentL] = [sax_ex.convert_to_carb_ex
-                                           for sax_ex in sax_exs]
+            carb_osentL_to_exs[osentL] = [sax_ex.convert_to_carb_ex()
+                                          for sax_ex in sax_exs]
+            # print("lasdr", carb_osentL_to_exs[osentL][0])
 
-        out_fp = "/dev/null"
+        # no /dev/null in Windows
+        # out_fp = "/dev/null"
+        out_fp = "dev_null.txt"
         if mode == 'dev':
             bmark = self.dev_benchmark
         elif mode == 'test':
@@ -61,7 +81,7 @@ class ExMetric():
             assert False
         auc, optimal_f1_point, last_f1_point = \
             bmark.compare(
-                predicted=openie6_osentL_to_exs,
+                predicted=carb_osentL_to_exs,
                 matchingFunc=self.matchingFunc,
                 output_fn=out_fp,
                 error_file=None,
@@ -77,20 +97,29 @@ class ExMetric():
             self.reset()
         return score_d
 
+
 if __name__ == "__main__":
 
-    def main():
-        mode = "test"
+    def main1():
         ex_met = ExMetric()
+        mode = "test"
+        bm = ex_met.test_benchmark
+        carb_osent_to_exs = bm.gold
+        sax_osent_to_exs = {}
+        for osent in carb_osent_to_exs:
+            print(osent)
+            sax_osent_to_exs[osent] = []
+            for ex in carb_osent_to_exs[osent]:
+                print("*", str(ex).strip().split("\t"))
+                rel, arg1, arg2 = str(ex).strip().split("\t")
+                sax_osent_to_exs[osent].append(" ".join([arg1, rel, arg2]))
+            print()
+        pred_l_osent, pred_lll_ilabel, pred_ll_score = \
+            AllenTool.get_lll_ilabel_from_osent_to_exs(sax_osent_to_exs)
 
-        pred_in_fp = "carb_subset/data/test_gold_allennlp_format.txt"
-        pred_at = AllenTool(pred_in_fp)
-        pred_osentL_to_exs = pred_at.osentL_to_exs
-        pred_l_osentL, pred_lll_ilabel, pred_ll_score =\
-            AllenTool.get_lll_ilabel_from_osentL_to_exs(pred_osentL_to_exs)
-
-        ex_met(pred_l_osentL, pred_lll_ilabel, pred_ll_score)
+        ex_met(pred_l_osent, pred_lll_ilabel, pred_ll_score)
         score_d = ex_met.get_metric_values(mode, do_reset=True)
         print(score_d)
 
-    main()
+
+    main1()

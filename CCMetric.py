@@ -39,6 +39,8 @@ class CCMetric():
         # meta_data same as osent
 
         num_samples = len(true_lll_ilabel)
+        print("Entering samples into CCMetric instance via its __call__() "
+              "method.")
         print("number of samples=", num_samples)
         for k in range(num_samples):
             pred_ccnodes = CCTree(l_osent[k],
@@ -150,6 +152,6 @@ if __name__ == "__main__":
         score_d = cc_met.get_metric_values(do_reset=False)
         print(score_d)
         # this gives nan if do_reset = True
-        print("overall-exact\n", cc_met.get_overall_score("exact"))
+        print("overall-exact score:", cc_met.get_overall_score("exact"))
 
     main()

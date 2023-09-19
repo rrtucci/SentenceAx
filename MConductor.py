@@ -447,7 +447,7 @@ class MConductor:
 
 
         path = PREDICTIONS_DIR + "/" + self.pred_fname +"-extags.txt"
-        with_scores = False
+        with_confis = False
         # Does same thing as Openie6's run.get_labels()
         self.write_extags_file_from_predictions()
 
@@ -486,7 +486,7 @@ class MConductor:
     #     for line_i, line in enumerate(rescored):
     #         fields = line.split('\t')
     #         sentence = fields[0]
-    #         score = float(fields[2])
+    #         confi = float(fields[2])
     #
     #         if line_i == 0:
     #             sentence_str = f'{sentence}\n'
@@ -509,13 +509,13 @@ class MConductor:
     #         arg2 = re.findall("<arg2>.*</arg2>", fields[1])[0].strip(
     #             '<arg2>').strip('</arg2>').strip()
     #
-    #         # why must score be exponentiated?
+    #         # why must confi be exponentiated?
     #
     #         extraction = SaxExtraction(orig_sentL=orig_senL,
     #                                    arg1=arg1,
     #                                    rel=rel,
     #                                    arg2=arg2,
-    #                                    score=math.exp(score))
+    #                                    confi=math.exp(confi))
     #         extraction.arg1 = arg1
     #         extraction.arg2 = arg2
     #         if self.params_d["type"] == 'sentences':

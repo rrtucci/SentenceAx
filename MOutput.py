@@ -9,7 +9,7 @@ class MOutput:
         self.l_orig_sent = []
         self.lll_ilabel = []
 
-        self.ll_score= []
+        self.ll_confi= []
         self.loss = None
             
     # def set_l_orig_sent(self, l_orig_sent):
@@ -33,9 +33,9 @@ class MOutput:
     #         for depth in range(MAX_DEPTH):
     #             for words in range(self.l_sample[sample_id].
     #
-    # def absorb_ll_score(self, ll_score):
-    #     for sample_id, l_score in enumerate(ll_score):
-    #         self.l_sample[sample_id].absorb_scores(l_score)
+    # def absorb_ll_confi(self, ll_confi):
+    #     for sample_id, l_confi in enumerate(ll_confi):
+    #         self.l_sample[sample_id].absorb_confis(l_confi)
     #
     # def absorb_all_possible(self):
     #     if self.l_orig_sent:
@@ -46,14 +46,14 @@ class MOutput:
     #         for k in range(self.num_samples):
     #             self.l_sample.append(Sample(self.task))
     #         self.set_lll_ilabel(self.lll_ilabel)
-    #     if self.ll_score:
-    #         self.num_samples = len(self.ll_score)
-    #         self.absorb_ll_score(self.ll_score)
+    #     if self.ll_confi:
+    #         self.num_samples = len(self.ll_confi)
+    #         self.absorb_ll_confi(self.ll_confi)
 
 
     def to_cpu(self):
         self.l_orig_sent= self.l_orig_sent.cpu()
-        self.ll_score = self.ll_score.cpu()
+        self.ll_confi = self.ll_confi.cpu()
         self.lll_ilabel = self.lll_ilabel.cpu()
 
     def get_l_orig_sentL(self):

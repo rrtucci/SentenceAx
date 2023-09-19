@@ -65,7 +65,7 @@ class AllenTool:
         This static method takes as input `osent2_to_exs` (one of the
         attributes of class AllenTool). It returns as output
 
-        `l_osent2, lll_ilabel, ll_score`
+        `l_osent2, lll_ilabel, ll_confi`
 
         osent = original sentence
         osentL = osent + UNUSED_TOKEN_STR
@@ -93,13 +93,13 @@ class AllenTool:
 
         lll_ilabel = [[get_ilabels(ex, sam_id) for ex in exs] for sam_id,
         exs in enumerate(l_exs)]
-        ll_score = [[ex.score for ex in exs] for exs in l_exs]
-        return l_osent2, lll_ilabel, ll_score
+        ll_confi = [[ex.confi for ex in exs] for exs in l_exs]
+        return l_osent2, lll_ilabel, ll_confi
 
     @staticmethod
     def get_osent2_to_exs_from_lll_ilabel(l_osent2,
                                           lll_ilabel,
-                                          ll_score,
+                                          ll_confi,
                                           fix_d):
         """
         similar to Openie6.metric.Carb.__call__()
@@ -120,7 +120,7 @@ class AllenTool:
         ----------
         l_osent2: list[str]
         lll_ilabel: list[list[list[int]]]
-        ll_score: list[list[float]]
+        ll_confi: list[list[float]]
         fix_d: dict[str, str]
             a dictionary that makes small fixes on osent2
 
@@ -139,7 +139,7 @@ class AllenTool:
                 if osent2 not in osent2_to_exs:
                     osent2_to_exs[osent2] = []
 
-            num_exs = len(ll_score[sam_id])
+            num_exs = len(ll_confi[sam_id])
             for depth in range(num_exs):
                 ilabels = lll_ilabel[sam_id][depth]
                 # all ilabels=0 once no more extractions
@@ -148,7 +148,7 @@ class AllenTool:
                 ex0 = SaxExtraction.get_ex_from_ilabels(
                     ilabels,
                     osent2,
-                    ll_score[sam_id][depth])
+                    ll_confi[sam_id][depth])
                 if ex0.arg1 and ex0.rel:
                     if fix_d:
                         if ex0.is_not_in(osent2_to_exs[
@@ -178,7 +178,7 @@ class AllenTool:
         """
         tab_sep_vals = line.strip().split('\t')
         in_sent = tab_sep_vals[0]
-        score = float(tab_sep_vals[2])
+        confi = float(tab_sep_vals[2])
         # if len(tab_sep_vals) == 4:
         #     num_exs = int(tab_sep_vals[3])
         # else:
@@ -196,7 +196,7 @@ class AllenTool:
             # print("vcbgh", part)
             part = ' '.join(get_words(part.strip(begin_tag).strip(end_tag)))
             parts.append(part)
-        ex = SaxExtraction(in_sent, parts[0], parts[1], parts[2], score)
+        ex = SaxExtraction(in_sent, parts[0], parts[1], parts[2], confi)
 
         return ex
 
@@ -221,7 +221,7 @@ class AllenTool:
         str0 += " <arg1> " + ex.arg1 + r" <\arg1> "
         str0 += " <rel> " + ex.rel + r" <\rel> "
         str0 += " <arg2> " + ex.arg2 + r" <\arg2> \t"
-        str0 += str(ex.score)
+        str0 += str(ex.confi)
         return str0
 
     def read_allen_file(self):

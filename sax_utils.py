@@ -94,9 +94,11 @@ def unL(osentL):
 def unL_l(l_osentL):
     return [unL(osentL) for osentL in l_osentL]
 
-def unL_lll(lll_ilabel):
-    return [[l_ilabel[:-3] for l_ilabel in ll_ilabel]
-            for ll_ilabel in lll_ilabel]
+# Don't use, even if the inner dimmension of lll_ilabel
+# does not agree with the number of words in osent2
+# def unL_lll(lll_ilabel):
+#     return [[l_ilabel[:-3] for l_ilabel in ll_ilabel]
+#             for ll_ilabel in lll_ilabel]
 
 def replace_in_list(l_x, x, new_x):
     assert l_x.count(x)==1

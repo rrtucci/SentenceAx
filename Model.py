@@ -264,8 +264,8 @@ class Model(pl.LightningModule):
 
         # `loss_fun` is not used in this function anymore
         # loss_fun, lstm_loss = 0, 0
-        ll_word_score = []
-        word_scores = []
+        ll_word_confi = []
+        word_confis = []
 
         hidden_states, _ = self.base_model()
 
@@ -287,19 +287,19 @@ class Model(pl.LightningModule):
             word_hidden_states = torch.gather(hidden_states, 1, xx)
 
             if d != 0:
-                greedy_ilabels = torch.argmax(word_scores, dim=-1)
+                greedy_ilabels = torch.argmax(word_confis, dim=-1)
                 ilabel_embeddings = self.ilabel_embeddings(greedy_ilabels)
                 word_hidden_states += ilabel_embeddings
 
             word_hidden_states = self.merge_layer(word_hidden_states)
-            word_scores = self.ilabelling_layer(word_hidden_states)
-            ll_word_score.append(word_scores)
+            word_confis = self.ilabelling_layer(word_hidden_states)
+            ll_word_confi.append(word_confis)
 
             d += 1
             if d >= max_depth:
                 break
             if self.params_d["mode"] != 'train':
-                predictions = torch.max(word_scores, dim=2)[1]
+                predictions = torch.max(word_confis, dim=2)[1]
                 valid_ext = False
                 for p in predictions:
                     if 1 in p and 2 in p:
@@ -311,7 +311,7 @@ class Model(pl.LightningModule):
         return self._calc_forward_output(
             init_params_d,
             mode,
-            ll_word_score,
+            ll_word_confi,
             constraints_str, 
             cweights_str)
 
@@ -319,7 +319,7 @@ class Model(pl.LightningModule):
             self,
             init_params_d,
             mode,
-            ll_word_score,
+            ll_word_confi,
             constraints_str, 
             cweights_str):
         """
@@ -328,7 +328,7 @@ class Model(pl.LightningModule):
         Parameters
         ----------
         mode
-        ll_word_score
+        ll_word_confi
         constraints_str
         cweights_str
 
@@ -337,19 +337,19 @@ class Model(pl.LightningModule):
 
         """
 
-        word_scores = ll_word_score[-1]
+        word_confis = ll_word_confi[-1]
         batch_loss = 0
         lll_ilabel = []
-        ll_score = []
-        batch_size, num_words, _ = word_scores.shape
+        ll_confi = []
+        batch_size, num_words, _ = word_confis.shape
         self.true_batch_out.lll_ilabel = self.true_batch_out.lll_ilabel.long()
-        for d, word_scores in enumerate(ll_word_score):
+        for d, word_confis in enumerate(ll_word_confi):
             if mode == 'train':
                 batch_loss += self.loss_fun(
-                    word_scores.reshape(batch_size * num_words, -1),
+                    word_confis.reshape(batch_size * num_words, -1),
                     self.true_batch_out.lll_ilabel[:, d, :].reshape(-1))
             else:
-                word_log_probs = torch.log_softmax(word_scores, dim=2)
+                word_log_probs = torch.log_softmax(word_confis, dim=2)
                 max_log_probs, predictions = \
                     torch.max(word_log_probs, dim=2)
                 # remember: lll_label was similar to labels
@@ -364,20 +364,20 @@ class Model(pl.LightningModule):
                 log_probs_norm_ext_len = \
                     (max_log_probs * sro_lll_ilabel) \
                     / (sro_lll_ilabel.sum(dim=0) + 1)
-                scores = torch.exp(
+                confis = torch.exp(
                     torch.sum(log_probs_norm_ext_len, dim=1))
 
                 lll_ilabel.append(predictions.unsqueeze(1))
-                ll_score.append(scores.unsqueeze(1))
+                ll_confi.append(confis.unsqueeze(1))
 
         if mode == 'train':
             if constraints_str:
-                ll_word_score = torch.cat([ws.unsqueeze(1) for
-                                           ws in ll_word_score], dim=1)
-                ll_word_score = torch.softmax(ll_word_score, dim=-1)
+                ll_word_confi = torch.cat([ws.unsqueeze(1) for
+                                           ws in ll_word_confi], dim=1)
+                ll_word_confi = torch.softmax(ll_word_confi, dim=-1)
 
                 const_loss = self._constrained_loss(
-                    ll_word_score,
+                    ll_word_confi,
                     constraints_str, cweights_str) / batch_size
                 batch_loss = const_loss
 
@@ -393,15 +393,15 @@ class Model(pl.LightningModule):
             # torch.cat([A, B], dim=0) will be of shape (6, 4)
             # torch.stack([A, B], dim=0) will be of shape (2, 3, 4)
             lll_ilabel = torch.cat(lll_ilabel, dim=1)
-            ll_score = torch.cat(ll_score, dim=1)
+            ll_confi = torch.cat(ll_confi, dim=1)
 
 
             if constraints_str and \
                     'predict' not in self.params_d["mode"] and \
                     self.params_d["batch_size"] != 1:
-                ll_word_score = torch.cat([d.unsqueeze(1) for
-                                           d in ll_word_score], dim=1)
-                ll_word_score.fill_(0)
+                ll_word_confi = torch.cat([d.unsqueeze(1) for
+                                           d in ll_word_confi], dim=1)
+                ll_word_confi.fill_(0)
 
                 # for checking test set
                 # labels = copy(self.lll_label)
@@ -410,8 +410,8 @@ class Model(pl.LightningModule):
 
                 ilabels = ilabels.unsqueeze(-1)
                 ilabels_depth = ilabels.shape[1]
-                ll_word_score = ll_word_score[:, :ilabels_depth, :, :]
-                ll_word_score.scatter_(3, ilabels.long(), 1)
+                ll_word_confi = ll_word_confi[:, :ilabels_depth, :, :]
+                ll_word_confi.scatter_(3, ilabels.long(), 1)
 
                 constraints_str = 'posm_hvc_hvr_hve'
                 cweights_str = '1_1_1_1'
@@ -423,16 +423,16 @@ class Model(pl.LightningModule):
                 for constraint_str, weight_str in \
                         zip(l_constraint_str, l_cweight_str):
                     const_loss = self._constrained_loss(self.pos_locs,
-                                                        ll_word_score,
+                                                        ll_word_confi,
                                                         constraint_str,
                                                         weight_str)
                     if constraint_str not in self.constraints_str_d:
                         self.constraints_str_d[constraint_str] = []
                     self.constraints_str_d[constraint_str].append(const_loss)
 
-        return lll_ilabel, ll_score, batch_loss
+        return lll_ilabel, ll_confi, batch_loss
 
-    def _constrained_loss(self, ll_word_score,
+    def _constrained_loss(self, ll_word_confi,
                           constraints_str, cweights_str):
         """
         similar to Openie6.model.constrained_loss()
@@ -441,7 +441,7 @@ class Model(pl.LightningModule):
 
         Parameters
         ----------
-        ll_word_score
+        ll_word_confi
         constraints_str
         cweights_str
 
@@ -449,19 +449,19 @@ class Model(pl.LightningModule):
         -------
 
         """
-        batch_size, depth, num_words, num_ilabels = ll_word_score.shape
+        batch_size, depth, num_words, num_ilabels = ll_word_confi.shape
         hinge_loss = 0
         xx = self.verb_locs.unsqueeze(1).unsqueeze(3). \
             repeat(1, depth, 1, num_ilabels)
-        verb_scores = torch.gather(ll_word_score, 2, xx)
-        verb_rel_scores = verb_scores[:, :, :, 2]
+        verb_confis = torch.gather(ll_word_confi, 2, xx)
+        verb_rel_confis = verb_confis[:, :, :, 2]
         # (batch_size, depth, num_words)
-        verb_rel_scores = verb_rel_scores * (self.verb_locs != 0). \
+        verb_rel_confis = verb_rel_confis * (self.verb_locs != 0). \
             unsqueeze(1).float()
 
         # every head-verb must be included in a relation
         if 'hvc' in constraints_str:
-            column_loss = torch.abs(1 - torch.sum(verb_rel_scores, dim=1))
+            column_loss = torch.abs(1 - torch.sum(verb_rel_confis, dim=1))
             column_loss = column_loss[self.verb_locs != 0]
             hinge_loss += cweights_str * column_loss.sum()
 
@@ -469,22 +469,22 @@ class Model(pl.LightningModule):
         # a head verb in them
         if 'hvr' in constraints_str:
             row_rel_loss = F.relu(self.verb_mask.sum(dim=1).float() -
-                                  torch.max(verb_rel_scores, dim=2)[0].sum(
+                                  torch.max(verb_rel_confis, dim=2)[0].sum(
                                       dim=1))
             hinge_loss += cweights_str * row_rel_loss.sum()
 
         # one relation cannot contain more than one head verb
         if 'hve' in constraints_str:
-            ex_loss = F.relu(torch.sum(verb_rel_scores, dim=2) - 1)
+            ex_loss = F.relu(torch.sum(verb_rel_confis, dim=2) - 1)
             hinge_loss += cweights_str * ex_loss.sum()
 
         if 'posm' in constraints_str:
             xx = self.pos_locs.unsqueeze(1).unsqueeze(3). \
                 repeat(1, depth, 1, num_ilabels)
-            pos_scores = torch.gather(ll_word_score, 2, xx)
-            pos_nnone_scores = \
-                torch.max(pos_scores[:, :, :, 1:], dim=-1)[0]
-            column_loss = (1 - torch.max(pos_nnone_scores, dim=1)[0]) * \
+            pos_confis = torch.gather(ll_word_confi, 2, xx)
+            pos_nnone_confis = \
+                torch.max(pos_confis[:, :, :, 1:], dim=-1)[0]
+            column_loss = (1 - torch.max(pos_nnone_confis, dim=1)[0]) * \
                           (self.pos_locs != 0).float()
             hinge_loss += cweights_str * column_loss.sum()
             
@@ -513,7 +513,7 @@ class Model(pl.LightningModule):
             constraints_str = self.params_d["constraints_str"]
             cweights_str = float(self.params_d["cweights_str"])
 
-        lll_ilabel, ll_score, batch_loss = self.forward(mode='train',
+        lll_ilabel, ll_confi, batch_loss = self.forward(mode='train',
                                 batch_id=batch_id,
                                 constraints_str=constraints_str,
                                 cweights_str=cweights_str)
@@ -532,13 +532,13 @@ class Model(pl.LightningModule):
         -------
 
         """
-        lll_ilabel, ll_score, loss= self.forward(
+        lll_ilabel, ll_confi, loss= self.forward(
             mode='val',
             constraints_str=self.params_d["constraints_str"],
             cweights_str=self.params_d["cweights_str"])
 
         val_out_d = {"lll_ilabel": lll_ilabel,
-                     "ll_score": ll_score,
+                     "ll_confi": ll_confi,
                      "ground_truth": self.true_batch_out.lll_ilabel,
                      "meta_data": self.batch_out.meta_data}
         val_out_d = OrderedDict(val_out_d)
@@ -587,10 +587,10 @@ class Model(pl.LightningModule):
             self.batch_out.to_cpu()
             self.true_batch_out.to_cpu()
             lll_ilabel = self.batch_out.lll_ilabel
-            ll_score = self.batch_out.ll_score
+            ll_confi = self.batch_out.ll_confi
             l_orig_sent = self.batch_out.l_orig_sent
             true_lll_ilabel = self.true_batch_out.lll_ilabel
-            ll_score = (ll_score * 100).round() / 100
+            ll_confi = (ll_confi * 100).round() / 100
 
         if self.params_d["task"] == "cc":
             if 'predict' in self.params_d["mode"]:
@@ -614,7 +614,9 @@ class Model(pl.LightningModule):
 
         elif self.params_d["task"] == "ex":
             if 'predict' in self.params_d["mode"]:
-                metrics_d = {'carb_f1': 0, 'carb_auc': 0, 'carb_lastf1': 0}
+                metrics_d = {'carb_f1': 0,
+                             'carb_auc': 0,
+                             'carb_last_f1': 0}
             else:
                 num_samples = len(self.batch_out.lll_ilabel)
                 for k in range(num_samples):
@@ -629,8 +631,8 @@ class Model(pl.LightningModule):
                     reset=True, mode=mode)
 
             eval_out_d = {"eval_f1": metrics_d["carb_f1"],
-                              "eval_auc": metrics_d["carb_auc"],
-                              "eval_lastf1": metrics_d["carb_lastf1"]}
+                        "eval_auc": metrics_d["carb_auc"],
+                        "eval_last_f1": metrics_d["carb_last_f1"]}
 
         print('\nResults: ' + str(eval_out_d))
         # For computing the constraint violations
@@ -708,7 +710,7 @@ class Model(pl.LightningModule):
         fix_d = self.metric.fix_d
 
         lll_ilabel = self.batch_out.lll_ilabel
-        ll_score = self.batch_out.ll_score
+        ll_confi = self.batch_out.ll_confi
         num_samples, max_depth, _= lll_ilabel.shape
 
         l_orig_sentL = [self.batch_out.l_orig_sent[k]
@@ -731,7 +733,7 @@ class Model(pl.LightningModule):
                 if sum(ex_ilabels) == 0:  # extractions completed
                     break
                 ex = SaxExtraction.get_ex_from_ilabels(
-                    ex_ilabels, orig_sentL, ll_score[sample_id][depth].item())
+                    ex_ilabels, orig_sentL, ll_confi[sample_id][depth].item())
                 if ex.arg1 and ex.rel:
                     if fix_d:
                         orig_sent0 = fix_d[orig_sent]
@@ -761,7 +763,7 @@ class Model(pl.LightningModule):
                 allen_str += f"<arg1> {arg1} </arg1>"
                 allen_str += f"<rel> {rel} </rel>"
                 allen_str += f"<arg2> {arg2} </arg2>\t"
-                allen_str += f"{pred_ex.score}\n"
+                allen_str += f"{pred_ex.confi}\n"
             l_pred_allen_str.append(allen_str.strip("/n"))
         return l_pred_str, l_pred_allen_str
 

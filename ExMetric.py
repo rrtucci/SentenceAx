@@ -26,27 +26,24 @@ class ExMetric():
         self.score_d = {'carb_auc': 0.0, 'carb_f1': 0.0, 'carb_sum': 0.0}
         self.fix_d = fix_d
 
-    def __call__(self, l_osentL, lll_ilabel, ll_score):
+    def __call__(self, l_osentL, lll_ilabel, ll_confi):
         """
-        This method works with L or unL parameters
-        __call__(self, l_osent, lll_ilabel, ll_score)
-        is fine as long as osent and lll_ilabel have the same length in the
-        innermost dimension.
+
 
         Parameters
         ----------
         l_osentL
         lll_ilabel
-        ll_score
+        ll_confi
 
         Returns
         -------
 
         """
         self.osentL_to_exs = \
-            AllenTool.get_osentL_to_exs_from_lll_ilabel(l_osentL,
+            AllenTool.get_osent2_to_exs_from_lll_ilabel(l_osentL,
                                                         lll_ilabel,
-                                                        ll_score,
+                                                        ll_confi,
                                                         self.fix_d)
         print("Just enetered samples into ExMetric instance via its "
               "__call__() method.")
@@ -62,13 +59,15 @@ class ExMetric():
             for osentL in self.osentL_to_exs:
                 self.osentL_to_exs[osentL] = \
                     sorted(self.osentL_to_exs[osentL],
-                           key=lambda x: x.score,
+                           key=lambda x: x.confi,
                            reverse=True)[:MAX_EX_DEPTH]
-        carb_osentL_to_exs = {}
-        for osentL, sax_exs in self.osentL_to_exs.items():
-            carb_osentL_to_exs[osentL] = [sax_ex.convert_to_carb_ex()
-                                          for sax_ex in sax_exs]
-            # print("lasdr", carb_osentL_to_exs[osentL][0])
+        osent_to_exs = SaxExtraction.shorten_osentL_to_exs(self.osentL_to_exs)
+        carb_osent_to_exs = \
+            SaxExtraction.get_carb_osent2_to_exs(osent_to_exs)
+        for osent, exs in carb_osent_to_exs.items():
+            if "Philip Russell" in osent:
+                for ex in exs:
+                    print("deft67", ex.pred, ex.args)
 
         # no /dev/null in Windows
         # out_fp = "/dev/null"
@@ -81,7 +80,7 @@ class ExMetric():
             assert False
         auc, optimal_f1_point, last_f1_point = \
             bmark.compare(
-                predicted=carb_osentL_to_exs,
+                predicted=carb_osent_to_exs,
                 matchingFunc=self.matchingFunc,
                 output_fn=out_fp,
                 error_file=None,
@@ -90,7 +89,7 @@ class ExMetric():
         self.score_d = {
             'carb_auc': auc,
             'carb_f1': optimal_f1_point[2],
-            'carb_lastf1': last_f1_point[2]}
+            'carb_last_f1': last_f1_point[2]}
         score_d = self.score_d
         if mode == 'dev' and do_reset:
             # this resets score_d
@@ -98,28 +97,47 @@ class ExMetric():
         return score_d
 
 
+
+
 if __name__ == "__main__":
 
+    # main1() didn't work.
+    # "carb_subset/data/test_gold_allennlp_format.txt"
+    # and "carb_subset/data/gold/test.tsv:" are DIFFERENT
     def main1():
+        in_fp = "carb_subset/data/test_gold_allennlp_format.txt"
+        at = AllenTool(in_fp)
+        osent_to_exs = SaxExtraction.shorten_osentL_to_exs(
+            at.osentL_to_exs)
+        ex_met = ExMetric()
+        mode = "test"
+        pred_l_osent, pred_lll_ilabel, pred_ll_confi = \
+            AllenTool.get_lll_ilabel_from_osent2_to_exs(osent_to_exs)
+
+        ex_met(pred_l_osent, pred_lll_ilabel, pred_ll_confi)
+        score_d = ex_met.get_metric_values(mode, do_reset=True)
+        print(score_d)
+
+    def main2():
         ex_met = ExMetric()
         mode = "test"
         bm = ex_met.test_benchmark
         carb_osent_to_exs = bm.gold
-        sax_osent_to_exs = {}
-        for osent in carb_osent_to_exs:
-            print(osent)
-            sax_osent_to_exs[osent] = []
-            for ex in carb_osent_to_exs[osent]:
-                print("*", str(ex).strip().split("\t"))
-                rel, arg1, arg2 = str(ex).strip().split("\t")
-                sax_osent_to_exs[osent].append(" ".join([arg1, rel, arg2]))
-            print()
-        pred_l_osent, pred_lll_ilabel, pred_ll_score = \
-            AllenTool.get_lll_ilabel_from_osent_to_exs(sax_osent_to_exs)
+        sax_osent_to_exs = \
+            SaxExtraction.get_sax_osent2_to_exs(carb_osent_to_exs)
+        for osent, exs in sax_osent_to_exs.items():
+            if 'Philip Russell' in osent:
+                for k, sax_ex in enumerate(exs):
+                    carb_ex = carb_osent_to_exs[osent][k]
+                    print("sax******************", sax_ex.arg2)
+                    print("carb******************", carb_ex.args[1:])
 
-        ex_met(pred_l_osent, pred_lll_ilabel, pred_ll_score)
+        pred_l_osent, pred_lll_ilabel, pred_ll_confi = \
+            AllenTool.get_lll_ilabel_from_osent2_to_exs(sax_osent_to_exs)
+
+        ex_met(pred_l_osent, pred_lll_ilabel, pred_ll_confi)
         score_d = ex_met.get_metric_values(mode, do_reset=True)
         print(score_d)
 
-
-    main1()
+    # main1() # no good
+    main2()

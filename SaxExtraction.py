@@ -1,6 +1,7 @@
 from sax_globals import *
 from sax_utils import *
 from sax_extraction_utils import *
+import numpy as np
 
 
 class SaxExtraction():
@@ -44,7 +45,7 @@ class SaxExtraction():
     loc_arg: str
     orig_sentL: str
     rel: str
-    score: int
+    confi: int
     time_arg: str
 
     """
@@ -54,7 +55,7 @@ class SaxExtraction():
                  arg1="",
                  rel="",
                  arg2="",
-                 score=None):
+                 confi=None):
         """
 
         Parameters
@@ -63,10 +64,10 @@ class SaxExtraction():
         arg1: str
         rel: str
         arg2: str
-        score: int
+        confi: int
         """
 
-        self.score = score
+        self.confi = confi
 
         self.orig_sentL = orig_sentL
         self._orig_sentL_words = None
@@ -727,11 +728,9 @@ class SaxExtraction():
     
         """
         arg1 = carb_ex.args[0]
-        arg2 = ""
-        for k, arg in enumerate(carb_ex.args):
-            if k > 0:
-                arg2 += arg
-                
+
+        arg2 = " ".join(carb_ex.args[1:])
+
         # print("lklder", carb_ex.sent)
         # print("arg1", carb_ex.sent)
         # print("arg1", arg1)
@@ -743,9 +742,10 @@ class SaxExtraction():
                              arg1=arg1,
                              rel=carb_ex.pred,
                              arg2=arg2,
-                             score=carb_ex.confidence)
+                             confi=carb_ex.confidence)
 
-    def convert_to_carb_ex(self):
+    @staticmethod
+    def convert_to_carb_ex(sax_ex):
         """
         openie6.model.write_to_files
 
@@ -754,17 +754,81 @@ class SaxExtraction():
         carb_subset.oie_readers.extraction.Extraction
 
         """
-        carb_ex = Extraction(pred=self.rel,
+        carb_ex = Extraction(pred=sax_ex.rel,
                               head_pred_index=None,
-                              sent=self.orig_sentL,
-                              confidence=self.score)
-        carb_ex.addArg(self.arg1)
-        carb_ex.addArg(self.arg2)
-        # print("llkt34", carb_ex.confidence)
+                              sent=sax_ex.orig_sentL,
+                              confidence=np.exp(sax_ex.confi),
+                             index=0)
+        #confidence only used for ordering exs, doesn't affect scores
+        carb_ex.addArg(sax_ex.arg1)
+        carb_ex.addArg(sax_ex.arg2)
+        if "Philip Russell" in sax_ex.orig_sentL:
+            print("llkt34-sax-arg1,arg2", sax_ex.arg1, sax_ex.arg2)
+            print("llkt34-carb-args", carb_ex.args)
         return carb_ex
 
     @staticmethod
-    def get_ex_from_ilabels(ex_ilabels, orig_sentL, score):
+    def get_carb_osent2_to_exs(sax_osent2_to_exs):
+        carb_osent2_to_exs = {}
+        for osent2, sax_exs in sax_osent2_to_exs.items():
+            carb_osent2_to_exs[osent2] =\
+                [SaxExtraction.convert_to_carb_ex(sax_ex)
+                    for sax_ex in sax_exs]
+        return carb_osent2_to_exs
+
+    @staticmethod
+    def get_sax_osent2_to_exs(carb_osent2_to_exs):
+        sax_osent2_to_exs = {}
+        for osent2, carb_exs in carb_osent2_to_exs.items():
+            sax_osent2_to_exs[osent2] = \
+                [SaxExtraction.convert_to_sax_ex(carb_ex)
+                 for carb_ex in carb_exs]
+        return sax_osent2_to_exs
+
+    @staticmethod
+    def shorten_osentL_to_exs(osentL_to_exs):
+        """
+        In the output of this method, the inner dimension of lll_ilabel
+        might not agree with the number of words in osent2
+
+        Parameters
+        ----------
+        osentL_to_exs: dict[str, list[SaxExtraction]]
+
+        Returns
+        -------
+        dict[str, list[SaxExtraction]]
+
+        """
+        osent_to_exs = {}
+        for osentL, exs in osentL_to_exs.items():
+            osent = unL(osentL)
+            osent_to_exs[osent] = exs
+        return osent_to_exs
+        # Don't use this, even if in the output of this method, the inner
+        # dimension of lll_ilabel does not agree with the number of words
+        # in osent2
+
+        # osent_to_exs = {}
+        # for osentL, exs in osentL_to_exs.items():
+        #     osent = unL(osentL)
+        #     new_exs = []
+        #     for ex in exs:
+        #         new_ex = SaxExtraction(
+        #             osent,
+        #             ex.arg1,
+        #             ex.rel,
+        #             ex.arg2,
+        #             ex.confi)
+        #         if ex.extags:
+        #             new_ex.extags = ex.extags[:-3]
+        #         new_exs.append(new_ex)
+        #     osent_to_exs[osent] = new_exs
+        # return osent_to_exs
+
+
+    @staticmethod
+    def get_ex_from_ilabels(ex_ilabels, orig_sentL, confi):
         """
         similar to Openie6.model.process_extraction()
 
@@ -782,7 +846,7 @@ class SaxExtraction():
         ----------
         ex_labels:
         orig_sentL
-        score
+        confi
 
         Returns
         -------
@@ -837,27 +901,28 @@ class SaxExtraction():
                                    arg1,
                                    rel,
                                    arg2,
-                                   score=score)
+                                   confi=confi)
 
         return extraction
 
 if __name__==  "__main__":
     from AllenTool import *
     def main():
-        in_fp = "testing_files/one_sample_allen.tsv"
+        in_fp = "testing_files/small_allen.tsv"
         at = AllenTool(in_fp)
         for osentL, sax_exs in at.osentL_to_exs.items():
-            carb_exs = [sax_ex.convert_to_carb_ex() for sax_ex in sax_exs]
+            carb_exs = [SaxExtraction.convert_to_carb_ex(sax_ex) for sax_ex in
+                        sax_exs]
             new_sax_exs = [SaxExtraction.convert_to_sax_ex(carb_ex)
                            for carb_ex in carb_exs]
             for k, sax_ex in enumerate(sax_exs):
                 new_sax_ex = new_sax_exs[k]
-                print(sax_ex.arg1 + "/" + new_sax_ex.arg1)
-                print(sax_ex.rel + "/" + new_sax_ex.rel)
-                print(sax_ex.arg2 + "/" + new_sax_ex.arg2)
-                print(str(sax_ex.score) + "/" + str(new_sax_ex.score))
-                assert sax_ex == new_sax_ex
-
+                l_old = [sax_ex.arg1, sax_ex.rel, sax_ex.arg2, sax_ex.confi]
+                l_new= [new_sax_ex.arg1, new_sax_ex.rel, new_sax_ex.arg2,
+                      new_sax_ex.confi]
+                for k, old in enumerate(l_old):
+                    new = l_new[k]
+                    assert old == new
 
     main()
 

@@ -66,17 +66,17 @@ class Benchmark:
     def compare(self, predicted, matchingFunc, output_fn, error_file=None,
                 binary=False, strategy='sm'):
 
-        for k, sent in enumerate(predicted):
-            if "Philip Russell" in sent:
-                print(str(k) +".")
-                print("mcvb", sent)
-            gold_exs = self.gold[sent]
-            for ex_id, ex in enumerate(predicted[sent]):
-                gold_ex = gold_exs[ex_id]
-                if "Philip Russell" in sent:
-                    print("gfrt-xxxx", ex.pred, ex.args, ex.confidence)
-                    print("gfrt-gold", gold_ex.pred, gold_ex.args,
-                          gold_ex.confidence)
+        # for k, sent in enumerate(predicted):
+        #     if "Philip Russell" in sent:
+        #         print(str(k) +".")
+        #         print("mcvb", sent)
+        #     gold_exs = self.gold[sent]
+        #     for ex_id, ex in enumerate(predicted[sent]):
+        #         gold_ex = gold_exs[ex_id]
+        #         if "Philip Russell" in sent:
+        #             print("gfrt-xxxx", ex.pred, ex.args, ex.confidence)
+        #             print("gfrt-gold", gold_ex.pred, gold_ex.args,
+        #                   gold_ex.confidence)
 
 
 

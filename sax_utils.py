@@ -105,7 +105,20 @@ def replace_in_list(l_x, x, new_x):
     k = l_x.index(x)
     l_x[k] = new_x
 
+def sax_sniffer(name, osent2_to_exs, lll_ilabel):
+    print(name + " sniffer")
+    for sam, (osent2, exs) in enumerate(osent2_to_exs.items()):
+        if "Philip Russell" in osent2:
+            print(lll_ilabel[sam])
+            for ex in exs:
+                print(ex.arg1, ex.rel, ex.arg2)
 
+def carb_sniffer(name, osent2_to_exs):
+    print(name + " sniffer")
+    for sam, (osent2, exs) in enumerate(osent2_to_exs.items()):
+        if "Philip Russell" in osent2:
+            for ex in exs:
+                print(ex.pred, ex.args)
 
 
 

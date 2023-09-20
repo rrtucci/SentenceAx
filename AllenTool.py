@@ -85,14 +85,14 @@ class AllenTool:
         """
         l_osent2, l_exs = zip(*osent2_to_exs.items())
 
-        def get_ilabels(ex, sam_id):
+        def get_ilabels(ex):
             extags = translate_words_to_extags(ex)
             ilabels = translate_extags_to_ilabels(extags)
-            ilabels = ilabels[0: len(l_osent2[sam_id])]
+            #ilabels = ilabels[0: len(l_osent2[sam_id])]
             return ilabels
 
-        lll_ilabel = [[get_ilabels(ex, sam_id) for ex in exs] for sam_id,
-        exs in enumerate(l_exs)]
+        lll_ilabel = [[get_ilabels(ex) for ex in exs] for
+                      exs in l_exs]
         ll_confi = [[ex.confi for ex in exs] for exs in l_exs]
         return l_osent2, lll_ilabel, ll_confi
 

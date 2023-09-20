@@ -549,7 +549,7 @@ class SaxExtraction():
                           range(len(self.orig_sentL_words)) if
                           sub_exists(self.arg1_words,
                                      self.orig_sentL_words, start_loc)]
-            #assert len(start_locs) > 1
+            # assert len(start_locs) > 1
 
             if 'REL' in self.extags:
                 # li.index(x) gives first occurrence of x
@@ -603,7 +603,7 @@ class SaxExtraction():
                      range(len(self.orig_sentL_words))
                      if
                      sub_exists(rel_words, self.orig_sentL_words, start_loc)]
-                #assert len(start_locs) > 1
+                # assert len(start_locs) > 1
                 arg2_condition = self.arg2 == "" or \
                                  'ARG2' in self.extags
                 if 'ARG1' in self.extags and arg2_condition:
@@ -736,7 +736,6 @@ class SaxExtraction():
         # print("arg1", arg1)
         # print("rel", carb_ex.pred)
         # print("arg2", arg2)
-        
 
         return SaxExtraction(orig_sentL=carb_ex.sent,
                              arg1=arg1,
@@ -755,25 +754,22 @@ class SaxExtraction():
 
         """
         carb_ex = Extraction(pred=sax_ex.rel,
-                              head_pred_index=None,
-                              sent=sax_ex.orig_sentL,
-                              confidence=np.exp(sax_ex.confi),
-                             index=0)
-        #confidence only used for ordering exs, doesn't affect scores
+                             head_pred_index=None,
+                             sent=sax_ex.orig_sentL,
+                             confidence=sax_ex.confi,
+                             index=1)
+        # confidence only used for ordering exs, doesn't affect scores
         carb_ex.addArg(sax_ex.arg1)
         carb_ex.addArg(sax_ex.arg2)
-        if "Philip Russell" in sax_ex.orig_sentL:
-            print("llkt34-sax-arg1,arg2", sax_ex.arg1, sax_ex.arg2)
-            print("llkt34-carb-args", carb_ex.args)
         return carb_ex
 
     @staticmethod
     def get_carb_osent2_to_exs(sax_osent2_to_exs):
         carb_osent2_to_exs = {}
         for osent2, sax_exs in sax_osent2_to_exs.items():
-            carb_osent2_to_exs[osent2] =\
+            carb_osent2_to_exs[osent2] = \
                 [SaxExtraction.convert_to_carb_ex(sax_ex)
-                    for sax_ex in sax_exs]
+                 for sax_ex in sax_exs]
         return carb_osent2_to_exs
 
     @staticmethod
@@ -784,6 +780,14 @@ class SaxExtraction():
                 [SaxExtraction.convert_to_sax_ex(carb_ex)
                  for carb_ex in carb_exs]
         return sax_osent2_to_exs
+
+    @staticmethod
+    def elongate_osent_to_exs(osent_to_exs):
+        osentL_to_exs = {}
+        for osent, exs in osent_to_exs.items():
+            osentL = osent + UNUSED_TOKENS_STR
+            osentL_to_exs[osentL] = exs
+        return osentL_to_exs
 
     @staticmethod
     def shorten_osentL_to_exs(osentL_to_exs):
@@ -825,7 +829,6 @@ class SaxExtraction():
         #         new_exs.append(new_ex)
         #     osent_to_exs[osent] = new_exs
         # return osent_to_exs
-
 
     @staticmethod
     def get_ex_from_ilabels(ex_ilabels, orig_sentL, confi):
@@ -905,9 +908,13 @@ class SaxExtraction():
 
         return extraction
 
-if __name__==  "__main__":
-    from AllenTool import *
+
+if __name__ == "__main__":
+
+
+
     def main():
+        from AllenTool import AllenTool
         in_fp = "testing_files/small_allen.tsv"
         at = AllenTool(in_fp)
         for osentL, sax_exs in at.osentL_to_exs.items():
@@ -918,11 +925,11 @@ if __name__==  "__main__":
             for k, sax_ex in enumerate(sax_exs):
                 new_sax_ex = new_sax_exs[k]
                 l_old = [sax_ex.arg1, sax_ex.rel, sax_ex.arg2, sax_ex.confi]
-                l_new= [new_sax_ex.arg1, new_sax_ex.rel, new_sax_ex.arg2,
-                      new_sax_ex.confi]
+                l_new = [new_sax_ex.arg1, new_sax_ex.rel, new_sax_ex.arg2,
+                         new_sax_ex.confi]
                 for k, old in enumerate(l_old):
                     new = l_new[k]
                     assert old == new
 
-    main()
 
+    main()

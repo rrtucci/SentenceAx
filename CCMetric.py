@@ -108,7 +108,7 @@ class CCMetric:
         # self.n_complete = 0
         # self.n_sentence = 0
 
-    def get_metric_values(self, do_reset=False):
+    def get_score_d(self, do_reset=False):
         # similar to Openie6.metric.Conjunction.get_metric()
 
         score_d = dict()
@@ -199,7 +199,7 @@ if __name__ == "__main__":
         if ll_ilabel:
             lll_ilabel.append(ll_ilabel)
         cc_met(l_osent, lll_ilabel, lll_ilabel)
-        score_d = cc_met.get_metric_values(do_reset=False)
+        score_d = cc_met.get_score_d(do_reset=False)
         print(score_d)
         # this gives nan if do_reset = True
         print("overall-exact score:", cc_met.get_overall_score("exact"))

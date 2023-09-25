@@ -43,12 +43,23 @@ the others are trivial.
 
 
 def translate_words_to_extags(ex):
+    """
+
+    Parameters
+    ----------
+    ex: SaxExtraction
+
+    Returns
+    -------
+    list[str]
+
+    """
     if not ex.extags_are_set:
         ex.set_extags()
     return ex.extags
 
 
-def translate_words_to_cctags(ll_ilabel, orig_sentL):
+def translate_words_to_cctags(cctree):
     """
     CCTree ilabels not same as those provided by AutoEncoder.
 
@@ -59,34 +70,26 @@ def translate_words_to_cctags(ll_ilabel, orig_sentL):
 
     Parameters
     ----------
-    orig_sent
-    ll_ilabel
+    cctree: CCTree
 
     Returns
     -------
+    list[list[str]]
 
     """
-    osent = orig_sentL.split("[unused1]")[0].strip()
-    osent_words = get_words(osent)
-    cctree = CCTree(osent, ll_ilabel)
-    l_spanned_locs = cctree.l_spanned_locs
-    max_depth = len(l_spanned_locs)
     nodes = cctree.ccnodes
-    depth_to_cclocs = {}
-    depth_to_seplocs = {}
+    assert cctree.ccsents
+    depth_to_ccnodes = {}
     for depth in range(max_depth):
-        seplocs = []
-        cclocs = []
+        ccnodes = []
         for node in nodes:
             if node.depth == depth:
-                seplocs += node.seplocs
-                cclocs.append(node.ccloc)
-        depth_to_seplocs[depth] = seplocs
-        depth_to_cclocs[depth] = cclocs
+                ccnodes.append(node)
+        depth_to_ccnodes[depth] = ccnodes
     l_cctags = [["NONE"] * len(osent_words)]
-    for depth, locs in enumerate(l_spanned_locs):
+    for depth, ccnodes in depth_to_ccnodes:
         cctags = l_cctags[depth]
-        for k, loc in enumerate(sorted(locs)):
+        for node in ccnodes:
             if k == 0:
                 cctags[loc] = "CP_START"
             else:

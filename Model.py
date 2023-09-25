@@ -604,7 +604,7 @@ class Model(pl.LightningModule):
                     self.metric(lll_ilabel[k],
                                 true_lll_ilabel[k],
                                 l_orig_sent[k])
-                metrics_d = self.metric.get_metric_values(
+                metrics_d = self.metric.get_score_d(
                     reset=True, mode=mode)
 
             val_acc = metrics_d["F1_exact"]
@@ -627,7 +627,7 @@ class Model(pl.LightningModule):
                     self.metric(lll_ilabel[k],
                                 true_lll_ilabel[k],
                                 l_orig_sent[k])
-                metrics_d = self.metric.get_metric_values(
+                metrics_d = self.metric.get_score_d(
                     reset=True, mode=mode)
 
             eval_out_d = {"eval_f1": metrics_d["carb_f1"],

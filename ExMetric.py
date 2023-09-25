@@ -9,14 +9,31 @@ from MOutput import *
 from AllenTool import *
 
 
-class ExMetric():
+class ExMetric:
     """
     similar to Openie6.metric.Carb
-
-
+    
+    Attributes 
+    ----------
+    dev_benchmark: Benchmark
+    fix_d: dict[str, str]
+    matchingFunc: Matcher.binary_linient_tuple_match
+    osentL_to_exs: dict[str, listt[SaxExtraction]]
+    score_d: dict[str, float]
+    test_benchmark: Benchmark
+    use_carb_ex: bool
+    
     """
 
     def __init__(self, osentL_to_exs=None, fix_d=None, use_carb_ex=False):
+        """
+        
+        Parameters
+        ----------
+        osentL_to_exs: dict[str, list[SaxExtraction]]
+        fix_d; dict[str, str]
+        use_carb_ex: bool
+        """
         self.dev_benchmark = Benchmark('carb_subset/data/gold/dev.tsv')
         self.test_benchmark = Benchmark('carb_subset/data/gold/test.tsv')
         self.matchingFunc = Matcher.binary_linient_tuple_match
@@ -25,7 +42,7 @@ class ExMetric():
         # self.l_osent_verb_mask = [] # not used
         self.score_d = {'carb_auc': 0.0, 'carb_f1': 0.0, 'carb_sum': 0.0}
         self.fix_d = fix_d
-        self.use_carb_ex=use_carb_ex
+        self.use_carb_ex = use_carb_ex
 
     def __call__(self, l_osentL, lll_ilabel, ll_confi):
         """
@@ -33,12 +50,13 @@ class ExMetric():
 
         Parameters
         ----------
-        l_osentL
-        lll_ilabel
-        ll_confi
+        l_osentL: list[str]
+        lll_ilabel: list[list[list[int]]]
+        ll_confi: list[list[float]]
 
         Returns
         -------
+        None
 
         """
         assert not self.use_carb_ex
@@ -49,25 +67,44 @@ class ExMetric():
                                                             ll_confi,
                                                             self.fix_d)
         else:
-            assert False, "This __call__ is redundant. osentL_to_exs"\
-            " has already been entered in the ExMetric constructor"
+            assert False, "This __call__ is redundant. osentL_to_exs" \
+                          " has already been entered in the " \
+                          "ExMetric constructor"
         print("Just entered samples into ExMetric instance via its "
               "__call__() method.")
         print("number of samples=", len(lll_ilabel))
 
     def reset(self):
+        """
+        
+        Returns
+        -------
+        None
+
+        """
         self.osentL_to_exs = {}
         self.score_d = {'carb_auc': 0.0, 'carb_f1': 0.0, 'carb_sum': 0.0}
 
-    def get_metric_values(self, mode, do_reset=True):
-        # similar to Openie6.metric.Carb.get_metric()
+    def get_score_d(self, mode, do_reset=True):
+        """
+        similar to Openie6.metric.Carb.get_metric()
+        
+        Parameters
+        ----------
+        mode: str
+        do_reset: bool
+
+        Returns
+        -------
+        dict[str, float]
+
+        """
 
         def fun(x):
             if hasattr(x, "confi"):
                 return x.confi
             elif hasattr(x, "confidence"):
                 return x.confidence
-
 
         if MAX_EX_DEPTH:
             for osentL in self.osentL_to_exs:
@@ -112,7 +149,6 @@ class ExMetric():
 
 
 if __name__ == "__main__":
-
     # main1() didn't work.
     # "carb_subset/data/test_gold_allennlp_format.txt"
     # and "carb_subset/data/gold/test.tsv:" are DIFFERENT
@@ -127,7 +163,7 @@ if __name__ == "__main__":
     #         AllenTool.get_lll_ilabel_from_osent2_to_exs(osent_to_exs)
     #
     #     ex_met(pred_l_osent, pred_lll_ilabel, pred_ll_confi)
-    #     score_d = ex_met.get_metric_values(mode, do_reset=True)
+    #     score_d = ex_met.get_score_d(mode, do_reset=True)
     #     print(score_d)
 
     def main2():
@@ -141,8 +177,9 @@ if __name__ == "__main__":
         # unnecessary
         # ex_met()
         mode = "test"
-        score_d = ex_met.get_metric_values(mode, do_reset=True)
+        score_d = ex_met.get_score_d(mode, do_reset=True)
         print(score_d)
+
 
     def main3():
         bm = Benchmark('carb_subset/data/gold/test.tsv')
@@ -151,9 +188,8 @@ if __name__ == "__main__":
         # unnecessary
         # ex_met()
         mode = "test"
-        score_d = ex_met.get_metric_values(mode, do_reset=True)
+        score_d = ex_met.get_score_d(mode, do_reset=True)
         print(score_d)
-
 
 
     # main1() # no good

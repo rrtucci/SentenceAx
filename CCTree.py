@@ -11,18 +11,19 @@ class CCTree:
     
     Attributes
     ----------
-    ccsents: list[str]
+    calc_tree_struc: bool
     ccnodes: list[CCNode]
+    ccsents: list[str]
     child_ccloc_to_par_cclocs: dict[int, list[int]]
     forced_tree: bool
-    calc_tree_struc: bool
+    level_to_ccnodes: dict[int, list[Node]]
+    level_to_fat_ll_spanned_loc: dict[int, list[list[int]]]
     ll_ilabel: list[list[int]]
     orig_sent: str
     osent_words: list[str]
     par_ccloc_to_child_cclocs: list[int,list[int]]
     root_cclocs: list[int]
-    
-    
+    verbose: str
     
     """
 

@@ -4,7 +4,7 @@ from sax_extraction_utils import *
 import numpy as np
 
 
-class SaxExtraction():
+class SaxExtraction:
     """
     similar to Openie6.data_processing.py
     
@@ -23,7 +23,7 @@ class SaxExtraction():
     
     orig_sentL = orig_sent + UNUSED_TOKEN_STR is the long version of orig_sent
     
-    `ex_sent' will represent an extracted sentence (simple sentence). It 
+    `ex_sent` will represent an extracted sentence (simple sentence). It
     does not contain unused tokens but may contain "is", "of", "from". which 
     do not appear in orig_sent.
     ex_sent = arg1 + rel + arg2
@@ -39,13 +39,13 @@ class SaxExtraction():
     arg1: str
     arg2: str
     arg2_is_extagged: bool
+    confi: float
     extags: list[str]
     extags_are_set: bool
     is_assigned_d: dict[str, bool]
     loc_arg: str
     orig_sentL: str
     rel: str
-    confi: int
     time_arg: str
 
     """
@@ -64,7 +64,7 @@ class SaxExtraction():
         arg1: str
         rel: str
         arg2: str
-        confi: int
+        confi: float
         """
 
         self.confi = confi
@@ -86,6 +86,8 @@ class SaxExtraction():
 
         self.loc_arg = ""
         self._loc_arg_words = None
+
+        self.arg2_is_extagged = False
 
         self.extags = ["NONE"] * len(self.orig_sentL_words)
         self.is_assigned_d = {extag_name: False
@@ -143,7 +145,8 @@ class SaxExtraction():
 
         Returns
         -------
-        list[str]
+        None
+
 
         """
         self._arg1_words = value
@@ -171,7 +174,7 @@ class SaxExtraction():
 
         Returns
         -------
-        list[str]
+        None
 
         """
         self._rel_words = value
@@ -199,7 +202,7 @@ class SaxExtraction():
 
         Returns
         -------
-        list[str]
+        None
 
         """
         self._arg2_words = value
@@ -227,7 +230,7 @@ class SaxExtraction():
 
         Returns
         -------
-        list[str]
+        None
 
         """
         self._time_arg_words = value
@@ -255,24 +258,24 @@ class SaxExtraction():
 
         Returns
         -------
-        list[str]
+        None
 
         """
         self._loc_arg_words = value
 
-    def __eq__(self, other):
+    def __eq__(self, other_ex):
         """
 
         Parameters
         ----------
-        other: SaxExtraction
+        other_ex: SaxExtraction
 
         Returns
         -------
         bool
 
         """
-        return self.get_simple_sent() == other.get_simple_sent()
+        return self.get_simple_sent() == other_ex.get_simple_sent()
 
     def is_in(self, l_ex):
         """
@@ -367,6 +370,7 @@ class SaxExtraction():
 
         Returns
         -------
+        None
 
         """
         assert extag_name in BASE_EXTAGS
@@ -388,9 +392,9 @@ class SaxExtraction():
         """
 
         li_2lt = self.arg2_words + self.loc_arg_words + \
-                 self.time_arg_words
+            self.time_arg_words
         li_2tl = self.arg2_words + self.time_arg_words + \
-                 self.loc_arg_words
+            self.loc_arg_words
         li_2t = self.arg2_words + self.time_arg_words
         li_2l = self.arg2_words + self.loc_arg_words
         li_2 = self.arg2_words
@@ -429,6 +433,7 @@ class SaxExtraction():
 
         Returns
         -------
+        None
 
         """
         if arg_name == "arg1":
@@ -461,7 +466,7 @@ class SaxExtraction():
 
         """
         assert unused_num in [1, 2, 3]
-        unused_str = '[unused' + unused_num + ']'
+        unused_str = '[unused' + str(unused_num) + ']'
         # this equals -3, -2, -1 for 1, 2, 3
         unused_loc = -4 + unused_num
         if unused_num in [2, 3]:
@@ -556,7 +561,10 @@ class SaxExtraction():
                 rel_loc = self.extags.index('REL')
 
                 xlist = start_locs
-                cost_fun = lambda x: abs(rel_loc - x)
+
+                def cost_fun(x):
+                    return abs(rel_loc - x)
+
                 loc0, cost0 = \
                     find_xlist_item_that_minimizes_cost_fun(xlist, cost_fun)
                 assert self.arg1_words == self.orig_sentL_words[
@@ -564,10 +572,9 @@ class SaxExtraction():
                                               self.arg1_words)]
                 self.set_the_is_extagged_flag_to_true("ARG1")
                 # only extag the first occurrence of arg1
-                self.extags[
-                loc0: loc0 + len(self.arg1_words)] = \
+                self.extags[loc0: loc0 + len(self.arg1_words)] = \
                     ['ARG1'] * len(self.arg1_words)
-            else:  # 'REL" is not in extags
+            else:  # "REL" is not in extags
                 assert False
 
     def set_extags_of_repeated_rel(self):
@@ -604,21 +611,22 @@ class SaxExtraction():
                      if
                      sub_exists(rel_words, self.orig_sentL_words, start_loc)]
                 # assert len(start_locs) > 1
-                arg2_condition = self.arg2 == "" or \
-                                 'ARG2' in self.extags
+                arg2_condition = self.arg2 == "" or 'ARG2' in self.extags
                 if 'ARG1' in self.extags and arg2_condition:
                     arg1_loc = self.extags.index('ARG1')
 
                     if self.arg2 == "":
                         xlist = start_locs
-                        cost_fun = lambda x: abs(arg1_loc - x)
+
+                        def cost_fun(x):
+                            return abs(arg1_loc - x)
+
                         loc0, cost0 = \
                             find_xlist_item_that_minimizes_cost_fun(xlist,
                                                                     cost_fun)
 
                         assert rel_words == \
-                               self.orig_sentL_words[
-                               loc0: loc0 + len(rel_words)]
+                            self.orig_sentL_words[loc0: loc0 + len(rel_words)]
                         self.set_the_is_extagged_flag_to_true("REL")
                         self.extags[loc0: loc0 + len(rel_words)] = \
                             ['REL'] * len(rel_words)
@@ -626,11 +634,13 @@ class SaxExtraction():
                     else:  # self.arg2 non-empty
                         arg2_loc = self.extags.index('ARG2')
                         xlist = start_locs
+
                         # this cost function has as minimum
                         # abs(arg1_loc - arg2_loc). This minimum is achieved
                         # by any x in the interval [arg1_loc, arg2_loc]
-                        cost_fun = \
-                            lambda x: abs(arg1_loc - x) + abs(arg2_loc - x)
+                        def cost_fun(x):
+                            return abs(arg1_loc - x) + abs(arg2_loc - x)
+
                         loc0, cost0 = \
                             find_xlist_item_that_minimizes_cost_fun(xlist,
                                                                     cost_fun)
@@ -709,7 +719,8 @@ class SaxExtraction():
         def addArg(self, arg, question = None):
         self.args.append(arg)
         if question:
-            self.questions[question] = self.questions.get(question,[]) + [Argument(arg)]
+            self.questions[question] = \
+            self.questions.get(question,[]) + [Argument(arg)]
     
         class Argument:
         def __init__(self, arg):
@@ -748,6 +759,10 @@ class SaxExtraction():
         """
         openie6.model.write_to_files
 
+        Parameters
+        ----------
+        sax_ex: SaxExtraction
+
         Returns
         -------
         carb_subset.oie_readers.extraction.Extraction
@@ -765,6 +780,17 @@ class SaxExtraction():
 
     @staticmethod
     def get_carb_osent2_to_exs(sax_osent2_to_exs):
+        """
+
+        Parameters
+        ----------
+        sax_osent2_to_exs: dict[str, list[SaxExtraction]]
+
+        Returns
+        -------
+        dict[str, list[Extraction]]
+
+        """
         carb_osent2_to_exs = {}
         for osent2, sax_exs in sax_osent2_to_exs.items():
             carb_osent2_to_exs[osent2] = \
@@ -774,6 +800,17 @@ class SaxExtraction():
 
     @staticmethod
     def get_sax_osent2_to_exs(carb_osent2_to_exs):
+        """
+
+        Parameters
+        ----------
+        carb_osent2_to_exs: dict[str, list[Extraction]]
+
+        Returns
+        -------
+        dict[str, list[SaxExtraction]]
+
+        """
         sax_osent2_to_exs = {}
         for osent2, carb_exs in carb_osent2_to_exs.items():
             sax_osent2_to_exs[osent2] = \
@@ -783,6 +820,17 @@ class SaxExtraction():
 
     @staticmethod
     def elongate_osent_to_exs(osent_to_exs):
+        """
+
+        Parameters
+        ----------
+        osent_to_exs: dict[str, list[saxExtraction]]
+
+        Returns
+        -------
+        dict[str, list[saxExtraction]]
+
+        """
         osentL_to_exs = {}
         for osent, exs in osent_to_exs.items():
             osentL = osent + UNUSED_TOKENS_STR
@@ -847,12 +895,13 @@ class SaxExtraction():
 
         Parameters
         ----------
-        ex_labels:
-        orig_sentL
-        confi
+        ex_ilabels: list[str]
+        orig_sentL: str
+        confi: float
 
         Returns
         -------
+        SaxExtraction
 
         """
         # ex_ilabels = ex_ilabels.to_list()  # change from torch tensor to list
@@ -911,8 +960,6 @@ class SaxExtraction():
 
 if __name__ == "__main__":
 
-
-
     def main():
         from AllenTool import AllenTool
         in_fp = "testing_files/small_allen.tsv"
@@ -927,8 +974,8 @@ if __name__ == "__main__":
                 l_old = [sax_ex.arg1, sax_ex.rel, sax_ex.arg2, sax_ex.confi]
                 l_new = [new_sax_ex.arg1, new_sax_ex.rel, new_sax_ex.arg2,
                          new_sax_ex.confi]
-                for k, old in enumerate(l_old):
-                    new = l_new[k]
+                for i, old in enumerate(l_old):
+                    new = l_new[i]
                     assert old == new
 
 

@@ -75,10 +75,10 @@ class CCMetric:
         for k in range(num_samples):
             pred_ccnodes = CCTree(l_osent[k],
                                   pred_lll_ilabel[k],
-                                  just_nodes=True).ccnodes
+                                  calc_tree_struc=True).ccnodes
             true_ccnodes = CCTree(l_osent[k],
                                   true_lll_ilabel[k],
-                                  just_nodes=True).ccnodes
+                                  calc_tree_struc=True).ccnodes
 
             self.report_whole.absorb_new_sample(pred_ccnodes, true_ccnodes)
             self.report_outer.absorb_new_sample(pred_ccnodes, true_ccnodes)

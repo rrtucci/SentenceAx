@@ -50,7 +50,7 @@ class CCTree:
 
         self.ccnodes = None
         # This must be called before calling self.set_tree_structure()
-        self.set_ccnodes()
+        self.set_ccnodes(fix_it=True)
 
         self.root_cclocs = None
         self.par_ccloc_to_child_cclocs = None
@@ -118,7 +118,7 @@ class CCTree:
                       " thrown away in fixing ccnodes")
                 self.ccnodes.pop(k)
 
-    def set_ccnodes(self, fix_it=False):
+    def set_ccnodes(self, fix_it=True):
         """
         similar to Openie6.metric.get_coords()
 
@@ -451,12 +451,20 @@ class CCTree:
             fat_ll_spanned_loc = self.level_to_fat_ll_spanned_loc[level]
             for k, node in enumerate(ccnodes):
                 fat_spanned_locs = sorted(fat_ll_spanned_loc[k])
-                before_ccloc_words = [self.osent_words[i]
-                                   for i in fat_spanned_locs if i<node.ccloc]
-                after_ccloc_words = [self.osent_words[i]
-                                   for i in fat_spanned_locs if i>node.ccloc]
-                ccsents.append(' '.join(before_ccloc_words))
-                ccsents.append(' '.join(after_ccloc_words))
+                spanned_locs = sorted(node.spanned_locs)
+                left_words = []
+                right_words = []
+                for i in fat_spanned_locs:
+                    if i >= node.ccloc and i in spanned_locs:
+                        pass
+                    else:
+                        left_words.append(self.osent_words[i])
+                    if i <= node.ccloc and i in spanned_locs:
+                        pass
+                    else:
+                        right_words.append(self.osent_words[i])
+                ccsents.append(' '.join(left_words))
+                ccsents.append(' '.join(right_words))
         self.ccsents = ccsents
         # self.l_spanned_text_chunk = l_spanned_text_chunk
 

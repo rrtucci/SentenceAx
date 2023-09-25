@@ -136,6 +136,7 @@ class CCNode:
 
     def is_parent(self, child):
         """
+        similar to Openie6.data.is_parent()
 
         Parameters
         ----------
@@ -150,8 +151,8 @@ class CCNode:
         ch_min = child.spans[0][0]
         ch_max = child.spans[-1][1] - 1
 
-        # self is parent iff at least one span in self.spans
-        # contains all spans of the child
+        # self is parent iff
+        # at least one span in self.spans contains all spans of the child
         for span in self.spans:
             if span[0] <= ch_min and ch_max <= span[1] - 1:
                 return True
@@ -212,6 +213,7 @@ class CCNode:
     def an_unbreakable_word_is_not_spanned(self):
         """
         similar to Openie6.data.remove_unbreakable_conjuncts()
+
         used in CCTree.fix_ccnodes()
 
         Returns

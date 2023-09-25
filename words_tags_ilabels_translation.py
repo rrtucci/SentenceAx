@@ -59,49 +59,37 @@ def translate_words_to_extags(ex):
     return ex.extags
 
 
-def translate_words_to_cctags(cctree):
+def translate_words_to_cctags(words):
     """
     CCTree ilabels not same as those provided by AutoEncoder.
 
-    This method is surely wrong, but a good first stab.
-
     Openie6 not very clear about this.
-
 
     Parameters
     ----------
-    cctree: CCTree
+    words: list[str]
 
     Returns
     -------
-    list[list[str]]
-
+    list[str]
     """
-    nodes = cctree.ccnodes
-    assert cctree.ccsents
-    depth_to_ccnodes = {}
-    for depth in range(max_depth):
-        ccnodes = []
-        for node in nodes:
-            if node.depth == depth:
-                ccnodes.append(node)
-        depth_to_ccnodes[depth] = ccnodes
-    l_cctags = [["NONE"] * len(osent_words)]
-    for depth, ccnodes in depth_to_ccnodes:
-        cctags = l_cctags[depth]
-        for node in ccnodes:
-            if k == 0:
-                cctags[loc] = "CP_START"
-            else:
-                cctags[loc] = "CP"
-            if loc in depth_to_cclocs[depth]:
-                cctags[loc] = "CC"
-            if loc in depth_to_seplocs[depth]:
-                cctags[loc] = "SEP"
-    return l_cctags
+    cctags = ["NONE"] * len(words)
+    assert False
+    return cctags
 
 
 def translate_extags_to_ilabels(extags):
+    """
+
+    Parameters
+    ----------
+    extags: list[str]
+
+    Returns
+    -------
+    list[int]
+
+    """
     ilabels = []
     for extag in extags:
         ilabels.append(EXTAG_TO_ILABEL[extag])
@@ -114,11 +102,12 @@ def translate_extags_to_words(extags, orig_sentL):
 
     Parameters
     ----------
-    extags
-    orig_sentL
+    extags: list[str]
+    orig_sentL: str
 
     Returns
     -------
+    list[str]
 
     """
     orig_sentL_words = get_words(orig_sentL)
@@ -146,6 +135,17 @@ def translate_extags_to_words(extags, orig_sentL):
 
 
 def translate_cctags_to_ilabels(cctags):
+    """
+
+    Parameters
+    ----------
+    cctags: list[str]
+
+    Returns
+    -------
+    list[int]
+
+    """
     ilabels = []
     for cctag in cctags:
         ilabels.append(CCTAG_TO_ILABEL[cctag])
@@ -153,6 +153,18 @@ def translate_cctags_to_ilabels(cctags):
 
 
 def translate_cctags_to_words(cctags, orig_sentL):
+    """
+
+    Parameters
+    ----------
+    cctags: list[str]
+    orig_sentL: str
+
+    Returns
+    -------
+    list[str]
+
+    """
     orig_senL_words = get_words(orig_sentL)
     max_len = len(orig_senL_words)
     cc_words = []
@@ -171,10 +183,11 @@ def translate_ilabels_to_cctags(ilabels):
 
     Parameters
     ----------
-    ilabels
+    ilabels: list[int]
 
     Returns
     -------
+    list[str]
 
     """
 
@@ -185,6 +198,17 @@ def translate_ilabels_to_cctags(ilabels):
 
 
 def translate_ilabels_to_extags(ilabels):
+    """
+
+    Parameters
+    ----------
+    ilabels: list[int]
+
+    Returns
+    -------
+    list[str]
+
+    """
     extags = []
     for ilabel in ilabels:
         extags.append(ILABEL_TO_EXTAG(ilabel))
@@ -193,11 +217,35 @@ def translate_ilabels_to_extags(ilabels):
 
 
 def translate_ilabels_to_words_via_extags(ilabels, orig_sentL):
+    """
+
+    Parameters
+    ----------
+    ilabels: list[int]
+    orig_sentL: str
+
+    Returns
+    -------
+    list[str]
+
+    """
     extags = translate_ilabels_to_extags(ilabels)
     return translate_extags_to_words(extags, orig_sentL)
 
 
 def translate_ilabels_to_words_via_cctags(ilabels, orig_sentL):
+    """
+
+    Parameters
+    ----------
+    ilabels: list[int]
+    orig_sentL: str
+
+    Returns
+    -------
+    list[str]
+
+    """
     cctags = translate_ilabels_to_cctags(ilabels)
     return translate_cctags_to_words(cctags, orig_sentL)
 
@@ -205,6 +253,19 @@ def translate_ilabels_to_words_via_cctags(ilabels, orig_sentL):
 def file_translate_tags_to_ilabels(tag_type,
                                    in_fp,
                                    out_fp):
+    """
+
+    Parameters
+    ----------
+    tag_type: str
+    in_fp: str
+    out_fp: str
+
+    Returns
+    -------
+    None
+
+    """
     with open(in_fp, "r", encoding="utf-8") as f:
         lines = f.readlines()
     with open(out_fp, "w", encoding="utf-8") as f:
@@ -230,11 +291,24 @@ def file_translate_tags_to_ilabels(tag_type,
 def file_translate_ilabels_to_tags(tag_type,
                                    in_fp,
                                    out_fp):
+    """
+
+    Parameters
+    ----------
+    tag_type: str
+    in_fp: str
+    out_fp: str
+
+    Returns
+    -------
+    None
+
+    """
     with open(in_fp, "r", encoding="utf-8") as f:
         lines = f.readlines()
     with open(out_fp, "w", encoding="utf-8") as f:
         for line in lines:
-            words= get_words(line)
+            words = get_words(line)
             if all([word.isdigit() for word in words[0:5]]):
                 ilabels = [int(x) for x in words()]
                 if tag_type == "ex":
@@ -242,7 +316,7 @@ def file_translate_ilabels_to_tags(tag_type,
                 elif tag_type == "cc":
                     tags = translate_ilabels_to_cctags(ilabels)
                 else:
-                    assert  False
+                    assert False
                 f.write(" ".join(tags) + "\n")
 
 

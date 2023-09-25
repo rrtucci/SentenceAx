@@ -5,14 +5,30 @@ from sax_utils import *
 from AllenTool import *
 
 
-class CCMetric():
+class CCMetric:
     """
     similar to Openie6.metric.Conjunction
+
+    Attributes
+    ----------
+    dump_dir: str
+    fix_d: dict[str, str]
+    report_exact: CCReport
+    report_inner: CCReport
+    report_outer: CCReport
+    report_whole: CCReport
 
 
     """
 
     def __init__(self, dump_dir=None, fix_d=None):
+        """
+
+        Parameters
+        ----------
+        dump_dir: str
+        fix_d: dict[str, str]
+        """
         self.report_whole = CCReport("whole")
         self.report_outer = CCReport("outer")
         self.report_inner = CCReport("inner")
@@ -34,9 +50,23 @@ class CCMetric():
                  l_osent,
                  pred_lll_ilabel,
                  true_lll_ilabel):
-        # ccnodes  when we give it the complete ccnodes
-        # happens when we want to evaluate on the original system outputs
-        # meta_data same as osent
+        """
+
+        ccnodes  when we give it the complete ccnodes
+        happens when we want to evaluate on the original system outputs
+        meta_data same as osent
+
+        Parameters
+        ----------
+        l_osent: list[str]
+        pred_lll_ilabel: list[list[list[int]]]
+        true_lll_ilabel: list[list[list[int]]]
+
+        Returns
+        -------
+        None
+
+        """
 
         num_samples = len(true_lll_ilabel)
         print("Entering samples into CCMetric instance via its __call__() "
@@ -64,6 +94,13 @@ class CCMetric():
                     self.dump_dir + '/l_true_ccnodes.pkl', 'ab'))
 
     def reset(self):
+        """
+
+        Returns
+        -------
+        None
+
+        """
         self.report_whole.reset()
         self.report_outer.reset()
         self.report_inner.reset()
@@ -86,6 +123,17 @@ class CCMetric():
         return score_d
 
     def get_overall_score(self, report_category='exact'):
+        """
+
+        Parameters
+        ----------
+        report_category: str
+
+        Returns
+        -------
+        int
+
+        """
         if report_category == 'whole':
             report = self.report_whole
         elif report_category == 'outer':
@@ -109,6 +157,7 @@ class CCMetric():
 
         Returns
         -------
+        dict[str, str]
 
         """
         fix_d = {}
@@ -122,6 +171,7 @@ class CCMetric():
                     else:
                         fix_d[line] = fixed_sent
         return fix_d
+
 
 if __name__ == "__main__":
     def main():
@@ -153,5 +203,6 @@ if __name__ == "__main__":
         print(score_d)
         # this gives nan if do_reset = True
         print("overall-exact score:", cc_met.get_overall_score("exact"))
+
 
     main()

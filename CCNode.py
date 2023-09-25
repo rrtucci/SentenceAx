@@ -12,6 +12,18 @@ class CCNode:
     CCNode is similar to Openie6.metric.Coordination
     span is similar to a conjunct
 
+    Attributes
+    ----------
+    ccloc: int
+    depth: int
+    osent_words: list[str]
+    seplocs: list[int]
+    spanned_locs: list[int]
+    spans: list[tuple[int, int]]
+    unspanned_locs: list[int]
+
+
+
     """
 
     def __init__(self,
@@ -37,11 +49,13 @@ class CCNode:
 
         Parameters
         ----------
-        ccloc:
+        ccloc: int
             location of coordinating conjunctions
-        seplocs:
+        depth: int
+        seplocs: list[int]
             separator (like commas) locations
-        spans
+        osent_words: list[str]
+        spans: list[tuple[int,int]]
         """
         self.ccloc = ccloc
         self.depth = depth
@@ -52,10 +66,17 @@ class CCNode:
         # for distinguishing between CCNodes. Not used for anything
 
         self.spanned_locs = self.get_spanned_locs()
-        #print("lobhj", self.spanned_locs)
+        # print("lobhj", self.spanned_locs)
         self.unspanned_locs = self.get_unspanned_locs()
 
     def check_spans(self):
+        """
+
+        Returns
+        -------
+        None
+
+        """
         last_b = -1
         for a, b in self.spans:
             assert a < b
@@ -63,18 +84,25 @@ class CCNode:
             last_b = b
 
     def check_all(self):
+        """
+
+        Returns
+        -------
+        None
+
+        """
         self.check_spans()
         # print("by56x", self.osent_words)
         # print("lkou", self.spans)
         # print("bnhj", self.ccloc)
         # print("bxxx", self.seplocs)
-        min = self.spans[0][0]
-        max = self.spans[-1][1] - 1
-        assert min<= self.ccloc <= max
+        min0 = self.spans[0][0]
+        max0 = self.spans[-1][1] - 1
+        assert min0 <= self.ccloc <= max0
         # for loc in self.seplocs:
-        #     assert min<= loc <= max
+        #     assert min0<= loc <= max0
 
-    def get_span_pair(self, mid_pair_id, assert_answer=False):
+    def get_span_pair(self, mid_pair_id, check_answer=False):
         """
         similar to Openie6.metric.Coordination.get_pair()
 
@@ -82,11 +110,13 @@ class CCNode:
         
         Parameters
         ----------
-        mid_pair_id
-        throw_exception
+        mid_pair_id: int
+        check_answer: bool
 
         Returns
         -------
+        list[tuple[int,int], tuple[int, int]]
+
 
         """
         span_pair = None
@@ -95,16 +125,27 @@ class CCNode:
                 span_pair = (self.spans[i - 1], self.spans[i])
                 # there must be at least one point between the
                 # 2 spans, or else the 2 spans would be 1
-                assert mid_pair_id >= span_pair[0][1] and \
-                       mid_pair_id < span_pair[1][0]
+                assert span_pair[0][1] <= mid_pair_id\
+                       < span_pair[1][0]
                 break
-        if assert_answer and span_pair is None:
+        if check_answer and span_pair is None:
             raise LookupError(
                 "Could not find any span_pair for index={}".
                 format(mid_pair_id))
         return span_pair
 
     def is_parent(self, child):
+        """
+
+        Parameters
+        ----------
+        child: CCNode
+
+        Returns
+        -------
+        bool
+
+        """
         # parent, child are instances of CCNode
         ch_min = child.spans[0][0]
         ch_max = child.spans[-1][1] - 1
@@ -117,22 +158,51 @@ class CCNode:
         return False
 
     def is_child(self, parent):
+        """
+
+        Parameters
+        ----------
+        parent: CCNode
+
+        Returns
+        -------
+        bool
+
+        """
         return parent.is_parent(self)
 
     def get_spanned_locs(self, fat=False):
+        """
+
+        Parameters
+        ----------
+        fat: bool
+
+        Returns
+        -------
+        list[int]
+
+        """
         spanned_locs = []
         for span in self.spans:
             for i in range(span[0], span[1]):
                 spanned_locs.append(i)
-        min = self.spans[0][0]
-        max = self.spans[-1][1] - 1
+        min0 = self.spans[0][0]
+        max0 = self.spans[-1][1] - 1
         if fat:
             for i in range(len(self.osent_words)):
-                if i < min or i > max:
+                if i < min0 or i > max0:
                     spanned_locs.append(i)
         return sorted(spanned_locs)
 
     def get_unspanned_locs(self):
+        """
+
+        Returns
+        -------
+        list[int]
+
+        """
         unspanned_locs = []
         for i in range(len(self.osent_words)):
             if i not in self.spanned_locs:
@@ -144,13 +214,9 @@ class CCNode:
         similar to Openie6.data.remove_unbreakable_conjuncts()
         used in CCTree.fix_ccnodes()
 
-
-        Parameters
-        ----------
-        osent_words
-
         Returns
         -------
+        bool
 
         """
 
@@ -166,4 +232,11 @@ class CCNode:
         return False
 
     def __str__(self):
+        """
+
+        Returns
+        -------
+        str
+
+        """
         return str(self.spans) + str(self.ccloc)

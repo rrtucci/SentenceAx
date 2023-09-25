@@ -772,8 +772,8 @@ class Model(pl.LightningModule):
 
         sample_id = 0
         correct = True
-        total_num_cc_sents1 = 0
-        total_num_cc_sents2 = 0
+        total_num_ccsents1 = 0
+        total_num_ccsents2 = 0
         lll_ilabel = self.batch_out.lll_ilabel
         num_samples, max_depth, _ = lll_ilabel.shape
         # true_lll_ilabel = self.true_batch_out.lll_label
@@ -794,11 +794,11 @@ class Model(pl.LightningModule):
             tree = CCTree(orig_sent, ll_ilabel)
 
             pred_str = orig_sent + '\n'
-            ex_sents, spanned_words, l_spanned_locs = tree.cc_sents
+            ex_sents, spanned_words, l_spanned_locs = tree.ccsents
             ll_spanned_word.append(spanned_words)
             ll_spanned_loc.append(l_spanned_locs)
-            total_num_cc_sents1 += len(ex_sents)
-            total_num_cc_sents2 += 1 if len(ex_sents) > 0 else 0
+            total_num_ccsents1 += len(ex_sents)
+            total_num_ccsents2 += 1 if len(ex_sents) > 0 else 0
             pred_str += '\n'.join(ex_sents) + '\n'
 
             l_pred_str.append(pred_str)

@@ -259,7 +259,7 @@ class MConductor:
         trainer.fit(
             self.model,
             train_dataloader=self.dloader.get_ttt_dataloaders("train"),
-            tune_dataloaders=self.dloader.get_ttt_dataloaders("val"))
+            tune_dataloaders=self.dloader.get_ttt_dataloaders("tune"))
         shutil.move(WEIGHTS_DIR + f'/logs/train.part',
                     WEIGHTS_DIR + f'/logs/train')
 
@@ -288,7 +288,7 @@ class MConductor:
         trainer.fit(
             self.model,
             train_dataloader=self.dloader.get_ttt_dataloaders("train"),
-            tune_dataloaders=self.dloader.get_ttt_dataloaders("val"))
+            tune_dataloaders=self.dloader.get_ttt_dataloaders("tune"))
         shutil.move(WEIGHTS_DIR + '/logs/resume.part',
                     WEIGHTS_DIR + '/logs/resume')
 

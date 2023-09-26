@@ -88,7 +88,7 @@ class AllenTool:
         def get_ilabels(ex):
             extags = translate_words_to_extags(ex)
             ilabels = translate_extags_to_ilabels(extags)
-            #ilabels = ilabels[0: len(l_osent2[sam_id])]
+            # ilabels = ilabels[0: len(l_osent2[sam_id])]
             return ilabels
 
         lll_ilabel = [[get_ilabels(ex) for ex in exs] for
@@ -256,8 +256,7 @@ class AllenTool:
 
     def write_allen_alternative_file(self,
                                      out_fp,
-                                     first_sample_id=1,
-                                     last_sample_id=-1,
+                                     first_last_sample_id=(1,-1),
                                      ftype="ex",
                                      numbered=False):
 
@@ -289,10 +288,9 @@ class AllenTool:
         ----------
         out_fp: str
             output file path
-        first_sample_id: int
-            number of first sample to be written in output file (1-based)
-        last_sample_id: int
-            number of last sample to be written in output file (1-based)
+        first_last_sample_id: tuple(int, int)
+            number of first and last sample to be written in output file (
+            1-based)
         ftype: str
             ftype in ["ex", "ss"]. If ftype=="ex", an extags file is
             written. If ftype=="ss", a simple sentences file is written
@@ -306,7 +304,7 @@ class AllenTool:
         None
 
         """
-
+        first_sample_id, last_sample_id = first_last_sample_id
         if last_sample_id != -1:
             assert 1 <= first_sample_id <= last_sample_id <= self.num_sents
 
@@ -315,7 +313,8 @@ class AllenTool:
             num_sams = 0
             for sent, l_ex in self.osentL_to_exs.items():
                 sample_id += 1
-                if sample_id < first_sample_id or sample_id > last_sample_id:
+                if sample_id < first_sample_id or \
+                        sample_id > last_sample_id:
                     continue
                 if numbered:
                     f.write(str(sample_id) + ".\n")
@@ -323,6 +322,7 @@ class AllenTool:
                 f.write(sent + "\n")
                 for ex in l_ex:
                     if ftype == "ex":  # extags file
+                        # print("llko34", sample_id, ex)
                         ex.set_extags()
                         f.write(" ".join(ex.extags) + "\n")
                     elif ftype == "ss":  # simple sentences file
@@ -372,15 +372,18 @@ class AllenTool:
             num_train_sents + num_tune_sents + 1,
             num_train_sents + num_tune_sents + num_test_sents)
 
-        # print("ghjy", train_first_last, tune_first_last, test_first_last)
+        print("ghjy", train_first_last, tune_first_last, test_first_last)
 
         train_fp = out_dir + "/extags_train.txt"
-        tune_fp = out_dir + "/extags_val.txt"
+        tune_fp = out_dir + "/extags_tune.txt"
         test_fp = out_dir + "/extags_test.txt"
 
-        self.write_allen_alternative_file(train_fp, *train_first_last)
-        self.write_allen_alternative_file(tune_fp, *tune_first_last)
-        self.write_allen_alternative_file(test_fp, *test_first_last)
+        self.write_allen_alternative_file(
+            train_fp, first_last_sample_id=train_first_last)
+        self.write_allen_alternative_file(
+            tune_fp, first_last_sample_id=tune_first_last)
+        self.write_allen_alternative_file(
+            test_fp, first_last_sample_id=test_first_last)
 
 
 if __name__ == "__main__":
@@ -394,8 +397,7 @@ if __name__ == "__main__":
             assert False
         at = AllenTool(allen_fp)
         at.write_allen_alternative_file(out_fp,
-                                        first_sample_id=1,
-                                        last_sample_id=-1,
+                                        first_last_sample_id=(1, -1),
                                         ftype=ftype,
                                         numbered=True)
 

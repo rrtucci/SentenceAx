@@ -1,25 +1,57 @@
 from sax_globals import *
 import spacy
 from sax_utils import *
+from transformers import AutoTokenizer
+
 
 class MInput:
-    def __init__(self, task, auto_tokenizer, use_spacy_model):
+    """
+
+    Attributes
+    ----------
+    auto_tokenizer: AutoTokenizer
+    l_orig_sent: list[str]
+    l_osent_ilabels: list[list[int]]
+    l_osent_pos_locs: list[list[int]]
+    l_osent_pos_mask: list[list[int]]
+    l_osent_verb_locs: list[list[int]]
+    l_osent_verb_mask: list[list[int]]
+    l_osent_word_start_locs: list[list[int]]
+    lll_ilabel: list[list[list[int]]]
+    num_samples: int
+    spacy_model: spacy.Language
+    task: str
+    use_spacy_model: bool
+
+    """
+
+    def __init__(self, in_fp, task, auto_tokenizer, use_spacy_model):
+        """
+
+        Parameters
+        ----------
+        in_fp: str
+        task: str
+        auto_tokenizer: AutoTokenizer
+        use_spacy_model: bool
+        """
         self.task = task
         self.auto_tokenizer = auto_tokenizer
         self.use_spacy_model = use_spacy_model
-        
+
         self.num_samples = None
-        self.l_orig_sent = [] #shape=(num_samples,)
-        self.lll_ilabel = []#shape=(num_samples, max_depth=num_ex, num_ilabels)
+        # shape=(num_samples,)
+        self.l_orig_sent = []
+        # shape=(num_samples, max_depth=num_ex, num_ilabels)
+        self.lll_ilabel = []
 
         # following lists have
         # shape is (num_samples, encoding length =100)
         # it's not (num_samples, max_depth=num_ex)
         # each word of orig_sent may be encoded with more than one ilabel
         # os = original sentence
-        self.l_osent_word_start_locs = [] # shape=(num_samples, encoding len)
+        self.l_osent_word_start_locs = []  # shape=(num_samples, encoding len)
         self.l_osent_ilabels = []  # shape=(num_samples, encoding len
-
 
         self.use_spacy_model = use_spacy_model
         if self.use_spacy_model:
@@ -33,21 +65,8 @@ class MInput:
         self.l_osent_pos_locs = []  # shape=(num_samples, num_words)
         self.l_osent_verb_mask = []  # shape=(num_samples, num_words)
         self.l_osent_verb_locs = []  # shape=(num_samples, num_words)
-        
 
-    # def absorb_l_orig_sent(self, l_orig_sent):
-    #     for k, orig_sent in enumerate(l_orig_sent):
-    #         self.l_sample[k].orig_sent = orig_sent
-    #
-    # def absorb_lll_ilabel(self, lll_ilabel):
-    #     for sample_id, ll_ilabel in enumerate(lll_ilabel):
-    #         self.l_sample[sample_id].absorb_children(ll_ilabel)
-    #
-    # def absorb_all_possible(self):
-    #     self.num_samples = len(self.lll_ilabel)
-    #     self.absorb_l_orig_sent(self.l_orig_sent)
-    #     self.absorb_lll_ilabel(self.lll_ilabel)
-
+        self.read_input_extags_file(in_fp)
 
     @staticmethod
     def remerge_sent(tokens):
@@ -56,10 +75,12 @@ class MInput:
 
         Parameters
         ----------
-        tokens
+        tokens: spacy.Doc
+            spacy.Doc is a list of Tokens
 
         Returns
         -------
+        spacy.Doc
 
         """
         # merges spacy tokens which are not separated by white-space
@@ -86,14 +107,15 @@ class MInput:
 
         Parameters
         ----------
-        tokens
+        tokens: spacy.Doc
 
         Returns
         -------
+        list[int], list[int], list[str]
 
         """
-        pos_mask = []
         pos_locs = []
+        pos_mask = []
         pos_words = []
         for token_index, token in enumerate(tokens):
             if token.pos_ in ['ADJ', 'ADV', 'NOUN', 'PROPN', 'VERB']:
@@ -105,7 +127,7 @@ class MInput:
         pos_mask.append(0)
         pos_mask.append(0)
         pos_mask.append(0)
-        return pos_mask, pos_locs, pos_words
+        return pos_locs, pos_mask, pos_words
 
     @staticmethod
     def verb_info(tokens):
@@ -114,13 +136,16 @@ class MInput:
 
         Parameters
         ----------
-        tokens
+        tokens: spacy.Doc
 
         Returns
         -------
+        list[int], list[int], list[str]
 
         """
-        verb_mask, verb_locs, verb_words = [], [], []
+        verb_locs = []
+        verb_mask = []
+        verb_words = []
         for token_index, token in enumerate(tokens):
             if token.pos_ in ['VERB'] and \
                     token.lower_ not in LIGHT_VERBS:
@@ -132,9 +157,16 @@ class MInput:
         verb_mask.append(0)
         verb_mask.append(0)
         verb_mask.append(0)
-        return verb_mask, verb_locs, verb_words
+        return verb_locs, verb_mask, verb_words
 
     def fill_pos_and_verb_info(self):
+        """
+
+        Returns
+        -------
+        None
+
+        """
         l_osent_pos_mask = []
         l_osent_pos_locs = []
         l_osent_verb_mask = []
@@ -147,12 +179,12 @@ class MInput:
             assert len(self.l_orig_sent[sent_id].split()) == len(
                 spacy_tokens)
 
-            pos_mask, pos_locs, pos_words = \
+            pos_locs, pos_mask, pos_words = \
                 MInput.pos_info(spacy_tokens)
             l_osent_pos_mask.append(pos_mask)
             l_osent_pos_locs.append(pos_locs)
 
-            verb_mask, verb_locs, verb_words = \
+            verb_locs, verb_mask, verb_words = \
                 MInput.verb_info(spacy_tokens)
             l_osent_verb_mask.append(verb_mask)
             if verb_locs:
@@ -164,7 +196,6 @@ class MInput:
         self.l_osent_pos_locs = l_osent_pos_locs
         self.l_osent_verb_mask = l_osent_verb_mask
         self.l_osent_verb_locs = l_osent_verb_locs
-
 
     def read_input_extags_file(self, in_fp):
         """
@@ -187,30 +218,42 @@ class MInput:
 
         the tags may be extags or cctags
         each original sentence and its tag sequences constitute a new example
+
+
+        Parameters
+        ----------
+        in_fp: str
+
+        Returns
+        -------
+        None
+
         """
         l_orig_sent = []
-        l_osent_word_start_locs = [] # similar to word_starts
-        l_osent_ilabels = [] # similar to input_ids
+        l_osent_word_start_locs = []  # similar to word_starts
+        l_osent_ilabels = []  # similar to input_ids
         ll_ex_ilabels = []  # similar to targets target=extraction
-        sentL = None # similar to `sentence`
+        sentL = None  # similar to `sentence`
 
-        with(in_fp, "r") as f:
+        with open(in_fp, "r") as f:
             lines = f.readlines()
 
-        def is_first_line_of_sample(line):
-            return '[used' in line
-        def is_tag_line_of_sample(line):
-            return len(line)!=0 and '[used' not in line
-        def is_end_of_sample(prev_line, line):
-            return not line or \
-                (prev_line and is_first_line_of_sample(line))
+        def is_first_line_of_sample(line0):
+            return '[used' in line0
+
+        def is_tag_line_of_sample(line0):
+            return len(line0) != 0 and '[used' not in line0
+
+        def is_end_of_sample(prev_line0, line0):
+            return not line0 or \
+                (prev_line0 and is_first_line_of_sample(line0))
 
         prev_line = None
         for line in lines:
             line = line.strip()
             if line == "":
                 # this skips blank lines
-                continue # skip to next line
+                continue  # skip to next line
 
             if is_first_line_of_sample(line):
                 sentL = line
@@ -229,11 +272,11 @@ class MInput:
                     # same as ilabels.extend(l_ilabel0)
                     os_ilabels += l_ilabel0
                 os_ilabels.append(EOS_ILABEL)
-                assert len(sentL.split())==len(os_word_start_locs)
+                assert len(sentL.split()) == len(os_word_start_locs)
                 l_ex_ilabels = []
             elif is_tag_line_of_sample(line):
-                ex_ilabels = [TAG_TO_ILABEL[tag] for tag in line.split()]
-                assert ex_ilabels ==len(os_word_start_locs)
+                ex_ilabels = [EXTAG_TO_ILABEL[tag] for tag in line.split()]
+                assert ex_ilabels == len(os_word_start_locs)
                 l_ex_ilabels.append(ex_ilabels)
             else:
                 assert False
@@ -261,7 +304,6 @@ class MInput:
         self.l_osent_ilabels = l_osent_ilabels
         self.l_osent_word_start_locs = l_osent_word_start_locs
 
-
         # so far, we haven't assumed any spacy derived data nanalysis
         # if spacy is allowed, the example_d can carry more info.
         if self.spacy_model:
@@ -284,5 +326,20 @@ class MInput:
         #     example = tt.data.Example.fromdict(example_d, fields)
         #     examples.append(example)
         # return examples, orig_sents
-        
 
+if __name__ == "__main__":
+    def main():
+        in_fp = "testing_files/extags_test.txt"
+        task = "test"
+        model_str = "bert-base-uncased"
+        auto_tokenizer = AutoTokenizer.from_pretrained(
+            model_str,
+            do_lower_case=True,
+            use_fast=True,
+            data_dir=CACHE_DIR,
+            add_special_tokens=False,
+            additional_special_tokens=UNUSED_TOKENS)
+        use_spacy_model = True
+        m_imput = MInput(in_fp, task, auto_tokenizer, use_spacy_model)
+
+    main()

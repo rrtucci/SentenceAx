@@ -533,7 +533,7 @@ class Model(pl.LightningModule):
 
         """
         lll_ilabel, ll_confi, loss= self.forward(
-            mode='val',
+            mode=MODE,
             constraints_str=self.params_d["constraints_str"],
             cweights_str=self.params_d["cweights_str"])
 

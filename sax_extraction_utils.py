@@ -29,6 +29,7 @@ def count_sub_reps(sub, full):
 
 def sub_exists(sub, full, start_loc):
     """
+    similar to Openie6.data_processing.starts_with()
 
     Parameters
     ----------
@@ -42,8 +43,10 @@ def sub_exists(sub, full, start_loc):
 
     """
     # similar to Openie6.data_processing.starts_with()
-
+    if len(full)-1 < start_loc + len(sub)-1:
+        return False
     return all([sub[i] == full[start_loc + i] for i in range(len(sub))])
+
 
 
 def has_2_matches(matches):

@@ -68,6 +68,8 @@ class SaxDataLoader:
     def get_m_input(self, in_fp):
         """
 
+        This is used to create an m_imput for in_fp=train_fp, tune_fp, test_fp.
+
         Parameters
         ----------
         in_fp: str
@@ -77,8 +79,10 @@ class SaxDataLoader:
         MInput
 
         """
-        m_input = MInput(TASK, self.auto_tokenizer, self.use_spacy_model)
-        m_input.read_input_extags_file(in_fp)
+        m_input = MInput(in_fp,
+                         TASK,
+                         self.auto_tokenizer,
+                         self.use_spacy_model)
 
         return m_input
 
@@ -209,7 +213,7 @@ class SaxDataLoader:
                               # collate_fn=None,
                               shuffle=True,
                               num_workers=1)
-        elif kind == "val":
+        elif kind == "tune":
             return DataLoader(tune_dataset,
                               batch_size=self.params_d["batch_size"],
                               # collate_fn=None,

@@ -1,6 +1,6 @@
 from sax_globals import *
 import spacy
-from sample_classes import *
+from sax_utils import *
 
 class MInput:
     def __init__(self, task, auto_tokenizer, use_spacy_model):

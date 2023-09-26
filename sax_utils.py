@@ -79,14 +79,14 @@ def set_seed(seed):
 def get_num_ttt_sents(num_sents, ttt_fractions):
     assert abs(sum(ttt_fractions) - 1) < 1e-8
     num_train_sents = floor(ttt_fractions[0] * num_sents)
-    num_val_sents = floor(ttt_fractions[1] * num_sents)
+    num_tune_sents = floor(ttt_fractions[1] * num_sents)
     num_test_sents = floor(ttt_fractions[2] * num_sents)
     num_extra_sents = num_sents - num_train_sents - \
-                      num_val_sents - num_test_sents
+                      num_tune_sents - num_test_sents
     num_train_sents += num_extra_sents
-    assert num_sents == num_train_sents + num_val_sents  + num_test_sents
-    # print("nnmk", num_train_sents, num_val_sents, num_test_sents)
-    return num_train_sents, num_val_sents, num_test_sents
+    assert num_sents == num_train_sents + num_tune_sents  + num_test_sents
+    # print("nnmk", num_train_sents, num_tune_sents, num_test_sents)
+    return num_train_sents, num_tune_sents, num_test_sents
 
 def unL(osentL):
     return osentL.split("[unused")[0].strip()

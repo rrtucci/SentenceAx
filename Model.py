@@ -537,17 +537,17 @@ class Model(pl.LightningModule):
             constraints_str=self.params_d["constraints_str"],
             cweights_str=self.params_d["cweights_str"])
 
-        val_out_d = {"lll_ilabel": lll_ilabel,
+        tune_out_d = {"lll_ilabel": lll_ilabel,
                      "ll_confi": ll_confi,
                      "ground_truth": self.true_batch_out.lll_ilabel,
                      "meta_data": self.batch_out.meta_data}
-        val_out_d = OrderedDict(val_out_d)
+        tune_out_d = OrderedDict(tune_out_d)
 
         if self.params_d["mode"] != 'test':
 
-            self._write_output(val_out_d, batch_id, self.params_d["task"])
+            self._write_output(tune_out_d, batch_id, self.params_d["task"])
 
-        return val_out_d
+        return tune_out_d
 
     def test_step(self, batch_id):
         """
@@ -657,7 +657,7 @@ class Model(pl.LightningModule):
 
         """
         eval_out_d = \
-            self._eval_metrics_at_epoch_end('dev')
+            self._eval_metrics_at_epoch_end("tune")
         val_ee_out_d = {}
         if eval_out_d :
             val_ee_out_d = {"log": eval_out_d,
@@ -696,7 +696,7 @@ class Model(pl.LightningModule):
         """
         return None
 
-    def val_dataloader(self):
+    def tune_dataloader(self):
         """
         inherited abstract method
 

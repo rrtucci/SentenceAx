@@ -58,11 +58,11 @@ class MConductor:
 
         if TASK == 'cc':
             self.train_fp = CCTAGS_TRAIN_FP
-            self.val_fp = CCTAGS_TUNE_FP
+            self.tune_fp = CCTAGS_TUNE_FP
             self.test_fp = CCTAGS_TEST_FP
         elif TASK == 'ex':
             self.train_fp = EXTAGS_TRAIN_FP
-            self.val_fp = EXTAGS_TUNE_FP
+            self.tune_fp = EXTAGS_TUNE_FP
             self.test_fp = EXTAGS_TEST_FP
 
         self.checkpoint_callback = self.get_checkpoint_callback()
@@ -87,7 +87,7 @@ class MConductor:
         self.dloader = SaxDataLoader(self.auto_tokenizer,
                                   self.pad_ilabel,
                                   self.train_fp,
-                                  self.val_fp,
+                                  self.tune_fp,
                                   self.test_fp)
 
         self.constraints_str_d = dict()
@@ -259,7 +259,7 @@ class MConductor:
         trainer.fit(
             self.model,
             train_dataloader=self.dloader.get_ttt_dataloaders("train"),
-            val_dataloaders=self.dloader.get_ttt_dataloaders("val"))
+            tune_dataloaders=self.dloader.get_ttt_dataloaders("val"))
         shutil.move(WEIGHTS_DIR + f'/logs/train.part',
                     WEIGHTS_DIR + f'/logs/train')
 
@@ -288,7 +288,7 @@ class MConductor:
         trainer.fit(
             self.model,
             train_dataloader=self.dloader.get_ttt_dataloaders("train"),
-            val_dataloaders=self.dloader.get_ttt_dataloaders("val"))
+            tune_dataloaders=self.dloader.get_ttt_dataloaders("val"))
         shutil.move(WEIGHTS_DIR + '/logs/resume.part',
                     WEIGHTS_DIR + '/logs/resume')
 

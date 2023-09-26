@@ -359,27 +359,27 @@ class AllenTool:
         -------
 
         """
-        num_train_sents, num_val_sents, num_test_sents = \
+        num_train_sents, num_tune_sents, num_test_sents = \
             get_num_ttt_sents(self.num_sents, ttt_fractions)
 
         train_first_last = (
             1,
             num_train_sents)
-        val_first_last = (
+        tune_first_last = (
             num_train_sents + 1,
-            num_train_sents + num_val_sents)
+            num_train_sents + num_tune_sents)
         test_first_last = (
-            num_train_sents + num_val_sents + 1,
-            num_train_sents + num_val_sents + num_test_sents)
+            num_train_sents + num_tune_sents + 1,
+            num_train_sents + num_tune_sents + num_test_sents)
 
-        # print("ghjy", train_first_last, val_first_last, test_first_last)
+        # print("ghjy", train_first_last, tune_first_last, test_first_last)
 
         train_fp = out_dir + "/extags_train.txt"
-        val_fp = out_dir + "/extags_val.txt"
+        tune_fp = out_dir + "/extags_val.txt"
         test_fp = out_dir + "/extags_test.txt"
 
         self.write_allen_alternative_file(train_fp, *train_first_last)
-        self.write_allen_alternative_file(val_fp, *val_first_last)
+        self.write_allen_alternative_file(tune_fp, *tune_first_last)
         self.write_allen_alternative_file(test_fp, *test_first_last)
 
 

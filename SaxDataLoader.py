@@ -26,10 +26,24 @@ class SaxDataLoader:
     link explaining a migration route ot of them.
 
     https://colab.research.google.com/github/pytorch/text/blob/master/examples/legacy_tutorial/migration_tutorial.ipynb#scrollTo=kBV-Wvlo07ye
+    
+    Attributes
+    ----------
+    auto_tokenizer:
+    pad_ilabel: int
+    params_d: dict[str, Any]
+    predict_fp: str
+    test_fp: str
+    train_fp: str
+    use_spacy_model: bool
+    tune_fp: str
+    
+    
+    
     """
 
     def __init__(self, auto_tokenizer, pad_ilabel,
-                 train_fp, val_fp, test_fp, use_spacy_model=True):
+                 train_fp, tune_fp, test_fp, use_spacy_model=True):
 
         self.params_d = PARAMS_D
         self.auto_tokenizer = auto_tokenizer
@@ -37,7 +51,7 @@ class SaxDataLoader:
 
         self.predict_fp = PRED_IN_FP
         self.train_fp = train_fp
-        self.val_fp = val_fp
+        self.tune_fp = tune_fp
         self.test_fp = test_fp
         self.use_spacy_model = use_spacy_model
 
@@ -62,12 +76,12 @@ class SaxDataLoader:
 
 
         # train_fp = self.params_d["train_fp"]
-        # val_fp = self.params_d["val_fp"]
+        # tune_fp = self.params_d["tune_fp"]
         # test_fp = self.params_d["test_fp"]
 
         model_str = self.params_d["model_str"].replace("/", "_")
         cached_train_fp = f'{self.train_fp}.{model_str}.pkl'
-        cached_val_fp = f'{self.val_fp}.{model_str}.pkl'
+        cached_tune_fp = f'{self.tune_fp}.{model_str}.pkl'
         cached_test_fp = f'{self.test_fp}.{model_str}.pkl'
 
         orig_sents = []
@@ -111,7 +125,7 @@ class SaxDataLoader:
             predict_dataset = SaxDataSet(*x)
 
             
-            train_dataset, val_dataset, test_dataset = \
+            train_dataset, tune_dataset, test_dataset = \
                 predict_dataset, predict_dataset, predict_dataset
         else: # 'predict' not in self.params_d["mode"]
             if not os.path.exists(cached_train_fp) or\
@@ -121,12 +135,12 @@ class SaxDataLoader:
             else:
                 train_m_input = pickle.load(open(cached_train_fp, 'rb'))
 
-            if not os.path.exists(cached_val_fp) or \
+            if not os.path.exists(cached_tune_fp) or \
                     self.params_d["build_cache"]:
-                val_m_input = self.get_m_input(self.val_fp)
-                pickle.dump(val_m_input, open(cached_val_fp, 'wb'))
+                tune_m_input = self.get_m_input(self.tune_fp)
+                pickle.dump(tune_m_input, open(cached_tune_fp, 'wb'))
             else:
-                val_m_input = pickle.load(open(cached_val_fp, 'rb'))
+                tune_m_input = pickle.load(open(cached_tune_fp, 'rb'))
 
             if not os.path.exists(cached_test_fp) or\
                     self.params_d["build_cache"]:
@@ -136,20 +150,20 @@ class SaxDataLoader:
                 test_m_input = pickle.load(open(cached_test_fp, 'rb'))
 
             # vocab = self.build_vocab(
-            #     train_m_input + val_m_input + test_m_input)
+            #     train_m_input + tune_m_input + test_m_input)
     
             x = [train_m_input, self.pad_ilabel, self.use_spacy_model]
             train_dataset = SaxDataSet(*x)
 
-            x = [val_m_input, self.pad_ilabel, self.use_spacy_model]
-            val_dataset = SaxDataSet(*x)
+            x = [tune_m_input, self.pad_ilabel, self.use_spacy_model]
+            tune_dataset = SaxDataSet(*x)
 
             x = [test_m_input, self.pad_ilabel, self.use_spacy_model]
             test_dataset = SaxDataSet(*x)
             
             train_dataset.sort()  # to simulate bucket sort (along with pad_data)
 
-        return train_dataset, val_dataset, test_dataset # , vocab, orig_sents
+        return train_dataset, tune_dataset, test_dataset # , vocab, orig_sents
 
     def get_ttt_dataloaders(self, type, pred_in_sents=None):
         """
@@ -164,7 +178,7 @@ class SaxDataLoader:
 
         """
 
-        train_dataset, val_dataset, test_dataset = \
+        train_dataset, tune_dataset, test_dataset = \
             self.get_ttt_datasets(pred_in_sents)
         # this method calls DataLoader
 
@@ -176,7 +190,7 @@ class SaxDataLoader:
                               shuffle=True,
                               num_workers=1)
         elif type == "val":
-            return DataLoader(val_dataset,
+            return DataLoader(tune_dataset,
                               batch_size=self.params_d["batch_size"],
                               #collate_fn=None,
                               num_workers=1)

@@ -19,6 +19,7 @@ from copy import deepcopy
 from SaxDataSet import *
 from MInput import *
 
+
 class SaxDataLoader:
     """
     Classes Example and Field from tt were used in the Openie6 code,
@@ -29,21 +30,30 @@ class SaxDataLoader:
     
     Attributes
     ----------
-    auto_tokenizer:
+    auto_tokenizer: AutoTokenizer
     pad_ilabel: int
     params_d: dict[str, Any]
     predict_fp: str
     test_fp: str
     train_fp: str
-    use_spacy_model: bool
     tune_fp: str
-    
-    
+    use_spacy_model: bool
     
     """
 
     def __init__(self, auto_tokenizer, pad_ilabel,
                  train_fp, tune_fp, test_fp, use_spacy_model=True):
+        """
+
+        Parameters
+        ----------
+        auto_tokenizer: AutoTokenizer
+        pad_ilabel: int
+        train_fp: str
+        tune_fp: str
+        test_fp: str
+        use_spacy_model: bool
+        """
 
         self.params_d = PARAMS_D
         self.auto_tokenizer = auto_tokenizer
@@ -56,6 +66,17 @@ class SaxDataLoader:
         self.use_spacy_model = use_spacy_model
 
     def get_m_input(self, in_fp):
+        """
+
+        Parameters
+        ----------
+        in_fp: str
+
+        Returns
+        -------
+        MInput
+
+        """
         m_input = MInput(TASK, self.auto_tokenizer, self.use_spacy_model)
         m_input.read_input_extags_file(in_fp)
 
@@ -67,13 +88,13 @@ class SaxDataLoader:
 
         Parameters
         ----------
-        pred_in_sents
+        pred_in_sents: list[str]
 
         Returns
         -------
+        SaxDataSet, SaxDataSet, SaxDataSet
 
         """
-
 
         # train_fp = self.params_d["train_fp"]
         # tune_fp = self.params_d["tune_fp"]
@@ -119,16 +140,15 @@ class SaxDataLoader:
             # get_samples()
             # returns: examples, orig_sents
             predict_m_input = self.get_m_input(self.predict_fp)
-            #vocab = build_vocab(predict_m_input)
+            # vocab = build_vocab(predict_m_input)
 
             x = [predict_m_input, self.pad_ilabel, self.use_spacy_model]
             predict_dataset = SaxDataSet(*x)
 
-            
             train_dataset, tune_dataset, test_dataset = \
                 predict_dataset, predict_dataset, predict_dataset
-        else: # 'predict' not in self.params_d["mode"]
-            if not os.path.exists(cached_train_fp) or\
+        else:  # 'predict' not in self.params_d["mode"]
+            if not os.path.exists(cached_train_fp) or \
                     self.params_d["build_cache"]:
                 train_m_input = self.get_m_input(self.train_fp)
                 pickle.dump(train_m_input, open(cached_train_fp, 'wb'))
@@ -142,7 +162,7 @@ class SaxDataLoader:
             else:
                 tune_m_input = pickle.load(open(cached_tune_fp, 'rb'))
 
-            if not os.path.exists(cached_test_fp) or\
+            if not os.path.exists(cached_test_fp) or \
                     self.params_d["build_cache"]:
                 test_m_input = self.get_m_input(self.test_fp)
                 pickle.dump(test_m_input, open(cached_test_fp, 'wb'))
@@ -151,7 +171,7 @@ class SaxDataLoader:
 
             # vocab = self.build_vocab(
             #     train_m_input + tune_m_input + test_m_input)
-    
+
             x = [train_m_input, self.pad_ilabel, self.use_spacy_model]
             train_dataset = SaxDataSet(*x)
 
@@ -160,21 +180,22 @@ class SaxDataLoader:
 
             x = [test_m_input, self.pad_ilabel, self.use_spacy_model]
             test_dataset = SaxDataSet(*x)
-            
-            train_dataset.sort()  # to simulate bucket sort (along with pad_data)
 
-        return train_dataset, tune_dataset, test_dataset # , vocab, orig_sents
+            # to simulate bucket sort (along with pad_data)
+            train_dataset.sort()
+        return train_dataset, tune_dataset, test_dataset  # , vocab, orig_sents
 
-    def get_ttt_dataloaders(self, type, pred_in_sents=None):
+    def get_ttt_dataloaders(self, kind, pred_in_sents=None):
         """
 
         Parameters
         ----------
-        type
-        pred_in_sents
+        kind: str
+        pred_in_sents: list[str]
 
         Returns
         -------
+        DataLoader
 
         """
 
@@ -182,22 +203,21 @@ class SaxDataLoader:
             self.get_ttt_datasets(pred_in_sents)
         # this method calls DataLoader
 
-
-        if type == "train":
+        if kind == "train":
             return DataLoader(train_dataset,
                               batch_size=self.params_d["batch_size"],
-                              #collate_fn=None,
+                              # collate_fn=None,
                               shuffle=True,
                               num_workers=1)
-        elif type == "val":
+        elif kind == "val":
             return DataLoader(tune_dataset,
                               batch_size=self.params_d["batch_size"],
-                              #collate_fn=None,
+                              # collate_fn=None,
                               num_workers=1)
-        elif type == "test":
+        elif kind == "test":
             return DataLoader(test_dataset,
                               batch_size=self.params_d["batch_size"],
-                              #collate_fn=None,
+                              # collate_fn=None,
                               num_workers=1)
         else:
             assert False

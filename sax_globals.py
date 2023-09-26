@@ -20,7 +20,6 @@ CCTAGS_TRAIN_FP = 'input_data/openie-data/ptb-train.labels'
 CCTAGS_TUNE_FP = 'input_data/openie-data/ptb-dev.labels'
 CCTAGS_TEST_FP = 'input_data/openie-data/ptb-test.labels'
 
-
 # # file paths for training, tuning and testing extags (ex=extraction)
 # EXTAGS_FP = "input_data/extags_all.txt"
 # EXTAGS_TRAIN_FP = "input_data/extags_train.txt"
@@ -34,18 +33,17 @@ EXTAGS_TEST_FP = 'input_data/carb-data/test.txt'
 
 # sentences used for prediction
 PRED_IN_FP = "carb_subset/data/carb_sentences.txt"
-
-CACHE_DIR = 'input_data/pretrained_cache' # used by AutoModel and AutoTokenizer
+# used by AutoModel and AutoTokenizer
+CACHE_DIR = 'input_data/pretrained_cache'
 WEIGHTS_DIR = "weights"
 PREDICTIONS_DIR = "predictions"
 RESCORE_DIR = "rescore"
 
-
-QUOTES = "\"\'" #2
-BRACKETS = "(){}[]<>" #8
-SEPARATORS = ",:;&-" #5
-ARITHMETICAL = "*|\/@#$%^+=~_" #13
-ENDING = ".?!" #3
+QUOTES = "\"\'"  # 2
+BRACKETS = "(){}[]<>"  # 8
+SEPARATORS = ",:;&-"  # 5
+ARITHMETICAL = "*|\/@#$%^+=~_"  # 13
+ENDING = ".?!"  # 3
 PUNCT_MARKS = QUOTES + BRACKETS + SEPARATORS + ARITHMETICAL + ENDING
 
 UNUSED_TOKENS = ["[unused1]", "[unused2]", "[unused3]"]
@@ -56,22 +54,22 @@ NUM_EMBEDDINGS = 100
 MAX_EX_DEPTH = 5
 MAX_CC_DEPTH = 3
 
-BOS_ILABEL = 101 # bos = begin of sentence
-EOS_ILABEL = 102 # eos = end of sentence
+BOS_ILABEL = 101  # bos = begin of sentence
+EOS_ILABEL = 102  # eos = end of sentence
 NUM_ILABELS = 6
 ILABELING_LEN = 300
 
 EXTAG_TO_ILABEL = {'NONE': 0, 'ARG1': 1, 'REL': 2, 'ARG2': 3,
                    'LOC': 4, 'TIME': 4, 'TYPE': 5, 'ARGS': 3}
 BASE_EXTAGS = EXTAG_TO_ILABEL.keys()
-ILABEL_TO_EXTAG={0: 'NONE', 1: 'ARG1', 2: 'REL', 3: 'ARG2',
-                 4: 'ARG2', 5: 'NONE'}
+ILABEL_TO_EXTAG = {0: 'NONE', 1: 'ARG1', 2: 'REL', 3: 'ARG2',
+                   4: 'ARG2', 5: 'NONE'}
 
 CCTAG_TO_ILABEL = {'NONE': 0, 'CP': 1, 'CP_START': 2,
                    'CC': 3, 'SEP': 4, 'OTHERS': 5}
 BASE_CCTAGS = CCTAG_TO_ILABEL.keys()
 ILABEL_TO_CCTAG = {0: 'NONE', 1: 'CP', 2: 'CP_START',
-                   3: 'CC', 4:'SEP', 5: 'OTHERS'}
+                   3: 'CC', 4: 'SEP', 5: 'OTHERS'}
 
 # LIGHT_VERBS = [
 #     "take", "have", "give", "do", "make", "has", "have",
@@ -130,7 +128,6 @@ else:
     assert MODE in ["predict", "train_test", "splitpredict",
                     "resume", "test"]
 
-
 if TASK == "ex":
     TAG_TO_ILABEL = EXTAG_TO_ILABEL
     MAX_DEPTH = MAX_EX_DEPTH
@@ -139,8 +136,6 @@ elif TASK == "cc":
     TAG_TO_ILABEL = CCTAG_TO_ILABEL
     MAX_DEPTH = MAX_CC_DEPTH
     LOG_DIR = WEIGHTS_DIR + '/cc_logs'
-
-
 
 # Do not define capitalized global and PARAMS_D key for the same
 # parameter. Define one or the other but not both
@@ -203,7 +198,7 @@ elif TASK == "ex" and MODE == "train_test":
         # "save": WEIGHTS_DIR + "/warmup_ex_model",
         "task": "ex"
     }
-    
+
 # Testing:
 # this ex/test pair is a repeat. First one only differs
 # in save directory and batch size (16 before, 24 now)
@@ -236,12 +231,12 @@ elif TASK == "ex" and MODE == "train_test":
 elif TASK == "ex" and MODE == "resume":
     # error in openie6 paper
     #         "lr": 5e-6, and "lr: 2e-5
-    
+
     PARAMS_D = {
         "accumulate_grad_batches": 2,
         "batch_size": 16,
-        "checkpoint_fp": WEIGHTS_DIR + 
-                      "/warmup_ex_model-epoch=13_eval_acc=0.544.ckpt",
+        "checkpoint_fp":
+            WEIGHTS_DIR + "/warmup_ex_model-epoch=13_eval_acc=0.544.ckpt",
         "constraints": "posm_hvc_hvr_hve",
         "cweights": "3_3_3_3",
         "epochs": 16,
@@ -277,7 +272,7 @@ elif TASK == "ex" and MODE == "predict":
         # "inp": "sentences.txt",
         "mode": "predict",
         "model_str": "bert-base-cased",
-        #"out": "predictions.txt",
+        # "out": "predictions.txt",
         # "save": WEIGHTS_DIR + "/ex_model",
         "task": "ex"
     }
@@ -304,14 +299,14 @@ elif TASK == "cc" and MODE == "train_test":
 # It is a repeat.
 elif TASK == "ex" and MODE == "splitpredict":
     PARAMS_D = {
-        "cc_model_fp": WEIGHTS_DIR +
-                    "/cc_model-epoch=28_eval_acc=0.854.ckpt",
+        "cc_model_fp":
+            WEIGHTS_DIR + "/cc_model-epoch=28_eval_acc=0.854.ckpt",
         "gpus": 1,
         # "inp": "carb_subset/data/carb_sentences.txt",
         "mode": "splitpredict",
         "num_extractions": 5,
-        "ex_model_fp": WEIGHTS_DIR +
-                    "/ex_model/epoch=14_eval_acc=0.551_v0.ckpt",
+        "ex_model_fp":
+            WEIGHTS_DIR + "/ex_model/epoch=14_eval_acc=0.551_v0.ckpt",
         # "out": WEIGHTS_DIR + "/results/final",
         # "rescore_model": WEIGHTS_DIR + "/rescore_model",
         "rescoring": True,
@@ -321,27 +316,30 @@ else:
     PARAMS_D = {}
     print("***********************PARAMS_D is empty")
 
-
-DEFAULT_PARAMS_D=\
-{
-    "batch_size": 32,
-    "checkpoint_fp": "",
-    "cweights": 1,
-    "dropout_fun": 0.0,
-    "gpus": 1,
-    "iterative_layers": 2,
-    "lr": 2E-5,
-    "model_str": "bert-base-cased",
-    "num_extractions": 5,
-    "optimizer": "adamW",
-    "save_k": 1,
-    "val_check_interval": 1.0,
-    "wreg": 0
-}
+DEFAULT_PARAMS_D = \
+    {
+        "batch_size": 32,
+        "checkpoint_fp": "",
+        "cweights": 1,
+        "dropout_fun": 0.0,
+        "gpus": 1,
+        "iterative_layers": 2,
+        "lr": 2E-5,
+        "model_str": "bert-base-cased",
+        "num_extractions": 5,
+        "optimizer": "adamW",
+        "save_k": 1,
+        "val_check_interval": 1.0,
+        "wreg": 0
+    }
 from copy import copy
+
+
 def merge_dicts(dominant_d, default_d):
     new_dict = copy(default_d)
     for key in dominant_d:
         new_dict[key] = dominant_d[key]
     return new_dict
+
+
 PARAMS_D = merge_dicts(PARAMS_D, DEFAULT_PARAMS_D)

@@ -645,12 +645,12 @@ class MConductor:
 #
 #     idx1, idx2, idx3 = 0, 0, 0
 #     count = 0
-#     for i in range(0, len(sentence_indices_list)):
+#     for i in range(len(sentence_indices_list)):
 #         if len(sentence_indices_list[i]) == 0:
 #             sentence = orig_sentences[i].split('[unused1]')[0].strip().split()
 #             sentence_indices_list[i].append(list(range(len(sentence))))
 #
-#         for j in range(0, len(sentence_indices_list[i])):
+#         for j in range(len(sentence_indices_list[i])):
 #             try:
 #                 assert len(sentence_indices_list[i][j]) == len(
 #                     outputs[idx1]['meta_data'][
@@ -680,7 +680,7 @@ class MConductor:
 #                 if hparams.rescoring == 'first':
 #                     lines.append(str_labels)
 #                 elif hparams.rescoring == 'max':
-#                     for _ in range(0, 5):
+#                     for _ in range(5):
 #                         lines.append(str_labels)
 #                 elif hparams.rescoring == 'others':
 #                     all_str_labels.append(str_labels)

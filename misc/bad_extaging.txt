@@ -1,0 +1,19 @@
+Allen file:
+Simon is quoted as saying `` if you 'd ever seen Widnes , then you 'd know why I was keen to get back to London as quickly as possible '' .	<arg1> Simon </arg1> <rel>  is quoted </rel> <arg2>  as saying `` if you 'd ever seen Widnes , then you 'd know why I was keen to get back to London as quickly as possible </arg2>	0.92
+Simon is quoted as saying `` if you 'd ever seen Widnes , then you 'd know why I was keen to get back to London as quickly as possible '' .	<arg1> I </arg1> <rel>  to get back as quickly </rel> <arg2>   </arg2>	0.12
+Simon is quoted as saying `` if you 'd ever seen Widnes , then you 'd know why I was keen to get back to London as quickly as possible '' .	<arg1> you </arg1> <rel>  'd seen </rel> <arg2>  Widnes  ever </arg2>	0.69
+Simon is quoted as saying `` if you 'd ever seen Widnes , then you 'd know why I was keen to get back to London as quickly as possible '' .	<arg1> Simon </arg1> <rel>  as saying </rel> <arg2>  then you 'd know why I was keen to get back to London as quickly as possible </arg2>	0.87
+
+simple sents file:
+Simon is quoted as saying `` if you 'd ever seen Widnes , then you 'd know why I was keen to get back to London as quickly as possible '' . [unused1] [unused2] [unused3]
+Simon is quoted as saying `` if you 'd ever seen Widnes , then you 'd know why I was keen to get back to London as quickly as possible
+I to get back as quickly
+you 'd seen Widnes ever
+Simon as saying then you 'd know why I was keen to get back to London as quickly as possible
+
+result of set_extags():
+Simon is quoted as saying `` if you 'd ever seen Widnes , then you 'd know why I was keen to get back to London as quickly as possible '' . [unused1] [unused2] [unused3]
+ARG1 REL REL ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 NONE NONE NONE NONE NONE
+NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE ARG1 NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE
+NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE
+ARG1 NONE NONE REL REL NONE NONE NONE NONE NONE NONE NONE NONE ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 NONE NONE NONE NONE NONE

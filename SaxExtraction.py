@@ -895,7 +895,7 @@ class SaxExtraction:
 
         Parameters
         ----------
-        ex_ilabels: list[str]
+        ex_ilabels: list[int]
         orig_sentL: str
         confi: float
 

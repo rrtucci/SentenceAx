@@ -188,29 +188,22 @@ class AllenTool:
         assert len(re.findall("<rel>.*</rel>", tab_sep_vals[1])) == 1
         assert len(re.findall("<arg2>.*</arg2>", tab_sep_vals[1])) == 1
 
-        parts = []
+        sent_parts = []
         for str0 in ['arg1', 'rel', 'arg2']:
             begin_tag = '<' + str0 + '>'
             end_tag = '</' + str0 + '>'
-            part = re.findall(begin_tag + '.*' + end_tag, tab_sep_vals[1])[0]
-            # print("vcbgh", part)
-            part = ' '.join(get_words(part.strip(begin_tag).strip(end_tag)))
-            parts.append(part)
+            sent_part = \
+                re.findall(begin_tag + '.*' + end_tag, tab_sep_vals[1])[0]
+            # print("vcbgh", sent_part)
+            sent_part = ' '.join(
+                get_words(sent_part.strip(begin_tag).strip(end_tag)))
+            sent_parts.append(sent_part)
 
-        if parts[1][0:4] == "[is]":
-            if parts[1][-4:] == "[of]":
-                parts[1].replace("[is]", "").replace("[of]", "").strip()
-                parts[1] += " NONE REL NONE"
-            elif parts[1][-6:] == "[from]":
-                parts[1].replace("[is]", "").replace("[from]", "").strip()
-                parts[1] += " NONE NONE REL"
-            else:
-                parts[1].replace("[is]", "").strip()
-                parts[1] += " REL NONE NONE"
-        else:
-            parts[1] += " NONE NONE NONE"
-
-        ex = SaxExtraction(in_sentL, parts[0], parts[1], parts[2], confi)
+        ex = SaxExtraction(in_sentL,
+                           sent_parts[0],
+                           sent_parts[1],
+                           sent_parts[2],
+                           confi)
 
         return ex
 

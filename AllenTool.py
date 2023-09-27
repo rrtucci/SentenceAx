@@ -177,7 +177,7 @@ class AllenTool:
 
         """
         tab_sep_vals = line.strip().split('\t')
-        in_sent = tab_sep_vals[0]
+        in_sentL = tab_sep_vals[0] + UNUSED_TOKENS_STR
         confi = float(tab_sep_vals[2])
         # if len(tab_sep_vals) == 4:
         #     num_exs = int(tab_sep_vals[3])
@@ -196,7 +196,21 @@ class AllenTool:
             # print("vcbgh", part)
             part = ' '.join(get_words(part.strip(begin_tag).strip(end_tag)))
             parts.append(part)
-        ex = SaxExtraction(in_sent, parts[0], parts[1], parts[2], confi)
+
+        if parts[1][0:4] == "[is]":
+            if parts[1][-4:] == "[of]":
+                parts[1].replace("[is]", "").replace("[of]", "").strip()
+                parts[1] += " NONE REL NONE"
+            elif parts[1][-6:] == "[from]":
+                parts[1].replace("[is]", "").replace("[from]", "").strip()
+                parts[1] += " NONE NONE REL"
+            else:
+                parts[1].replace("[is]", "").strip()
+                parts[1] += " REL NONE NONE"
+        else:
+            parts[1] += " NONE NONE NONE"
+
+        ex = SaxExtraction(in_sentL, parts[0], parts[1], parts[2], confi)
 
         return ex
 
@@ -256,7 +270,7 @@ class AllenTool:
 
     def write_allen_alternative_file(self,
                                      out_fp,
-                                     first_last_sample_id=(1,-1),
+                                     first_last_sample_id=(1, -1),
                                      ftype="ex",
                                      numbered=False):
 
@@ -307,11 +321,13 @@ class AllenTool:
         first_sample_id, last_sample_id = first_last_sample_id
         if last_sample_id != -1:
             assert 1 <= first_sample_id <= last_sample_id <= self.num_sents
+        else:
+            last_sample_id = self.num_sents
 
         with open(out_fp, 'w', encoding='utf-8') as f:
             sample_id = 0
             num_sams = 0
-            for sent, l_ex in self.osentL_to_exs.items():
+            for osentL, l_ex in self.osentL_to_exs.items():
                 sample_id += 1
                 if sample_id < first_sample_id or \
                         sample_id > last_sample_id:
@@ -319,7 +335,7 @@ class AllenTool:
                 if numbered:
                     f.write(str(sample_id) + ".\n")
                 num_sams += 1
-                f.write(sent + "\n")
+                f.write(osentL + "\n")
                 for ex in l_ex:
                     if ftype == "ex":  # extags file
                         # print("llko34", sample_id, ex)
@@ -372,7 +388,9 @@ class AllenTool:
             num_train_sents + num_tune_sents + 1,
             num_train_sents + num_tune_sents + num_test_sents)
 
-        print("ghjy", train_first_last, tune_first_last, test_first_last)
+        print("first_last pairs for train, tune, test:", train_first_last,
+              tune_first_last,
+              test_first_last)
 
         train_fp = out_dir + "/extags_train.txt"
         tune_fp = out_dir + "/extags_tune.txt"

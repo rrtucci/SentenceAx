@@ -58,7 +58,7 @@ def get_words(sent, algo="ss"):
 
     Returns
     -------
-    list
+    list[str]
 
     """
     if algo == "ss":

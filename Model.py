@@ -133,7 +133,7 @@ class Model(pl.LightningModule):
         self.pos_locs = None
         self.verb_mask = None
         self.verb_locs = None
-        self.l_word_start_loc = None
+        self.l_wstart_loc = None
 
         self.batch_out = MOutput(TASK)
         self.true_batch_out = MOutput(TASK)
@@ -282,7 +282,7 @@ class Model(pl.LightningModule):
             # a chaptgpt generated explanation of this transformation
             # is given in misc/hidden_states_transformation2.txt
             #
-            xx = self.l_word_start_loc.unsqueeze(2). \
+            xx = self.l_wstart_loc.unsqueeze(2). \
                 repeat(1, 1, hidden_states.shape[2])
             word_hidden_states = torch.gather(hidden_states, 1, xx)
 

@@ -30,7 +30,7 @@ class SaxDataSet(Dataset):
 
         padded_data_d = {'ll_sentL_ilabel': padded_ll_sentL_ilabel,
                        'lll_label': padded_ll_label,
-                       'l_word_start_locs': padded_l_word_start_locs,
+                       'l_wstart_locs': padded_l_wstart_locs,
                        'l_orig_sent': l_orig_sent}
 
         Parameters

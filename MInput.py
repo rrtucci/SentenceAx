@@ -2,6 +2,7 @@ from sax_globals import *
 import spacy
 from sax_utils import *
 from transformers import AutoTokenizer
+from copy import deepcopy
 
 
 class MInput:
@@ -16,7 +17,7 @@ class MInput:
     l_osent_pos_mask: list[list[int]]
     l_osent_verb_locs: list[list[int]]
     l_osent_verb_mask: list[list[int]]
-    l_osent_word_start_locs: list[list[int]]
+    l_osent_wstart_locs: list[list[int]]
     lll_ilabel: list[list[list[int]]]
     num_samples: int
     spacy_model: spacy.Language
@@ -50,7 +51,7 @@ class MInput:
         # it's not (num_samples, max_depth=num_ex)
         # each word of orig_sent may be encoded with more than one ilabel
         # os = original sentence
-        self.l_osent_word_start_locs = []  # shape=(num_samples, encoding len)
+        self.l_osent_wstart_locs = []  # shape=(num_samples, encoding len)
         self.l_osent_ilabels = []  # shape=(num_samples, encoding len
 
         self.use_spacy_model = use_spacy_model
@@ -88,16 +89,22 @@ class MInput:
         changed = True
         while changed:
             changed = False
-            i = 0
-            while i < len(tokens) - 1:
+            for i in range(len(tokens) - 1):
+                print("sdfrt", i)
                 tok = tokens[i]
                 if not tok.whitespace_:
                     next_tok = tokens[i + 1]
                     # in-place operation.
-                    tokens.merge(tok.idx,
-                                 next_tok.idx + len(next_tok))
+                    a = tok.idx
+                    b = next_tok.idx + len(next_tok)
+                    # old
+                    #tokens[a:b].merge()
+                    # new
+                    # print("dfgty***********", a, b, tokens[0:2], len(tokens))
+                    with tokens.retokenize() as retokenizer:
+                        if a<b<len(tokens):
+                            retokenizer.merge(tokens[a:b])
                     changed = True
-                i += 1
         return tokens
 
     @staticmethod
@@ -175,9 +182,9 @@ class MInput:
             return
         for sent_id, spacy_tokens in enumerate(
                 self.spacy_model.pipe(self.l_orig_sent, batch_size=10000)):
-            spacy_tokens = MInput.remerge_sent(spacy_tokens)
-            assert len(self.l_orig_sent[sent_id].split()) == len(
-                spacy_tokens)
+            # #spacy_tokens = MInput.remerge_sent(spacy_tokens)
+            # assert len(self.l_orig_sent[sent_id].split()) == len(
+            #     spacy_tokens)
 
             pos_locs, pos_mask, pos_words = \
                 MInput.pos_info(spacy_tokens)
@@ -230,7 +237,7 @@ class MInput:
 
         """
         l_orig_sent = []
-        l_osent_word_start_locs = []  # similar to word_starts
+        l_osent_wstart_locs = []  # similar to word_starts
         l_osent_ilabels = []  # similar to input_ids
         ll_ex_ilabels = []  # similar to targets target=extraction
         sentL = None  # similar to `sentence`
@@ -239,70 +246,83 @@ class MInput:
             lines = f.readlines()
 
         def is_first_line_of_sample(line0):
-            return '[used' in line0
+            return '[unused' in line0
 
         def is_tag_line_of_sample(line0):
-            return len(line0) != 0 and '[used' not in line0
+            return 'NONE' in line0
 
         def is_end_of_sample(prev_line0, line0):
-            return not line0 or \
-                (prev_line0 and is_first_line_of_sample(line0))
+            if not line0:
+                return True
+            if prev_line0 and is_tag_line_of_sample(prev_line0) and \
+                 is_first_line_of_sample(line0):
+                return True
+            return False
 
         prev_line = None
-        for line in lines:
+        for k, line in enumerate(lines):
             line = line.strip()
             if line == "":
+
                 # this skips blank lines
                 continue  # skip to next line
-
+            # print("kklop", line)
             if is_first_line_of_sample(line):
+                print("kklop-1st", line)
                 sentL = line
                 encoding_d = self.auto_tokenizer.batch_encode_plus(
                     sentL.split())
-                os_ilabels = [BOS_ILABEL]
-                os_word_start_locs = []
+                # print("encoding_d", encoding_d)
+                osent_ilabels = [BOS_ILABEL]
+                osent_wstart_locs = []
                 # encoding_d['input_ids'] is a ll_ilabel
-                for l_ilabel0 in encoding_d['input_ids']:
+                for ilabels in encoding_d['input_ids']:
+                    #print("ppokl" , k)
                     # special spacy tokens like \x9c have zero length
-                    if len(l_ilabel0) == 0:
-                        l_ilabel0 = [100]
-                    # note os_word_start_locs[0]=1 because first
+                    if len(ilabels) == 0:
+                        ilabels = [100]
+                    # note osent_wstart_locs[0]=1 because first
                     # ilabels =[BOS_ILABEL]
-                    os_word_start_locs.append(len(os_ilabels))
-                    # same as ilabels.extend(l_ilabel0)
-                    os_ilabels += l_ilabel0
-                os_ilabels.append(EOS_ILABEL)
-                assert len(sentL.split()) == len(os_word_start_locs)
+                    osent_wstart_locs.append(len(osent_ilabels))
+                    # same as ilabels.extend(ilabels)
+                    osent_ilabels += ilabels
+                osent_ilabels.append(EOS_ILABEL)
+                assert len(sentL.split()) == len(osent_wstart_locs)
                 l_ex_ilabels = []
             elif is_tag_line_of_sample(line):
-                ex_ilabels = [EXTAG_TO_ILABEL[tag] for tag in line.split()]
-                assert ex_ilabels == len(os_word_start_locs)
+                print("sdfrg-tag", k)
+                ex_ilabels = [EXTAG_TO_ILABEL[tag] for tag in get_words(line)]
+                # print("nnmk-line number= " + str(k))
+                # assert len(ex_ilabels) == len(osent_wstart_locs)
                 l_ex_ilabels.append(ex_ilabels)
+                print("dfgthj", l_ex_ilabels)
             else:
-                assert False
+                pass
             if is_end_of_sample(prev_line, line):
+                print("ddft-end", k)
                 if len(l_osent_ilabels) == 0:
                     l_osent_ilabels = [[0]]
 
                 if len(sentL.split()) <= 100:
-                    l_osent_ilabels.append(os_ilabels)
+                    l_osent_ilabels.append(osent_ilabels)
                     orig_sent = unL(sentL)
                     l_orig_sent.append(orig_sent)
 
                     # note that if li=[2,3]
                     # then li[:100] = [2,3]
-                    ll_ex_ilabels.append(l_ex_ilabels)
-                    l_osent_word_start_locs.append(os_word_start_locs)
+                    print("oooooooooooooosdftty", l_ex_ilabels)
+                    ll_ex_ilabels.append(deepcopy(l_ex_ilabels))
+                    l_osent_wstart_locs.append(osent_wstart_locs)
 
-                os_ilabels = []
-                os_word_start_locs = []
-                l_ex_ilabels = []
+                osent_ilabels = []
+                osent_wstart_locs = []
+                #l_ex_ilabels = []
             prev_line = line
         self.l_orig_sent = l_orig_sent
         self.lll_ilabel = ll_ex_ilabels
 
         self.l_osent_ilabels = l_osent_ilabels
-        self.l_osent_word_start_locs = l_osent_word_start_locs
+        self.l_osent_wstart_locs = l_osent_wstart_locs
 
         # so far, we haven't assumed any spacy derived data nanalysis
         # if spacy is allowed, the example_d can carry more info.
@@ -327,6 +347,7 @@ class MInput:
         #     examples.append(example)
         # return examples, orig_sents
 
+
 if __name__ == "__main__":
     def main():
         in_fp = "testing_files/extags_test.txt"
@@ -340,6 +361,18 @@ if __name__ == "__main__":
             add_special_tokens=False,
             additional_special_tokens=UNUSED_TOKENS)
         use_spacy_model = True
-        m_imput = MInput(in_fp, task, auto_tokenizer, use_spacy_model)
+        m_input = MInput(in_fp, task, auto_tokenizer, use_spacy_model)
+        k = 0
+        print("num_samples=", m_input.num_samples)
+        print("l_orig_sent[k]=", m_input.l_orig_sent[k])
+        print("l_osent_ilabels[k]=\n", m_input.l_osent_ilabels[k])
+        print("l_osent_pos_locs[k]=\n", m_input.l_osent_pos_locs[k])
+        print("l_osent_pos_mask[k]=\n", m_input.l_osent_pos_mask[k])
+        print("l_osent_verb_locs[k]=\n", m_input.l_osent_verb_locs[k])
+        print("l_osent_verb_mask[k]=\n", m_input.l_osent_verb_mask[k])
+        print("l_osent_wstart_locs[k]=\n",
+              m_input.l_osent_wstart_locs[k])
+        print("lll_ilabel=\n", m_input.lll_ilabel)
+
 
     main()

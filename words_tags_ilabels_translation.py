@@ -112,26 +112,26 @@ def translate_extags_to_words(extags, orig_sentL):
     """
     orig_sentL_words = get_words(orig_sentL)
     max_len = len(orig_sentL_words)
-    l_arg1 = []
-    l_rel = []
-    l_arg2 = []
+    arg1_words = []
+    rel_words = []
+    arg2_words = []
     for k, extag in enumerate(extags):
         # extags may be padded
         if k < max_len:
             if extag == "ARG1":
-                l_arg1.append(orig_sentL_words[k])
+                arg1_words.append(orig_sentL_words[k])
             elif extag == "REL":
-                l_rel.append(orig_sentL_words[k])
+                rel_words.append(orig_sentL_words[k])
             elif extag in ["ARG2", "LOC", "TIME"]:
-                l_arg2.append(orig_sentL_words[k])
-    if l_rel[-1] == "[unused1]":
-        l_rel = ["[is]"] + l_rel[:-1]
-    elif l_rel[-1] == "[unused2]":
-        l_rel = ["[is]"] + l_rel[:-1] + ["[of]"]
-    elif l_rel[-1] == "[unused3]":
-        l_rel = ["[is]"] + l_rel[:-1] + ["[from]"]
+                arg2_words.append(orig_sentL_words[k])
+    if rel_words[-1] == "[unused1]":
+        rel_words = ["[is]"] + rel_words[:-1]
+    elif rel_words[-1] == "[unused2]":
+        rel_words = ["[is]"] + rel_words[:-1] + ["[of]"]
+    elif rel_words[-1] == "[unused3]":
+        rel_words = ["[is]"] + rel_words[:-1] + ["[from]"]
 
-    return l_arg1 + l_rel + l_arg2
+    return arg1_words + rel_words + arg2_words
 
 
 def translate_cctags_to_ilabels(cctags):

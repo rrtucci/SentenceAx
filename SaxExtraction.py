@@ -382,7 +382,7 @@ class SaxExtraction:
 
     def set_extags_of_arg2(self):
         """
-        similar to Openie6.data_processing.label_arg2()
+        similar to Openie6.data_processing.labearg2_words()
 
 
         Returns
@@ -906,11 +906,11 @@ class SaxExtraction:
         """
         # ex_ilabels = ex_ilabels.to_list()  # change from torch tensor to list
 
-        l_rel = []
-        l_arg1 = []
-        l_arg2 = []
-        # l_loc_time=[]
-        # l_args = []
+        rel_words = []
+        arg1_words = []
+        arg2_words = []
+        # loc_time_words=[]
+        # args_words = []
         rel_case = 0
         for i, word in enumerate(get_words(orig_sentL)):
             if '[unused' in word:
@@ -922,18 +922,18 @@ class SaxExtraction:
             if ex_ilabels[i] == 0:  # NONE
                 pass
             elif ex_ilabels[i] == 1:  # ARG1
-                l_arg1.append(word)
+                arg1_words.append(word)
             elif ex_ilabels[i] == 2:  # REL
-                l_rel.append(word)
+                rel_words.append(word)
             elif ex_ilabels[i] == 3:  # ARG2
-                l_arg2.append(word)
+                arg2_words.append(word)
             elif ex_ilabels[i] == 4:  # ARG2
                 # l_loc_time.append(word)
-                l_arg2.append(word)
+                arg2_words.append(word)
             else:
                 assert False
 
-        rel = ' '.join(l_rel).strip()
+        rel = ' '.join(rel_words)
         if rel_case == 1:
             rel = 'is ' + rel
         elif rel_case == 2:
@@ -941,13 +941,13 @@ class SaxExtraction:
         elif rel_case == 3:
             rel = 'is ' + rel + ' from'
 
-        arg1 = ' '.join(l_arg1).strip()
-        arg2 = ' '.join(l_arg2).strip()
+        arg1 = ' '.join(arg1_words)
+        arg2 = ' '.join(arg2_words)
 
-        # args = ' '.join(l_args).strip()
-        # loc_time = ' '.join(l_loc_time).strip()
+        # args = ' '.join(args_words)
+        # loc_time = ' '.join(l_loc_time)
         # if not self.params_d["no_lt"]: # no_lt = no loc time
-        #     arg2 = (arg2 + ' ' + loc_time + ' ' + args).strip()
+        #     arg2 = arg2 + ' ' + loc_time + ' ' + args
 
         extraction = SaxExtraction(orig_sentL,
                                    arg1,

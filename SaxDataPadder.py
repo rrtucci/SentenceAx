@@ -145,14 +145,14 @@ class SaxDataPadder:
         padded_lll_ilabel = \
             SaxDataPadder.get_padded_lll_ilabel(self.m_input.lll_ilabel)
 
-        padded_l_osent_word_start_locs = \
-            SaxDataPadder.get_padded_ll_x(self.m_input.l_osent_word_start_locs,
+        padded_l_osent_wstart_locs = \
+            SaxDataPadder.get_padded_ll_x(self.m_input.l_osent_wstart_locs,
                                           0)
 
         padded_data_d = OrderedDict(
             {'l_osent_ilabels': padded_l_osent_ilabels,
              'lll_ilabel': padded_lll_ilabel,
-             'l_osent_word_start_locs': padded_l_osent_word_start_locs,
+             'l_osent_wstart_locs': padded_l_osent_wstart_locs,
              'l_orig_sent': torch.tensor(self.m_input.l_orig_sent)})
 
         if self.use_spacy_model:

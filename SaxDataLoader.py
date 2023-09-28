@@ -31,7 +31,7 @@ class SaxDataLoader:
     Attributes
     ----------
     auto_tokenizer: AutoTokenizer
-    pad_ilabel: int
+    pad_ilabels: list[int]
     params_d: dict[str, Any]
     predict_fp: str
     test_fp: str
@@ -41,14 +41,14 @@ class SaxDataLoader:
     
     """
 
-    def __init__(self, auto_tokenizer, pad_ilabel,
+    def __init__(self, auto_tokenizer, pad_ilabels,
                  train_fp, tune_fp, test_fp, use_spacy_model=True):
         """
 
         Parameters
         ----------
         auto_tokenizer: AutoTokenizer
-        pad_ilabel: int
+        pad_ilabels: list[int]
         train_fp: str
         tune_fp: str
         test_fp: str
@@ -57,7 +57,7 @@ class SaxDataLoader:
 
         self.params_d = PARAMS_D
         self.auto_tokenizer = auto_tokenizer
-        self.pad_ilabel = pad_ilabel
+        self.pad_ilabels = pad_ilabels
 
         self.predict_fp = PRED_IN_FP
         self.train_fp = train_fp
@@ -146,7 +146,7 @@ class SaxDataLoader:
             predict_m_input = self.get_m_input(self.predict_fp)
             # vocab = build_vocab(predict_m_input)
 
-            x = [predict_m_input, self.pad_ilabel, self.use_spacy_model]
+            x = [predict_m_input, self.pad_ilabels, self.use_spacy_model]
             predict_dataset = SaxDataSet(*x)
 
             train_dataset, tune_dataset, test_dataset = \
@@ -176,13 +176,13 @@ class SaxDataLoader:
             # vocab = self.build_vocab(
             #     train_m_input + tune_m_input + test_m_input)
 
-            x = [train_m_input, self.pad_ilabel, self.use_spacy_model]
+            x = [train_m_input, self.pad_ilabels, self.use_spacy_model]
             train_dataset = SaxDataSet(*x)
 
-            x = [tune_m_input, self.pad_ilabel, self.use_spacy_model]
+            x = [tune_m_input, self.pad_ilabels, self.use_spacy_model]
             tune_dataset = SaxDataSet(*x)
 
-            x = [test_m_input, self.pad_ilabel, self.use_spacy_model]
+            x = [test_m_input, self.pad_ilabels, self.use_spacy_model]
             test_dataset = SaxDataSet(*x)
 
             # to simulate bucket sort (along with pad_data)

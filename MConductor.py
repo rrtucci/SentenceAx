@@ -82,10 +82,10 @@ class MConductor:
         # decode()
         # replaces vocab.itos() (itos=integer to string)
         self.decode = self.auto_tokenizer.decode
-        self.pad_ilabel = self.encode(self.auto_tokenizer.pad_token)
+        self.pad_ilabels = self.encode(self.auto_tokenizer.pad_token)
 
         self.dloader = SaxDataLoader(self.auto_tokenizer,
-                                  self.pad_ilabel,
+                                  self.pad_ilabels,
                                   self.train_fp,
                                   self.tune_fp,
                                   self.test_fp)

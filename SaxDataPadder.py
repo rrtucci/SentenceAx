@@ -14,22 +14,22 @@ class SaxDataPadder:
     Attributes
     ----------
     m_input: MInput
-    pad_ilabel: int
+    pad_ilabels: list[int]
     use_spacy_model: bool
     """
 
-    def __init__(self, m_input, pad_ilabel, use_spacy_model):
+    def __init__(self, m_input, pad_ilabels, use_spacy_model):
         """
 
         Parameters
         ----------
         m_input: MInput
-        pad_ilabel: int
+        pad_ilabels: list[int]
         use_spacy_model: bool
         """
 
         self.m_input = m_input
-        self.pad_ilabel = pad_ilabel
+        self.pad_ilabels = pad_ilabels
         self.use_spacy_model = use_spacy_model
 
     @staticmethod
@@ -140,7 +140,7 @@ class SaxDataPadder:
         # }
 
         padded_l_osent_ilabels = SaxDataPadder.get_padded_ll_x(
-            self.m_input.l_osent_ilabels, self.pad_ilabel)
+            self.m_input.l_osent_ilabels, self.pad_ilabels)
 
         padded_lll_ilabel = \
             SaxDataPadder.get_padded_lll_ilabel(self.m_input.lll_ilabel)

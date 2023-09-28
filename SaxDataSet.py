@@ -12,7 +12,8 @@ class SaxDataSet(Dataset):
     max_depth: int
     num_samples: int
     num_words: int
-    num_xtypes: int
+    padder: SaxDataPadder
+    xtypes: list[str]
     x: torch.tensor
     y: torch.tensor
 
@@ -39,26 +40,16 @@ class SaxDataSet(Dataset):
         pad_ilabel: int
         use_spacy_model: bool
         """
-        padder = SaxDataPadder(m_input, pad_ilabel, use_spacy_model)
-        padded_data_d = padder.get_padded_data_d()
+        self.padder = SaxDataPadder(m_input, pad_ilabel, use_spacy_model)
+        data_d = self.padder.padded_data_d
 
         self.num_samples, self.max_depth, self.num_words = \
-            padded_data_d["lll_ilabel"].shape
+            data_d["lll_ilabel"].shape
 
-        x = []
-        num_xtypes = -1
-        for sam in range(self.num_samples):
-            sam_x = []
-            for name, sub_x in padded_data_d.items():
-                if name != "lll_ilabel":
-                    num_xtypes += 1
-                    sam_x.append(sub_x[sam])
-            x.append(sam_x)
-        self.num_xtypes = num_xtypes
-        self.x = torch.tensor(x)
+        self.xtypes = [name for name in data_d.keys() if name != "lll_ilabel"]
+        self.x = torch.cat([data_d[xtype] for xtype in self.xtypes], dim=1)
 
-        y = padded_data_d["lll_ilabel"]
-        self.y = torch.tensor(y)
+        self.y = data_d["lll_ilabel"]
 
     def __getitem__(self, sample_id):
         """
@@ -84,6 +75,7 @@ class SaxDataSet(Dataset):
         """
         return self.num_samples
 
+
 if __name__ == "__main__":
     def main():
         in_fp = "testing_files/extags_test.txt"
@@ -104,6 +96,12 @@ if __name__ == "__main__":
         # full encoding is [101, 0, 102], 101=BOS_ILABEL, 102=EOS_ILABEL
         pad_ilabel = auto.encode(auto.pad_token)[1]
         print("pad_token, pad_ilabel=", auto.pad_token, pad_ilabel)
-        sax_dset = SaxDataSet(m_input, pad_ilabel, use_spacy_model)
+        dset = SaxDataSet(m_input, pad_ilabel, use_spacy_model)
+        dset.padder.print_padded_data_d_shapes()
+        print("xtypes=", dset.xtypes)
+        print("x.shape=", dset.x.shape)
+        print("y.shape=", dset.y.shape)
+
+
 
     main()

@@ -53,7 +53,7 @@ DROPOUT = 0.0
 MAX_EX_DEPTH = 5
 MAX_CC_DEPTH = 3
 
-PAD_ILABEL = 0
+PAD_ILABEL = 0 #ipad
 EMBEDDING_MAX = 100
 BOS_ILABEL = 101  # bos = begin of sentence
 EOS_ILABEL = 102  # eos = end of sentence
@@ -306,7 +306,7 @@ elif TASK == "ex" and MODE == "splitpredict":
         "gpus": 1,
         # "inp": "carb_subset/data/carb_sentences.txt",
         "mode": "splitpredict",
-        "num_extractions": 5,
+        "num_extractions": MAX_EX_DEPTH,
         "ex_model_fp":
             WEIGHTS_DIR + "/ex_model/epoch=14_eval_acc=0.551_v0.ckpt",
         # "out": WEIGHTS_DIR + "/results/final",
@@ -328,7 +328,7 @@ DEFAULT_PARAMS_D = \
         "iterative_layers": 2,
         "lr": 2E-5,
         "model_str": "bert-base-cased",
-        "num_extractions": 5,
+        "num_extractions": MAX_EX_DEPTH,
         "optimizer": "adamW",
         "save_k": 1,
         "val_check_interval": 1.0,

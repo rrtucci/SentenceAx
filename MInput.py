@@ -392,7 +392,7 @@ if __name__ == "__main__":
                          use_spacy_model,
                          verbose=verbose)
         for k in range(0, 5):
-            print("k=", k)
+            print("************** k=", k)
             print("num_samples=", m_input.num_samples)
             print("l_orig_sent[k]=", m_input.l_orig_sent[k])
             print("l_osent_ilabels[k]=\n", m_input.l_osent_ilabels[k])

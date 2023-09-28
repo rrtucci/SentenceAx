@@ -110,12 +110,12 @@ class Model(pl.LightningModule):
         self.dropout_fun = nn.Dropout(p=DROPOUT)  # 0.0
 
         """
-        nn.Embedding(num_embeddings, embedding_size)
-        num_embeddings (int) – size of the dictionary of embeddings
+        nn.Embedding(embedding_max, embedding_size)
+        embedding_max (int) – size of the dictionary of embeddings
         embedding_dim (int) – the size of each embedding vector
             
         """
-        self.ilabel_embeddings = nn.Embedding(NUM_EMBEDDINGS,  # 100
+        self.ilabel_embeddings = nn.Embedding(EMBEDDING_MAX,  # 100
                                              self.hidden_size)
         self.merge_layer = nn.Linear(self.hidden_size,
                                      ILABELING_LEN)  # 300

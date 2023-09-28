@@ -50,12 +50,14 @@ UNUSED_TOKENS = ["[unused1]", "[unused2]", "[unused3]"]
 UNUSED_TOKENS_STR = " " + " ".join(UNUSED_TOKENS)
 
 DROPOUT = 0.0
-NUM_EMBEDDINGS = 100
 MAX_EX_DEPTH = 5
 MAX_CC_DEPTH = 3
 
+PAD_ILABEL = 0
+EMBEDDING_MAX = 100
 BOS_ILABEL = 101  # bos = begin of sentence
 EOS_ILABEL = 102  # eos = end of sentence
+
 NUM_ILABELS = 6
 ILABELING_LEN = 300
 

@@ -99,8 +99,10 @@ if __name__ == "__main__":
         dset = SaxDataSet(m_input, pad_ilabel, use_spacy_model)
         dset.padder.print_padded_data_d_shapes()
         print("xtypes=", dset.xtypes)
-        print("x.shape=", dset.x.shape)
-        print("y.shape=", dset.y.shape)
+        print("x.shape, x.shape_product=",
+              dset.x.shape, np.product(dset.x.shape))
+        print("y.shape, y.shape_product=",
+              dset.y.shape, np.product(dset.y.shape))
 
 
 

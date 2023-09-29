@@ -181,6 +181,21 @@ def unL_l(l_osentL):
 #     return [[l_ilabel[:-3] for l_ilabel in ll_ilabel]
 #             for ll_ilabel in lll_ilabel]
 
+def use_ascii_quotes(line):
+    """
+
+    Parameters
+    ----------
+    line: str
+
+    Returns
+    -------
+    str
+
+    """
+    return line.replace('’', '\'').replace('”', '\'\'')
+
+
 def replace_in_list(l_x, x, new_x):
     """
 

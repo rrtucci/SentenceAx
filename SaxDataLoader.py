@@ -44,7 +44,8 @@ class SaxDataLoader:
 
     def __init__(self,
                  auto_tokenizer,
-                 train_fp, tune_fp, test_fp, predict_fp,
+                 train_fp, tune_fp, test_fp,
+                 predict_fp=None,
                  use_spacy_model=True):
         """
 
@@ -64,10 +65,10 @@ class SaxDataLoader:
         self.pad_ilabel = \
             auto_tokenizer.encode(auto_tokenizer.pad_token)[1]
 
-        self.predict_fp = predict_fp
         self.train_fp = train_fp
         self.tune_fp = tune_fp
         self.test_fp = test_fp
+        self.predict_fp = predict_fp
         self.use_spacy_model = use_spacy_model
 
     def get_m_input(self, in_fp):
@@ -91,13 +92,9 @@ class SaxDataLoader:
 
         return m_input
 
-    def get_ttt_datasets(self, pred_in_sents=None):
+    def get_ttt_datasets(self):
         """
         similar to Openie6.data.process_data()
-
-        Parameters
-        ----------
-        pred_in_sents: list[str]
 
         Returns
         -------
@@ -109,39 +106,36 @@ class SaxDataLoader:
         # tune_fp = self.params_d["tune_fp"]
         # test_fp = self.params_d["test_fp"]
 
-        model_str = self.params_d["model_str"].replace("/", "_")
-        cached_train_fp = f'{self.train_fp.split(".")[0]}.{model_str}.pkl'
-        cached_tune_fp = f'{self.tune_fp.split(".")[0]}.{model_str}.pkl'
-        cached_test_fp = f'{self.test_fp.split(".")[0]}.{model_str}.pkl'
-
-        orig_sents = []
-        if 'predict' in MODE:  # no caching used if predict in mode
+        # no caching used if predict in mode
+        if 'predict' in MODE:
             # no caching used if predict in mode
-            if not pred_in_sents:  # predict
-                # if self.params_d["in_fp"] :
-                #     predict_fp = self.params_d["in_fp"]
-                # else:
-                #     predict_fp = self.params_d["predict_fp"]
-                with open(self.predict_fp, "r") as f:
-                    predict_lines = f.readlines()
-
-                pred_in_sents = []
-                for line in predict_lines:
-                    line = use_ascii_quotes(line)
-                    # tokenized_line = line.split()
-
-                    # Why use both nltk and spacy to word tokenize.
-                    # get_ttt_datasets() uses nltk.word_tokenize()
-                    # get_samples() uses spacy_model.pipe(sents...)
-
-                    words = ' '.join(nltk.word_tokenize(line))
-                    pred_in_sents.append(
-                        words + UNUSED_TOKENS_STR + "\n")
-
-            # openie 6 is wrong here. Uses wrong arguments for
+            # if not pred_in_sents:  # predict
+            #     # if self.params_d["in_fp"] :
+            #     #     predict_fp = self.params_d["in_fp"]
+            #     # else:
+            #     #     predict_fp = self.params_d["predict_fp"]
+            #     with open(self.predict_fp, "r") as f:
+            #         predict_lines = f.readlines()
+            #
+            #     pred_in_sents = []
+            #     for line in predict_lines:
+            #         line = use_ascii_quotes(line)
+            #         # tokenized_line = line.split()
+            #
+            #         # Why use both nltk and spacy to word tokenize.
+            #         # get_ttt_datasets() uses nltk.word_tokenize()
+            #         # get_samples() uses spacy_model.pipe(sents...)
+            #
+            #         words = ' '.join(nltk.word_tokenize(line))
+            #         pred_in_sents.append(
+            #             words + UNUSED_TOKENS_STR + "\n")
+            #
+            # # openie 6 is wrong here. Uses wrong arguments for
             # process_data() which is get_samples() for us.
             # get_samples()
             # returns: examples, orig_sents
+            assert self.predict_fp, \
+                "predict_fp required if 'predict' in mode"
             predict_m_input = self.get_m_input(self.predict_fp)
             # vocab = build_vocab(predict_m_input)
 
@@ -153,6 +147,17 @@ class SaxDataLoader:
             tune_dataset = predict_dataset
             test_dataset = predict_dataset
         else:  # if 'predict' not in MODE, use caching
+            assert self.train_fp
+            assert self.tune_fp
+            assert self.test_fp
+            model_str = self.params_d["model_str"].replace("/", "_")
+            cached_train_fp = \
+                f'{self.train_fp.split(".")[0]}.{model_str}.pkl'
+            cached_tune_fp = \
+                f'{self.tune_fp.split(".")[0]}.{model_str}.pkl'
+            cached_test_fp = \
+                f'{self.test_fp.split(".")[0]}.{model_str}.pkl'
+
             if not os.path.exists(cached_train_fp) or \
                     self.params_d["build_cache"]:
                 train_m_input = self.get_m_input(self.train_fp)
@@ -191,16 +196,17 @@ class SaxDataLoader:
 
             # to simulate bucket sort (along with pad_data)
             # train_dataset.sort()
+
+        # if predict in MODE, all 3 returned dataset are equal
         return train_dataset, tune_dataset, test_dataset  # , vocab, orig_sents
 
-    def get_ttt_dataloaders(self, ttt_kind, pred_in_sents=None):
+    def get_ttt_dataloaders(self, ttt_kind):
         """
         # this method calls DataLoader
 
         Parameters
         ----------
         ttt_kind: str
-        pred_in_sents: list[str]
 
         Returns
         -------
@@ -209,7 +215,7 @@ class SaxDataLoader:
         """
 
         train_dataset, tune_dataset, test_dataset = \
-            self.get_ttt_datasets(pred_in_sents)
+            self.get_ttt_datasets()
 
         if ttt_kind == "train":
             return DataLoader(train_dataset,

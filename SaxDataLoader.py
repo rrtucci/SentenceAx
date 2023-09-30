@@ -232,13 +232,7 @@ class SaxDataLoader:
 
 if __name__ == "__main__":
 
-    def main(no_caching):
-        # if no_caching:
-        #     set_TASK_and_MODE("ex", "predict")
-        # else:
-        #     set_TASK_and_MODE("ex", "test")
-
-
+    def main():
         print(PARAMS_D())
         auto = AutoTokenizer.from_pretrained(
             PARAMS_D()["model_str"],
@@ -260,5 +254,8 @@ if __name__ == "__main__":
         train_dataset, tune_dataset, test_dataset = \
             dloader.get_ttt_datasets()
 
-
-    main(True)
+    # tried with
+    # TASK, MODE = "ex", "predict"
+    # TASK, MODE = "ex", "test"
+    # in sax_params_d file
+    main()

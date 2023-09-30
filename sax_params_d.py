@@ -1,7 +1,8 @@
 from sax_globals import *
 
-TASK = ""
-MODE = ""
+
+TASK, MODE = "ex", "predict"
+
 
 # I use "ex" instead of "oie" for task
 # I use "cc" instead of "conj" for task

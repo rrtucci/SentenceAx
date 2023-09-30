@@ -41,31 +41,6 @@ def merge_dicts(dominant_d, default_d):
     return new_dict
 
 
-def set_TASK_and_MODE(task, mode):
-    """
-
-    Parameters
-    ----------
-    task: str
-    mode: str
-
-    Returns
-    -------
-    None
-
-    """
-    from importlib import reload
-    if "TASK" not in globals():
-        global TASK
-    TASK = task
-    print("cfvg", TASK)
-    assert TASK in ["ex", "cc"]
-    MODE = globals()["MODE"]
-    MODE = mode
-    import sax_globals
-    reload(sax_globals)
-
-
 def get_words(sent, algo="ss"):
     """
     note: get_words("") = []
@@ -163,7 +138,7 @@ def get_num_ttt_sents(num_sents, ttt_fractions):
     num_tune_sents = floor(ttt_fractions[1] * num_sents)
     num_test_sents = floor(ttt_fractions[2] * num_sents)
     num_extra_sents = num_sents - num_train_sents - \
-        num_tune_sents - num_test_sents
+                      num_tune_sents - num_test_sents
     num_train_sents += num_extra_sents
     assert num_sents == num_train_sents + num_tune_sents + num_test_sents
     # print("nnmk", num_train_sents, num_tune_sents, num_test_sents)

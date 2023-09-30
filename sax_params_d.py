@@ -2,7 +2,7 @@ from sax_globals import *
 
 
 # Possible choices for PARAMS_D
-# 0. prior custom choice
+# 0. "", ""
 # 1. ex, train_test
 #    Conductor.train() followed by Conductor.test()
 # 2. ex, test  (appears twice)
@@ -17,6 +17,7 @@ from sax_globals import *
 #    Conductor.splitpredict()
 
 TASK_MODE_d = {
+0: ("", ""),
 1: ("ex", "train_test"),
 2: ("ex", "test"),
 3: ("ex", "predict"),

@@ -233,7 +233,8 @@ class SaxDataLoader:
 if __name__ == "__main__":
 
     def main():
-        print(PARAMS_D())
+        from pprint import pprint
+        pprint(PARAMS_D())
         auto = AutoTokenizer.from_pretrained(
             PARAMS_D()["model_str"],
             do_lower_case=True,

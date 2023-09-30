@@ -1,8 +1,32 @@
 from sax_globals import *
 
 
-TASK, MODE = "ex", "predict"
+# Possible choices for PARAMS_D
+# 0. prior custom choice
+# 1. ex, train_test
+#    Conductor.train() followed by Conductor.test()
+# 2. ex, test  (appears twice)
+#     Conductor.test()
+# 3. ex, predict (appears twice)
+#     Conductor.predict()
+# 4. ex, resume
+#     Conductor.resume()
+# 5. cc, train_test
+#    Conductor.train() followed by Conductor.test()
+# 6. ex, splitpredict (appears twice)
+#    Conductor.splitpredict()
 
+TASK_MODE_d = {
+1: ("ex", "train_test"),
+2: ("ex", "test"),
+3: ("ex", "predict"),
+4: ("ex", "resume"),
+5: ("cc", "train_test"),
+6: ("ex", "splitpredict")
+}
+
+
+TASK, MODE = TASK_MODE_d[3]
 
 # I use "ex" instead of "oie" for task
 # I use "cc" instead of "conj" for task
@@ -36,20 +60,6 @@ else:
 # Do not define capitalized global and PARAMS_D key for the same
 # parameter. Define one or the other but not both
 
-# Possible choices for PARAMS_D
-# 1. prior custom choice
-# 2. ex, train_test
-#    Conductor.train() followed by Conductor.test()
-# 3. ex, test  (appears twice)
-#     Conductor.test()
-# 4. ex, predict (appears twice)
-#     Conductor.predict()
-# 5. ex, resume
-#     Conductor.resume()
-# 6. cc, train_test
-#    Conductor.train() followed by Conductor.test()
-# 7. ex, splitpredict (appears twice)
-#    Conductor.splitpredict()
 
     # define `PARAMS_D` in jupyter notebook before running any
     # subroutines that use it. The file `custom_params_d.txt` gives

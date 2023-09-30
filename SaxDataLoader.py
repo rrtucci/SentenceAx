@@ -1,4 +1,4 @@
-from sax_globals import *
+from sax_params_d import *
 from AllenTool import *
 from transformers import AutoTokenizer
 import spacy
@@ -18,15 +18,7 @@ import nltk
 from copy import deepcopy
 from SaxDataSet import *
 from MInput import *
-
-
-from sax_globals import *
-print("vbghy1", TASK)
-TASK = "ex"
-MODE = "predict"
-from importlib import reload
-print("vbxxc2", TASK)
-reload(sax_globals)
+from sax_params_d import *
 
 
 class SaxDataLoader:
@@ -64,7 +56,7 @@ class SaxDataLoader:
         use_spacy_model: bool
         """
 
-        self.params_d = PARAMS_D
+        self.params_d = PARAMS_D()
         self.auto_tokenizer = auto_tokenizer
         # full encoding is [101, 0, 102], 101=BOS_ILABEL, 102=EOS_ILABEL
         self.pad_ilabel = \
@@ -247,9 +239,9 @@ if __name__ == "__main__":
         #     set_TASK_and_MODE("ex", "test")
 
 
-        print(PARAMS_D)
+        print(PARAMS_D())
         auto = AutoTokenizer.from_pretrained(
-            PARAMS_D["model_str"],
+            PARAMS_D()["model_str"],
             do_lower_case=True,
             use_fast=True,
             data_dir=CACHE_DIR,

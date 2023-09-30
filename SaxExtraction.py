@@ -1,4 +1,4 @@
-from sax_globals import *
+from sax_params_d import *
 from sax_utils import *
 from sax_extraction_utils import *
 import numpy as np

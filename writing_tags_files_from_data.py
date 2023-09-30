@@ -1,4 +1,4 @@
-from sax_globals import *
+from sax_params_d import *
 
 
 def write_tags_file(path,

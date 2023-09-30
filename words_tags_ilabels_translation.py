@@ -28,7 +28,7 @@ NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE 
 CHAIN OF CONVERSIONS
 words->extags, cctags->ilabels->extags->words
 """
-from sax_globals import *
+from sax_params_d import *
 from sax_utils import *
 from SaxExtraction import *
 from CCTree import *

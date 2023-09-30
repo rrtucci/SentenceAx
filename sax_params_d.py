@@ -12,7 +12,7 @@ MODE = ""
 # when doing "cc" only
 # MODE in ("train_test", "resume", "test", "predict", "splitpredict")
 
-# 
+#
 # hparams = hyperparameters,
 # fp = file path
 # params_d = parameters dictionary

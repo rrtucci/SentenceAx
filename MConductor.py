@@ -11,7 +11,7 @@ from time import time
 from Model import *
 from SaxDataLoader import *
 from sax_utils import *
-from sax_globals import *
+from sax_params_d import *
 
 
 class MConductor:
@@ -51,7 +51,7 @@ class MConductor:
 
         """
         self.pred_fname = pred_fname
-        self.params_d = PARAMS_D
+        self.params_d = PARAMS_D()
         self.has_been_saved = False
         self.has_cuda = torch.cuda.is_available()
         warnings.filterwarnings('ignore')
@@ -158,12 +158,12 @@ class MConductor:
 
         # the current log file will have no number prefix,
         # stored ones will.
-        assert os.path.exists(LOG_DIR + "/" + MODE)
-        num_numbered_logs = len(list(glob(LOG_DIR + f'/{MODE}_*')))
+        assert os.path.exists(LOG_DIR() + "/" + MODE)
+        num_numbered_logs = len(list(glob(LOG_DIR() + f'/{MODE}_*')))
         new_id = num_numbered_logs + 1
         print('Retiring current log file by changing its name')
-        print(shutil.move(LOG_DIR + f'/{MODE}',
-                          LOG_DIR + f'/{MODE}_{new_id}'))
+        print(shutil.move(LOG_DIR() + f'/{MODE}',
+                          LOG_DIR() + f'/{MODE}_{new_id}'))
         logger = TensorBoardLogger(
             save_dir=WEIGHTS_DIR,
             name='logs',

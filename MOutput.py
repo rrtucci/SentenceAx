@@ -30,7 +30,7 @@ class MOutput:
     #     lll_ilabel = []
     #     for sample_id in range(self.num_samples):
     #         ll_ilabel = []
-    #         for depth in range(MAX_DEPTH):
+    #         for depth in range(MAX_DEPTH()):
     #             for words in range(self.l_sample[sample_id].
     #
     # def absorb_ll_confi(self, ll_confi):

@@ -1,5 +1,5 @@
 from copy import deepcopy
-from sax_globals import *
+from sax_params_d import *
 import torch
 from collections import OrderedDict
 from MInput import *

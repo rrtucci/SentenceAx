@@ -1,7 +1,7 @@
 from carb_subset.matcher import Matcher
 from carb_subset.carb import Benchmark
 import re
-from sax_globals import *
+from sax_params_d import *
 from sax_utils import *
 from SaxExtraction import *
 from words_tags_ilabels_translation import *

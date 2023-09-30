@@ -20,6 +20,15 @@ from SaxDataSet import *
 from MInput import *
 
 
+from sax_globals import *
+print("vbghy1", TASK)
+TASK = "ex"
+MODE = "predict"
+from importlib import reload
+print("vbxxc2", TASK)
+reload(sax_globals)
+
+
 class SaxDataLoader:
     """
     Classes Example and Field from tt were used in the Openie6 code,
@@ -188,7 +197,7 @@ class SaxDataLoader:
                                       self.use_spacy_model)
 
             # to simulate bucket sort (along with pad_data)
-            train_dataset.sort()
+            # train_dataset.sort()
         return train_dataset, tune_dataset, test_dataset  # , vocab, orig_sents
 
     def get_ttt_dataloaders(self, ttt_kind, pred_in_sents=None):
@@ -230,9 +239,14 @@ class SaxDataLoader:
 
 
 if __name__ == "__main__":
-    def main():
-        TASK = "ex"
-        MODE = "predict"
+
+    def main(no_caching):
+        # if no_caching:
+        #     set_TASK_and_MODE("ex", "predict")
+        # else:
+        #     set_TASK_and_MODE("ex", "test")
+
+
         print(PARAMS_D)
         auto = AutoTokenizer.from_pretrained(
             PARAMS_D["model_str"],
@@ -242,15 +256,17 @@ if __name__ == "__main__":
             add_special_tokens=False,
             additional_special_tokens=UNUSED_TOKENS)
         use_spacy_model = True
-        train_fp = "testing_files/train_dloader.txt"
-        tune_fp = "testing_files/tune_dloader.txt"
-        test_fp = "testing_files/test_dloader.txt"
+        train_fp = "testing_files/extags_train.txt"
+        tune_fp = "testing_files/extags_tune.txt"
+        test_fp = "testing_files/extags_test.txt"
 
         dloader = SaxDataLoader(auto,
                                 train_fp,
                                 tune_fp,
                                 test_fp,
                                 use_spacy_model)
+        train_dataset, tune_dataset, test_dataset = \
+            dloader.get_ttt_datasets()
 
 
-    main()
+    main(True)

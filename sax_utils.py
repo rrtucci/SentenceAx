@@ -41,6 +41,31 @@ def merge_dicts(dominant_d, default_d):
     return new_dict
 
 
+def set_TASK_and_MODE(task, mode):
+    """
+
+    Parameters
+    ----------
+    task: str
+    mode: str
+
+    Returns
+    -------
+    None
+
+    """
+    from importlib import reload
+    if "TASK" not in globals():
+        global TASK
+    TASK = task
+    print("cfvg", TASK)
+    assert TASK in ["ex", "cc"]
+    MODE = globals()["MODE"]
+    MODE = mode
+    import sax_globals
+    reload(sax_globals)
+
+
 def get_words(sent, algo="ss"):
     """
     note: get_words("") = []

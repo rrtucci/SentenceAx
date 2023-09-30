@@ -32,6 +32,7 @@ class SaxDataLoader:
     Attributes
     ----------
     auto_tokenizer: AutoTokenizer
+    pad_ilabel: int
     params_d: dict[str, Any]
     predict_fp: str
     test_fp: str
@@ -114,7 +115,7 @@ class SaxDataLoader:
         cached_test_fp = f'{self.test_fp.split(".")[0]}.{model_str}.pkl'
 
         orig_sents = []
-        if 'predict' in MODE: # no caching used if predict in mode
+        if 'predict' in MODE:  # no caching used if predict in mode
             # no caching used if predict in mode
             if not pred_in_sents:  # predict
                 # if self.params_d["in_fp"] :
@@ -194,6 +195,7 @@ class SaxDataLoader:
 
     def get_ttt_dataloaders(self, ttt_kind, pred_in_sents=None):
         """
+        # this method calls DataLoader
 
         Parameters
         ----------
@@ -208,7 +210,6 @@ class SaxDataLoader:
 
         train_dataset, tune_dataset, test_dataset = \
             self.get_ttt_datasets(pred_in_sents)
-        # this method calls DataLoader
 
         if ttt_kind == "train":
             return DataLoader(train_dataset,
@@ -231,7 +232,6 @@ class SaxDataLoader:
 
 
 if __name__ == "__main__":
-
     def main():
         from pprint import pprint
         pprint(PARAMS_D())
@@ -256,6 +256,11 @@ if __name__ == "__main__":
                                 use_spacy_model)
         train_dataset, tune_dataset, test_dataset = \
             dloader.get_ttt_datasets()
+
+        print("len(train_dataset)=", len(train_dataset))
+        print("len(tune_dataset)=", len(tune_dataset))
+        print("len(test_dataset)=", len(test_dataset))
+
 
     # tried with
     # TASK, MODE = "ex", "predict"

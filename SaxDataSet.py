@@ -13,8 +13,8 @@ class SaxDataSet(Dataset):
     num_samples: int
     num_words: int
     padder: SaxDataPadder
-    xtypes: list[str]
     x: torch.tensor
+    xtypes: list[str]
     y: torch.tensor
 
     """
@@ -103,7 +103,6 @@ if __name__ == "__main__":
               dset.x.shape, np.product(dset.x.shape))
         print("y.shape, y.shape_product=",
               dset.y.shape, np.product(dset.y.shape))
-
 
 
     main()

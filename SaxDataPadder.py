@@ -35,7 +35,7 @@ class SaxDataPadder:
         self.use_spacy_model = use_spacy_model
         self.padded_data_d = None
         self.set_padded_data_d()
-        self.num_samples  = len(self.m_input.l_orig_sent)
+        self.num_samples = len(self.m_input.l_orig_sent)
 
     @staticmethod
     def get_padded_ll_x(unpadded_ll_x, ipad=0):
@@ -44,7 +44,7 @@ class SaxDataPadder:
         Parameters
         ----------
         unpadded_ll_x: list[list[torch.tensor]]
-        ipad: torch.tensor
+        ipad: int
 
         Returns
         -------
@@ -75,6 +75,7 @@ class SaxDataPadder:
         Parameters
         ----------
         unpadded_lll_ilabel: list[list[list[int]]]
+        ipad: int
 
         Returns
         -------
@@ -219,5 +220,6 @@ if __name__ == "__main__":
         # print("pad_token, pad_ilabel=", auto.pad_token, pad_ilabel)
         padder = SaxDataPadder(m_input, pad_ilabel, use_spacy_model)
         padder.print_padded_data_d_shapes()
+
 
     main()

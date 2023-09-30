@@ -1,5 +1,17 @@
 from sax_globals import *
 
+TASK_MODE_d = {
+0: ("", ""),
+1: ("ex", "train_test"),
+2: ("ex", "test"),
+3: ("ex", "predict"),
+4: ("ex", "resume"),
+5: ("cc", "train_test"),
+6: ("ex", "splitpredict")
+}
+
+TASK, MODE = TASK_MODE_d[2]
+
 
 # Possible choices for PARAMS_D
 # 0. "", ""
@@ -16,18 +28,7 @@ from sax_globals import *
 # 6. ex, splitpredict (appears twice)
 #    Conductor.splitpredict()
 
-TASK_MODE_d = {
-0: ("", ""),
-1: ("ex", "train_test"),
-2: ("ex", "test"),
-3: ("ex", "predict"),
-4: ("ex", "resume"),
-5: ("cc", "train_test"),
-6: ("ex", "splitpredict")
-}
 
-
-TASK, MODE = TASK_MODE_d[2]
 
 # I use "ex" instead of "oie" for task
 # I use "cc" instead of "conj" for task

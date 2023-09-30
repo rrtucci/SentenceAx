@@ -27,7 +27,7 @@ TASK_MODE_d = {
 }
 
 
-TASK, MODE = TASK_MODE_d[3]
+TASK, MODE = TASK_MODE_d[2]
 
 # I use "ex" instead of "oie" for task
 # I use "cc" instead of "conj" for task
@@ -223,6 +223,7 @@ def PARAMS_D():
     DEFAULT_PARAMS_D = \
         {
             "batch_size": 32,
+            "build_cache": True,
             "checkpoint_fp": "",
             "cweights": 1,
             "dropout_fun": 0.0,

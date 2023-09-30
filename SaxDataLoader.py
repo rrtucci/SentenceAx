@@ -43,7 +43,7 @@ class SaxDataLoader:
 
     def __init__(self,
                  auto_tokenizer,
-                 train_fp, tune_fp, test_fp,
+                 train_fp, tune_fp, test_fp, predict_fp,
                  use_spacy_model=True):
         """
 
@@ -53,6 +53,7 @@ class SaxDataLoader:
         train_fp: str
         tune_fp: str
         test_fp: str
+        predict_fp: str
         use_spacy_model: bool
         """
 
@@ -62,7 +63,7 @@ class SaxDataLoader:
         self.pad_ilabel = \
             auto_tokenizer.encode(auto_tokenizer.pad_token)[1]
 
-        self.predict_fp = PRED_IN_FP
+        self.predict_fp = predict_fp
         self.train_fp = train_fp
         self.tune_fp = tune_fp
         self.test_fp = test_fp
@@ -108,20 +109,19 @@ class SaxDataLoader:
         # test_fp = self.params_d["test_fp"]
 
         model_str = self.params_d["model_str"].replace("/", "_")
-        cached_train_fp = f'{self.train_fp}.{model_str}.pkl'
-        cached_tune_fp = f'{self.tune_fp}.{model_str}.pkl'
-        cached_test_fp = f'{self.test_fp}.{model_str}.pkl'
+        cached_train_fp = f'{self.train_fp.split(".")[0]}.{model_str}.pkl'
+        cached_tune_fp = f'{self.tune_fp.split(".")[0]}.{model_str}.pkl'
+        cached_test_fp = f'{self.test_fp.split(".")[0]}.{model_str}.pkl'
 
         orig_sents = []
-        if 'predict' in MODE:
+        if 'predict' in MODE: # no caching used if predict in mode
             # no caching used if predict in mode
             if not pred_in_sents:  # predict
                 # if self.params_d["in_fp"] :
                 #     predict_fp = self.params_d["in_fp"]
                 # else:
                 #     predict_fp = self.params_d["predict_fp"]
-                # will set predict_fp = PRED_IN_FP
-                with open(PRED_IN_FP, "r") as f:
+                with open(self.predict_fp, "r") as f:
                     predict_lines = f.readlines()
 
                 pred_in_sents = []
@@ -246,11 +246,13 @@ if __name__ == "__main__":
         train_fp = "testing_files/extags_train.txt"
         tune_fp = "testing_files/extags_tune.txt"
         test_fp = "testing_files/extags_test.txt"
+        predict_fp = test_fp
 
         dloader = SaxDataLoader(auto,
                                 train_fp,
                                 tune_fp,
                                 test_fp,
+                                predict_fp,
                                 use_spacy_model)
         train_dataset, tune_dataset, test_dataset = \
             dloader.get_ttt_datasets()

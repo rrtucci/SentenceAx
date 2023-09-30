@@ -36,8 +36,6 @@ EXTAGS_TRAIN_FP = 'input_data/openie-data/openie4_labels'
 EXTAGS_TUNE_FP = 'input_data/carb-data/dev.txt'
 EXTAGS_TEST_FP = 'input_data/carb-data/test.txt'
 
-# sentences used for prediction
-PRED_IN_FP = "carb_subset/data/carb_sentences.txt"
 # used by AutoModel and AutoTokenizer
 CACHE_DIR = 'input_data/pretrained_cache'
 WEIGHTS_DIR = "weights"

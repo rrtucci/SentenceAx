@@ -3,14 +3,36 @@ from words_tags_ilabels_translation import *
 
 
 class MOutput:
-    def __init__(self):
-        self.num_samples = None
-        self.l_orig_sent = []
-        self.lll_ilabel = []
+    """
 
-        self.ll_confi= []
-        self.loss = None
-            
+    Attributes
+    ----------
+    l_orig_sent: list[str]
+    ll_confi: list[list[float]]
+    lll_ilabel: list[list[list[int]]]
+    loss: float
+    """
+
+    def __init__(self,
+                 l_orig_sent,
+                 lll_ilabel_10,
+                 ll_confi_10,
+                 loss_10):
+        """
+
+        Parameters
+        ----------
+        l_orig_sent
+        lll_ilabel_10
+        ll_confi_10
+        loss_10
+        """
+        self.l_orig_sent = l_orig_sent
+        self.lll_ilabel = lll_ilabel_10.to_list()
+
+        self.ll_confi = ll_confi_10.to_list()
+        self.loss = float(loss_10)
+
     # def set_l_orig_sent(self, l_orig_sent):
     #     for k, orig_sent in enumerate(l_orig_sent):
     #         self.l_sample[k].orig_sent = orig_sent
@@ -49,34 +71,28 @@ class MOutput:
     #         self.num_samples = len(self.ll_confi)
     #         self.absorb_ll_confi(self.ll_confi)
 
-
     def to_cpu(self):
-        self.l_orig_sent= self.l_orig_sent.cpu()
+        self.l_orig_sent = self.l_orig_sent.cpu()
         self.ll_confi = self.ll_confi.cpu()
         self.lll_ilabel = self.lll_ilabel.cpu()
 
-    def get_l_orig_sentL(self):
-        return [self.l_orig_sent[k] + UNUSED_TOKENS_STR
-                for k in range(len(self.l_orig_sent))]
-
-    def get_lll_word(self,type):
-        if type=="ex":
-            trans_fun = translate_ilabels_to_words_via_extags
-        elif type=="cc":
-            trans_fun = translate_ilabels_to_words_via_cctags
+    def get_lll_word(self, task):
+        if task == "ex":
+            translator = translate_ilabels_to_words_via_extags
+        elif task == "cc":
+            translator = translate_ilabels_to_words_via_cctags
         else:
             assert False
-        l_orig_sentL = self.get_l_orig_sentL()
+        l_orig_sentL = redoL(self.l_orig_sent)
         num_samples = len(self.lll_ilabel)
         num_depths = len(self.lll_ilabel[0])
-        sent_len = len(self.lll_ilabel[0][0])
+        # sent_len = len(self.lll_ilabel[0][0])
         lll_word = []
         for sam in range(num_samples):
-            ll_word=[]
+            ll_word = []
             for depth in range(num_depths):
                 ll_word.append(
-                    trans_fun(self.lll_ilabel[sam][depth], l_orig_sentL))
+                    translator(self.lll_ilabel[sam][depth],
+                               l_orig_sentL[sam]))
             lll_word.append(ll_word)
         return lll_word
-
-        

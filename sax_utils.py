@@ -145,34 +145,39 @@ def get_num_ttt_sents(num_sents, ttt_fractions):
     return num_train_sents, num_tune_sents, num_test_sents
 
 
-def unL(osentL):
+def undoL(x):
     """
 
     Parameters
     ----------
-    osentL: str
+    x: str|list[str]
 
     Returns
     -------
-    str
+    str|list[str]
 
     """
-    return osentL.split("[unused")[0].strip()
+    if type(x) == str:
+        return x.split("[unused")[0].strip()
+    else:
+        return [a.split("[unused")[0].strip() for a in x]
 
 
-def unL_l(l_osentL):
+def redoL(x):
     """
 
     Parameters
     ----------
-    l_osentL: list[str]
+    x: str|list[str]
 
     Returns
     -------
-    list[str]
-
+    str|list[str]
     """
-    return [unL(osentL) for osentL in l_osentL]
+    if type(x) == str:
+        return x + UNUSED_TOKENS_STR
+    else:
+        return [a + UNUSED_TOKENS_STR for a in x]
 
 
 # Don't use, even if the inner dimmension of lll_ilabel

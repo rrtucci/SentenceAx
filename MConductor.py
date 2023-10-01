@@ -85,10 +85,10 @@ class MConductor:
         self.pad_ilabel = self.encode(self.auto_tokenizer.pad_token)
 
         self.dloader = SaxDataLoader(self.auto_tokenizer,
-                                  self.pad_ilabel,
-                                  self.train_fp,
-                                  self.tune_fp,
-                                  self.test_fp)
+                                     self.pad_ilabel,
+                                     self.train_fp,
+                                     self.tune_fp,
+                                     self.test_fp)
 
         self.constraints_str_d = dict()
 
@@ -159,7 +159,8 @@ class MConductor:
         # the current log file will have no number prefix,
         # stored ones will.
         assert os.path.exists(self.params.log_dir() + "/" + self.params.mode)
-        num_numbered_logs = len(list(glob(self.params.log_dir() + f'/{self.params.mode}_*')))
+        num_numbered_logs = len(
+            list(glob(self.params.log_dir() + f'/{self.params.mode}_*')))
         new_id = num_numbered_logs + 1
         print('Retiring current log file by changing its name')
         print(shutil.move(self.params.log_dir() + f'/{self.params.mode}',
@@ -371,7 +372,7 @@ class MConductor:
         trainer.test(
             self.model,
             test_dataloaders=test_dloader if
-                test_dloader else self.dloader.get_ttt_dataloaders("test"))
+            test_dloader else self.dloader.get_ttt_dataloaders("test"))
         end_time = time()
         print(f'Total Time taken = {(end_time - start_time) / 60:2f} minutes')
 
@@ -441,8 +442,7 @@ class MConductor:
 
         self.predict(test_dloader=pred_test_dataloader)
 
-
-        path = PREDICTIONS_DIR + "/" + self.pred_fname +"-extags.txt"
+        path = PREDICTIONS_DIR + "/" + self.pred_fname + "-extags.txt"
         with_confis = False
         # Does same thing as Openie6's run.get_labels()
         self.write_extags_file_from_predictions()
@@ -574,11 +574,10 @@ class MConductor:
         """
         bout = self.model.batch_out
         num_samples = len(bout.l_orig_sent)
-        l_sentL= [bout.l_orig_sent[k] + UNUSED_TOKENS_STR
-                  for k in range(num_samples)]
+        l_sentL = [bout.l_orig_sent[k] + UNUSED_TOKENS_STR
+                   for k in range(num_samples)]
         lll_ilabel = bout.lll_ilabel
         lll_word_loc = []
-
 
         lines = []
         sam_id0 = 0
@@ -586,13 +585,13 @@ class MConductor:
         word_id0 = 0
 
         for sam_id in range(num_samples):
-            words = get_words(unL(l_sentL[sam_id]))
+            words = get_words(undoL(l_sentL[sam_id]))
             lll_word_loc[sam_id].append(list(range(len(words))))
 
-            lines.append('\n' + unL(l_sentL[sam_id]))
+            lines.append('\n' + undoL(l_sentL[sam_id]))
             for ex_id in range(len(lll_word_loc[sam_id])):
-                assert len(lll_word_loc[sam_id][ex_id])==\
-                    len(bout.l_orig_sent[sam_id0])
+                assert len(lll_word_loc[sam_id][ex_id]) == \
+                       len(bout.l_orig_sent[sam_id0])
 
                 sentL = l_sentL[sam_id0].strip() + UNUSED_TOKENS_STR
                 ll_ilabel = lll_ilabel[sam_id]
@@ -611,7 +610,7 @@ class MConductor:
                     ilabels = ilabels[:-3]
                     # 1: arg1, 2: rel
                     if 1 not in pred_ilabels and 2 not in pred_ilabels:
-                        continue # not a pass
+                        continue  # not a pass
 
                     str_extags = \
                         ' '.join([ILABEL_TO_EXTAG[i] for i in ilabels])

@@ -854,7 +854,7 @@ class SaxExtraction:
         """
         osent_to_exs = {}
         for osentL, exs in osentL_to_exs.items():
-            osent = unL(osentL)
+            osent = undoL(osentL)
             osent_to_exs[osent] = exs
         return osent_to_exs
         # Don't use this, even if in the output of this method, the inner
@@ -863,7 +863,7 @@ class SaxExtraction:
 
         # osent_to_exs = {}
         # for osentL, exs in osentL_to_exs.items():
-        #     osent = unL(osentL)
+        #     osent = undoL(osentL)
         #     new_exs = []
         #     for ex in exs:
         #         new_ex = SaxExtraction(

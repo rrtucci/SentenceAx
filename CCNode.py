@@ -125,7 +125,7 @@ class CCNode:
                 span_pair = (self.spans[i - 1], self.spans[i])
                 # there must be at least one point between the
                 # 2 spans, or else the 2 spans would be 1
-                assert span_pair[0][1] <= mid_pair_id\
+                assert span_pair[0][1] <= mid_pair_id \
                        < span_pair[1][0]
                 break
         if check_answer and span_pair is None:

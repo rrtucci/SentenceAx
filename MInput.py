@@ -316,7 +316,7 @@ class MInput:
                     l_osent_ilabels.append(deepcopy(osent_ilabels))
                     # print("dfeg", l_osent_ilabels)
                     osent_ilabels = []
-                    orig_sent = unL(sentL)
+                    orig_sent = undoL(sentL)
                     l_orig_sent.append(orig_sent)
 
                     # note that if li=[2,3]

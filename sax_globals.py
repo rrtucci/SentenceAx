@@ -62,7 +62,7 @@ BOS_ILABEL = 101  # bos = begin of sentence
 EOS_ILABEL = 102  # eos = end of sentence
 
 NUM_ILABELS = 6
-ILABELING_LEN = 300
+ILABELLING_DIM = 300
 
 EXTAG_TO_ILABEL = {'NONE': 0, 'ARG1': 1, 'REL': 2, 'ARG2': 3,
                    'LOC': 4, 'TIME': 4, 'TYPE': 5, 'ARGS': 3}

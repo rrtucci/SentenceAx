@@ -126,7 +126,6 @@ class Model(pl.LightningModule):
                 self.base_model.encoder.layer[num_encoder_layers:num_layers]
 
         else:
-            self.base_model.encoder.layer = self.base_model.encoder.layer
             self.iterative_transformer = []
 
         self.dropout_fun = nn.Dropout(p=DROPOUT)  # 0.0
@@ -147,9 +146,9 @@ class Model(pl.LightningModule):
         self.ilabel_embeddings = nn.Embedding(NUM_ICODES,  # 100
                                               self.hidden_size)
         self.merge_layer = nn.Linear(self.hidden_size,
-                                     ILABELING_LEN)  # 300
-        self.ilabelling_layer = nn.Linear(ILABELING_LEN,  # 300
-                                          NUM_ILABELS)  # 6
+                                     ILABELLING_DIM)  # 300
+        self.compressing_layer = nn.Linear(ILABELLING_DIM,  # 300
+                                           NUM_ILABELS)  # 6
 
         self.loss_fun = nn.CrossEntropyLoss()
 
@@ -180,40 +179,34 @@ class Model(pl.LightningModule):
         list[Adam|AdamW]
 
         """
-        # self.named_parameters() is Iterator[Tuple[str, Parameter]]
-        all_param_pairs = list(self.named_parameters())
+        # self.named_parameters() is list[Tuple[str, Parameter]]
+        all_pairs = list(self.named_parameters())
+
         # opt= optimizer
-        # p = parameter
-        opt_p_names = ["bias", "gamma", "beta"]
+        # x = parameter
+        # pair = (xname, x)
 
-        def p_in_overlap_of_lists(p, li1, li2):
-            return any(p in li1 for p in li2)
+        def base_model_pairs():
+            return [pair for pair in all_pairs if "base_model" in pair[0]]
 
-        def p_not_in_overlap_of_lists(p, li1, li2):
-            return not any(p in li1 for p in li2)
+        def non_base_model_pairs():
+            return [pair for pair in all_pairs if "base_model" not in pair[0]]
 
-        def not_in_overlap(pair):
-            p_names, p = pair
-            return p_not_in_overlap_of_lists(p, p_names, opt_p_names) and \
-                'base_model' in p_names
+        xnames = ["bias", "gamma", "beta"]
 
-        def in_overlap(pair):
-            p_names, p = pair
-            return p_in_overlap_of_lists(p, p_names, opt_p_names) and \
-                'base_model' in p_names
-
-        def basic(pair):
-            p_names, p = pair
-            return 'base_model' not in p_names
+        def pair_in_xnames(pair):
+            return any((pair[0] in xname) for xname in xnames)
 
         opt_param_d = [
-            {"params": [pair[1] for pair in all_param_pairs if not_in_overlap(pair)],
+            {"params": [pair[1] for pair in base_model_pairs() if
+                        not pair_in_xnames(pair)],
              "weight_decay_rate": 0.01,
              'lr': self.params.d["lr"]},
-            {"params": [pair[1] for pair in all_param_pairs if in_overlap(pair)],
+            {"params": [pair[1] for pair in base_model_pairs() if
+                        pair_in_xnames(pair)],
              "weight_decay_rate": 0.0,
              'lr': self.params.d["lr"]},
-            {"params": [pair[1] for pair in all_param_pairs if basic(pair)],
+            {"params": [pair[1] for pair in non_base_model_pairs()],
              'lr': self.params.d["lr"]}
         ]
 
@@ -327,7 +320,7 @@ class Model(pl.LightningModule):
                 word_hidden_states += ilabel_embeddings
 
             word_hidden_states = self.merge_layer(word_hidden_states)
-            word_confis = self.ilabelling_layer(word_hidden_states)
+            word_confis = self.compressing_layer(word_hidden_states)
             ll_word_confi.append(word_confis)
 
             d += 1

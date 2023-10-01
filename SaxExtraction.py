@@ -1,4 +1,4 @@
-from sax_params_d import *
+from Params import *
 from sax_utils import *
 from sax_extraction_utils import *
 import numpy as np
@@ -946,7 +946,7 @@ class SaxExtraction:
 
         # args = ' '.join(args_words)
         # loc_time = ' '.join(l_loc_time)
-        # if not self.params_d["no_lt"]: # no_lt = no loc time
+        # if not self.params.d["no_lt"]: # no_lt = no loc time
         #     arg2 = arg2 + ' ' + loc_time + ' ' + args
 
         extraction = SaxExtraction(orig_sentL,

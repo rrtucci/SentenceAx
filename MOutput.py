@@ -3,8 +3,7 @@ from words_tags_ilabels_translation import *
 
 
 class MOutput:
-    def __init__(self, task):
-        self.task = task
+    def __init__(self):
         self.num_samples = None
         self.l_orig_sent = []
         self.lll_ilabel = []
@@ -30,7 +29,7 @@ class MOutput:
     #     lll_ilabel = []
     #     for sample_id in range(self.num_samples):
     #         ll_ilabel = []
-    #         for depth in range(MAX_DEPTH()):
+    #         for depth in range(NUM_DEPTHS()):
     #             for words in range(self.l_sample[sample_id].
     #
     # def absorb_ll_confi(self, ll_confi):
@@ -69,12 +68,12 @@ class MOutput:
             assert False
         l_orig_sentL = self.get_l_orig_sentL()
         num_samples = len(self.lll_ilabel)
-        max_depth = len(self.lll_ilabel[0])
+        num_depths = len(self.lll_ilabel[0])
         sent_len = len(self.lll_ilabel[0][0])
         lll_word = []
         for sam in range(num_samples):
             ll_word=[]
-            for depth in range(max_depth):
+            for depth in range(num_depths):
                 ll_word.append(
                     trans_fun(self.lll_ilabel[sam][depth], l_orig_sentL))
             lll_word.append(ll_word)

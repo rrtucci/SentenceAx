@@ -3,7 +3,7 @@ import random
 import numpy as np
 import torch
 import nltk
-from sax_params_d import *
+from Params import *
 from math import floor
 from copy import copy
 

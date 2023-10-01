@@ -1,4 +1,4 @@
-from sax_params_d import *
+from Params import *
 import spacy
 from sax_utils import *
 from transformers import AutoTokenizer
@@ -21,7 +21,6 @@ class MInput:
     lll_ilabel: list[list[list[int]]]
     num_samples: int
     spacy_model: spacy.Language
-    task: str
     use_spacy_model: bool
     verbose: bool
 
@@ -29,7 +28,6 @@ class MInput:
 
     def __init__(self,
                  in_fp,
-                 task,
                  auto_tokenizer,
                  use_spacy_model,
                  verbose=False):
@@ -38,12 +36,10 @@ class MInput:
         Parameters
         ----------
         in_fp: str
-        task: str
         auto_tokenizer: AutoTokenizer
         use_spacy_model: bool
         verbose: bool
         """
-        self.task = task
         self.auto_tokenizer = auto_tokenizer
         self.use_spacy_model = use_spacy_model
         self.verbose = verbose
@@ -51,12 +47,12 @@ class MInput:
         self.num_samples = None
         # shape=(num_samples,)
         self.l_orig_sent = []
-        # shape=(num_samples, max_depth=num_ex, num_ilabels)
+        # shape=(num_samples, num_depths=num_ex, num_ilabels)
         self.lll_ilabel = []
 
         # following lists have
         # shape is (num_samples, encoding length =100)
-        # it's not (num_samples, max_depth=num_ex)
+        # it's not (num_samples, num_depths=num_ex)
         # each word of orig_sent may be encoded with more than one ilabel
         # os = original sentence
         self.l_osent_wstart_locs = []  # shape=(num_samples, encoding len)
@@ -376,7 +372,6 @@ class MInput:
 if __name__ == "__main__":
     def main(verbose):
         in_fp = "testing_files/extags_test.txt"
-        task = "test"
         model_str = "bert-base-uncased"
         auto_tokenizer = AutoTokenizer.from_pretrained(
             model_str,
@@ -387,7 +382,6 @@ if __name__ == "__main__":
             additional_special_tokens=UNUSED_TOKENS)
         use_spacy_model = True
         m_input = MInput(in_fp,
-                         task,
                          auto_tokenizer,
                          use_spacy_model,
                          verbose=verbose)

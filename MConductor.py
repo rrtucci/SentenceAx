@@ -11,7 +11,7 @@ from time import time
 from Model import *
 from SaxDataLoader import *
 from sax_utils import *
-from sax_params_d import *
+from Params import *
 
 
 class MConductor:
@@ -45,31 +45,31 @@ class MConductor:
 
     """
 
-    def __init__(self, pred_fname=None):
+    def __init__(self, params, pred_fname=None):
         """
 
 
         """
         self.pred_fname = pred_fname
-        self.params_d = PARAMS_D()
+        self.params = params
         self.has_been_saved = False
         self.has_cuda = torch.cuda.is_available()
         warnings.filterwarnings('ignore')
 
-        if TASK == 'cc':
+        if self.params.task == 'cc':
             self.train_fp = CCTAGS_TRAIN_FP
             self.tune_fp = CCTAGS_TUNE_FP
             self.test_fp = CCTAGS_TEST_FP
-        elif TASK == 'ex':
+        elif self.params.task == 'ex':
             self.train_fp = EXTAGS_TRAIN_FP
             self.tune_fp = EXTAGS_TUNE_FP
             self.test_fp = EXTAGS_TEST_FP
 
         self.checkpoint_callback = self.get_checkpoint_callback()
 
-        do_lower_case = ('uncased' in self.params_d["model_str"])
+        do_lower_case = ('uncased' in self.params.d["model_str"])
         self.auto_tokenizer = AutoTokenizer.from_pretrained(
-            self.params_d["model_str"],
+            self.params.d["model_str"],
             do_lower_case=do_lower_case,
             use_fast=True,
             data_dir=CACHE_DIR,
@@ -111,12 +111,12 @@ class MConductor:
         """
         return ModelCheckpoint(
             filepath=WEIGHTS_DIR + "/" +
-                     TASK + '_model/{epoch:02d}_{eval_acc:.3f}',
+                     self.params.task + '_model/{epoch:02d}_{eval_acc:.3f}',
             verbose=True,
             monitor='eval_acc',
             mode='max',
-            save_top_k=self.params_d["save_k"] \
-                if not self.params_d["debug"] else 0,
+            save_top_k=self.params.d["save_k"] \
+                if not self.params.d["debug"] else 0,
             period=0)
 
     def get_all_checkpoint_paths(self):
@@ -127,8 +127,8 @@ class MConductor:
         -------
 
         """
-        if self.params_d["checkpoint_fp"]:
-            return [self.params_d["checkpoint_fp"]]
+        if self.params.d["checkpoint_fp"]:
+            return [self.params.d["checkpoint_fp"]]
 
         else:
             return glob(WEIGHTS_DIR + '/*.ckpt')
@@ -158,16 +158,16 @@ class MConductor:
 
         # the current log file will have no number prefix,
         # stored ones will.
-        assert os.path.exists(LOG_DIR() + "/" + MODE)
-        num_numbered_logs = len(list(glob(LOG_DIR() + f'/{MODE}_*')))
+        assert os.path.exists(self.params.log_dir() + "/" + self.params.mode)
+        num_numbered_logs = len(list(glob(self.params.log_dir() + f'/{self.params.mode}_*')))
         new_id = num_numbered_logs + 1
         print('Retiring current log file by changing its name')
-        print(shutil.move(LOG_DIR() + f'/{MODE}',
-                          LOG_DIR() + f'/{MODE}_{new_id}'))
+        print(shutil.move(self.params.log_dir() + f'/{self.params.mode}',
+                          self.params.log_dir() + f'/{self.params.mode}_{new_id}'))
         logger = TensorBoardLogger(
             save_dir=WEIGHTS_DIR,
             name='logs',
-            version=MODE + '.part')
+            version=self.self.params.mode + '.part')
         return logger
 
     def get_trainer(self, logger, checkpoint_path,
@@ -202,24 +202,24 @@ class MConductor:
 
         if use_minimal:
             trainer = Trainer(
-                gpus=self.params_d["gpus"],
+                gpus=self.params.d["gpus"],
                 logger=logger,
                 resume_from_checkpoint=checkpoint_path)
         else:
             trainer = Trainer(
                 accumulate_grad_batches= \
-                    int(self.params_d["accumulate_grad_batches"]),
+                    int(self.params.d["accumulate_grad_batches"]),
                 checkpoint_callback=self.checkpoint_callback,
                 logger=logger,
-                max_epochs=self.params_d["epochs"],
-                min_epochs=self.params_d["epochs"],
+                max_epochs=self.params.d["epochs"],
+                min_epochs=self.params.d["epochs"],
                 resume_from_checkpoint= \
-                    checkpoint_path if MODE == "resume" else None,
+                    checkpoint_path if self.params.mode == "resume" else None,
                 show_progress_bar=True,
-                **self.params_d)
+                **self.params.d)
         return trainer
 
-    def update_params_d(self, checkpoint_path):
+    def update_params(self, checkpoint_path):
         """
         similar to Openie6.run.test() and data.override_args()
 
@@ -233,14 +233,14 @@ class MConductor:
 
         """
         if self.has_cuda:
-            loaded_params_d = torch.load(checkpoint_path)["params_d"]
+            loaded_params = torch.load(checkpoint_path)["params"]
         else:
             map_loc = torch.device('cpu')
-            loaded_params_d = torch.load(
-                checkpoint_path, map_location=map_loc)["params_d"]
+            loaded_params = torch.load(
+                checkpoint_path, map_location=map_loc)["params"]
 
-        self.params_d = merge_dicts(loaded_params_d,
-                                    default_d=self.params_d)
+        self.params.d = merge_dicts(loaded_params.d,
+                                    default_d=self.params.d)
 
     def train(self):
         """
@@ -250,8 +250,8 @@ class MConductor:
         -------
 
         """
-        # train is the only mode that doesn't require update_params_d()
-        self.model = Model(self.params_d, self.auto_tokenizer)
+        # train is the only mode that doesn't require update_params()
+        self.model = Model(self.params.d, self.auto_tokenizer)
         logger = self.get_logger()
         trainer = self.get_trainer(logger,
                                    checkpoint_path=None,
@@ -268,19 +268,15 @@ class MConductor:
         similar to Openie6.run.resume()
 
 
-        Parameters
-        ----------
-        final_changes_params_d
-
         Returns
         -------
 
         """
         checkpoint_path = self.get_checkpoint_path()
         # train is the only mode that doesn't require
-        # update_params_d() because it is called first
-        self.update_params_d(checkpoint_path)
-        self.model = Model(self.params_d, self.auto_tokenizer)
+        # update_params() because it is called first
+        self.update_params(checkpoint_path)
+        self.model = Model(self.params.d, self.auto_tokenizer)
         logger = self.get_logger()
         trainer = self.get_trainer(logger,
                                    checkpoint_path,
@@ -305,15 +301,15 @@ class MConductor:
 
         """
         checkpoint_path = self.get_checkpoint_path()
-        if 'train' not in MODE:
+        if 'train' not in self.params.mode:
             # train is the only mode that doesn't require
-            # update_params_d() because it is called first
-            self.update_params_d(checkpoint_path)
+            # update_params() because it is called first
+            self.update_params(checkpoint_path)
 
-        self.model = Model(self.params_d, self.auto_tokenizer)
-        if TASK == "ex" and self.ex_fix_d:
+        self.model = Model(self.params.d, self.auto_tokenizer)
+        if self.params.task == "ex" and self.ex_fix_d:
             self.model.metric.fix_d = self.ex_fix_d
-        if TASK == "cc" and self.cc_fix_d:
+        if self.params.task == "cc" and self.cc_fix_d:
             self.model.metric.fix_d = self.cc_fix_d
 
         logger = self.get_logger()
@@ -352,18 +348,18 @@ class MConductor:
         #             val_dataloader, test_dataloader, all_sentences,
         #             mapping=None,
         #             conj_word_mapping=None):
-        if TASK == 'cc':
-            self.params_d["checkpoint_fp"] = self.params_d["cc_model_fp"]
-        if TASK == 'ex':
-            self.params_d["checkpoint_fp"] = self.params_d["ex_model_fp"]
+        if self.params.task == 'cc':
+            self.params.d["checkpoint_fp"] = self.params.d["cc_model_fp"]
+        if self.params.task == 'ex':
+            self.params.d["checkpoint_fp"] = self.params.d["ex_model_fp"]
 
         checkpoint_path = self.get_checkpoint_path()
-        self.update_params_d(checkpoint_path)
-        self.model = Model(self.params_d, self.auto_tokenizer)
+        self.update_params(checkpoint_path)
+        self.model = Model(self.params.d, self.auto_tokenizer)
 
-        if TASK == "ex" and self.ex_fix_d:
+        if self.params.task == "ex" and self.ex_fix_d:
             self.model.metric.fix_d = self.ex_fix_d
-        elif TASK == "cc" and self.cc_fix_d:
+        elif self.params.task == "cc" and self.cc_fix_d:
             self.model.metric.fix_d = self.cc_fix_d
 
         logger = None
@@ -383,10 +379,10 @@ class MConductor:
         self.ex_fix_d = {}
         self.cc_fix_d = {}
         if not PRED_IN_FP:
-            self.params_d["task"] = TASK = 'cc'
-            self.params_d["checkpoint_fp"] = self.params_d["cc_model_fp"]
-            self.params_d["model_str"] = 'bert-base-cased'
-            self.params_d["mode"] = MODE = 'predict'
+            self.params.d["task"] = self.params.task = 'cc'
+            self.params.d["checkpoint_fp"] = self.params.d["cc_model_fp"]
+            self.params.d["model_str"] = 'bert-base-cased'
+            self.params.d["mode"] = self.params.mode = 'predict'
             self.predict()
             l_pred_str = self.cc_l_pred_str
             ll_spanned_loc = self.cc_ll_spanned_loc
@@ -437,9 +433,9 @@ class MConductor:
         self.l_orig_sentL = l_orig_sentL
 
     def splitpredict_do_ex_second(self):
-        self.params_d["task"] = TASK = 'ex'
-        self.params_d["checkpoint_fp"] = self.params_d["ex_model_fp"]
-        self.params_d["model_str"] = 'bert-base-cased'
+        self.params.d["task"] = self.params.task = 'ex'
+        self.params.d["checkpoint_fp"] = self.params.d["ex_model_fp"]
+        self.params.d["model_str"] = 'bert-base-cased'
         pred_test_dataloader = self.dloader.get_ttt_dataloaders(
             "test", self.l_pred_sentL)
 
@@ -452,7 +448,7 @@ class MConductor:
         self.write_extags_file_from_predictions()
 
     # def splitpredict_do_rescoring(self):
-    #     self.params_d["write_allennlp"] = True
+    #     self.params.d["write_allennlp"] = True
     #     print()
     #     print("Starting re-scoring ...")
     #     print()
@@ -494,7 +490,7 @@ class MConductor:
     #         if line_i in sentence_line_nums:
     #             exts = sorted(exts, reverse=True,
     #                           key=lambda x: float(x.split()[0][:-1]))
-    #             exts = exts[:self.params_d["num_extractions"]]
+    #             exts = exts[:self.params.d["num_extractions"]]
     #             all_predictions.append(sentence_str + ''.join(exts))
     #             sentence_str = f'{sentence}\n'
     #             exts = []
@@ -518,7 +514,7 @@ class MConductor:
     #                                    confi=math.exp(confi))
     #         extraction.arg1 = arg1
     #         extraction.arg2 = arg2
-    #         if self.params_d["type"] == 'sentences':
+    #         if self.params.d["type"] == 'sentences':
     #             ext_str = extraction.get_simple_sent() + '\n'
     #         else:
     #             ext_str = extraction.get_simple_sent() + '\n'
@@ -526,7 +522,7 @@ class MConductor:
     #
     #     exts = sorted(exts, reverse=True,
     #                   key=lambda x: float(x.split()[0][:-1]))
-    #     exts = exts[:self.params_d["num_extractions"]]
+    #     exts = exts[:self.params.d["num_extractions"]]
     #     all_predictions.append(sentence_str + ''.join(exts))
     #
     #     if line_i + 1 in no_extractions:
@@ -556,7 +552,7 @@ class MConductor:
 
         self.splitpredict_do_cc_first()
         self.splitpredict_do_ex_second()
-        if self.params_d["rescoring"]:
+        if self.params.d["rescoring"]:
             # self.splitpredict_do_rescoring()
             print("rescoring not implented yet")
 

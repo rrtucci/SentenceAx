@@ -1,5 +1,5 @@
 from copy import deepcopy
-from sax_params_d import *
+from Params import *
 import torch
 from collections import OrderedDict
 from MInput import *
@@ -201,7 +201,6 @@ class SaxDataPadder:
 if __name__ == "__main__":
     def main():
         in_fp = "testing_files/extags_test.txt"
-        task = "test"
         model_str = "bert-base-uncased"
         auto = AutoTokenizer.from_pretrained(
             model_str,
@@ -212,7 +211,6 @@ if __name__ == "__main__":
             additional_special_tokens=UNUSED_TOKENS)
         use_spacy_model = True
         m_input = MInput(in_fp,
-                         task,
                          auto,
                          use_spacy_model)
         # full encoding is [101, 0, 102], 101=BOS_ILABEL, 102=EOS_ILABEL

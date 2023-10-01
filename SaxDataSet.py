@@ -9,7 +9,7 @@ class SaxDataSet(Dataset):
 
     Attributes
     ----------
-    max_depth: int
+    num_depths: int
     num_samples: int
     num_words: int
     padder: SaxDataPadder
@@ -43,7 +43,7 @@ class SaxDataSet(Dataset):
         self.padder = SaxDataPadder(m_input, pad_ilabel, use_spacy_model)
         data_d = self.padder.padded_data_d
 
-        self.num_samples, self.max_depth, self.num_words = \
+        self.num_samples, self.num_depths, self.num_words = \
             data_d["lll_ilabel"].shape
 
         self.xtypes = [name for name in data_d.keys() if name != "lll_ilabel"]
@@ -79,7 +79,6 @@ class SaxDataSet(Dataset):
 if __name__ == "__main__":
     def main():
         in_fp = "testing_files/extags_test.txt"
-        task = "test"
         model_str = "bert-base-uncased"
         auto = AutoTokenizer.from_pretrained(
             model_str,
@@ -90,7 +89,6 @@ if __name__ == "__main__":
             additional_special_tokens=UNUSED_TOKENS)
         use_spacy_model = True
         m_input = MInput(in_fp,
-                         task,
                          auto,
                          use_spacy_model)
         # full encoding is [101, 0, 102], 101=BOS_ILABEL, 102=EOS_ILABEL

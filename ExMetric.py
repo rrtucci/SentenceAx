@@ -1,7 +1,7 @@
 from carb_subset.matcher import Matcher
 from carb_subset.carb import Benchmark
 import re
-from sax_params_d import *
+from Params import *
 from sax_utils import *
 from SaxExtraction import *
 from words_tags_ilabels_translation import *
@@ -85,13 +85,13 @@ class ExMetric:
         self.osentL_to_exs = {}
         self.score_d = {'carb_auc': 0.0, 'carb_f1': 0.0, 'carb_sum': 0.0}
 
-    def get_score_d(self, mode, do_reset=True):
+    def get_score_d(self, ttt, do_reset=True):
         """
         similar to Openie6.metric.Carb.get_metric()
         
         Parameters
         ----------
-        mode: str
+        ttt: str
         do_reset: bool
 
         Returns
@@ -123,9 +123,9 @@ class ExMetric:
         # no /dev/null in Windows
         # out_fp = "/dev/null"
         out_fp = "dev_null.txt"
-        if mode == "tune":
+        if ttt == "tune":
             bmark = self.tune_fpbenchmark
-        elif mode == 'test':
+        elif ttt == 'test':
             bmark = self.test_benchmark
         else:
             assert False
@@ -142,7 +142,7 @@ class ExMetric:
             'carb_f1': optimal_f1_point[2],
             'carb_last_f1': last_f1_point[2]}
         score_d = self.score_d
-        if mode == "tune" and do_reset:
+        if ttt == "tune" and do_reset:
             # this resets score_d
             self.reset()
         return score_d
@@ -158,12 +158,12 @@ if __name__ == "__main__":
     #     osent_to_exs = SaxExtraction.shorten_osentL_to_exs(
     #         at.osentL_to_exs)
     #     ex_met = ExMetric()
-    #     mode = "test"
+    #     ttt = "test"
     #     pred_l_osent, pred_lll_ilabel, pred_ll_confi = \
     #         AllenTool.get_lll_ilabel_from_osent2_to_exs(osent_to_exs)
     #
     #     ex_met(pred_l_osent, pred_lll_ilabel, pred_ll_confi)
-    #     score_d = ex_met.get_score_d(mode, do_reset=True)
+    #     score_d = ex_met.get_score_d(ttt, do_reset=True)
     #     print(score_d)
 
     def main2():
@@ -176,8 +176,8 @@ if __name__ == "__main__":
         ex_met = ExMetric(sax_osentL_to_exs)
         # unnecessary
         # ex_met()
-        mode = "test"
-        score_d = ex_met.get_score_d(mode, do_reset=True)
+        ttt = "test"
+        score_d = ex_met.get_score_d(ttt, do_reset=True)
         print(score_d)
 
 
@@ -187,8 +187,8 @@ if __name__ == "__main__":
         ex_met = ExMetric(carb_osent_to_exs, use_carb_ex=True)
         # unnecessary
         # ex_met()
-        mode = "test"
-        score_d = ex_met.get_score_d(mode, do_reset=True)
+        ttt = "test"
+        score_d = ex_met.get_score_d(ttt, do_reset=True)
         print(score_d)
 
 

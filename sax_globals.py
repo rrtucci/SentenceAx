@@ -57,7 +57,7 @@ MAX_EX_DEPTH = 5
 MAX_CC_DEPTH = 3
 
 PAD_ILABEL = 0 #ipad
-EMBEDDING_MAX = 100
+NUM_ICODES = 100
 BOS_ILABEL = 101  # bos = begin of sentence
 EOS_ILABEL = 102  # eos = end of sentence
 

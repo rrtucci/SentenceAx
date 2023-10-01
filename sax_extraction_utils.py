@@ -43,10 +43,9 @@ def sub_exists(sub, full, start_loc):
 
     """
     # similar to Openie6.data_processing.starts_with()
-    if len(full)-1 < start_loc + len(sub)-1:
+    if len(full) - 1 < start_loc + len(sub) - 1:
         return False
     return all([sub[i] == full[start_loc + i] for i in range(len(sub))])
-
 
 
 def has_2_matches(matches):
@@ -100,8 +99,8 @@ def get_matches(list0, list1):
 
     Parameters
     ----------
-    list0: list
-    list1: list
+    list0: Sequence
+    list1: Sequence
 
     Returns
     -------

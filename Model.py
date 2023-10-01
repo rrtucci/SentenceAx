@@ -164,8 +164,8 @@ class Model(pl.LightningModule):
         self.verb_locs = None
         self.l_wstart_loc = None
 
-        self.batch_m_out = MOutput()
-        self.true_batch_m_out = MOutput()
+        self.batch_m_out = None
+        self.true_batch_m_out = None
         self.eval_out_d = {}  # filled in test_epoch_end()
 
         # self.init_params_d=None #Openie6 has this as Model attribute but
@@ -630,8 +630,6 @@ class Model(pl.LightningModule):
         """
         eval_out_d = None
         if self.params.d["mode"] == 'test':
-            self.batch_m_out.to_cpu()
-            self.true_batch_m_out.to_cpu()
             lll_ilabel = self.batch_m_out.lll_ilabel
             ll_confi = self.batch_m_out.ll_confi
             l_orig_sent = self.batch_m_out.l_orig_sent
@@ -880,8 +878,6 @@ class Model(pl.LightningModule):
         None
 
         """
-        self.batch_m_out.to_cpu()
-        self.true_batch_m_out.lll_ilabel.to_cpu()
         num_samples = len(self.batch_m_out.lll_ilabel)
         l_orig_sent = self.batch_m_out.l_orig_sent
         for k in range(num_samples):

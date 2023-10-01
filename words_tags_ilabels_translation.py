@@ -310,7 +310,7 @@ def file_translate_ilabels_to_tags(tag_type,
         for line in lines:
             words = get_words(line)
             if all([word.isdigit() for word in words[0:5]]):
-                ilabels = [int(x) for x in words()]
+                ilabels = [int(x) for x in words]
                 if tag_type == "ex":
                     tags = translate_ilabels_to_extags(ilabels)
                 elif tag_type == "cc":

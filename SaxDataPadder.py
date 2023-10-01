@@ -96,7 +96,7 @@ class SaxDataPadder:
                 rg = range(MAX_EX_DEPTH, len(lll_ilabel[sam]))
                 # must delete last extraction first
                 for depth in reversed(rg):
-                    print("deleting this extraction because over max: " + \
+                    print("deleting this extraction because over max: " +
                           f"(sample, depth)={sam}, {depth}")
                     del lll_ilabel[sam][depth]
 

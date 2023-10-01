@@ -137,8 +137,8 @@ def get_num_ttt_sents(num_sents, ttt_fractions):
     num_train_sents = floor(ttt_fractions[0] * num_sents)
     num_tune_sents = floor(ttt_fractions[1] * num_sents)
     num_test_sents = floor(ttt_fractions[2] * num_sents)
-    num_extra_sents = num_sents - num_train_sents - \
-                      num_tune_sents - num_test_sents
+    num_extra_sents = \
+        num_sents - num_train_sents - num_tune_sents - num_test_sents
     num_train_sents += num_extra_sents
     assert num_sents == num_train_sents + num_tune_sents + num_test_sents
     # print("nnmk", num_train_sents, num_tune_sents, num_test_sents)

@@ -256,7 +256,8 @@ if __name__ == "__main__":
         test_fp = "testing_files/extags_test.txt"
         predict_fp = test_fp
 
-        dloader = SaxDataLoader(auto,
+        dloader = SaxDataLoader(params,
+                                auto,
                                 train_fp,
                                 tune_fp,
                                 test_fp,

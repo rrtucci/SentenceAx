@@ -28,10 +28,10 @@ class MOutput:
         loss_10
         """
         self.l_orig_sent = l_orig_sent
-        self.lll_ilabel = lll_ilabel_10.to_list()
+        self.lll_ilabel = lll_ilabel_10.cpu().to_list()
 
-        self.ll_confi = ll_confi_10.to_list()
-        self.loss = float(loss_10)
+        self.ll_confi = ll_confi_10.cpu().to_list()
+        self.loss = float(loss_10.cpu())
 
     # def set_l_orig_sent(self, l_orig_sent):
     #     for k, orig_sent in enumerate(l_orig_sent):
@@ -70,11 +70,6 @@ class MOutput:
     #     if self.ll_confi:
     #         self.num_samples = len(self.ll_confi)
     #         self.absorb_ll_confi(self.ll_confi)
-
-    def to_cpu(self):
-        self.l_orig_sent = self.l_orig_sent.cpu()
-        self.ll_confi = self.ll_confi.cpu()
-        self.lll_ilabel = self.lll_ilabel.cpu()
 
     def get_lll_word(self, task):
         if task == "ex":

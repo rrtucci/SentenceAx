@@ -41,6 +41,9 @@ class SaxDataPadder:
     @staticmethod
     def get_padded_ll_x(unpadded_ll_x, ipad1=-100):
         """
+        The number at the end of `ipad` refers to the dimension. The
+        dimensions here are called 0, 1 (1 is the innermost).
+
 
         Parameters
         ----------
@@ -72,6 +75,8 @@ class SaxDataPadder:
     @staticmethod
     def get_padded_lll_ilabel(unpadded_lll_ilabel, ipad1=0, ipad2=-100):
         """
+        The number at the end of `ipad` refers to the dimension. The
+        dimensions here are called 0, 1, 2 (2 is the innermost).
 
         Parameters
         ----------

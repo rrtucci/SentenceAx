@@ -32,13 +32,14 @@ class SaxDataPadder:
 
         self.m_input = m_input
         self.pad_ilabel = pad_ilabel
+        assert pad_ilabel == 0
         self.use_spacy_model = use_spacy_model
         self.padded_data_d = None
         self.set_padded_data_d()
         self.num_samples = len(self.m_input.l_orig_sent)
 
     @staticmethod
-    def get_padded_ll_x(unpadded_ll_x, ipad=0):
+    def get_padded_ll_x(unpadded_ll_x, ipad1=-100):
         """
 
         Parameters
@@ -61,7 +62,7 @@ class SaxDataPadder:
         padded_ll_x = []
         for l_x in ll_x:
             padding_len = max_dim1 - len(l_x)
-            l_x += [ipad] * padding_len
+            l_x += [ipad1] * padding_len
             padded_ll_x.append(l_x)
         # for i in range(len(padded_ll_x)):
         #     print(i,len(padded_ll_x[i]), padded_ll_x)
@@ -69,7 +70,7 @@ class SaxDataPadder:
         return torch.tensor(padded_ll_x)
 
     @staticmethod
-    def get_padded_lll_ilabel(unpadded_lll_ilabel, ipad=0):
+    def get_padded_lll_ilabel(unpadded_lll_ilabel, ipad1=0, ipad2=-100):
         """
 
         Parameters
@@ -86,10 +87,10 @@ class SaxDataPadder:
         for sam in range(len(lll_ilabel)):
             pad_depth = MAX_EX_DEPTH - len(lll_ilabel[sam])
             if pad_depth > 0:
-                num_words = len(lll_ilabel[sam][ipad])
+                num_words = len(lll_ilabel[sam][0])
                 # ilabel = 0 for extag=NONE
                 lll_ilabel[sam] = lll_ilabel[sam] + [
-                    [ipad] * num_words] * pad_depth
+                    [ipad1] * num_words] * pad_depth
             elif pad_depth == 0:
                 pass
             else:
@@ -102,12 +103,12 @@ class SaxDataPadder:
 
         max_num_words = -1
         for ll_ilabel in lll_ilabel:
-            if len(ll_ilabel[ipad]) > max_num_words:
-                max_num_words = len(ll_ilabel[ipad])
+            if len(ll_ilabel[0]) > max_num_words:
+                max_num_words = len(ll_ilabel[0])
         for ll_ilabel in lll_ilabel:
             for l_ilabel in ll_ilabel:
                 padding_len = max_num_words - len(l_ilabel)
-                l_ilabel += [ipad] * padding_len
+                l_ilabel += [ipad2] * padding_len
 
         # for sam in range(len(lll_ilabel)):
         #     print(sam, len(lll_ilabel[sam]), len(lll_ilabel[sam][0]))
@@ -160,13 +161,13 @@ class SaxDataPadder:
         # }
 
         padded_l_osent_ilabels = SaxDataPadder. \
-            get_padded_ll_x(self.m_input.l_osent_ilabels, self.pad_ilabel)
+            get_padded_ll_x(self.m_input.l_osent_ilabels)
 
         padded_lll_ilabel = SaxDataPadder. \
             get_padded_lll_ilabel(self.m_input.lll_ilabel)
 
         padded_l_osent_wstart_locs = SaxDataPadder. \
-            get_padded_ll_x(self.m_input.l_osent_wstart_locs, 0)
+            get_padded_ll_x(self.m_input.l_osent_wstart_locs)
 
         padded_data_d = OrderedDict(
             {'l_osent_ilabels': padded_l_osent_ilabels,
@@ -175,13 +176,13 @@ class SaxDataPadder:
 
         if self.use_spacy_model:
             padded_data_d["l_osent_pos_mask"] = SaxDataPadder. \
-                get_padded_ll_x(self.m_input.l_osent_pos_mask, 0)
+                get_padded_ll_x(self.m_input.l_osent_pos_mask)
             padded_data_d["l_osent_pos_locs"] = SaxDataPadder. \
-                get_padded_ll_x(self.m_input.l_osent_pos_locs, 0)
+                get_padded_ll_x(self.m_input.l_osent_pos_locs)
             padded_data_d["l_osent_verb_mask"] = SaxDataPadder. \
-                get_padded_ll_x(self.m_input.l_osent_verb_mask, 0)
+                get_padded_ll_x(self.m_input.l_osent_verb_mask)
             padded_data_d["l_osent_verb_locs"] = SaxDataPadder. \
-                get_padded_ll_x(self.m_input.l_osent_verb_locs, 0)
+                get_padded_ll_x(self.m_input.l_osent_verb_locs)
 
         self.padded_data_d = padded_data_d
 

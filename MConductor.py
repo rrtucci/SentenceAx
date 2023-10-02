@@ -127,7 +127,7 @@ class MConductor:
         -------
 
         """
-        if self.params.d["checkpoint_fp"]:
+        if "checkpoint_fp" in self.params.d:
             return [self.params.d["checkpoint_fp"]]
 
         else:
@@ -552,7 +552,7 @@ class MConductor:
 
         self.splitpredict_do_cc_first()
         self.splitpredict_do_ex_second()
-        if self.params.d["rescoring"]:
+        if "rescoring" in self.params.d:
             # self.splitpredict_do_rescoring()
             print("rescoring not implented yet")
 

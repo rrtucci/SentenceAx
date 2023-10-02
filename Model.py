@@ -90,6 +90,7 @@ class Model(pl.LightningModule):
     loss_fun: nn.CrossEntropyLoss
     merge_layer: nn.Linear
     metric: CCMetric | ExMetric
+    name_to_param: dict[str, Any]
     params: Params
     pos_locs: list[int]
     pos_mask: list[int]
@@ -110,6 +111,7 @@ class Model(pl.LightningModule):
         """
         super().__init__(self)
         self.params = params
+        self.name_to_param = None
         self.auto_tokenizer = auto_tokenizer
 
         self.base_model = AutoModel.from_pretrained(
@@ -167,7 +169,7 @@ class Model(pl.LightningModule):
         self.true_batch_m_out = None
         self.eval_out_d = {}  # filled in test_epoch_end()
 
-        # self.init_params_d=None #Openie6 has this as Model attribute but
+        # self.name_to_param=None #Openie6 has this as Model attribute but
         # not us
 
     def configure_optimizers(self):
@@ -217,10 +219,10 @@ class Model(pl.LightningModule):
         else:
             assert False
 
-        if self.params.d["multi_opt"] and \
-                self.params.d["constraints_str"]:
+        if "multi_opt" in self.params.d:
+            assert "constraints" in self.params.d
             num_optimizers = \
-                len(self.params.d["constraints_str"].split('_'))
+                len(self.params.d["constraints"].split('_'))
             return [optimizer] * num_optimizers
         else:
             return [optimizer]
@@ -277,9 +279,8 @@ class Model(pl.LightningModule):
             lll_ilabel, ll_confi, batch_loss
 
         """
-        if self.params.d["wreg"] and \
-                not hasattr(self, 'init_params_d'):
-            init_params_d = deepcopy(
+        if "wreg" in self.params.d:
+            self.name_to_param = deepcopy(
                 dict(self.named_parameters()))
 
         # lll_label is similar to openie6 labels
@@ -336,20 +337,16 @@ class Model(pl.LightningModule):
                 if not valid_ext:
                     break
         # outsource everything after do loop to a new function
-        return self._calc_forward_output(
-            init_params_d,
-            ttt,
-            ll_word_confi,
-            constraints_str,
-            cweights_str)
+        return self._calc_forward_output(ttt,
+                                         ll_word_confi,
+                                         constraints_str,
+                                         cweights_str)
 
-    def _calc_forward_output(
-            self,
-            init_params_d,
-            ttt,
-            ll_word_confi,
-            constraints_str,
-            cweights_str):
+    def _calc_forward_output(self,
+                             ttt,
+                             ll_word_confi,
+                             constraints_str,
+                             cweights_str):
         """
         not inherited method. used in forward() method
 
@@ -413,12 +410,12 @@ class Model(pl.LightningModule):
                     constraints_str, cweights_str) / batch_size
                 batch_loss = const_loss
 
-            if self.params.d["wreg"] != 0:
+            if "wreg" in self.params.d["wreg"]:
                 weight_diff = 0
                 current_parameters = dict(self.named_parameters())
-                for name in init_params_d:
+                for name in self.name_to_param:
                     weight_diff += torch.norm(current_parameters[name]
-                                              - init_params_d[name])
+                                              - self.name_to_param[name])
                 batch_loss = batch_loss + self.params.d["wreg"] * weight_diff
         else:  # not train
             # if A and B are of shape (3, 4):
@@ -538,13 +535,14 @@ class Model(pl.LightningModule):
             batch_loss
 
         """
-        if self.params.d["multi_opt"]:
-            constraints_str = self.params.d["constraints_str"].split('_')[
+        if "multi_opt" in self.params.d:
+            assert "constraints" in self.params.d
+            constraints_str = self.params.d["constraints"].split('_')[
                 optimizer_id]
             cweights_str = float(
                 self.params.d["cweights_str"].split('_')[optimizer_id])
         else:
-            constraints_str = self.params.d["constraints_str"]
+            constraints_str = self.params.d["constraints"]
             cweights_str = self.params.d["cweights_str"]
 
         lll_ilabel, ll_confi, batch_loss = \
@@ -571,7 +569,7 @@ class Model(pl.LightningModule):
         """
         lll_ilabel, ll_confi, loss = self.forward(
             mode=self.params.mode,
-            constraints_str=self.params.d["constraints_str"],
+            constraints_str=self.params.d["constraints"],
             cweights_str=self.params.d["cweights_str"])
 
         tune_out_d = {"lll_ilabel": lll_ilabel,
@@ -672,7 +670,7 @@ class Model(pl.LightningModule):
         print('\nResults: ' + str(eval_out_d))
         # For computing the constraint violations
         # if hasattr(self, 'constraints_str_d') and \
-        # self.params.d["constraints_str"] != '':
+        # self.params.d["constraints"] != '':
         #     for key in self.constraints_str_d:
         #         self.constraints_str_d[key] = sum(self.constraints_str_d[key]).item()
         #     print('\nViolations: ', self.constraints_str_d)
@@ -890,7 +888,8 @@ class Model(pl.LightningModule):
             fmode = 'a'
         with open(fpath, fmode) as pred_f:
             pred_f.write('\n'.join(l_pred_str) + '\n')
-        if task == "ex" and self.params.d["write_allennlp"]:
+        if self.params.d.task == "ex" and \
+                "write_allennlp" in self.params.d:
             fpath = PREDICTIONS_DIR + "/allen.txt"
             if batch_id == 0:
                 fmode = "w"

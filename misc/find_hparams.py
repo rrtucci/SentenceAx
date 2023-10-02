@@ -43,7 +43,7 @@ if __name__ == "__main__":
 #  'hparams.checkpoint',
 #  'hparams.conj_model',
 #  'hparams.constraints',
-#  'hparams.cweights',
+#  'hparams.con_weights',
 #  'hparams.debug',
 #  'hparams.dev_fp',
 #  'hparams.dropout',

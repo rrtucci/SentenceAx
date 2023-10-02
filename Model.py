@@ -83,7 +83,7 @@ class Model(pl.LightningModule):
     dropout_fun: nn.Dropout
     eval_out_d: dict[str, Any]
     hidden_size: int
-    ilabel_embeddings: list[int]
+    icodes: list[int]
     illabelling_layer: self.base_model.encoder.layer
     iterative_transformer: self.base_model.encoder.layer
     l_wstart_loc: list[int]
@@ -145,8 +145,8 @@ class Model(pl.LightningModule):
         embedding_dim (int) – n=new_inner_dim
             
         """
-        self.ilabel_embeddings = nn.Embedding(NUM_ICODES,  # 100
-                                              self.hidden_size)
+        self.icodes = nn.Embedding(NUM_ICODES,  # 100
+                                   self.hidden_size)
         self.merge_layer = nn.Linear(self.hidden_size,
                                      ILABELLING_DIM)  # 300
         self.compressing_layer = nn.Linear(ILABELLING_DIM,  # 300
@@ -241,9 +241,11 @@ class Model(pl.LightningModule):
             tqdm_d
 
         """
+        # get avg_training_loss
         running_train_loss = self.trainer.running_loss.mean()
         avg_training_loss = running_train_loss.cpu().item() if \
             running_train_loss else float('NaN')
+        # get `best` as float
         if type(self.trainer.checkpoint_callback.kth_value) != float:
             best = self.trainer.checkpoint_callback.kth_value.item()
         else:
@@ -255,7 +257,7 @@ class Model(pl.LightningModule):
         return tqdm_d
 
     def forward(self, batch_id=-1, ttt='train',
-                constraints=None, cweights=None):
+                constraints=None, con_weights=None):
         """
         inherited method
         signature of parent method:  def forward(self, *args, **kwargs)
@@ -271,7 +273,7 @@ class Model(pl.LightningModule):
         mode: str
         batch_id: int
         constraints: str
-        cweights: str
+        con_weights: str
 
         Returns
         -------
@@ -294,7 +296,7 @@ class Model(pl.LightningModule):
         # `loss_fun` is not used in this function anymore
         # loss_fun, lstm_loss = 0, 0
         ll_word_confi = []
-        word_confis = []
+        l_word_confi = []
 
         hidden_states, _ = self.base_model()
 
@@ -316,19 +318,19 @@ class Model(pl.LightningModule):
             word_hidden_states = torch.gather(hidden_states, 1, xx)
 
             if d != 0:
-                greedy_ilabels = torch.argmax(word_confis, dim=-1)
-                ilabel_embeddings = self.ilabel_embeddings(greedy_ilabels)
-                word_hidden_states += ilabel_embeddings
+                greedy_ilabels = torch.argmax(l_word_confi, dim=-1)
+                icodes = self.icodes(greedy_ilabels)
+                word_hidden_states += icodes
 
             word_hidden_states = self.merge_layer(word_hidden_states)
-            word_confis = self.compressing_layer(word_hidden_states)
-            ll_word_confi.append(word_confis)
+            l_word_confi = self.compressing_layer(word_hidden_states)
+            ll_word_confi.append(l_word_confi)
 
             d += 1
             if d >= num_depths:
                 break
             if self.params.d["mode"] != 'train':
-                predictions = torch.max(word_confis, dim=2)[1]
+                predictions = torch.max(l_word_confi, dim=2)[1]
                 valid_ext = False
                 for p in predictions:
                     if 1 in p and 2 in p:
@@ -340,13 +342,13 @@ class Model(pl.LightningModule):
         return self._calc_forward_output(ttt,
                                          ll_word_confi,
                                          constraints,
-                                         cweights)
+                                         con_weights)
 
     def _calc_forward_output(self,
                              ttt,
                              ll_word_confi,
                              constraints,
-                             cweights):
+                             con_weights):
         """
         not inherited method. used in forward() method
 
@@ -355,7 +357,7 @@ class Model(pl.LightningModule):
         ttt
         ll_word_confi
         constraints
-        cweights
+        con_weights
 
         Returns
         -------
@@ -365,19 +367,19 @@ class Model(pl.LightningModule):
 
         """
 
-        word_confis = ll_word_confi[-1]
+        l_word_confi = ll_word_confi[-1]
         batch_loss = 0
         lll_ilabel = []
         ll_confi = []
-        batch_size, num_words, _ = word_confis.shape
+        batch_size, num_words, _ = l_word_confi.shape
         self.true_batch_m_out.lll_ilabel = self.true_batch_m_out.lll_ilabel.long()
-        for d, word_confis in enumerate(ll_word_confi):
+        for d, l_word_confi in enumerate(ll_word_confi):
             if ttt == 'train':
                 batch_loss += self.loss_fun(
-                    word_confis.reshape(batch_size * num_words, -1),
+                    l_word_confi.reshape(batch_size * num_words, -1),
                     self.true_batch_m_out.lll_ilabel[:, d, :].reshape(-1))
             else:
-                word_log_probs = torch.log_softmax(word_confis, dim=2)
+                word_log_probs = torch.log_softmax(l_word_confi, dim=2)
                 max_log_probs, predictions = \
                     torch.max(word_log_probs, dim=2)
                 # remember: lll_label was similar to labels
@@ -407,7 +409,7 @@ class Model(pl.LightningModule):
 
                 const_loss = self._constrained_loss(
                     ll_word_confi,
-                    constraints, cweights) / batch_size
+                    constraints, con_weights) / batch_size
                 batch_loss = const_loss
 
             if "wreg" in self.params.d["wreg"]:
@@ -442,26 +444,26 @@ class Model(pl.LightningModule):
                 ll_word_confi.scatter_(3, ilabels.long(), 1)
 
                 constraints = 'posm_hvc_hvr_hve'
-                cweights = '1_1_1_1'
-                l_constraint_str = constraints.split('_')
-                l_cweight_str = cweights.split('_')
-                if len(l_constraint_str) != len(l_cweight_str):
-                    l_cweight_str = [cweights] * len(l_constraint_str)
+                con_weights = '1_1_1_1'
+                l_constrait = constraints.split('_')
+                l_con_weight = con_weights.split('_')
+                if len(l_constrait) != len(l_con_weight):
+                    l_con_weight = [con_weights] * len(l_constrait)
 
-                for constraint_str, cweight_str in \
-                        zip(l_constraint_str, l_cweight_str):
+                for constrait, con_weight in \
+                        zip(l_constrait, l_con_weight):
                     const_loss = self._constrained_loss(self.pos_locs,
                                                         ll_word_confi,
-                                                        constraint_str,
-                                                        cweight_str)
-                    if constraint_str not in self.constraints_d:
-                        self.constraints_d[constraint_str] = []
-                    self.constraints_d[constraint_str].append(const_loss)
+                                                        constrait,
+                                                        con_weight)
+                    if constrait not in self.constraints_d:
+                        self.constraints_d[constrait] = []
+                    self.constraints_d[constrait].append(const_loss)
 
         return lll_ilabel, ll_confi, batch_loss
 
     def _constrained_loss(self, ll_word_confi,
-                          constraints, cweights):
+                          constraints, con_weights):
         """
         similar to Openie6.model.constrained_loss()
         not inherited method
@@ -471,7 +473,7 @@ class Model(pl.LightningModule):
         ----------
         ll_word_confi: torch.tensor
         constraints: str
-        cweights: str
+        con_weights: str
 
         Returns
         -------
@@ -493,7 +495,7 @@ class Model(pl.LightningModule):
         if 'hvc' in constraints:
             column_loss = torch.abs(1 - torch.sum(verb_rel_confis, dim=1))
             column_loss = column_loss[self.verb_locs != 0]
-            hinge_loss += cweights * column_loss.sum()
+            hinge_loss += con_weights * column_loss.sum()
 
         # extractions must have at least k-relations with
         # a head verb in them
@@ -501,12 +503,12 @@ class Model(pl.LightningModule):
             row_rel_loss = F.relu(self.verb_mask.sum(dim=1).float() -
                                   torch.max(verb_rel_confis, dim=2)[0].sum(
                                       dim=1))
-            hinge_loss += cweights * row_rel_loss.sum()
+            hinge_loss += con_weights * row_rel_loss.sum()
 
         # one relation cannot contain more than one head verb
         if 'hve' in constraints:
             ex_loss = F.relu(torch.sum(verb_rel_confis, dim=2) - 1)
-            hinge_loss += cweights * ex_loss.sum()
+            hinge_loss += con_weights * ex_loss.sum()
 
         if 'posm' in constraints:
             xx = self.pos_locs.unsqueeze(1).unsqueeze(3). \
@@ -516,7 +518,7 @@ class Model(pl.LightningModule):
                 torch.max(pos_confis[:, :, :, 1:], dim=-1)[0]
             column_loss = (1 - torch.max(pos_nnone_confis, dim=1)[0]) * \
                           (self.pos_locs != 0).float()
-            hinge_loss += cweights * column_loss.sum()
+            hinge_loss += con_weights * column_loss.sum()
 
         return hinge_loss
 
@@ -539,17 +541,17 @@ class Model(pl.LightningModule):
             assert "constraints" in self.params.d
             constraints = self.params.d["constraints"].split('_')[
                 optimizer_id]
-            cweights = float(
-                self.params.d["cweights"].split('_')[optimizer_id])
+            con_weights = float(
+                self.params.d["con_weights"].split('_')[optimizer_id])
         else:
             constraints = self.params.d["constraints"]
-            cweights = self.params.d["cweights"]
+            con_weights = self.params.d["con_weights"]
 
         lll_ilabel, ll_confi, batch_loss = \
             self.forward(mode='train',
                          batch_id=batch_id,
                          constraints=constraints,
-                         cweights=cweights)
+                         con_weights=con_weights)
 
         return batch_loss
 
@@ -570,7 +572,7 @@ class Model(pl.LightningModule):
         lll_ilabel, ll_confi, loss = self.forward(
             mode=self.params.mode,
             constraints=self.params.d["constraints"],
-            cweights=self.params.d["cweights"])
+            con_weights=self.params.d["con_weights"])
 
         tune_out_d = {"lll_ilabel": lll_ilabel,
                       "ll_confi": ll_confi,

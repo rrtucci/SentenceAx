@@ -162,7 +162,7 @@ class Params:
                 "checkpoint_fp":
                     WEIGHTS_DIR + "/warmup_ex_self.model-epoch=13_eval_acc=0.544.ckpt",
                 "constraints": "posm_hvc_hvr_hve",
-                "cweights": "3_3_3_3",
+                "con_weights": "3_3_3_3",
                 "epochs": 16,
                 "gpus": 1,
                 "gradient_clip_val": 1,
@@ -245,7 +245,7 @@ class Params:
                 "batch_size": 32,
                 "build_cache": True,
                 "checkpoint_fp": "",
-                "cweights": 1,
+                "con_weights": 1,
                 "dropout_fun": 0.0,
                 "gpus": 1,
                 "iterative_layers": 2,

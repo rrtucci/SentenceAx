@@ -42,7 +42,10 @@ class SaxDataPadder:
     def get_padded_ll_x(unpadded_ll_x, ipad1=-100):
         """
         The number at the end of `ipad` refers to the dimension. The
-        dimensions here are called 0, 1 (1 is the innermost).
+        dimensions here are called 0, 1 (1 is the innermost). -100 is a good
+        ipad for the innermost dimension because it is ignored by loss
+        functions like cross entropy. -100 is a good ipad for the innermost
+        dimension because it is ignored by loss functions like cross entropy.
 
 
         Parameters

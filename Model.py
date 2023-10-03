@@ -455,8 +455,8 @@ class Model(pl.LightningModule):
                 con_weight_str = '1_1_1_1'
                 l_constraint = constraint_str.split('_')
                 l_con_weight = con_weight_str.split('_')
-                # if len(l_constraint) != len(l_con_weight):
-                #     l_con_weight = [con_weight_str] * len(l_constraint)
+                if len(l_con_weight) == 1:
+                    l_con_weight = [con_weight_str] * len(l_constraint)
 
                 for constraint, con_weight in \
                         zip(l_constraint, l_con_weight):

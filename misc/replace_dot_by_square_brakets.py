@@ -18,7 +18,7 @@ word_d =\
     "checkpoint": ("models/warmup_oie_model/epoch=13_eval_acc=0.544.ckpt", ),
     "conj_model": ("models/conj_model/epoch=28_eval_acc=0.854.ckpt", ),
     "constraints": ("posm_hvc_hvr_hve", ),
-    "con_weights": ("3_3_3_3", ),
+    "cweights": ("3_3_3_3", ),
     "epochs": (30, 16, 40, ),
     "gpus": (1, ),
     "gradient_clip_val": (1, ),

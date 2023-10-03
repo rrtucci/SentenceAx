@@ -90,7 +90,7 @@ class MConductor:
                                      self.tune_fp,
                                      self.test_fp)
 
-        self.constraints_d = dict()
+        self.constraint_str_d = dict()
 
         self.cc_ll_spanned_word = []
         self.cc_ll_spanned_loc = []

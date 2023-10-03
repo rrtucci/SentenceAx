@@ -219,7 +219,7 @@ class Model(pl.LightningModule):
         else:
             assert False
 
-        if "multi_opt" in self.params.d:
+        if "multi_con" in self.params.d:
             assert "constraint_str" in self.params.d
             num_optimizers = \
                 len(self.params.d["constraint_str"].split('_'))
@@ -411,7 +411,7 @@ class Model(pl.LightningModule):
             if constraint_str:
                 # dim=1 is depth. This cats along depth dimension
                 llll_word_confi = torch.cat([ll.unsqueeze(1) for
-                                            ll in llll_word_confi], dim=1)
+                                             ll in llll_word_confi], dim=1)
                 llll_word_confi = torch.softmax(llll_word_confi, dim=-1)
 
                 con_loss = self._constrained_loss(
@@ -438,7 +438,7 @@ class Model(pl.LightningModule):
                     'predict' not in self.params.d["mode"] and \
                     self.params.d["batch_size"] != 1:
                 llll_word_confi = torch.cat([ll.unsqueeze(1) for
-                                            ll in llll_word_confi], dim=1)
+                                             ll in llll_word_confi], dim=1)
                 # this fills tensor with 0's
                 llll_word_confi.fill_(0)
 
@@ -452,15 +452,14 @@ class Model(pl.LightningModule):
                 llll_word_confi = llll_word_confi[:, :number_depths, :, :]
                 llll_word_confi.scatter_(
                     dim=3,
-                    index= llll_ilabel.long(),
-                    src= 1)
+                    index=llll_ilabel.long(),
+                    src=1)
 
-                constraint_str = 'posm_hvc_hvr_hve'
-                con_weight_str = '1_1_1_1'
                 l_constraint = constraint_str.split('_')
                 l_con_weight = con_weight_str.split('_')
-                if len(l_con_weight) == 1:
-                    l_con_weight = [con_weight_str] * len(l_constraint)
+                assert len(l_constraint) == len(l_con_weight)
+                # if len(l_con_weight) == 1:
+                #     l_con_weight = [con_weight_str] * len(l_constraint)
 
                 for constraint, con_weight in \
                         zip(l_constraint, l_con_weight):
@@ -499,14 +498,14 @@ class Model(pl.LightningModule):
         llll_index = self.ll_verb_loc.unsqueeze(1).unsqueeze(3). \
             repeat(1, num_depths, 1, icode_dim)
         llll_verb_confi = torch.gather(
-            input=llll_word_confi, 
-            dim=2, 
+            input=llll_word_confi,
+            dim=2,
             index=llll_index)
         lll_verb_rel_confi = llll_verb_confi[:, :, :, 2]
         # (batch_size, depth, num_words)
         lll_bool = (self.ll_verb_loc != 0).unsqueeze(1).float()
 
-        lll_verb_rel_confi = lll_verb_rel_confi * lll_bool 
+        lll_verb_rel_confi = lll_verb_rel_confi * lll_bool
         # every head-verb must be included in a relation
         if constraint == 'hvc':
             ll_column_loss = \
@@ -519,7 +518,7 @@ class Model(pl.LightningModule):
         if constraint == 'hvr':
             l_a = self.ll_verb_bool.sum(dim=1).float()
             l_b = torch.max(lll_verb_rel_confi, dim=2)[0].sum(dim=1)
-            row_rel_loss = F.relu( l_a - l_b)
+            row_rel_loss = F.relu(l_a - l_b)
             hinge_loss += con_weight * row_rel_loss.sum()
 
         # one relation cannot contain more than one head verb
@@ -531,26 +530,26 @@ class Model(pl.LightningModule):
             llll_index = self.ll_pos_loc.unsqueeze(1).unsqueeze(3). \
                 repeat(1, num_depths, 1, icode_dim)
             llll_confi = torch.gather(
-                input=llll_word_confi, 
-                dim=2, 
+                input=llll_word_confi,
+                dim=2,
                 index=llll_index)
             lll_pos_not_none_confi = \
                 torch.max(llll_confi[:, :, :, 1:], dim=-1)[0]
             ll_column_loss = \
                 (1 - torch.max(lll_pos_not_none_confi, dim=1)[0]) * \
-                          (self.ll_pos_loc != 0).float()
+                (self.ll_pos_loc != 0).float()
             hinge_loss += con_weight * ll_column_loss.sum()
 
         return hinge_loss
 
-    def training_step(self, batch_id, optimizer_id=-1):
+    def training_step(self, batch_id, use_all_con=True):
         """
         inherited method
 
         Parameters
         ----------
         batch_id: int
-        optimizer_id: int
+        use_all_con: bool
 
         Returns
         -------
@@ -558,21 +557,26 @@ class Model(pl.LightningModule):
             batch_loss
 
         """
-        if "multi_opt" in self.params.d:
-            assert "constraint_str" in self.params.d
-            constraint_str = self.params.d["constraint_str"].split('_')[
-                optimizer_id]
-            con_weight_str = float(
-                self.params.d["con_weight_str"].split('_')[optimizer_id])
+        if use_all_con:
+            constraint_str = 'posm_hvc_hvr_hve'
+            con_weight_str = '1_1_1_1'
         else:
+            assert "constraint_str" in self.params.d
+            assert "con_weight_str" in self.params.d
             constraint_str = self.params.d["constraint_str"]
             con_weight_str = self.params.d["con_weight_str"]
+            l_constraint = constraint_str.split('_')
+            l_con_weight = con_weight_str.split('_')
+            assert len(l_constraint) == len(l_con_weight)
+            if "multi_con" in self.params.d:
+                assert len(l_constraint) > 1
+            else:
+                assert len(l_constraint) == 1
 
-        lll_ilabel, lll_confi, batch_loss = \
-            self.forward(mode='train',
-                         batch_id=batch_id,
-                         constraint_str=constraint_str,
-                         con_weight_str=con_weight_str)
+        _, _, batch_loss = self.forward(batch_id=batch_id,
+                                        ttt='train',
+                                        constraint_str=constraint_str,
+                                        con_weight_str=con_weight_str)
 
         return batch_loss
 

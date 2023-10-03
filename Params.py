@@ -170,7 +170,7 @@ class Params:
                 "lr": 2E-5,
                 "self.mode": "resume",
                 "self.model_str": "bert-base-cased",
-                "multi_opt": True,
+                "multi_con": True, # similar to multi_opt
                 "optimizer": "adam",
                 # "save": WEIGHTS_DIR + "/ex_self.model",
                 "save_k": 3,

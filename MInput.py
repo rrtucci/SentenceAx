@@ -14,9 +14,9 @@ class MInput:
     l_orig_sent: list[str]
     l_osent_ilabels: list[list[int]]
     l_osent_pos_locs: list[list[int]]
-    l_osent_pos_mask: list[list[int]]
+    l_osent_pos_bools: list[list[int]]
     l_osent_verb_locs: list[list[int]]
-    l_osent_verb_mask: list[list[int]]
+    l_osent_verb_bools: list[list[int]]
     l_osent_wstart_locs: list[list[int]]
     lll_ilabel: list[list[list[int]]]
     num_samples: int
@@ -66,9 +66,9 @@ class MInput:
         # spacy_model.pipe()
         # spacy_model usually abbreviated as nlp
 
-        self.l_osent_pos_mask = []  # shape=(num_samples, num_words)
+        self.l_osent_pos_bools = []  # shape=(num_samples, num_words)
         self.l_osent_pos_locs = []  # shape=(num_samples, num_words)
-        self.l_osent_verb_mask = []  # shape=(num_samples, num_words)
+        self.l_osent_verb_bools = []  # shape=(num_samples, num_words)
         self.l_osent_verb_locs = []  # shape=(num_samples, num_words)
 
         self.read_input_extags_file(in_fp)
@@ -135,19 +135,19 @@ class MInput:
 
         """
         pos_locs = []
-        pos_mask = []
+        pos_bools = []
         pos_words = []
         for token_index, token in enumerate(tokens):
             if token.pos_ in ['ADJ', 'ADV', 'NOUN', 'PROPN', 'VERB']:
-                pos_mask.append(1)
+                pos_bools.append(1)
                 pos_locs.append(token_index)
                 pos_words.append(token.lower_)
             else:
-                pos_mask.append(0)
-        pos_mask.append(0)
-        pos_mask.append(0)
-        pos_mask.append(0)
-        return pos_locs, pos_mask, pos_words
+                pos_bools.append(0)
+        pos_bools.append(0)
+        pos_bools.append(0)
+        pos_bools.append(0)
+        return pos_locs, pos_bools, pos_words
 
     @staticmethod
     def verb_info(tokens):
@@ -164,20 +164,20 @@ class MInput:
 
         """
         verb_locs = []
-        verb_mask = []
+        verb_bools = []
         verb_words = []
         for token_index, token in enumerate(tokens):
             if token.pos_ in ['VERB'] and \
                     token.lower_ not in LIGHT_VERBS:
-                verb_mask.append(1)
+                verb_bools.append(1)
                 verb_locs.append(token_index)
                 verb_words.append(token.lower_)
             else:
-                verb_mask.append(0)
-        verb_mask.append(0)
-        verb_mask.append(0)
-        verb_mask.append(0)
-        return verb_locs, verb_mask, verb_words
+                verb_bools.append(0)
+        verb_bools.append(0)
+        verb_bools.append(0)
+        verb_bools.append(0)
+        return verb_locs, verb_bools, verb_words
 
     def fill_pos_and_verb_info(self):
         """
@@ -187,9 +187,9 @@ class MInput:
         None
 
         """
-        self.l_osent_pos_mask = []
+        self.l_osent_pos_bools = []
         self.l_osent_pos_locs = []
-        self.l_osent_verb_mask = []
+        self.l_osent_verb_bools = []
         self.l_osent_verb_locs = []
         if not self.use_spacy_model:
             return
@@ -199,14 +199,14 @@ class MInput:
             # assert len(self.l_orig_sent[sent_id].split()) == len(
             #     spacy_tokens)
 
-            pos_locs, pos_mask, pos_words = \
+            pos_locs, pos_bools, pos_words = \
                 MInput.pos_info(spacy_tokens)
-            self.l_osent_pos_mask.append(pos_mask)
+            self.l_osent_pos_bools.append(pos_bools)
             self.l_osent_pos_locs.append(pos_locs)
 
-            verb_locs, verb_mask, verb_words = \
+            verb_locs, verb_bools, verb_words = \
                 MInput.verb_info(spacy_tokens)
-            self.l_osent_verb_mask.append(verb_mask)
+            self.l_osent_verb_bools.append(verb_bools)
             if verb_locs:
                 self.l_osent_verb_locs.append(verb_locs)
             else:
@@ -356,9 +356,9 @@ class MInput:
         #     'l_word_start_loc': l_word_start_loc,
         #     'orig_sent': orig_sent,
         #     # if spacy_model:
-        #     'pos_mask': pos_mask,
+        #     'pos_bools': pos_bools,
         #     'pos_locs': pos_locs,
-        #     'verb_mask': verb_mask,
+        #     'verb_bools': verb_bools,
         #     'verb_locs': verb_locs
         # }
 
@@ -391,9 +391,9 @@ if __name__ == "__main__":
             print("l_orig_sent[k]=", m_input.l_orig_sent[k])
             print("l_osent_ilabels[k]=\n", m_input.l_osent_ilabels[k])
             print("l_osent_pos_locs[k]=\n", m_input.l_osent_pos_locs[k])
-            print("l_osent_pos_mask[k]=\n", m_input.l_osent_pos_mask[k])
+            print("l_osent_pos_bools[k]=\n", m_input.l_osent_pos_bools[k])
             print("l_osent_verb_locs[k]=\n", m_input.l_osent_verb_locs[k])
-            print("l_osent_verb_mask[k]=\n", m_input.l_osent_verb_mask[k])
+            print("l_osent_verb_bools[k]=\n", m_input.l_osent_verb_bools[k])
             print("l_osent_wstart_locs[k]=\n", m_input.l_osent_wstart_locs[k])
             if verbose:
                 print("lll_ilabel=\n", m_input.lll_ilabel)

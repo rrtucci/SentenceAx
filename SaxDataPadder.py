@@ -162,9 +162,9 @@ class SaxDataPadder:
         #     'word_starts': word_starts,
         #     'orig_sent': orig_sent,
         #     # if use_spacy_model:
-        #     'pos_mask': pos_mask,
+        #     'pos_bools': pos_bools,
         #     'pos_locs': pos_locs,
-        #     'verb_mask': verb_mask,
+        #     'verb_bools': verb_bools,
         #     'verb_locs': verb_locs
         # }
 
@@ -183,12 +183,12 @@ class SaxDataPadder:
              'l_osent_wstart_locs': padded_l_osent_wstart_locs})
 
         if self.use_spacy_model:
-            padded_data_d["l_osent_pos_mask"] = SaxDataPadder. \
-                get_padded_ll_x(self.m_input.l_osent_pos_mask)
+            padded_data_d["l_osent_pos_bools"] = SaxDataPadder. \
+                get_padded_ll_x(self.m_input.l_osent_pos_bools)
             padded_data_d["l_osent_pos_locs"] = SaxDataPadder. \
                 get_padded_ll_x(self.m_input.l_osent_pos_locs)
-            padded_data_d["l_osent_verb_mask"] = SaxDataPadder. \
-                get_padded_ll_x(self.m_input.l_osent_verb_mask)
+            padded_data_d["l_osent_verb_bools"] = SaxDataPadder. \
+                get_padded_ll_x(self.m_input.l_osent_verb_bools)
             padded_data_d["l_osent_verb_locs"] = SaxDataPadder. \
                 get_padded_ll_x(self.m_input.l_osent_verb_locs)
 

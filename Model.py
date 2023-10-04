@@ -187,7 +187,7 @@ class Model(pl.LightningModule):
         l_con_weight = con_weight_str.split('_')
         assert len(l_constraint) == len(l_con_weight)
         self.con_to_weight= {l_constraint[k]: float(l_con_weight[k])
-                for k in range(len(l_constraint))}
+                for k in range(len(l_constraint)) if l_constraint[k]}
 
     def configure_optimizers(self):
         """

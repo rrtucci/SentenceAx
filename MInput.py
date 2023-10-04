@@ -3,6 +3,7 @@ import spacy
 from sax_utils import *
 from transformers import AutoTokenizer
 from copy import deepcopy
+from pprint import pprint
 
 
 class MInput:
@@ -19,7 +20,6 @@ class MInput:
     l_osent_verb_bools: list[list[int]]
     l_osent_wstart_locs: list[list[int]]
     lll_ilabel: list[list[list[int]]]
-    num_samples: int
     spacy_model: spacy.Language
     use_spacy_model: bool
     verbose: bool
@@ -44,7 +44,6 @@ class MInput:
         self.use_spacy_model = use_spacy_model
         self.verbose = verbose
 
-        self.num_samples = None
         # shape=(num_samples,)
         self.l_orig_sent = []
         # shape=(num_samples, num_depths=num_ex, num_ilabels)
@@ -72,6 +71,55 @@ class MInput:
         self.l_osent_verb_locs = []  # shape=(num_samples, num_words)
 
         self.read_input_extags_file(in_fp)
+
+    @staticmethod
+    def encode_l_sent(l_sent,
+                      auto_tokenizer,
+                      add=True):
+        """
+        Parameters
+        ----------
+        l_sent: list[sent]
+        auto_tokenizer: AutoTokenizer
+        add: bool
+
+        Returns
+        -------
+        list[list[int]]
+
+        """
+        encoder = auto_tokenizer.encode
+        ll_icode = []
+        for sent in l_sent:
+            l_icode = encoder(sent,
+                              add_special_tokens=add)
+            ll_icode.append(l_icode)
+        return ll_icode
+
+    @staticmethod
+    def decode_ll_icode(ll_icode,
+                        auto_tokenizer,
+                        remove=True):
+        """
+
+        Parameters
+        ----------
+        ll_icode: list[list[int]]
+        auto_tokenizer: AutoTokenizer
+        remove: bool
+
+        Returns
+        -------
+        list[str]
+
+        """
+        decoder = auto_tokenizer.decode
+        l_sent = []
+        for l_icode in ll_icode:
+            sent = decoder(l_icode,
+                           skip_special_tokens=remove)
+            l_sent.append(sent)
+        return l_sent
 
     def remerge_tokens(self, tokens):
         """
@@ -335,11 +383,11 @@ class MInput:
         self.lll_ilabel = ll_ex_ilabels
         self.l_osent_wstart_locs = l_osent_wstart_locs
 
-        self.num_samples = len(l_orig_sent)
+        num_samples = len(l_orig_sent)
 
         def check_len(li):
             for x in li:
-                assert len(x) == self.num_samples
+                assert len(x) == num_samples
 
         check_len([self.l_osent_ilabels,
                    self.lll_ilabel,
@@ -370,7 +418,7 @@ class MInput:
 
 
 if __name__ == "__main__":
-    def main(verbose):
+    def main1(verbose):
         in_fp = "testing_files/extags_test.txt"
         model_str = "bert-base-uncased"
         auto_tokenizer = AutoTokenizer.from_pretrained(
@@ -381,22 +429,46 @@ if __name__ == "__main__":
             add_special_tokens=False,
             additional_special_tokens=UNUSED_TOKENS)
         use_spacy_model = True
-        m_input = MInput(in_fp,
-                         auto_tokenizer,
-                         use_spacy_model,
-                         verbose=verbose)
+        m_in = MInput(in_fp,
+                      auto_tokenizer,
+                      use_spacy_model,
+                      verbose=verbose)
         for k in range(0, 5):
             print("************** k=", k)
-            print("num_samples=", m_input.num_samples)
-            print("l_orig_sent[k]=", m_input.l_orig_sent[k])
-            print("l_osent_ilabels[k]=\n", m_input.l_osent_ilabels[k])
-            print("l_osent_pos_locs[k]=\n", m_input.l_osent_pos_locs[k])
-            print("l_osent_pos_bools[k]=\n", m_input.l_osent_pos_bools[k])
-            print("l_osent_verb_locs[k]=\n", m_input.l_osent_verb_locs[k])
-            print("l_osent_verb_bools[k]=\n", m_input.l_osent_verb_bools[k])
-            print("l_osent_wstart_locs[k]=\n", m_input.l_osent_wstart_locs[k])
+            print("num_samples=", len(m_in.l_orig_sent))
+            print("l_orig_sent[k]=", m_in.l_orig_sent[k])
+            print("l_osent_ilabels[k]=\n", m_in.l_osent_ilabels[k])
+            print("l_osent_pos_locs[k]=\n", m_in.l_osent_pos_locs[k])
+            print("l_osent_pos_bools[k]=\n", m_in.l_osent_pos_bools[k])
+            print("l_osent_verb_locs[k]=\n", m_in.l_osent_verb_locs[k])
+            print("l_osent_verb_bools[k]=\n", m_in.l_osent_verb_bools[k])
+            print("l_osent_wstart_locs[k]=\n", m_in.l_osent_wstart_locs[k])
             if verbose:
-                print("lll_ilabel=\n", m_input.lll_ilabel)
+                print("lll_ilabel=\n", m_in.lll_ilabel)
 
 
-    main(False)
+    def main2(add, remove):
+        l_sent = [
+            "We went to the park on Sunday, and then went to the movies.",
+            "I wish i new how to make this program work."]
+        model_str = "bert-base-uncased"
+        auto_tokenizer = AutoTokenizer.from_pretrained(
+            model_str,
+            do_lower_case=True,
+            use_fast=True,
+            data_dir=CACHE_DIR,
+            add_special_tokens=False,
+            additional_special_tokens=UNUSED_TOKENS)
+        ll_icode = MInput.encode_l_sent(l_sent,
+                                        auto_tokenizer,
+                                        add)
+        l_sent2 = MInput.decode_ll_icode(ll_icode,
+                                         auto_tokenizer,
+                                         remove)
+        pprint(l_sent)  # add
+        print(ll_icode)  # remove
+        pprint(l_sent2)
+
+
+    main1(verbose=False)
+    main2(add=True, remove=True)

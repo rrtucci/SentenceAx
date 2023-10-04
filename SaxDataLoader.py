@@ -73,7 +73,7 @@ class SaxDataLoader:
         self.predict_fp = predict_fp
         self.use_spacy_model = use_spacy_model
 
-    def get_m_input(self, in_fp):
+    def get_m_in(self, in_fp):
         """
 
         This is used to create an m_imput for in_fp=train_fp, tune_fp, test_fp.
@@ -87,11 +87,11 @@ class SaxDataLoader:
         MInput
 
         """
-        m_input = MInput(in_fp,
+        m_in = MInput(in_fp,
                          self.auto_tokenizer,
                          self.use_spacy_model)
 
-        return m_input
+        return m_in
 
     def get_ttt_datasets(self):
         """
@@ -137,10 +137,10 @@ class SaxDataLoader:
             # returns: examples, orig_sents
             assert self.predict_fp, \
                 "predict_fp required if 'predict' in mode"
-            predict_m_input = self.get_m_input(self.predict_fp)
-            # vocab = build_vocab(predict_m_input)
+            predict_m_in = self.get_m_in(self.predict_fp)
+            # vocab = build_vocab(predict_m_in)
 
-            predict_dataset = SaxDataSet(predict_m_input,
+            predict_dataset = SaxDataSet(predict_m_in,
                                          self.pad_ilabel,
                                          self.use_spacy_model)
 
@@ -161,37 +161,37 @@ class SaxDataLoader:
 
             if not os.path.exists(cached_train_fp) or \
                     self.params.d["build_cache"]:
-                train_m_input = self.get_m_input(self.train_fp)
-                pickle.dump(train_m_input, open(cached_train_fp, 'wb'))
+                train_m_in = self.get_m_in(self.train_fp)
+                pickle.dump(train_m_in, open(cached_train_fp, 'wb'))
             else:
-                train_m_input = pickle.load(open(cached_train_fp, 'rb'))
+                train_m_in = pickle.load(open(cached_train_fp, 'rb'))
 
             if not os.path.exists(cached_tune_fp) or \
                     self.params.d["build_cache"]:
-                tune_m_input = self.get_m_input(self.tune_fp)
-                pickle.dump(tune_m_input, open(cached_tune_fp, 'wb'))
+                tune_m_in = self.get_m_in(self.tune_fp)
+                pickle.dump(tune_m_in, open(cached_tune_fp, 'wb'))
             else:
-                tune_m_input = pickle.load(open(cached_tune_fp, 'rb'))
+                tune_m_in = pickle.load(open(cached_tune_fp, 'rb'))
 
             if not os.path.exists(cached_test_fp) or \
                     self.params.d["build_cache"]:
-                test_m_input = self.get_m_input(self.test_fp)
-                pickle.dump(test_m_input, open(cached_test_fp, 'wb'))
+                test_m_in = self.get_m_in(self.test_fp)
+                pickle.dump(test_m_in, open(cached_test_fp, 'wb'))
             else:
-                test_m_input = pickle.load(open(cached_test_fp, 'rb'))
+                test_m_in = pickle.load(open(cached_test_fp, 'rb'))
 
             # vocab = self.build_vocab(
-            #     train_m_input + tune_m_input + test_m_input)
+            #     train_m_in + tune_m_in + test_m_in)
 
-            train_dataset = SaxDataSet(train_m_input,
+            train_dataset = SaxDataSet(train_m_in,
                                        self.pad_ilabel,
                                        self.use_spacy_model)
 
-            tune_dataset = SaxDataSet(tune_m_input,
+            tune_dataset = SaxDataSet(tune_m_in,
                                       self.pad_ilabel,
                                       self.use_spacy_model)
 
-            test_dataset = SaxDataSet(test_m_input,
+            test_dataset = SaxDataSet(test_m_in,
                                       self.pad_ilabel,
                                       self.use_spacy_model)
 

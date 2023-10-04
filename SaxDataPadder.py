@@ -13,30 +13,30 @@ class SaxDataPadder:
 
     Attributes
     ----------
-    m_input: MInput
+    m_in: MInput
     num_samples: int
     pad_ilabel: int
     padded_data_d: dict[str, torch.tensor]
     use_spacy_model: bool
     """
 
-    def __init__(self, m_input, pad_ilabel, use_spacy_model):
+    def __init__(self, m_in, pad_ilabel, use_spacy_model):
         """
 
         Parameters
         ----------
-        m_input: MInput
+        m_in: MInput
         pad_ilabel: int
         use_spacy_model: bool
         """
 
-        self.m_input = m_input
+        self.m_in = m_in
         self.pad_ilabel = pad_ilabel
         assert pad_ilabel == 0
         self.use_spacy_model = use_spacy_model
         self.padded_data_d = None
         self.set_padded_data_d()
-        self.num_samples = len(self.m_input.l_orig_sent)
+        self.num_samples = len(self.m_in.l_orig_sent)
 
     @staticmethod
     def get_padded_ll_x(unpadded_ll_x, ipad1=-100):
@@ -122,7 +122,7 @@ class SaxDataPadder:
         #     print(sam, len(lll_ilabel[sam]), len(lll_ilabel[sam][0]))
         return torch.tensor(lll_ilabel)
 
-    # def build_vocab(self, self.m_input):
+    # def build_vocab(self, self.m_in):
     #     """
     #
     #     A vocabulary (vocab) is a function that turns
@@ -134,12 +134,12 @@ class SaxDataPadder:
     #
     #     # tokenizer = get_tokenizer("basic_english")
     #     tokenizer = self.auto_tokenizer
-    #     def yield_tokens(self.m_input):
-    #         for example_d in self.m_input:
+    #     def yield_tokens(self.m_in):
+    #         for example_d in self.m_in:
     #             orig_sent = example_d["orig_sent"]
     #             yield tokenizer(orig_sent)
     #
-    #     vocab = build_vocab_from_iterator(yield_tokens(self.m_input),
+    #     vocab = build_vocab_from_iterator(yield_tokens(self.m_in),
     #                                       specials=["<unk>"])
     #     vocab.set_default_index(vocab["<unk>"])
     #
@@ -155,7 +155,7 @@ class SaxDataPadder:
 
         """
 
-        # data_in = self.m_input
+        # data_in = self.m_in
         # example_d = {
         #     'sentL_ids': sentL_ids,
         #     'll_label': labels_for_each_ex[:MAX_EX_DEPTH],
@@ -169,13 +169,13 @@ class SaxDataPadder:
         # }
 
         padded_l_osent_ilabels = SaxDataPadder. \
-            get_padded_ll_x(self.m_input.l_osent_ilabels)
+            get_padded_ll_x(self.m_in.l_osent_ilabels)
 
         padded_lll_ilabel = SaxDataPadder. \
-            get_padded_lll_ilabel(self.m_input.lll_ilabel)
+            get_padded_lll_ilabel(self.m_in.lll_ilabel)
 
         padded_l_osent_wstart_locs = SaxDataPadder. \
-            get_padded_ll_x(self.m_input.l_osent_wstart_locs)
+            get_padded_ll_x(self.m_in.l_osent_wstart_locs)
 
         padded_data_d = OrderedDict(
             {'l_osent_ilabels': padded_l_osent_ilabels,
@@ -184,13 +184,13 @@ class SaxDataPadder:
 
         if self.use_spacy_model:
             padded_data_d["l_osent_pos_bools"] = SaxDataPadder. \
-                get_padded_ll_x(self.m_input.l_osent_pos_bools)
+                get_padded_ll_x(self.m_in.l_osent_pos_bools)
             padded_data_d["l_osent_pos_locs"] = SaxDataPadder. \
-                get_padded_ll_x(self.m_input.l_osent_pos_locs)
+                get_padded_ll_x(self.m_in.l_osent_pos_locs)
             padded_data_d["l_osent_verb_bools"] = SaxDataPadder. \
-                get_padded_ll_x(self.m_input.l_osent_verb_bools)
+                get_padded_ll_x(self.m_in.l_osent_verb_bools)
             padded_data_d["l_osent_verb_locs"] = SaxDataPadder. \
-                get_padded_ll_x(self.m_input.l_osent_verb_locs)
+                get_padded_ll_x(self.m_in.l_osent_verb_locs)
 
         self.padded_data_d = padded_data_d
 
@@ -219,13 +219,13 @@ if __name__ == "__main__":
             add_special_tokens=False,
             additional_special_tokens=UNUSED_TOKENS)
         use_spacy_model = True
-        m_input = MInput(in_fp,
+        m_in = MInput(in_fp,
                          auto,
                          use_spacy_model)
         # full encoding is [101, 0, 102], 101=BOS_ILABEL, 102=EOS_ILABEL
         pad_ilabel = auto.encode(auto.pad_token)[1]
         # print("pad_token, pad_ilabel=", auto.pad_token, pad_ilabel)
-        padder = SaxDataPadder(m_input, pad_ilabel, use_spacy_model)
+        padder = SaxDataPadder(m_in, pad_ilabel, use_spacy_model)
         padder.print_padded_data_d_shapes()
 
 

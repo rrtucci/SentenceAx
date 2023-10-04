@@ -397,7 +397,7 @@ class MConductor:
 
                 # not done when reading from PRED_IN_FP
                 words = ll_spanned_word[sample_id]
-                self.cc_fix_d[l_pred_sent[0]] = " ".join(words)
+                self.cc_fix_d[l_pred_sent[??]] = " ".join(words)
 
                 l_orig_sentL.append(l_pred_sent[0] + UNUSED_TOKENS_STR)
                 for sent in l_pred_sent:
@@ -574,8 +574,7 @@ class MConductor:
         """
         bout = self.model.batch_out
         num_samples = len(bout.l_orig_sent)
-        l_sentL = [bout.l_orig_sent[k] + UNUSED_TOKENS_STR
-                   for k in range(num_samples)]
+        l_sentL = redoL(bout.l_orig_sent)
         lll_ilabel = bout.lll_ilabel
         lll_word_loc = []
 

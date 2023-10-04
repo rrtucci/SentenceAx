@@ -186,8 +186,9 @@ class Model(pl.LightningModule):
         l_constraint = constraint_str.split('_')
         l_con_weight = con_weight_str.split('_')
         assert len(l_constraint) == len(l_con_weight)
-        self.con_to_weight= {l_constraint[k]: float(l_con_weight[k])
-                for k in range(len(l_constraint)) if l_constraint[k]}
+        self.con_to_weight = {l_constraint[k]: float(l_con_weight[k])
+                              for k in range(len(l_constraint)) if
+                              l_constraint[k]}
 
     def configure_optimizers(self):
         """
@@ -466,7 +467,7 @@ class Model(pl.LightningModule):
 
                 for constraint, con_weight in self.con_to_weight.items():
                     con_loss = self._constrained_loss(llll_word_confi,
-                                                      {constraint:con_weight})
+                                                      {constraint: con_weight})
                     if constraint not in self.con_to_l_loss:
                         self.con_to_l_loss[constraint] = []
                     self.con_to_l_loss[constraint].append(con_loss)
@@ -748,13 +749,16 @@ class Model(pl.LightningModule):
         """
         return
 
-    def _write_if_task_ex(self):
+    def _write_if_task_ex(self, batch_id):
         """
+
+        Parameters
+        ----------
+        batch_id: int
 
         Returns
         -------
-        list[str], list[str]
-            l_pred_str, l_pred_allen_str
+        None
 
         """
         fix_d = self.metric.fix_d
@@ -762,50 +766,46 @@ class Model(pl.LightningModule):
         lll_ilabel = self.batch_m_out.lll_ilabel
         lll_confi = self.batch_m_out.lll_confi
         num_samples, num_depths, _ = lll_ilabel.shape
+        l_orig_sent = self.batch_m_out.l_orig_sent
 
-        l_orig_sentL = [self.batch_m_out.l_orig_sent[k]
-                        + UNUSED_TOKENS_STR for
-                        k in range(num_samples)]
-
-        orig_sent_to_pred_l_ex = {}
-        for sample_id, orig_sentL in enumerate(l_orig_sentL):
-            orig_sent = undoL(orig_sentL)
+        osent_to_l_pred_ex = {}
+        for sample_id, orig_sent in enumerate(l_orig_sent):
+            orig_sentL = redoL(orig_sent)
             if fix_d:
                 orig_sent0 = fix_d[orig_sent]
-                if orig_sent0 not in orig_sent_to_pred_l_ex:
-                    orig_sent_to_pred_l_ex[orig_sent0] = []
+                if orig_sent0 not in osent_to_l_pred_ex:
+                    osent_to_l_pred_ex[orig_sent0] = []
             else:
-                if orig_sent not in orig_sent_to_pred_l_ex:
-                    orig_sent_to_pred_l_ex[orig_sent] = []
+                if orig_sent not in osent_to_l_pred_ex:
+                    osent_to_l_pred_ex[orig_sent] = []
             for depth in range(num_depths):
                 num_words = len(get_words(orig_sentL))
                 ex_ilabels = lll_ilabel[sample_id][depth][:num_words]
                 if sum(ex_ilabels) == 0:  # extractions completed
                     break
                 ex = SaxExtraction.get_ex_from_ilabels(
-                    ex_ilabels, orig_sentL, lll_confi[sample_id][depth].item())
+                    ex_ilabels, orig_sentL, lll_confi[sample_id][depth])
                 if ex.arg1 and ex.rel:
                     if fix_d:
                         orig_sent0 = fix_d[orig_sent]
                         if ex.is_not_in(
-                                orig_sent_to_pred_l_ex[orig_sent0]):
-                            orig_sent_to_pred_l_ex[orig_sent0]. \
+                                osent_to_l_pred_ex[orig_sent0]):
+                            osent_to_l_pred_ex[orig_sent0]. \
                                 append(ex)
                     else:  # no fix_d
                         if ex.is_not_in(
-                                orig_sent_to_pred_l_ex[orig_sent]):
-                            orig_sent_to_pred_l_ex[orig_sent].append(ex)
+                                osent_to_l_pred_ex[orig_sent]):
+                            osent_to_l_pred_ex[orig_sent].append(ex)
         l_pred_str = []
         l_pred_allen_str = []
-        for sample_id, pred_ex_sent in enumerate(orig_sent_to_pred_l_ex):
-            pred_l_ex = orig_sent_to_pred_l_ex[pred_ex_sent]
-            orig_sentL = l_orig_sentL[sample_id]
-            str0 = f'{pred_ex_sent}\n'
-            for pred_ex in pred_l_ex:
+        for sample_id, l_pred_ex in enumerate(osent_to_l_pred_ex):
+            orig_sentL = redoL(l_orig_sent[sample_id])
+            str0 = ""
+            for pred_ex in l_pred_ex:
                 str0 += pred_ex.get_simple_sent() + '\n'
             l_pred_str.append(str0.strip("/n"))
             allen_str = ""
-            for pred_ex in pred_l_ex:
+            for pred_ex in l_pred_ex:
                 arg1 = pred_ex.arg1
                 rel = pred_ex.rel
                 arg2 = pred_ex.arg2
@@ -815,15 +815,26 @@ class Model(pl.LightningModule):
                 allen_str += f"<arg2> {arg2} </arg2>\t"
                 allen_str += f"{pred_ex.confi}\n"
             l_pred_allen_str.append(allen_str.strip("/n"))
-        return l_pred_str, l_pred_allen_str
 
-    def _write_if_task_cc(self):
+        fmode = "w" if batch_id == 0 else "a"
+        fpath = self.params.task + ".txt"
+        with open(fpath, fmode) as pred_f:
+            pred_f.write('\n'.join(l_pred_str) + '\n')
+        if "write_allennlp" in self.params.d:
+            fpath = PREDICTIONS_DIR + "/allen.txt"
+            with open(fpath, fmode) as allen_f:
+                allen_f.write('\n'.join(l_pred_allen_str) + '\n')
+
+    def _write_if_task_cc(self, batch_id):
         """
+
+        Parameters
+        ----------
+        batch_id: int
 
         Returns
         -------
-        list[str]
-            l_pred_str
+        None
 
         """
         fix_d = self.metric.fix_d
@@ -865,7 +876,10 @@ class Model(pl.LightningModule):
         self.cc_l_pred_str += l_pred_str
         self.cc_ll_spanned_loc += ll_spanned_loc
 
-        return l_pred_str
+        fmode = "w" if batch_id == 0 else "a"
+        fpath = self.params.task + ".txt"
+        with open(fpath, fmode) as pred_f:
+            pred_f.write('\n'.join(l_pred_str) + '\n')
 
     def _write_output(self, batch_id):
         """
@@ -886,25 +900,8 @@ class Model(pl.LightningModule):
             l_orig_sent = [self.auto_tokenizer.decode[m] for m
                            in l_orig_sent[k]]
         if self.params.task == "ex":
-            l_pred_str, l_pred_allen_str = \
-                self._write_if_task_ex()
+            self._write_if_task_ex(batch_id)
         elif self.params.task == "cc":
-            l_pred_str = self._write_if_task_cc()
+            self._write_if_task_cc(batch_id)
         else:
             assert False
-        fpath = self.params.task + ".txt"
-        if batch_id == 0:
-            fmode = 'w'
-        else:
-            fmode = 'a'
-        with open(fpath, fmode) as pred_f:
-            pred_f.write('\n'.join(l_pred_str) + '\n')
-        if self.params.d.task == "ex" and \
-                "write_allennlp" in self.params.d:
-            fpath = PREDICTIONS_DIR + "/allen.txt"
-            if batch_id == 0:
-                fmode = "w"
-            else:
-                fmode = "a"
-            with open(fpath, fmode) as allen_f:
-                allen_f.write('\n'.join(l_pred_allen_str) + '\n')

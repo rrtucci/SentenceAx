@@ -165,8 +165,7 @@ class Model(pl.LightningModule):
         self.ll_verb_loc = None
         self.ll_wstart_loc = None
 
-        self.batch_m_out = None
-        self.true_batch_m_out = None
+        self.l_batch_m_out = None
         self.eval_out_d = {}  # filled in test_epoch_end()
 
         # self.init_name_to_param=None #Openie6 has this as Model attribute but
@@ -175,6 +174,10 @@ class Model(pl.LightningModule):
     def configure_optimizers(self):
         """
         inherited method
+
+        The optimizer can be Adam or AdamW. If there are multiple
+        constraints `multi_con = True`, then an Adam or AdamW optimzer will
+        be used for each constraint.
 
         Returns
         -------
@@ -219,7 +222,7 @@ class Model(pl.LightningModule):
         else:
             assert False
 
-        if "multi_con" in self.params.d:
+        if "multi_opt" in self.params.d:
             assert "constraint_str" in self.params.d
             num_optimizers = \
                 len(self.params.d["constraint_str"].split('_'))
@@ -542,7 +545,7 @@ class Model(pl.LightningModule):
 
         return hinge_loss
 
-    def training_step(self, batch_id, use_all_con=True):
+    def training_step(self, batch_id):
         """
         inherited method
 
@@ -557,21 +560,21 @@ class Model(pl.LightningModule):
             batch_loss
 
         """
-        if use_all_con:
-            constraint_str = 'posm_hvc_hvr_hve'
-            con_weight_str = '1_1_1_1'
+        if "multi_opt" not in self.params.d \
+                or not self.params.d["multi_opt"]:
+            constraint_str = ""
+            con_weight_str = ""
         else:
-            assert "constraint_str" in self.params.d
-            assert "con_weight_str" in self.params.d
-            constraint_str = self.params.d["constraint_str"]
-            con_weight_str = self.params.d["con_weight_str"]
-            l_constraint = constraint_str.split('_')
-            l_con_weight = con_weight_str.split('_')
-            assert len(l_constraint) == len(l_con_weight)
-            if "multi_con" in self.params.d:
-                assert len(l_constraint) > 1
+            if "constraint_str" not in self.params.d or \
+                    "con_weight_str" not in self.params.d:
+                constraint_str = 'posm_hvc_hvr_hve'
+                con_weight_str = '1_1_1_1'
             else:
-                assert len(l_constraint) == 1
+                constraint_str = self.params.d["constraint_str"]
+                con_weight_str = self.params.d["con_weight_str"]
+                l_constraint = constraint_str.split('_')
+                l_con_weight = con_weight_str.split('_')
+                assert len(l_constraint) == len(l_con_weight)
 
         _, _, batch_loss = self.forward(batch_id=batch_id,
                                         ttt='train',
@@ -595,14 +598,15 @@ class Model(pl.LightningModule):
 
         """
         lll_ilabel, lll_confi, loss = self.forward(
-            mode=self.params.mode,
-            constraint_str=self.params.d["constraint_str"],
-            con_weight_str=self.params.d["con_weight_str"])
+            batch_id,
+            "tune",
+            self.params.d["constraint_str"],
+            self.params.d["con_weight_str"])
 
         tune_out_d = {"lll_ilabel": lll_ilabel,
                       "lll_confi": lll_confi,
                       "ground_truth": self.true_batch_m_out.lll_ilabel,
-                      "meta_data": self.batch_m_out.meta_data}
+                      "l_orig_sent": self.batch_m_out.l_orig_sent}
         tune_out_d = OrderedDict(tune_out_d)
 
         if self.params.d["mode"] != 'test':
@@ -635,6 +639,8 @@ class Model(pl.LightningModule):
         not inherited method, used in *_epoch_end methods
         note that both `mode` and self.params.d["mode"] are used
 
+        `outputs` similar to `self.l_batch_m_out`
+
         Parameters
         ----------
         ttt: str
@@ -648,27 +654,29 @@ class Model(pl.LightningModule):
         """
         eval_out_d = None
         if self.params.d["mode"] == 'test':
-            lll_ilabel = self.batch_m_out.lll_ilabel
-            lll_confi = self.batch_m_out.lll_confi
-            l_orig_sent = self.batch_m_out.l_orig_sent
-            true_lll_ilabel = self.true_batch_m_out.lll_ilabel
-            lll_confi = (lll_confi * 100).round() / 100
+            for batch_m_out in self.l_batch_m_out:
+                lll_ilabel = batch_m_out.lll_ilabel.cpu()
+                lll_confi = batch_m_out.lll_confi.cpu()
+                l_orig_sent = batch_m_out.l_orig_sent.cpu()
+                true_lll_ilabel = batch_m_out.true_lll_ilabel.cpu()
+                lll_confi = (lll_confi * 100).round() / 100
 
         if self.params.task == "cc":
             if 'predict' in self.params.mode:
                 metrics_d = {'P_exact': 0, 'R_exact': 0, 'F1_exact': 0}
             else:
-                num_samples = len(lll_ilabel)
-                for k in enumerate(range(num_samples)):
-                    if type(l_orig_sent[k][0]) != str:
-                        l_orig_sent[k] = [self.auto_tokenizer.decode[m] for
-                                          m in l_orig_sent]
-                    self.metric(lll_ilabel[k],
-                                true_lll_ilabel[k],
-                                l_orig_sent[k])
+                for batch_m_out in l_batch_m_out:
+                    # if type(batch_m_out.l_orig_sent[0]) != str:
+                    #     batch_m_out.l_orig_sent = \
+                    #         [self.auto_tokenizer.decode[m]
+                    #          for m in l_orig_sent]
+                    self.metric(batch_m_out.l_orig_sent,
+                                batch_m_out.lll_ilabel,
+                                batch_m_out.true_lll_ilabel)
                 metrics_d = self.metric.get_score_d(do_reset=True)
 
             val_acc = metrics_d["F1_exact"]
+            # val_auc = 0
             eval_out_d = {"eval_f1": val_acc,
                           "eval_p": metrics_d["P_exact"],
                           "eval_r": metrics_d["R_exact"]}
@@ -679,22 +687,21 @@ class Model(pl.LightningModule):
                              'carb_auc': 0,
                              'carb_last_f1': 0}
             else:
-                num_samples = len(self.batch_m_out.lll_ilabel)
-                for k in range(num_samples):
-                    if type(l_orig_sent[k][0]) != str:
-                        l_orig_sent[k] = [self.auto_tokenizer.decode[m]
-                                          for m in
-                                          l_orig_sent[k]]
-                    self.metric(l_orig_sent[k],
-                                lll_ilabel[k],
-                                true_lll_ilabel[k])
+                for batch_m_out in self.l_batch_m_out:
+                    # if type(l_orig_sent[k][0]) != str:
+                    #     l_orig_sent[k] = [self.auto_tokenizer.decode[m]
+                    #                       for m in
+                    #                       l_orig_sent[k]]
+                    self.metric(batch_m_out.l_orig_sent,
+                                batch_m_out.lll_ilabel,
+                                batch_m_out.true_lll_ilabel)
                 metrics_d = self.metric.get_score_d(do_reset=True)
 
             eval_out_d = {"eval_f1": metrics_d["carb_f1"],
                           "eval_auc": metrics_d["carb_auc"],
                           "eval_last_f1": metrics_d["carb_last_f1"]}
 
-        print('\nResults: ' + str(eval_out_d))
+        print('\nResults:\n' + str(eval_out_d))
         # For computing the constraint violations
         # if hasattr(self, 'con_to_l_loss') and \
         # self.params.d["constraint_str"] != '':
@@ -751,9 +758,9 @@ class Model(pl.LightningModule):
         None
 
         """
-        pass
+        return
 
-    def tune_dataloader(self):
+    def val_dataloader(self):
         """
         inherited abstract method
 
@@ -762,7 +769,7 @@ class Model(pl.LightningModule):
         None
 
         """
-        pass
+        return
 
     def _write_if_task_ex(self):
         """

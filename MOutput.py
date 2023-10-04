@@ -16,6 +16,7 @@ class MOutput:
     def __init__(self,
                  l_orig_sent,
                  lll_ilabel_10,
+                 true_lll_ilabel_10,
                  ll_confi_10,
                  loss_10):
         """
@@ -24,11 +25,13 @@ class MOutput:
         ----------
         l_orig_sent
         lll_ilabel_10
+        true_lll_ilabel_10
         ll_confi_10
         loss_10
         """
         self.l_orig_sent = l_orig_sent
         self.lll_ilabel = lll_ilabel_10.cpu().to_list()
+        self.true_lll_ilabel = true_lll_ilabel_10.cpu().to_list()
 
         self.ll_confi = ll_confi_10.cpu().to_list()
         self.loss = float(loss_10.cpu())

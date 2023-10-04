@@ -171,6 +171,24 @@ class Model(pl.LightningModule):
         # self.init_name_to_param=None #Openie6 has this as Model attribute but
         # not us
 
+        if "multi_opt" not in self.params.d \
+                or not self.params.d["multi_opt"]:
+            constraint_str = ""
+            con_weight_str = ""
+        else:
+            if "constraint_str" not in self.params.d or \
+                    "con_weight_str" not in self.params.d:
+                constraint_str = 'posm_hvc_hvr_hve'
+                con_weight_str = '1_1_1_1'
+            else:
+                constraint_str = self.params.d["constraint_str"]
+                con_weight_str = self.params.d["con_weight_str"]
+        l_constraint = constraint_str.split('_')
+        l_con_weight = con_weight_str.split('_')
+        assert len(l_constraint) == len(l_con_weight)
+        self.con_to_weight= {l_constraint[k]: float(l_con_weight[k])
+                for k in range(len(l_constraint))}
+
     def configure_optimizers(self):
         """
         inherited method
@@ -223,9 +241,7 @@ class Model(pl.LightningModule):
             assert False
 
         if "multi_opt" in self.params.d:
-            assert "constraint_str" in self.params.d
-            num_optimizers = \
-                len(self.params.d["constraint_str"].split('_'))
+            num_optimizers = len(self.con_to_weight)
             return [optimizer] * num_optimizers
         else:
             return [optimizer]
@@ -259,8 +275,7 @@ class Model(pl.LightningModule):
         tqdm_d['best'] = best
         return tqdm_d
 
-    def forward(self, batch_id=-1, ttt='train',
-                constraint_str=None, con_weight_str=None):
+    def forward(self, batch_id=-1, ttt='train'):
         """
         inherited method
         signature of parent method:  def forward(self, *args, **kwargs)
@@ -275,8 +290,6 @@ class Model(pl.LightningModule):
         ----------
         mode: str
         batch_id: int
-        constraint_str: str
-        con_weight_str: str
 
         Returns
         -------
@@ -347,15 +360,11 @@ class Model(pl.LightningModule):
                     break
         # outsource everything after do loop to a new function
         return self._calc_forward_output(ttt,
-                                         llll_word_confi,
-                                         constraint_str,
-                                         con_weight_str)
+                                         llll_word_confi)
 
     def _calc_forward_output(self,
                              ttt,
-                             llll_word_confi,
-                             constraint_str,
-                             con_weight_str):
+                             llll_word_confi):
         """
         not inherited method. used in forward() method
 
@@ -363,8 +372,6 @@ class Model(pl.LightningModule):
         ----------
         ttt
         llll_word_confi
-        constraint_str
-        con_weight_str
 
         Returns
         -------
@@ -411,7 +418,7 @@ class Model(pl.LightningModule):
                 lll_confi.append(l_confi.unsqueeze(1))
 
         if ttt == 'train':
-            if constraint_str:
+            if self.constraint_str:
                 # dim=1 is depth. This cats along depth dimension
                 llll_word_confi = torch.cat([ll.unsqueeze(1) for
                                              ll in llll_word_confi], dim=1)
@@ -419,8 +426,7 @@ class Model(pl.LightningModule):
 
                 con_loss = self._constrained_loss(
                     llll_word_confi,
-                    constraint_str,
-                    con_weight_str) / batch_size
+                    self.con_to_weight) / batch_size
                 batch_loss = con_loss
 
             if "wreg" in self.params.d["wreg"]:
@@ -437,7 +443,7 @@ class Model(pl.LightningModule):
             llll_pred_ilabel = torch.cat(llll_pred_ilabel, dim=1)
             lll_confi = torch.cat(lll_confi, dim=1)
 
-            if constraint_str and \
+            if self.constraint_str and \
                     'predict' not in self.params.d["mode"] and \
                     self.params.d["batch_size"] != 1:
                 llll_word_confi = torch.cat([ll.unsqueeze(1) for
@@ -458,17 +464,9 @@ class Model(pl.LightningModule):
                     index=llll_ilabel.long(),
                     src=1)
 
-                l_constraint = constraint_str.split('_')
-                l_con_weight = con_weight_str.split('_')
-                assert len(l_constraint) == len(l_con_weight)
-                # if len(l_con_weight) == 1:
-                #     l_con_weight = [con_weight_str] * len(l_constraint)
-
-                for constraint, con_weight in \
-                        zip(l_constraint, l_con_weight):
+                for constraint, con_weight in self.con_to_weight.items():
                     con_loss = self._constrained_loss(llll_word_confi,
-                                                      constraint,
-                                                      float(con_weight))
+                                                      {constraint:con_weight})
                     if constraint not in self.con_to_l_loss:
                         self.con_to_l_loss[constraint] = []
                     self.con_to_l_loss[constraint].append(con_loss)
@@ -477,8 +475,7 @@ class Model(pl.LightningModule):
 
     def _constrained_loss(self,
                           llll_word_confi,
-                          constraint,
-                          con_weight):
+                          con_to_weight):
         """
         similar to Openie6.model.constrained_loss()
         not inherited method
@@ -487,8 +484,7 @@ class Model(pl.LightningModule):
         Parameters
         ----------
         llll_word_confi: torch.tensor
-        constraint: str
-        con_weight: float
+        con_to_weight: dict[str, float]
 
         Returns
         -------
@@ -510,26 +506,26 @@ class Model(pl.LightningModule):
 
         lll_verb_rel_confi = lll_verb_rel_confi * lll_bool
         # every head-verb must be included in a relation
-        if constraint == 'hvc':
+        if 'hvc' in con_to_weight:
             ll_column_loss = \
                 torch.abs(1 - torch.sum(lll_verb_rel_confi, dim=1))
             ll_column_loss = ll_column_loss[self.ll_verb_loc != 0]
-            hinge_loss += con_weight * ll_column_loss.sum()
+            hinge_loss += con_to_weight['hvc'] * ll_column_loss.sum()
 
         # extractions must have at least k-relations with
         # a head verb in them
-        if constraint == 'hvr':
+        if 'hvr' in con_to_weight:
             l_a = self.ll_verb_bool.sum(dim=1).float()
             l_b = torch.max(lll_verb_rel_confi, dim=2)[0].sum(dim=1)
             row_rel_loss = F.relu(l_a - l_b)
-            hinge_loss += con_weight * row_rel_loss.sum()
+            hinge_loss += con_to_weight['hvr'] * row_rel_loss.sum()
 
         # one relation cannot contain more than one head verb
-        if constraint == 'hve':
+        if 'hve' in con_to_weight:
             ll_ex_loss = F.relu(torch.sum(lll_verb_rel_confi, dim=2) - 1)
-            hinge_loss += con_weight * ll_ex_loss.sum()
+            hinge_loss += con_to_weight['hve'] * ll_ex_loss.sum()
 
-        if constraint == 'posm':
+        if 'posm' in con_to_weight:
             llll_index = self.ll_pos_loc.unsqueeze(1).unsqueeze(3). \
                 repeat(1, num_depths, 1, icode_dim)
             llll_confi = torch.gather(
@@ -541,7 +537,7 @@ class Model(pl.LightningModule):
             ll_column_loss = \
                 (1 - torch.max(lll_pos_not_none_confi, dim=1)[0]) * \
                 (self.ll_pos_loc != 0).float()
-            hinge_loss += con_weight * ll_column_loss.sum()
+            hinge_loss += con_to_weight['posm'] * ll_column_loss.sum()
 
         return hinge_loss
 
@@ -560,26 +556,9 @@ class Model(pl.LightningModule):
             batch_loss
 
         """
-        if "multi_opt" not in self.params.d \
-                or not self.params.d["multi_opt"]:
-            constraint_str = ""
-            con_weight_str = ""
-        else:
-            if "constraint_str" not in self.params.d or \
-                    "con_weight_str" not in self.params.d:
-                constraint_str = 'posm_hvc_hvr_hve'
-                con_weight_str = '1_1_1_1'
-            else:
-                constraint_str = self.params.d["constraint_str"]
-                con_weight_str = self.params.d["con_weight_str"]
-                l_constraint = constraint_str.split('_')
-                l_con_weight = con_weight_str.split('_')
-                assert len(l_constraint) == len(l_con_weight)
 
         _, _, batch_loss = self.forward(batch_id=batch_id,
-                                        ttt='train',
-                                        constraint_str=constraint_str,
-                                        con_weight_str=con_weight_str)
+                                        ttt='train')
 
         return batch_loss
 
@@ -599,9 +578,7 @@ class Model(pl.LightningModule):
         """
         lll_ilabel, lll_confi, loss = self.forward(
             batch_id,
-            "tune",
-            self.params.d["constraint_str"],
-            self.params.d["con_weight_str"])
+            "tune")
 
         tune_out_d = {"lll_ilabel": lll_ilabel,
                       "lll_confi": lll_confi,

@@ -19,7 +19,7 @@ class SaxDataSet(Dataset):
 
     """
 
-    def __init__(self, m_in, pad_ilabel, use_spacy_model):
+    def __init__(self, m_in, pad_icode, use_spacy_model):
         """
         In Openie6, the `torchtext.data.Dataset` class is a normal class
         `Dataset(examples, fields)` is abstract class but in newer versions
@@ -37,10 +37,10 @@ class SaxDataSet(Dataset):
         Parameters
         ----------
         m_in: MInput
-        pad_ilabel: int
+        pad_icode: int
         use_spacy_model: bool
         """
-        self.padder = SaxDataPadder(m_in, pad_ilabel, use_spacy_model)
+        self.padder = SaxDataPadder(m_in, pad_icode, use_spacy_model)
         data_d = self.padder.padded_data_d
 
         self.num_samples, self.num_depths, self.num_words = \
@@ -91,10 +91,10 @@ if __name__ == "__main__":
         m_in = MInput(in_fp,
                          auto,
                          use_spacy_model)
-        # full encoding is [101, 0, 102], 101=BOS_ILABEL, 102=EOS_ILABEL
-        pad_ilabel = auto.encode(auto.pad_token)[1]
-        print("pad_token, pad_ilabel=", auto.pad_token, pad_ilabel)
-        dset = SaxDataSet(m_in, pad_ilabel, use_spacy_model)
+        # full encoding is [101, 0, 102], 101=BOS_ICODE, 102=EOS_ICODE
+        pad_icode = auto.encode(auto.pad_token)[1]
+        print("pad_token, pad_icode=", auto.pad_token, pad_icode)
+        dset = SaxDataSet(m_in, pad_icode, use_spacy_model)
         dset.padder.print_padded_data_d_shapes()
         print("xtypes=", dset.xtypes)
         print("x.shape, x.shape_product=",

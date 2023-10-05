@@ -329,7 +329,7 @@ class MInput:
                 encoding_d = self.auto_tokenizer.batch_encode_plus(
                     get_words(sentL))
                 # print("encoding_d", encoding_d)
-                osent_ilabels = [BOS_ILABEL]
+                osent_ilabels = [BOS_ICODE]
                 osent_wstart_locs = []
                 # encoding_d['input_ids'] is a ll_ilabel
                 for ilabels in encoding_d['input_ids']:
@@ -338,11 +338,11 @@ class MInput:
                     if len(ilabels) == 0:
                         ilabels = [100]
                     # note osent_wstart_locs[0]=1 because first
-                    # ilabels =[BOS_ILABEL]
+                    # ilabels =[BOS_ICODE]
                     osent_wstart_locs.append(len(osent_ilabels))
                     # same as ilabels.extend(ilabels)
                     osent_ilabels += ilabels
-                osent_ilabels.append(EOS_ILABEL)
+                osent_ilabels.append(EOS_ICODE)
                 assert len(sentL.split()) == len(osent_wstart_locs)
             elif is_tag_line_of_sample(line):
                 # print("sdfrg-tag", k)

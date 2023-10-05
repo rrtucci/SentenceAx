@@ -41,7 +41,7 @@ def merge_dicts(dominant_d, default_d):
     return new_dict
 
 
-def get_words(sent, algo="ss"):
+def get_words(sent, algo="nltk"):
     """
     note: get_words("") = []
 
@@ -282,6 +282,13 @@ if __name__ == "__main__":
         replace_in_list(l_x, 3, 33)
         print("l_x=", l_x)
 
+    def main3():
+        sent1 = 'This is a great quote: "To be, or not to be".'
+        sent2 = 'This is a great quote : " To be, or not to be " . '
+        print(get_words(sent1))
+        print(get_words(sent2))
+
 
     main1()
     main2()
+    main3()

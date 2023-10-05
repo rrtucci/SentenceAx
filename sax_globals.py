@@ -56,10 +56,10 @@ DROPOUT = 0.0
 MAX_EX_DEPTH = 5
 MAX_CC_DEPTH = 3
 
-PAD_ILABEL = 0  # ipad
+PAD_ICODE = 0  # ipad
 NUM_ICODES = 100
-BOS_ILABEL = 101  # bos = begin of sentence
-EOS_ILABEL = 102  # eos = end of sentence
+BOS_ICODE = 101  # bos = begin of sentence
+EOS_ICODE = 102  # eos = end of sentence
 
 NUM_ILABELS = 6
 ILABELLING_DIM = 300

@@ -32,7 +32,7 @@ class SaxDataLoader:
     Attributes
     ----------
     auto_tokenizer: AutoTokenizer
-    pad_ilabel: int
+    pad_icode: int
     params: Params
     predict_fp: str
     test_fp: str
@@ -63,8 +63,8 @@ class SaxDataLoader:
 
         self.params = params
         self.auto_tokenizer = auto_tokenizer
-        # full encoding is [101, 0, 102], 101=BOS_ILABEL, 102=EOS_ILABEL
-        self.pad_ilabel = \
+        # full encoding is [101, 0, 102], 101=BOS_ICODE, 102=EOS_ICODE
+        self.pad_icode = \
             auto_tokenizer.encode(auto_tokenizer.pad_token)[1]
 
         self.train_fp = train_fp
@@ -141,7 +141,7 @@ class SaxDataLoader:
             # vocab = build_vocab(predict_m_in)
 
             predict_dataset = SaxDataSet(predict_m_in,
-                                         self.pad_ilabel,
+                                         self.pad_icode,
                                          self.use_spacy_model)
 
             train_dataset = predict_dataset
@@ -184,15 +184,15 @@ class SaxDataLoader:
             #     train_m_in + tune_m_in + test_m_in)
 
             train_dataset = SaxDataSet(train_m_in,
-                                       self.pad_ilabel,
+                                       self.pad_icode,
                                        self.use_spacy_model)
 
             tune_dataset = SaxDataSet(tune_m_in,
-                                      self.pad_ilabel,
+                                      self.pad_icode,
                                       self.use_spacy_model)
 
             test_dataset = SaxDataSet(test_m_in,
-                                      self.pad_ilabel,
+                                      self.pad_icode,
                                       self.use_spacy_model)
 
             # to simulate bucket sort (along with pad_data)

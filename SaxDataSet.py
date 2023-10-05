@@ -13,9 +13,9 @@ class SaxDataSet(Dataset):
     num_samples: int
     num_words: int
     padder: SaxDataPadder
-    x: torch.tensor
+    x: torch.Tensor
     xtypes: list[str]
-    y: torch.tensor
+    y: torch.Tensor
 
     """
 
@@ -60,7 +60,7 @@ class SaxDataSet(Dataset):
 
         Returns
         -------
-        torch.tensor, torch.tensor
+        torch.Tensor, torch.Tensor
 
         """
         return self.x[sample_id], self.y[sample_id]

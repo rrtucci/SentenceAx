@@ -16,7 +16,7 @@ class SaxDataPadder:
     m_in: MInput
     num_samples: int
     pad_icode: int
-    padded_data_d: dict[str, torch.tensor]
+    padded_data_d: dict[str, torch.Tensor]
     use_spacy_model: bool
     """
 
@@ -50,12 +50,12 @@ class SaxDataPadder:
 
         Parameters
         ----------
-        unpadded_ll_x: list[list[torch.tensor]]
+        unpadded_ll_x: list[list[torch.Tensor]]
         ipad: int
 
         Returns
         -------
-        torch.tensor
+        torch.Tensor
 
         """
         # padding a 2 dim array
@@ -73,7 +73,7 @@ class SaxDataPadder:
         # for i in range(len(padded_ll_x)):
         #     print(i,len(padded_ll_x[i]), padded_ll_x)
 
-        return torch.tensor(padded_ll_x)
+        return torch.Tensor(padded_ll_x)
 
     @staticmethod
     def get_padded_lll_ilabel(unpadded_lll_ilabel, ipad1=0, ipad2=0):
@@ -88,7 +88,7 @@ class SaxDataPadder:
 
         Returns
         -------
-        torch.tensor
+        torch.Tensor
         """
         lll_ilabel = deepcopy(unpadded_lll_ilabel)
 
@@ -120,7 +120,7 @@ class SaxDataPadder:
 
         # for sam in range(len(lll_ilabel)):
         #     print(sam, len(lll_ilabel[sam]), len(lll_ilabel[sam][0]))
-        return torch.tensor(lll_ilabel)
+        return torch.Tensor(lll_ilabel)
 
     # def build_vocab(self, self.m_in):
     #     """
@@ -151,7 +151,7 @@ class SaxDataPadder:
 
         Returns
         -------
-        dict[str, torch.tensor]
+        dict[str, torch.Tensor]
 
         """
 

@@ -134,15 +134,22 @@ class Model(pl.LightningModule):
 
         """
         embedding = nn.Embedding(num_embeddings=10, embedding_dim=3)
-        an embedding or encoding is the vector image for an int or 
-        tensor of ints. Hence, an embedding or encoding is a map: 
-        A->A^n where A = range(len(A))
-        Will call i\in A an icode.
+        an embedding or encoding takes a tensor ll_x with shape (2, 4)
+        to a tensor lll_x of shape (2, 4, 3)
+        The elements of the tensor will be called icodes. The num of 
+        possible icodes here is 10.
 
         a = torch.LongTensor([[1, 2, 3, 9], [4, 3, 2, 0]]) # (2, 4)
         embedding(a) has shape (2, 4, 3)
-        num_embeddings (int) – len(A)=vocab size=num_icodes
-        embedding_dim (int) – n=new_inner_dim
+        num_embeddings (int) – vocab size, num icodes
+        embedding_dim (int) – 3 = len(lll[0][0])
+        
+        Embedding is a layer that takes a tensor of icodes to another tensor 
+        of icodes with one more index. An encoder takes each word and 
+        replaces it by an icode.
+        
+        output = nn.Linear(na, nb)(input)
+        If input has shape (10, 20, na), then output has shape (10, 20, nb)
             
         """
         self.embedding = nn.Embedding(NUM_ICODES,  # 100
@@ -294,7 +301,7 @@ class Model(pl.LightningModule):
 
         Returns
         -------
-        torch.tensor, torch.tensor, torch.tensor
+        torch.Tensor, torch.Tensor, torch.Tensor
             lll_ilabel, lll_confi, batch_loss
 
         """
@@ -376,7 +383,7 @@ class Model(pl.LightningModule):
 
         Returns
         -------
-        torch.tensor, torch.tensor, torch.tensor
+        torch.Tensor, torch.Tensor, torch.Tensor
             llll_pred_ilabel, lll_confi, batch_loss
 
 
@@ -484,7 +491,7 @@ class Model(pl.LightningModule):
 
         Parameters
         ----------
-        llll_word_confi: torch.tensor
+        llll_word_confi: torch.Tensor
         con_to_weight: dict[str, float]
 
         Returns
@@ -584,7 +591,7 @@ class Model(pl.LightningModule):
         tune_out_d = {"lll_ilabel": lll_ilabel,
                       "lll_confi": lll_confi,
                       "ground_truth": self.true_batch_m_out.lll_ilabel,
-                      "l_orig_sent": self.batch_m_out.l_orig_sent}
+                      "l_orig_sent": self.batch_m_out.ll_osent_icode}
         tune_out_d = OrderedDict(tune_out_d)
 
         if self.params.d["mode"] != 'test':
@@ -643,11 +650,10 @@ class Model(pl.LightningModule):
             if 'predict' in self.params.mode:
                 metrics_d = {'P_exact': 0, 'R_exact': 0, 'F1_exact': 0}
             else:
-                for batch_m_out in l_batch_m_out:
-                    # if type(batch_m_out.l_orig_sent[0]) != str:
-                    #     batch_m_out.l_orig_sent = \
-                    #         [self.auto_tokenizer.decode[m]
-                    #          for m in l_orig_sent]
+                for batch_m_out in l_batch_m_out
+                    batch_m_out.l_orig_sent = \
+                        MInput.decode_ll_icode(ll_osent_icode,
+                                               self.auto_tokenizer)
                     self.metric(batch_m_out.l_orig_sent,
                                 batch_m_out.lll_ilabel,
                                 batch_m_out.true_lll_ilabel)
@@ -666,10 +672,8 @@ class Model(pl.LightningModule):
                              'carb_last_f1': 0}
             else:
                 for batch_m_out in self.l_batch_m_out:
-                    # if type(l_orig_sent[k][0]) != str:
-                    #     l_orig_sent[k] = [self.auto_tokenizer.decode[m]
-                    #                       for m in
-                    #                       l_orig_sent[k]]
+                    l_orig_sent = MInput.decode_ll_icode(ll_osent_icode,
+                                               self.auto_tokenizer)
                     self.metric(batch_m_out.l_orig_sent,
                                 batch_m_out.lll_ilabel,
                                 batch_m_out.true_lll_ilabel)
@@ -766,7 +770,7 @@ class Model(pl.LightningModule):
         lll_ilabel = self.batch_m_out.lll_ilabel
         lll_confi = self.batch_m_out.lll_confi
         num_samples, num_depths, _ = lll_ilabel.shape
-        l_orig_sent = self.batch_m_out.l_orig_sent
+        l_orig_sent = self.batch_m_out.ll_osent_icode
 
         osent_to_l_pred_ex = {}
         for sample_id, orig_sent in enumerate(l_orig_sent):
@@ -846,7 +850,7 @@ class Model(pl.LightningModule):
         lll_ilabel = self.batch_m_out.lll_ilabel
         num_samples, num_depths, _ = lll_ilabel.shape
         # true_lll_ilabel = self.true_batch_m_out.lll_label
-        l_orig_sent = [self.batch_m_out.l_orig_sent for
+        l_orig_sent = [self.batch_m_out.ll_osent_icode for
                        k in range(num_samples)]
         l_pred_str = []
         ll_spanned_word = []
@@ -895,10 +899,8 @@ class Model(pl.LightningModule):
 
         """
         num_samples = len(self.batch_m_out.lll_ilabel)
-        l_orig_sent = self.batch_m_out.l_orig_sent
-        for k in range(num_samples):
-            l_orig_sent = [self.auto_tokenizer.decode[m] for m
-                           in l_orig_sent[k]]
+        l_orig_sent = MInput.decode_ll_icode(ll_osent_icode,
+                               self.auto_tokenizer)
         if self.params.task == "ex":
             self._write_if_task_ex(batch_id)
         elif self.params.task == "cc":

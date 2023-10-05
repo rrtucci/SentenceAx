@@ -1,5 +1,6 @@
 import torch
 from words_tags_ilabels_translation import *
+from MInput import *
 
 
 class MOutput:
@@ -7,77 +8,89 @@ class MOutput:
 
     Attributes
     ----------
+    in_cpu: bool
     l_orig_sent: list[str]
     ll_confi: list[list[float]]
+    ll_confi_10: torch.Tensor
+    ll_osent_icode_10: torch.Tensor
     lll_ilabel: list[list[list[int]]]
+    lll_ilabel_10: torch.Tensor
     loss: float
+    loss_10: torch.Tensor
+    task: str
+    true_lll_ilabel: list[list[list[int]]]
+    true_lll_ilabel_10: torch.Tensor
     """
 
     def __init__(self,
-                 l_orig_sent,
+                 ll_osent_icode_10,
                  lll_ilabel_10,
                  true_lll_ilabel_10,
                  ll_confi_10,
-                 loss_10):
+                 loss_10,
+                 task,
+                 auto_tokenizer):
         """
+        The inputs to the constractor are torch.Tensor and in gpu. They get
+        converted to lists and cpu before being stored as attributes of the
+        class.
+
+        _10 stands for ten-sor
 
         Parameters
         ----------
-        l_orig_sent
-        lll_ilabel_10
-        true_lll_ilabel_10
-        ll_confi_10
-        loss_10
+        ll_osent_icode_10: torch.Tensor
+        lll_ilabel_10: torch.Tensor
+        true_lll_ilabel_10: torch.Tensor
+        ll_confi_10: torch.Tensor
+        loss_10: torch.Tensor
+        task: str
+        auto_tokenizer: AutoTokenizer
+        
         """
-        self.l_orig_sent = l_orig_sent
-        self.lll_ilabel = lll_ilabel_10.cpu().to_list()
-        self.true_lll_ilabel = true_lll_ilabel_10.cpu().to_list()
+        self.ll_osent_icode_10 = ll_osent_icode_10
+        self.lll_ilabel_10 = lll_ilabel_10
+        self.true_lll_ilabel_10 = true_lll_ilabel_10
+        self.ll_confi_10 = ll_confi_10
+        self.loss_10 = loss_10
 
-        self.ll_confi = ll_confi_10.cpu().to_list()
-        self.loss = float(loss_10.cpu())
+        self.l_orig_sent = None
+        self.lll_ilabel = None
+        self.true_lll_ilabel = None
+        self.ll_confi = None
+        self.loss = None
 
-    # def set_l_orig_sent(self, l_orig_sent):
-    #     for k, orig_sent in enumerate(l_orig_sent):
-    #         self.l_sample[k].orig_sent = orig_sent
-    # def get_l_orig_sent(self):
-    #     l_orig_sent = []
-    #     for k in range(self.num_samples):
-    #         l_orig_sent.append(self.l_sample[k])
-    #     return l_orig_sent
-    #
-    #
-    # def set_lll_ilabel(self, lll_ilabel):
-    #     for sample_id, ll_ilabel in enumerate(lll_ilabel):
-    #         self.l_sample[sample_id].absorb_children(ll_ilabel)
-    #
-    # def get_lll_ilabel(self):
-    #     lll_ilabel = []
-    #     for sample_id in range(self.num_samples):
-    #         ll_ilabel = []
-    #         for depth in range(NUM_DEPTHS()):
-    #             for words in range(self.l_sample[sample_id].
-    #
-    # def absorb_ll_confi(self, ll_confi):
-    #     for sample_id, l_confi in enumerate(ll_confi):
-    #         self.l_sample[sample_id].absorb_confis(l_confi)
-    #
-    # def absorb_all_possible(self):
-    #     if self.l_orig_sent:
-    #         self.set_l_orig_sent(self.l_orig_sent)
-    #     if self.lll_ilabel:
-    #         self.num_samples = len(self.lll_ilabel)
-    #         self.l_sample = []
-    #         for k in range(self.num_samples):
-    #             self.l_sample.append(Sample(self.task))
-    #         self.set_lll_ilabel(self.lll_ilabel)
-    #     if self.ll_confi:
-    #         self.num_samples = len(self.ll_confi)
-    #         self.absorb_ll_confi(self.ll_confi)
+        self.in_cpu = False
 
-    def get_lll_word(self, task):
-        if task == "ex":
+        self.task = task
+        self.auto_tokenizer = auto_tokenizer
+
+    def move_to_cpu(self):
+        """
+
+        Returns
+        -------
+        None
+
+        """
+        self.in_cpu = True
+        l_orig_sent2 = \
+            MInput.decode_ll_icode(self.ll_osent_icode_10.cpu(),
+                                   self.auto_tokenizer)
+        if self.task == "ex":
+            self.l_orig_sent = l_orig_sent2
+        else:
+            self.l_orig_sent = l_orig_sent2
+
+        self.lll_ilabel = self.lll_ilabel_10.cpu().to_list()
+        self.true_lll_ilabel = self.true_lll_ilabel_10.cpu().to_list()
+        self.ll_confi = self.ll_confi_10.cpu().to_list()
+        self.loss = float(self.loss_10.cpu())
+
+    def get_lll_word(self):
+        if self.task == "ex":
             translator = translate_ilabels_to_words_via_extags
-        elif task == "cc":
+        elif self.task == "cc":
             translator = translate_ilabels_to_words_via_cctags
         else:
             assert False

@@ -13,13 +13,13 @@ class MInput:
     ----------
     auto_tokenizer: AutoTokenizer
     l_orig_sent: list[str]
-    l_osent_ilabels: list[list[int]]
-    l_osent_pos_locs: list[list[int]]
-    l_osent_pos_bools: list[list[int]]
-    l_osent_verb_locs: list[list[int]]
-    l_osent_verb_bools: list[list[int]]
-    l_osent_wstart_locs: list[list[int]]
-    lll_ilabel: list[list[list[int]]]
+    l_osent_ilabels: list[list[int]] | torch.Tensor
+    l_osent_pos_bools: list[list[int]] | torch.Tensor
+    l_osent_pos_locs: list[list[int]] | torch.Tensor
+    l_osent_verb_bools: list[list[int]] | torch.Tensor
+    l_osent_verb_locs: list[list[int]] | torch.Tensor
+    l_osent_wstart_locs: list[list[int]] | torch.Tensor
+    lll_ilabel: list[list[list[int]]] | torch.Tensor
     spacy_model: spacy.Language
     use_spacy_model: bool
     verbose: bool
@@ -71,6 +71,33 @@ class MInput:
         self.l_osent_verb_locs = []  # shape=(num_samples, num_words)
 
         self.read_input_extags_file(in_fp)
+
+    def use_tensors(self, reverse=False):
+        """
+
+        Parameters
+        ----------
+        reverse: bool
+
+        Returns
+        -------
+        None
+
+        """
+        li = [self.lll_ilabel,
+              self.l_osent_ilabels,
+              self.l_osent_verb_locs,
+              self.l_osent_verb_bools,
+              self.l_osent_pos_locs,
+              self.l_osent_pos_bools,
+              self.l_osent_wstart_locs]
+
+        if not reverse:
+            for x in li:
+                x = torch.Tensor(x)
+        else:
+            for x in li:
+                x = x.tolist()
 
     @staticmethod
     def encode_l_sent(l_sent,
@@ -346,7 +373,8 @@ class MInput:
                 assert len(sentL.split()) == len(osent_wstart_locs)
             elif is_tag_line_of_sample(line):
                 # print("sdfrg-tag", k)
-                ex_ilabels = [EXTAG_TO_ILABEL[tag] for tag in get_words(line)]
+                ex_ilabels = [EXTAG_TO_ILABEL[tag] for tag in
+                              get_words(line)]
                 # print("nnmk-line number= " + str(k))
                 # assert len(ex_ilabels) == len(osent_wstart_locs)
                 l_ex_ilabels.append(ex_ilabels)

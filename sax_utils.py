@@ -262,6 +262,38 @@ def carb_sniffer(name, osent2_to_exs):
                 print(ex.pred, ex.args)
 
 
+def Ten(lista):
+    """
+
+    Parameters
+    ----------
+    lista: list[Any]
+
+    Returns
+    -------
+    torch.Tensor
+
+    """
+    assert type(lista) == list
+    return torch.Tensor(lista)
+
+
+def Li(tensor):
+    """
+
+    Parameters
+    ----------
+    tensor: torch.Tensor
+
+    Returns
+    -------
+    list[Any]
+
+    """
+    assert type(tensor) == torch.Tensor
+    return tensor.tolist()
+
+
 if __name__ == "__main__":
     def main1():
         h = {"x": 5, "y": 3}

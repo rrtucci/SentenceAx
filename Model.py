@@ -87,6 +87,7 @@ class Model(pl.LightningModule):
     hidden_size: int
     init_name_to_param: dict[str, variable]
     iterative_transformer: self.base_model.encoder.layer
+    l_batch_m_out: list[MOutput]
     loss_fun: nn.CrossEntropyLoss
     merge_layer: nn.Linear
     metric: CCMetric | ExMetric
@@ -184,6 +185,8 @@ class Model(pl.LightningModule):
         self.con_to_weight = {l_constraint[k]: float(l_con_weight[k])
                               for k in range(len(l_constraint)) if
                               l_constraint[k]}
+
+        self.l_batch_m_out = None
 
     def configure_optimizers(self):
         """
@@ -380,13 +383,13 @@ class Model(pl.LightningModule):
         Returns
         -------
         torch.Tensor, torch.Tensor, torch.Tensor
-            llll_pred_icode, lll_confi, batch_loss
+            llll_pred_icode, lll_pred_ex_confi, batch_loss
 
 
         """
         batch_loss = 0
         llll_pred_icode = []  # all_depth_predictions
-        lll_confi = []  # all_depth_confidences
+        lll_pred_ex_confi = []  # all_depth_confidences
         batch_size, num_words, _ = lll_word_score.shape
         self.batch_m_in.lll_ex_ilabel = \
             self.batch_m_in.lll_ex_ilabel.long()
@@ -420,7 +423,7 @@ class Model(pl.LightningModule):
 
                 # this unsqueezes depth dim=1
                 llll_pred_icode.append(ll_pred_ilabel.unsqueeze(1))
-                lll_confi.append(l_confi.unsqueeze(1))
+                lll_pred_ex_confi.append(l_confi.unsqueeze(1))
 
         if ttt == 'train':
             if self.constraint_str:
@@ -447,7 +450,7 @@ class Model(pl.LightningModule):
             # torch.cat([A, B], dim=0) will be of shape (6, 4)
             # torch.stack([A, B], dim=0) will be of shape (2, 3, 4)
             llll_pred_icode = torch.cat(llll_pred_icode, dim=1)
-            lll_confi = torch.cat(lll_confi, dim=1)
+            lll_pred_ex_confi = torch.cat(lll_pred_ex_confi, dim=1)
 
             if self.constraint_str and \
                     'predict' not in self.params.d["mode"] and \
@@ -460,14 +463,14 @@ class Model(pl.LightningModule):
                 # for checking test set
                 # lll_ex_ilabel = copy(llll_pred_icode)
                 # ll_ilabel[lll_ex_ilabel == -100] = 0
-                llll_ex_icode = copy(llll_pred_icode)
+                llll_pred_ex_icode = copy(llll_pred_icode)
 
-                llll_ex_icode = llll_ex_icode.unsqueeze(-1)
-                number_depths = llll_ex_icode.shape[1]
+                llll_pred_ex_icode = llll_pred_ex_icode.unsqueeze(-1)
+                number_depths = llll_pred_ex_icode.shape[1]
                 llll_word_score = llll_word_score[:, :number_depths, :, :]
                 llll_word_score.scatter_(
                     dim=3,
-                    index=llll_ex_icode.long(),
+                    index=llll_pred_ex_icode.long(),
                     src=1)
 
                 for constraint, con_weight in self.con_to_weight.items():
@@ -482,7 +485,7 @@ class Model(pl.LightningModule):
         batch_m_out = MOutput(batch_m_in.l_orig_sent,
                               batch_m_in.lll_ex_ilabel,
                               llll_pred_icode,
-                              lll_confi,
+                              lll_pred_ex_confi,
                               batch_loss)
 
         return batch_m_out
@@ -545,12 +548,12 @@ class Model(pl.LightningModule):
         if 'posm' in con_to_weight:
             llll_index = batch_m_in.ll_osent_pos_loc. \
                 unsqueeze(1).unsqueeze(3).repeat(1, num_depths, 1, icode_dim)
-            llll_confi = torch.gather(
+            llll_pred_ex_confi = torch.gather(
                 input=llll_word_score,
                 dim=2,
                 index=llll_index)
             lll_pos_not_none_confi = \
-                torch.max(llll_confi[:, :, :, 1:], dim=-1)[0]
+                torch.max(llll_pred_ex_confi[:, :, :, 1:], dim=-1)[0]
             ll_column_loss = \
                 (1 - torch.max(lll_pos_not_none_confi, dim=1)[0]) * \
                 (batch_m_in.ll_osent_pos_loc != 0).float()
@@ -602,7 +605,7 @@ class Model(pl.LightningModule):
             "tune")
 
         # tune_out_d = {"lll_ex_ilabel": lll_ex_ilabel,
-        #               "lll_confi": lll_confi,
+        #               "lll_pred_ex_confi": lll_pred_ex_confi,
         #               "ground_truth": batch_m_in.lll_ex_ilabel,
         #               "l_orig_sent": batch_m_in.l_orig_sent}
         # tune_out_d = OrderedDict(tune_out_d)
@@ -632,7 +635,7 @@ class Model(pl.LightningModule):
         """
         return self.validation_step(batch_m_in, batch_id, ttt="test")
 
-    def sax_eval_metrics_at_epoch_end(self, l_batch_m_out, ttt):
+    def sax_eval_metrics_at_epoch_end(self, ttt):
         """
         similar to Openie6.model.evaluation_end()
         not inherited method, used in *_epoch_end methods
@@ -642,7 +645,6 @@ class Model(pl.LightningModule):
 
         Parameters
         ----------
-        l_batch_m_out: list[MOutput]
         ttt: str
             either "train", "tune", "test"
 
@@ -654,17 +656,18 @@ class Model(pl.LightningModule):
         """
         eval_out_d = None
         if self.params.d["mode"] == 'test':
-            for batch_m_out in l_batch_m_out:
+            for batch_m_out in self.l_batch_m_out:
                 batch_m_out.move_to_cpu()
 
         if self.params.task == "cc":
             if 'predict' in self.params.mode:
                 metrics_d = {'P_exact': 0, 'R_exact': 0, 'F1_exact': 0}
             else:
-                for batch_m_out in l_batch_m_out:
-                    self.metric(batch_m_out.l_orig_sent,  # meta data
-                                batch_m_out.llll_ex_icode,  # predictions
-                                batch_m_out.lll_ex_ilabel)  # ground truth
+                for batch_m_out in self.l_batch_m_out:
+                    self.metric(
+                        batch_m_out.l_orig_sent,  # meta data
+                        batch_m_out.get_pred_lll_ex_ilabel(),  # predictions
+                        batch_m_out.lll_ex_ilabel)  # ground truth
 
                 metrics_d = self.metric.get_score_d(do_reset=True)
 
@@ -680,10 +683,11 @@ class Model(pl.LightningModule):
                              'ex_auc': 0,
                              'ex_last_f1': 0}
             else:
-                for batch_m_out in l_batch_m_out:
-                    self.metric(batch_m_out.l_orig_sent, # meta data
-                                batch_m_out.llll_ex_icode, # predictions
-                                batch_m_out.lll_confi) # scores
+                for batch_m_out in self.l_batch_m_out:
+                    self.metric(
+                        batch_m_out.l_orig_sent,  # meta data
+                        batch_m_out.get_lll_pred_ex_ilabel(),  # predictions
+                        batch_m_out.get_ll_pred_ex_confi()) # scores
                 metrics_d = self.metric.get_score_d(do_reset=True)
 
             eval_out_d = {"eval_f1": metrics_d["ex_f1"],
@@ -700,13 +704,9 @@ class Model(pl.LightningModule):
         #     self.con_to_l_loss = dict()
         return eval_out_d
 
-    def validation_epoch_end(self, l_batch_m_out):
+    def validation_epoch_end(self):
         """
         inherited method
-
-        Parameters
-        ----------
-        l_batch_m_out: list[MOutput]
 
         Returns
         -------
@@ -715,7 +715,7 @@ class Model(pl.LightningModule):
 
         """
         eval_out_d = \
-            self.sax_eval_metrics_at_epoch_end(l_batch_m_out, "tune")
+            self.sax_eval_metrics_at_epoch_end("tune")
         val_ee_out_d = {}
         if eval_out_d:
             val_ee_out_d = {"log": eval_out_d,
@@ -723,13 +723,9 @@ class Model(pl.LightningModule):
 
         return val_ee_out_d
 
-    def test_epoch_end(self, l_batch_m_out):
+    def test_epoch_end(self):
         """
         inherited method
-
-        Parameters
-        ----------
-        l_batch_m_out: list[MOutput]
 
         Returns
         -------
@@ -738,7 +734,7 @@ class Model(pl.LightningModule):
 
         """
         self.eval_out_d = \
-            self.sax_eval_metrics_at_epoch_end(l_batch_m_out, ttt='test')
+            self.sax_eval_metrics_at_epoch_end(ttt='test')
         test_ee_out_d = {"log": self.eval_out_d,
                          "progress_bar": self.eval_out_d,
                          "test_acc": self.eval_out_d["eval_f1"]}
@@ -783,7 +779,7 @@ class Model(pl.LightningModule):
         fix_d = self.metric.fix_d
 
         lll_ex_ilabel = batch_m_out.lll_ex_ilabel
-        lll_confi = batch_m_out.lll_confi
+        lll_pred_ex_confi = batch_m_out.lll_pred_ex_confi
         num_samples, num_depths, _ = lll_ex_ilabel.shape
         l_orig_sent = batch_m_out.ll_osent_icode
 
@@ -803,7 +799,7 @@ class Model(pl.LightningModule):
                 if sum(ex_ilabels) == 0:  # extractions completed
                     break
                 ex = SaxExtraction.get_ex_from_ilabels(
-                    ex_ilabels, orig_sentL, lll_confi[sample_id][depth])
+                    ex_ilabels, orig_sentL, lll_pred_ex_confi[sample_id][depth])
                 if ex.arg1 and ex.rel:
                     if fix_d:
                         orig_sent0 = fix_d[orig_sent]

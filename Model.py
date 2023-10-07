@@ -662,9 +662,10 @@ class Model(pl.LightningModule):
                 metrics_d = {'P_exact': 0, 'R_exact': 0, 'F1_exact': 0}
             else:
                 for batch_m_out in l_batch_m_out:
-                    self.metric(batch_m_out.l_orig_sent,
-                                batch_m_out.lll_ex_ilabel,
-                                batch_m_out.lll_ex_ilabel)
+                    self.metric(batch_m_out.l_orig_sent,  # meta data
+                                batch_m_out.llll_ex_icode,  # predictions
+                                batch_m_out.lll_ex_ilabel)  # ground truth
+
                 metrics_d = self.metric.get_score_d(do_reset=True)
 
             val_acc = metrics_d["F1_exact"]
@@ -680,10 +681,9 @@ class Model(pl.LightningModule):
                              'ex_last_f1': 0}
             else:
                 for batch_m_out in l_batch_m_out:
-                    l_orig_sent = batch_m_out.get_l_orig_sent()
-                    self.metric(l_orig_sent,
-                                batch_m_out.llll_ex_icode,
-                                batch_m_out.llll_true_ex_icode)
+                    self.metric(batch_m_out.l_orig_sent, # meta data
+                                batch_m_out.llll_ex_icode, # predictions
+                                batch_m_out.lll_confi) # scores
                 metrics_d = self.metric.get_score_d(do_reset=True)
 
             eval_out_d = {"eval_f1": metrics_d["ex_f1"],

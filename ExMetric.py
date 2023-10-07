@@ -44,15 +44,18 @@ class ExMetric:
         self.fix_d = fix_d
         self.use_carb_ex = use_carb_ex
 
-    def __call__(self, l_osentL, lll_ex_ilabel, ll_confi):
+    def __call__(self, 
+                 l_osentL, # meta data
+                 llll_ex_icode, # predictions
+                 lll_iconfi): # scores
         """
 
 
         Parameters
         ----------
         l_osentL: list[str]
-        lll_ex_ilabel: list[list[list[int]]]
-        ll_confi: list[list[float]]
+        llll_ex_icode: list[list[list[int]]]
+        lll_iconfi: list[list[float]]
 
         Returns
         -------
@@ -62,9 +65,9 @@ class ExMetric:
         assert not self.use_carb_ex
         if not self.osentL_to_exs:
             self.osentL_to_exs = \
-                AllenTool.get_osent2_to_exs_from_lll_ex_ilabel(l_osentL,
-                                                               lll_ex_ilabel,
-                                                               ll_confi,
+                AllenTool.get_osent2_to_exs_from_llll_ex_icode(l_osentL,
+                                                               llll_ex_icode,
+                                                               lll_iconfi,
                                                                self.fix_d)
         else:
             assert False, "This __call__ is redundant. osentL_to_exs" \
@@ -72,7 +75,7 @@ class ExMetric:
                           "ExMetric constructor"
         print("Just entered samples into ExMetric instance via its "
               "__call__() method.")
-        print("number of samples=", len(lll_ex_ilabel))
+        print("number of samples=", len(llll_ex_icode))
 
     def reset(self):
         """
@@ -159,10 +162,10 @@ if __name__ == "__main__":
     #         at.osentL_to_exs)
     #     ex_met = ExMetric()
     #     ttt = "test"
-    #     pred_l_osent, pred_lll_ex_ilabel, pred_ll_confi = \
-    #         AllenTool.get_lll_ex_ilabel_from_osent2_to_exs(osent_to_exs)
+    #     pred_l_osent, pred_llll_ex_icode, pred_lll_iconfi = \
+    #         AllenTool.get_llll_ex_icode_from_osent2_to_exs(osent_to_exs)
     #
-    #     ex_met(pred_l_osent, pred_lll_ex_ilabel, pred_ll_confi)
+    #     ex_met(pred_l_osent, pred_llll_ex_icode, pred_lll_iconfi)
     #     score_d = ex_met.get_score_d(ttt, do_reset=True)
     #     print(score_d)
 

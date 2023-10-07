@@ -47,9 +47,9 @@ class CCMetric:
         self.fix_d = fix_d
 
     def __call__(self,
-                 l_osent,
-                 pred_lll_ex_ilabel,
-                 true_lll_ex_ilabel):
+                 l_osent,  # meta data
+                 llll_ex_icode,  # predicted
+                 lll_ex_ilabel):  # ground truth
         """
 
         ccnodes  when we give it the complete ccnodes
@@ -59,8 +59,8 @@ class CCMetric:
         Parameters
         ----------
         l_osent: list[str]
-        pred_lll_ex_ilabel: list[list[list[int]]]
-        true_lll_ex_ilabel: list[list[list[int]]]
+        llll_ex_icode: list[list[list[int]]]
+        lll_ex_ilabel: list[list[list[int]]]
 
         Returns
         -------
@@ -68,16 +68,16 @@ class CCMetric:
 
         """
 
-        num_samples = len(true_lll_ex_ilabel)
+        num_samples = len(lll_ex_ilabel)
         print("Entering samples into CCMetric instance via its __call__() "
               "method.")
         print("number of samples=", num_samples)
         for k in range(num_samples):
             pred_ccnodes = CCTree(l_osent[k],
-                                  pred_lll_ex_ilabel[k],
+                                  llll_ex_icode[k],
                                   calc_tree_struc=True).ccnodes
             true_ccnodes = CCTree(l_osent[k],
-                                  true_lll_ex_ilabel[k],
+                                  lll_ex_ilabel[k],
                                   calc_tree_struc=True).ccnodes
 
             self.report_whole.absorb_new_sample(pred_ccnodes, true_ccnodes)

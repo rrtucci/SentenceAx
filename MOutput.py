@@ -12,14 +12,15 @@ class MOutput:
     in_cpu: bool
     lll_confi: torch.Tensor
     lll_osent_icode: torch.Tensor
-    llll_ilabel: torch.Tensor]
+    llll_icode: torch.Tensor]
     batch_loss: torch.Tensor
     task: str
     """
 
     def __init__(self,
                  lll_osent_icode,
-                 llll_ilabel,
+                 llll_icode,
+                 llll_true_icode,
                  lll_confi,
                  batch_loss,
                  task,
@@ -34,7 +35,8 @@ class MOutput:
         Parameters
         ----------
         ll_osent_icode: torch.Tensor
-        llll_ilabel: torch.Tensor
+        llll_icode: torch.Tensor
+        llll_true_icode: torch.Tensor
         lll_confi: torch.Tensor
         batch_loss: torch.Tensor
         task: str
@@ -42,7 +44,8 @@ class MOutput:
         
         """
         self.ll_osent_icode = ll_osent_icode
-        self.llll_ilabel = llll_ilabel
+        self.llll_icode = llll_icode
+        self.llll_true_icode = llll_true_icode
         self.lll_confi = lll_confi
         self.batch_loss = batch_loss
 
@@ -62,7 +65,8 @@ class MOutput:
         self.in_cpu = True
 
         self.ll_osent_icode = self.ll_osent_icode.cpu()
-        self.llll_ilabel = self.llll_ilabel.cpu()
+        self.llll_icode = self.llll_icode.cpu()
+        self.llll_true_icode = self.llll_true_icode.cpu()
         self.lll_confi = self.lll_confi.cpu()
         self.batch_loss = self.batch_loss.cpu()
 
@@ -92,15 +96,15 @@ class MOutput:
         else:
             assert False
         l_orig_sentL = redoL(self.get_l_orig_sent())
-        num_samples = len(self.llll_ilabel)
-        num_depths = len(self.llll_ilabel[0])
+        num_samples = len(self.llll_icode)
+        num_depths = len(self.llll_icode[0])
         # sent_len = len(self.lll_ilabel[0][0])
         lll_word = []
         for sam in range(num_samples):
             ll_word = []
             for depth in range(num_depths):
                 ll_word.append(
-                    translator(self.llll_ilabel[sam][depth],
+                    translator(self.llll_icode[sam][depth],
                                l_orig_sentL[sam]))
             lll_word.append(ll_word)
         return lll_word

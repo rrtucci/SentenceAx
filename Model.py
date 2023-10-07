@@ -380,12 +380,12 @@ class Model(pl.LightningModule):
         Returns
         -------
         torch.Tensor, torch.Tensor, torch.Tensor
-            llll_pred_ilabel, lll_confi, batch_loss
+            llll_pred_icode, lll_confi, batch_loss
 
 
         """
         batch_loss = 0
-        llll_pred_ilabel = []  # all_depth_predictions
+        llll_pred_icode = []  # all_depth_predictions
         lll_confi = []  # all_depth_confidences
         batch_size, num_words, _ = lll_word_score.shape
         self.batch_m_in.lll_ilabel = \
@@ -419,7 +419,7 @@ class Model(pl.LightningModule):
                     torch.sum(ll_norm_log_prob, dim=1))
 
                 # this unsqueezes depth dim=1
-                llll_pred_ilabel.append(ll_pred_ilabel.unsqueeze(1))
+                llll_pred_icode.append(ll_pred_ilabel.unsqueeze(1))
                 lll_confi.append(l_confi.unsqueeze(1))
 
         if ttt == 'train':
@@ -446,7 +446,7 @@ class Model(pl.LightningModule):
             # if A and B are of shape (3, 4):
             # torch.cat([A, B], dim=0) will be of shape (6, 4)
             # torch.stack([A, B], dim=0) will be of shape (2, 3, 4)
-            llll_pred_ilabel = torch.cat(llll_pred_ilabel, dim=1)
+            llll_pred_icode = torch.cat(llll_pred_icode, dim=1)
             lll_confi = torch.cat(lll_confi, dim=1)
 
             if self.constraint_str and \
@@ -458,16 +458,16 @@ class Model(pl.LightningModule):
                 llll_word_score.fill_(0)
 
                 # for checking test set
-                # lll_ilabel = copy(llll_pred_ilabel)
+                # lll_ilabel = copy(llll_pred_icode)
                 # ll_ilabel[lll_ilabel == -100] = 0
-                llll_ilabel = copy(llll_pred_ilabel)
+                llll_icode = copy(llll_pred_icode)
 
-                llll_ilabel = llll_ilabel.unsqueeze(-1)
-                number_depths = llll_ilabel.shape[1]
+                llll_icode = llll_icode.unsqueeze(-1)
+                number_depths = llll_icode.shape[1]
                 llll_word_score = llll_word_score[:, :number_depths, :, :]
                 llll_word_score.scatter_(
                     dim=3,
-                    index=llll_ilabel.long(),
+                    index=llll_icode.long(),
                     src=1)
 
                 for constraint, con_weight in self.con_to_weight.items():
@@ -480,7 +480,8 @@ class Model(pl.LightningModule):
                     self.con_to_l_loss[constraint].append(con_loss)
 
         batch_m_out = MOutput(lll_osent_icode,
-                              llll_pred_ilabel,
+                              llll_pred_icode,
+                              llll_true_icode,
                               lll_confi,
                               batch_loss,
                               task,
@@ -526,13 +527,14 @@ class Model(pl.LightningModule):
         if 'hvc' in con_to_weight:
             ll_column_loss = \
                 torch.abs(1 - torch.sum(lll_verb_rel_confi, dim=1))
-            ll_column_loss = ll_column_loss[batch_m_in.ll_verb_loc != 0]
+            ll_column_loss = \
+                ll_column_loss[batch_m_in.ll_osent_verb_loc != 0]
             hinge_loss += con_to_weight['hvc'] * ll_column_loss.sum()
 
         # extractions must have at least k-relations with
         # a head verb in them
         if 'hvr' in con_to_weight:
-            l_a = batch_m_in.ll_verb_bool.sum(dim=1).float()
+            l_a = batch_m_in.ll_osent_verb_bool.sum(dim=1).float()
             l_b = torch.max(lll_verb_rel_confi, dim=2)[0].sum(dim=1)
             row_rel_loss = F.relu(l_a - l_b)
             hinge_loss += con_to_weight['hvr'] * row_rel_loss.sum()
@@ -543,8 +545,8 @@ class Model(pl.LightningModule):
             hinge_loss += con_to_weight['hve'] * ll_ex_loss.sum()
 
         if 'posm' in con_to_weight:
-            llll_index = batch_m_in.ll_pos_loc.unsqueeze(1).unsqueeze(3). \
-                repeat(1, num_depths, 1, icode_dim)
+            llll_index = batch_m_in.ll_osent_pos_loc.\
+                unsqueeze(1).unsqueeze(3).repeat(1, num_depths, 1, icode_dim)
             llll_confi = torch.gather(
                 input=llll_word_score,
                 dim=2,
@@ -553,7 +555,7 @@ class Model(pl.LightningModule):
                 torch.max(llll_confi[:, :, :, 1:], dim=-1)[0]
             ll_column_loss = \
                 (1 - torch.max(lll_pos_not_none_confi, dim=1)[0]) * \
-                (batch_m_in.ll_pos_loc != 0).float()
+                (batch_m_in.ll_osent_pos_loc != 0).float()
             hinge_loss += con_to_weight['posm'] * ll_column_loss.sum()
 
         return hinge_loss
@@ -621,7 +623,8 @@ class Model(pl.LightningModule):
 
         Parameters
         ----------
-        batch_id
+        batch_m_out: MOutput
+        batch_id: int
 
         Returns
         -------
@@ -629,7 +632,7 @@ class Model(pl.LightningModule):
             tune_out_d
 
         """
-        return self.validation_step(batch_m_in, batch_id)
+        return self.validation_step(batch_m_in, batch_id, ttt="test")
 
     def _eval_metrics_at_epoch_end(self, l_batch_m_out, ttt):
         """
@@ -641,6 +644,7 @@ class Model(pl.LightningModule):
 
         Parameters
         ----------
+        l_batch_m_out: list[MOutput]
         ttt: str
             either "train", "tune", "test"
 
@@ -660,10 +664,10 @@ class Model(pl.LightningModule):
                 metrics_d = {'P_exact': 0, 'R_exact': 0, 'F1_exact': 0}
             else:
                 for batch_m_out in l_batch_m_out:
-                    l_orig_sent = batch_m_out.get_l_rig_sent()
+                    l_orig_sent = batch_m_out.get_l_orig_sent()
                     self.metric(l_orig_sent,
-                                batch_m_out.lll_ilabel_10,
-                                batch_m_out.true_lll_ilabel_10)
+                                batch_m_out.llll_icode,
+                                batch_m_out.llll_true_ilabel)
                 metrics_d = self.metric.get_score_d(do_reset=True)
 
             val_acc = metrics_d["F1_exact"]
@@ -679,10 +683,10 @@ class Model(pl.LightningModule):
                              'ex_last_f1': 0}
             else:
                 for batch_m_out in l_batch_m_out:
-                    l_orig_sent = batch_m_out.get_l_rig_sent()
+                    l_orig_sent = batch_m_out.get_l_orig_sent()
                     self.metric(l_orig_sent,
-                                batch_m_out.lll_ilabel,
-                                batch_m_out.true_lll_ilabel)
+                                batch_m_out.llll_icode,
+                                batch_m_out.llll_true_icode)
                 metrics_d = self.metric.get_score_d(do_reset=True)
 
             eval_out_d = {"eval_f1": metrics_d["ex_f1"],
@@ -703,6 +707,10 @@ class Model(pl.LightningModule):
         """
         inherited method
 
+        Parameters
+        ----------
+        l_batch_m_out: list[MOutput]
+
         Returns
         -------
         dict[str, Any]
@@ -710,7 +718,7 @@ class Model(pl.LightningModule):
 
         """
         eval_out_d = \
-            self._eval_metrics_at_epoch_end("tune")
+            self._eval_metrics_at_epoch_end(l_batch_m_out, "tune")
         val_ee_out_d = {}
         if eval_out_d:
             val_ee_out_d = {"log": eval_out_d,
@@ -722,6 +730,10 @@ class Model(pl.LightningModule):
         """
         inherited method
 
+        Parameters
+        ----------
+        l_batch_m_out: list[MOutput]
+
         Returns
         -------
         dict[str, Any]
@@ -729,7 +741,7 @@ class Model(pl.LightningModule):
 
         """
         self.eval_out_d = \
-            self._eval_metrics_at_epoch_end('test')
+            self._eval_metrics_at_epoch_end(l_batch_m_out, ttt='test')
         test_ee_out_d = {"log": self.eval_out_d,
                          "progress_bar": self.eval_out_d,
                          "test_acc": self.eval_out_d["eval_f1"]}

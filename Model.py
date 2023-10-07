@@ -91,7 +91,6 @@ class Model(pl.LightningModule):
     merge_layer: nn.Linear
     metric: CCMetric | ExMetric
     params: Params
-    true_batch_m_out: MOutput
 
 
 
@@ -285,13 +284,14 @@ class Model(pl.LightningModule):
         
         Parameters
         ----------
-        mode: str
+        batch_m_in: MInput
         batch_id: int
+        ttt: str
 
         Returns
         -------
-        torch.Tensor, torch.Tensor, torch.Tensor
-            lll_ilabel, lll_confi, batch_loss
+        MOutput
+            batch_m_out
 
         """
         if "wreg" in self.params.d:
@@ -308,10 +308,10 @@ class Model(pl.LightningModule):
 
         # `loss_fun` is not used in this function anymore
         # loss_fun, lstm_loss = 0, 0
-        llll_word_confi = []
 
         lll_hidden_state, _ = self.base_model()
 
+        llll_word_score = []  # similar to all_depth_scores
         depth = 0
         while True:
             for layer in self.iterative_transformer:
@@ -333,19 +333,19 @@ class Model(pl.LightningModule):
                 index=lll_loc)
 
             if depth != 0:
-                lll_pred_ilabel = torch.argmax(llll_word_confi, dim=-1)
-                lll_pred_code = self.embedding(lll_pred_ilabel)
+                ll_pred_ilabel = torch.argmax(lll_word_score, dim=-1)
+                lll_pred_code = self.embedding(ll_pred_ilabel)
                 lll_word_hidden_state += lll_pred_code
 
             lll_word_hidden_state = self.merge_layer(lll_word_hidden_state)
-            lll_word_confi = self.compress_layer(lll_word_hidden_state)
-            llll_word_confi.append(lll_word_confi)
+            lll_word_score = self.compress_layer(lll_word_hidden_state)
+            llll_word_score.append(lll_word_score)
 
             depth += 1
             if depth >= num_depths:
                 break
             if self.params.d["mode"] != 'train':
-                ll_prob_ilabel = torch.max(lll_word_confi, dim=2)[1]
+                ll_prob_ilabel = torch.max(lll_word_score, dim=2)[1]
                 valid_extraction = False
                 assert self.params.d["task"] == "ex"
                 for l_prob_ilabel in ll_prob_ilabel:
@@ -359,19 +359,23 @@ class Model(pl.LightningModule):
         return self._calc_forward_output(
             batch_m_in,
             ttt,
-            llll_word_confi)
+            lll_word_score,
+            llll_word_score)
 
     def _calc_forward_output(self,
                              batch_m_in,
                              ttt,
-                             llll_word_confi):
+                             lll_word_score,
+                             llll_word_score):
         """
         not inherited method. used in forward() method
 
         Parameters
         ----------
-        ttt
-        llll_word_confi
+        batch_m_in: MInput
+        ttt: str
+        lll_word_score: torch.Tensor
+        llll_word_score: list[torch.Tensor]
 
         Returns
         -------
@@ -382,32 +386,32 @@ class Model(pl.LightningModule):
         """
         batch_loss = 0
         llll_pred_ilabel = []  # all_depth_predictions
-        lll_confi = []  # all_depth_confidences  
-        batch_size, num_words, _ = llll_word_confi.shape
-        self.batch_m_in.llll_ilabel = \
-            self.batch_m_in.llll_ilabel.long()
-        for depth, lll_word_confi in enumerate(llll_word_confi):
+        lll_confi = []  # all_depth_confidences
+        batch_size, num_words, _ = lll_word_score.shape
+        self.batch_m_in.lll_ilabel = \
+            self.batch_m_in.lll_ilabel.long()
+        for depth, lll_word_score0 in enumerate(llll_word_score):
             if ttt == 'train':
-                loss_input = \
-                    lll_word_confi.reshape(batch_size * num_words, -1)
-                loss_target = self.batch_m_in. \
-                                  llll_ilabel[:, depth, :].reshape(-1)
-                batch_loss += self.loss_fun(loss_input, loss_target)
+                l_loss_input = \
+                    lll_word_score0.reshape(batch_size * num_words, -1)
+                l_loss_target = self.batch_m_in. \
+                                    lll_ilabel[:, depth, :].reshape(-1)
+                batch_loss += self.loss_fun(l_loss_input, l_loss_target)
             else:
-                lll_soft_word_confi = \
-                    torch.log_softmax(llll_word_confi, dim=2)
-                ll_max_log_prob, lll_pred_ilabel = \
-                    torch.max(lll_soft_word_confi, dim=2)
+                lll_soft_word_score = \
+                    torch.log_softmax(lll_word_score0, dim=2)
+                ll_max_log_prob, ll_pred_ilabel = \
+                    torch.max(lll_soft_word_score, dim=2)
                 # remember: lll_label was similar to labels
                 # first (outer) list over batch events
                 # second list over extractions
                 # third (inner) list over number of labels in a line
                 ll_pred_bool = \
-                    (self.batch_m_in.llll_ilabel[:, 0, :] != -100).float()
+                    (self.batch_m_in.lll_ilabel[:, 0, :] != -100).float()
 
                 # * is element-wise multiplication of tensors
                 ll_pred_bool = \
-                    (lll_pred_ilabel != 0).float() * ll_pred_bool
+                    (ll_pred_ilabel != 0).float() * ll_pred_bool
                 ll_norm_log_prob = \
                     (ll_max_log_prob * ll_pred_bool) \
                     / (1 + ll_pred_bool.sum(dim=0))
@@ -415,19 +419,19 @@ class Model(pl.LightningModule):
                     torch.sum(ll_norm_log_prob, dim=1))
 
                 # this unsqueezes depth dim=1
-                llll_pred_ilabel.append(lll_pred_ilabel.unsqueeze(1))
+                llll_pred_ilabel.append(ll_pred_ilabel.unsqueeze(1))
                 lll_confi.append(l_confi.unsqueeze(1))
 
         if ttt == 'train':
             if self.constraint_str:
                 # dim=1 is depth. This cats along depth dimension
-                llll_word_confi = torch.cat([ll.unsqueeze(1) for
-                                             ll in llll_word_confi], dim=1)
-                llll_word_confi = torch.softmax(llll_word_confi, dim=-1)
+                llll_word_score = torch.cat(
+                    [lll.unsqueeze(1) for lll in llll_word_score], dim=1)
+                llll_word_score = torch.softmax(llll_word_score, dim=-1)
 
                 con_loss = Model._constrained_loss(
                     batch_m_in,
-                    llll_word_confi,
+                    llll_word_score,
                     self.con_to_weight) / batch_size
                 batch_loss = con_loss
 
@@ -448,20 +452,20 @@ class Model(pl.LightningModule):
             if self.constraint_str and \
                     'predict' not in self.params.d["mode"] and \
                     self.params.d["batch_size"] != 1:
-                llll_word_confi = torch.cat([ll.unsqueeze(1) for
-                                             ll in llll_word_confi], dim=1)
+                llll_word_score = torch.cat([lll.unsqueeze(1) for
+                                             lll in llll_word_score], dim=1)
                 # this fills tensor with 0's
-                llll_word_confi.fill_(0)
+                llll_word_score.fill_(0)
 
                 # for checking test set
                 # lll_ilabel = copy(llll_pred_ilabel)
                 # ll_ilabel[lll_ilabel == -100] = 0
-                lll_ilabel = copy(llll_pred_ilabel)
+                llll_ilabel = copy(llll_pred_ilabel)
 
-                llll_ilabel = lll_ilabel.unsqueeze(-1)
+                llll_ilabel = llll_ilabel.unsqueeze(-1)
                 number_depths = llll_ilabel.shape[1]
-                llll_word_confi = llll_word_confi[:, :number_depths, :, :]
-                llll_word_confi.scatter_(
+                llll_word_score = llll_word_score[:, :number_depths, :, :]
+                llll_word_score.scatter_(
                     dim=3,
                     index=llll_ilabel.long(),
                     src=1)
@@ -469,17 +473,24 @@ class Model(pl.LightningModule):
                 for constraint, con_weight in self.con_to_weight.items():
                     con_loss = Model._constrained_loss(
                         batch_m_in,
-                        llll_word_confi,
+                        llll_word_score,
                         {constraint: con_weight})
                     if constraint not in self.con_to_l_loss:
                         self.con_to_l_loss[constraint] = []
                     self.con_to_l_loss[constraint].append(con_loss)
 
-        return llll_pred_ilabel, lll_confi, batch_loss
+        batch_m_out = MOutput(lll_osent_icode,
+                              llll_pred_ilabel,
+                              lll_confi,
+                              batch_loss,
+                              task,
+                              self.auto_tokenizer)
+
+        return batch_m_out
 
     @staticmethod
     def _constrained_loss(batch_m_in,
-                          llll_word_confi,
+                          llll_word_score,
                           con_to_weight):
         """
         similar to Openie6.model.constrained_loss()
@@ -488,7 +499,8 @@ class Model(pl.LightningModule):
 
         Parameters
         ----------
-        llll_word_confi: torch.Tensor
+        batch_m_in: MInput
+        llll_word_score: torch.Tensor
         con_to_weight: dict[str, float]
 
         Returns
@@ -497,17 +509,17 @@ class Model(pl.LightningModule):
             hinge_loss
 
         """
-        batch_size, num_depths, num_words, icode_dim = llll_word_confi.shape
+        batch_size, num_depths, num_words, icode_dim = llll_word_score.shape
         hinge_loss = 0
-        llll_index = batch_m_in.ll_verb_loc.unsqueeze(1).unsqueeze(3). \
+        llll_index = batch_m_in.ll_osent_verb_loc.unsqueeze(1).unsqueeze(3). \
             repeat(1, num_depths, 1, icode_dim)
         llll_verb_confi = torch.gather(
-            input=llll_word_confi,
+            input=llll_word_score,
             dim=2,
             index=llll_index)
         lll_verb_rel_confi = llll_verb_confi[:, :, :, 2]
         # (batch_size, depth, num_words)
-        lll_bool = (batch_m_in.ll_verb_loc != 0).unsqueeze(1).float()
+        lll_bool = (batch_m_in.ll_osent_verb_loc != 0).unsqueeze(1).float()
 
         lll_verb_rel_confi = lll_verb_rel_confi * lll_bool
         # every head-verb must be included in a relation
@@ -534,7 +546,7 @@ class Model(pl.LightningModule):
             llll_index = batch_m_in.ll_pos_loc.unsqueeze(1).unsqueeze(3). \
                 repeat(1, num_depths, 1, icode_dim)
             llll_confi = torch.gather(
-                input=llll_word_confi,
+                input=llll_word_score,
                 dim=2,
                 index=llll_index)
             lll_pos_not_none_confi = \
@@ -552,30 +564,31 @@ class Model(pl.LightningModule):
 
         Parameters
         ----------
+        batch_m_in: MInput
         batch_id: int
-        use_all_con: bool
 
         Returns
         -------
-        float
-            batch_loss
+        MOutput
 
         """
 
-        _, _, batch_loss = self.forward(
+        batch_m_out = self.forward(
             batch_m_in,
             batch_id,
             ttt='train')
 
-        return batch_loss
+        return batch_m_out
 
-    def validation_step(self, batch_m_in, batch_id):
+    def validation_step(self, batch_m_in, batch_id, ttt):
         """
         inherited method
 
         Parameters
         ----------
+        batch_m_in: MInput
         batch_id: int
+        ttt: str
 
         Returns
         -------
@@ -583,21 +596,21 @@ class Model(pl.LightningModule):
             tune_out_d
 
         """
-        lll_ilabel, lll_confi, loss = self.forward(
+        batch_m_out = self.forward(
             batch_m_in,
             batch_id,
             "tune")
 
-        tune_out_d = {"lll_ilabel": lll_ilabel,
-                      "lll_confi": lll_confi,
-                      "ground_truth": batch_m_in.lll_ilabel,
-                      "l_orig_sent": batch_m_in.ll_osent_icode}
-        tune_out_d = OrderedDict(tune_out_d)
+        # tune_out_d = {"lll_ilabel": lll_ilabel,
+        #               "lll_confi": lll_confi,
+        #               "ground_truth": batch_m_in.lll_ilabel,
+        #               "l_orig_sent": batch_m_in.l_orig_sent}
+        # tune_out_d = OrderedDict(tune_out_d)
 
         if self.params.d["mode"] != 'test':
-            self._write_output(batch_id)
+            self._write_output(batch_m_out, batch_id)
 
-        return tune_out_d
+        return batch_m_out
 
     def test_step(self, batch_m_in, batch_id):
         """

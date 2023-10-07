@@ -13,12 +13,12 @@ class MInput:
     ----------
     auto_tokenizer: AutoTokenizer
     l_orig_sent: list[str]
-    l_osent_ilabels: list[list[int]]
-    l_osent_pos_bools: list[list[int]]
-    l_osent_pos_locs: list[list[int]]
-    l_osent_verb_bools: list[list[int]]
-    l_osent_verb_locs: list[list[int]]
-    l_osent_wstart_locs: list[list[int]]
+    ll_osent_ilabel: list[list[int]]
+    ll_osent_pos_bool: list[list[int]]
+    ll_osent_pos_loc: list[list[int]]
+    ll_osent_verb_bool: list[list[int]]
+    ll_osent_verb_loc: list[list[int]]
+    ll_osent_wstart_loc: list[list[int]]
     lll_ilabel: list[list[list[int]]]
     spacy_model: spacy.Language
     use_spacy_model: bool
@@ -54,8 +54,8 @@ class MInput:
         # it's not (num_samples, num_depths=num_ex)
         # each word of orig_sent may be encoded with more than one ilabel
         # os = original sentence
-        self.l_osent_wstart_locs = []  # shape=(num_samples, encoding len)
-        self.l_osent_ilabels = []  # shape=(num_samples, encoding len
+        self.ll_osent_wstart_loc = []  # shape=(num_samples, encoding len)
+        self.ll_osent_ilabel = []  # shape=(num_samples, encoding len
 
         self.use_spacy_model = use_spacy_model
         if self.use_spacy_model:
@@ -65,10 +65,10 @@ class MInput:
         # spacy_model.pipe()
         # spacy_model usually abbreviated as nlp
 
-        self.l_osent_pos_bools = []  # shape=(num_samples, num_words)
-        self.l_osent_pos_locs = []  # shape=(num_samples, num_words)
-        self.l_osent_verb_bools = []  # shape=(num_samples, num_words)
-        self.l_osent_verb_locs = []  # shape=(num_samples, num_words)
+        self.ll_osent_pos_bool = []  # shape=(num_samples, num_words)
+        self.ll_osent_pos_loc = []  # shape=(num_samples, num_words)
+        self.ll_osent_verb_bool = []  # shape=(num_samples, num_words)
+        self.ll_osent_verb_loc = []  # shape=(num_samples, num_words)
 
         self.read_input_extags_file(in_fp)
 
@@ -235,10 +235,10 @@ class MInput:
         None
 
         """
-        self.l_osent_pos_bools = []
-        self.l_osent_pos_locs = []
-        self.l_osent_verb_bools = []
-        self.l_osent_verb_locs = []
+        self.ll_osent_pos_bool = []
+        self.ll_osent_pos_loc = []
+        self.ll_osent_verb_bool = []
+        self.ll_osent_verb_loc = []
         if not self.use_spacy_model:
             return
         for sent_id, spacy_tokens in enumerate(
@@ -249,16 +249,16 @@ class MInput:
 
             pos_locs, pos_bools, pos_words = \
                 MInput.pos_info(spacy_tokens)
-            self.l_osent_pos_bools.append(pos_bools)
-            self.l_osent_pos_locs.append(pos_locs)
+            self.ll_osent_pos_bool.append(pos_bools)
+            self.ll_osent_pos_loc.append(pos_locs)
 
             verb_locs, verb_bools, verb_words = \
                 MInput.verb_info(spacy_tokens)
-            self.l_osent_verb_bools.append(verb_bools)
+            self.ll_osent_verb_bool.append(verb_bools)
             if verb_locs:
-                self.l_osent_verb_locs.append(verb_locs)
+                self.ll_osent_verb_loc.append(verb_locs)
             else:
-                self.l_osent_verb_locs.append([0])
+                self.ll_osent_verb_loc.append([0])
 
     def read_input_extags_file(self, in_fp):
         """
@@ -293,8 +293,8 @@ class MInput:
 
         """
         l_orig_sent = []
-        l_osent_wstart_locs = []  # similar to word_starts
-        l_osent_ilabels = []  # similar to input_ids
+        ll_osent_wstart_loc = []  # similar to word_starts
+        ll_osent_ilabel = []  # similar to input_ids
         ll_ex_ilabels = []  # similar to targets target=extraction
         sentL = None  # similar to `sentence`
 
@@ -356,14 +356,14 @@ class MInput:
                 pass
             if is_end_of_sample(k, prev_line, line):
                 # print("ddft-end", k)
-                if len(l_osent_ilabels) == 0:
-                    l_osent_ilabels = [[0]]
+                if len(ll_osent_ilabel) == 0:
+                    ll_osent_ilabel = [[0]]
 
                 if len(sentL.split()) > 100:
                     assert False, "sentence longer than 100"
                 else:
-                    l_osent_ilabels.append(deepcopy(osent_ilabels))
-                    # print("dfeg", l_osent_ilabels)
+                    ll_osent_ilabel.append(deepcopy(osent_ilabels))
+                    # print("dfeg", ll_osent_ilabel)
                     osent_ilabels = []
                     orig_sent = undoL(sentL)
                     l_orig_sent.append(orig_sent)
@@ -373,16 +373,16 @@ class MInput:
                     # print("sdftty", l_ex_ilabels)
                     ll_ex_ilabels.append(deepcopy(l_ex_ilabels))
                     l_ex_ilabels = []
-                    l_osent_wstart_locs.append(deepcopy(osent_wstart_locs))
+                    ll_osent_wstart_loc.append(deepcopy(osent_wstart_locs))
                     osent_wstart_locs = []
 
             prev_line = line
 
         self.l_orig_sent = l_orig_sent
-        # l_osent_ilabels add extra term [0] at beginnig
-        self.l_osent_ilabels = l_osent_ilabels[1:]
+        # ll_osent_ilabel add extra term [0] at beginnig
+        self.ll_osent_ilabel = ll_osent_ilabel[1:]
         self.lll_ilabel = ll_ex_ilabels
-        self.l_osent_wstart_locs = l_osent_wstart_locs
+        self.ll_osent_wstart_loc = ll_osent_wstart_loc
 
         num_samples = len(l_orig_sent)
 
@@ -390,9 +390,9 @@ class MInput:
             for x in li:
                 assert len(x) == num_samples
 
-        check_len([self.l_osent_ilabels,
+        check_len([self.ll_osent_ilabel,
                    self.lll_ilabel,
-                   self.l_osent_wstart_locs])
+                   self.ll_osent_wstart_loc])
 
         # so far, we haven't assumed any spacy derived data nanalysis
         # if spacy is allowed, the example_d can carry more info.
@@ -438,12 +438,12 @@ if __name__ == "__main__":
             print("************** k=", k)
             print("num_samples=", len(m_in.l_orig_sent))
             print("l_orig_sent[k]=", m_in.l_orig_sent[k])
-            print("l_osent_ilabels[k]=\n", m_in.l_osent_ilabels[k])
-            print("l_osent_pos_locs[k]=\n", m_in.l_osent_pos_locs[k])
-            print("l_osent_pos_bools[k]=\n", m_in.l_osent_pos_bools[k])
-            print("l_osent_verb_locs[k]=\n", m_in.l_osent_verb_locs[k])
-            print("l_osent_verb_bools[k]=\n", m_in.l_osent_verb_bools[k])
-            print("l_osent_wstart_locs[k]=\n", m_in.l_osent_wstart_locs[k])
+            print("ll_osent_ilabel[k]=\n", m_in.ll_osent_ilabel[k])
+            print("ll_osent_pos_loc[k]=\n", m_in.ll_osent_pos_loc[k])
+            print("ll_osent_pos_bool[k]=\n", m_in.ll_osent_pos_bool[k])
+            print("ll_osent_verb_loc[k]=\n", m_in.ll_osent_verb_loc[k])
+            print("ll_osent_verb_bool[k]=\n", m_in.ll_osent_verb_bool[k])
+            print("ll_osent_wstart_loc[k]=\n", m_in.ll_osent_wstart_loc[k])
             if verbose:
                 print("lll_ilabel=\n", m_in.lll_ilabel)
 

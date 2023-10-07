@@ -168,29 +168,29 @@ class SaxDataPadder:
         #     'verb_locs': verb_locs
         # }
 
-        padded_l_osent_ilabels = SaxDataPadder. \
-            get_padded_ll_x(self.m_in.l_osent_ilabels)
+        padded_ll_osent_ilabel = SaxDataPadder. \
+            get_padded_ll_x(self.m_in.ll_osent_ilabel)
 
         padded_lll_ilabel = SaxDataPadder. \
             get_padded_lll_ilabel(self.m_in.lll_ilabel)
 
-        padded_l_osent_wstart_locs = SaxDataPadder. \
-            get_padded_ll_x(self.m_in.l_osent_wstart_locs)
+        padded_ll_osent_wstart_loc = SaxDataPadder. \
+            get_padded_ll_x(self.m_in.ll_osent_wstart_loc)
 
         padded_data_d = OrderedDict(
-            {'l_osent_ilabels': padded_l_osent_ilabels,
+            {'ll_osent_ilabel': padded_ll_osent_ilabel,
              'lll_ilabel': padded_lll_ilabel,
-             'l_osent_wstart_locs': padded_l_osent_wstart_locs})
+             'll_osent_wstart_loc': padded_ll_osent_wstart_loc})
 
         if self.use_spacy_model:
-            padded_data_d["l_osent_pos_bools"] = SaxDataPadder. \
-                get_padded_ll_x(self.m_in.l_osent_pos_bools)
-            padded_data_d["l_osent_pos_locs"] = SaxDataPadder. \
-                get_padded_ll_x(self.m_in.l_osent_pos_locs)
-            padded_data_d["l_osent_verb_bools"] = SaxDataPadder. \
-                get_padded_ll_x(self.m_in.l_osent_verb_bools)
-            padded_data_d["l_osent_verb_locs"] = SaxDataPadder. \
-                get_padded_ll_x(self.m_in.l_osent_verb_locs)
+            padded_data_d["ll_osent_pos_bool"] = SaxDataPadder. \
+                get_padded_ll_x(self.m_in.ll_osent_pos_bool)
+            padded_data_d["ll_osent_pos_loc"] = SaxDataPadder. \
+                get_padded_ll_x(self.m_in.ll_osent_pos_loc)
+            padded_data_d["ll_osent_verb_bool"] = SaxDataPadder. \
+                get_padded_ll_x(self.m_in.ll_osent_verb_bool)
+            padded_data_d["ll_osent_verb_loc"] = SaxDataPadder. \
+                get_padded_ll_x(self.m_in.ll_osent_verb_loc)
 
         self.padded_data_d = padded_data_d
 

@@ -38,8 +38,8 @@ class ExMetric:
         self.test_benchmark = Benchmark('carb_subset/data/gold/test.tsv')
         self.matchingFunc = Matcher.binary_linient_tuple_match
         self.osentL_to_exs = osentL_to_exs
-        # self.l_osent_pos_bools = [] # not used
-        # self.l_osent_verb_bools = [] # not used
+        # self.ll_osent_pos_bool = [] # not used
+        # self.ll_osent_verb_bool = [] # not used
         self.score_d = {'carb_auc': 0.0, 'carb_f1': 0.0, 'carb_sum': 0.0}
         self.fix_d = fix_d
         self.use_carb_ex = use_carb_ex

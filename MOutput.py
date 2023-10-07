@@ -10,18 +10,18 @@ class MOutput:
     ----------
     auto_tokenizer: AutoTokenizer
     in_cpu: bool
-    ll_confi: torch.Tensor
-    ll_osent_icode: torch.Tensor
-    lll_ilabel: torch.Tensor
-    loss: torch.Tensor
+    lll_confi: torch.Tensor
+    lll_osent_icode: torch.Tensor
+    llll_ilabel: torch.Tensor]
+    batch_loss: torch.Tensor
     task: str
     """
 
     def __init__(self,
-                 ll_osent_icode,
-                 lll_ilabel,
-                 ll_confi,
-                 loss,
+                 lll_osent_icode,
+                 llll_ilabel,
+                 lll_confi,
+                 batch_loss,
                  task,
                  auto_tokenizer):
         """
@@ -34,17 +34,17 @@ class MOutput:
         Parameters
         ----------
         ll_osent_icode: torch.Tensor
-        lll_ilabel: torch.Tensor
-        ll_confi: torch.Tensor
-        loss: torch.Tensor
+        llll_ilabel: torch.Tensor
+        lll_confi: torch.Tensor
+        batch_loss: torch.Tensor
         task: str
         auto_tokenizer: AutoTokenizer
         
         """
         self.ll_osent_icode = ll_osent_icode
-        self.lll_ilabel = lll_ilabel
-        self.ll_confi = ll_confi
-        self.loss = loss
+        self.llll_ilabel = llll_ilabel
+        self.lll_confi = lll_confi
+        self.batch_loss = batch_loss
 
         self.in_cpu = False
         self.task = task
@@ -62,11 +62,11 @@ class MOutput:
         self.in_cpu = True
 
         self.ll_osent_icode = self.ll_osent_icode.cpu()
-        self.lll_ilabel = self.lll_ilabel.cpu()
-        self.ll_confi = self.ll_confi.cpu()
-        self.loss = self.loss.cpu()
+        self.llll_ilabel = self.llll_ilabel.cpu()
+        self.lll_confi = self.lll_confi.cpu()
+        self.batch_loss = self.batch_loss.cpu()
 
-        self.ll_confi = (self.ll_confi * 100).round() / 100
+        self.lll_confi = (self.lll_confi * 100).round() / 100
 
     def get_l_orig_sent(self):
         """
@@ -92,15 +92,15 @@ class MOutput:
         else:
             assert False
         l_orig_sentL = redoL(self.get_l_orig_sent())
-        num_samples = len(self.lll_ilabel)
-        num_depths = len(self.lll_ilabel[0])
+        num_samples = len(self.llll_ilabel)
+        num_depths = len(self.llll_ilabel[0])
         # sent_len = len(self.lll_ilabel[0][0])
         lll_word = []
         for sam in range(num_samples):
             ll_word = []
             for depth in range(num_depths):
                 ll_word.append(
-                    translator(self.lll_ilabel[sam][depth],
+                    translator(self.llll_ilabel[sam][depth],
                                l_orig_sentL[sam]))
             lll_word.append(ll_word)
         return lll_word

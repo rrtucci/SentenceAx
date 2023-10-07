@@ -19,7 +19,7 @@ class MInput:
     ll_osent_verb_bool: list[list[int]]
     ll_osent_verb_loc: list[list[int]]
     ll_osent_wstart_loc: list[list[int]]
-    lll_ilabel: list[list[list[int]]]
+    lll_ex_ilabel: list[list[list[int]]]
     spacy_model: spacy.Language
     use_spacy_model: bool
     verbose: bool
@@ -47,7 +47,7 @@ class MInput:
         # shape=(num_samples,)
         self.l_orig_sent = []
         # shape=(num_samples, num_depths=num_ex, num_ilabels)
-        self.lll_ilabel = []
+        self.lll_ex_ilabel = []
 
         # following lists have
         # shape is (num_samples, encoding length =100)
@@ -381,7 +381,7 @@ class MInput:
         self.l_orig_sent = l_orig_sent
         # ll_osent_ilabel add extra term [0] at beginnig
         self.ll_osent_ilabel = ll_osent_ilabel[1:]
-        self.lll_ilabel = ll_ex_ilabels
+        self.lll_ex_ilabel = ll_ex_ilabels
         self.ll_osent_wstart_loc = ll_osent_wstart_loc
 
         num_samples = len(l_orig_sent)
@@ -391,7 +391,7 @@ class MInput:
                 assert len(x) == num_samples
 
         check_len([self.ll_osent_ilabel,
-                   self.lll_ilabel,
+                   self.lll_ex_ilabel,
                    self.ll_osent_wstart_loc])
 
         # so far, we haven't assumed any spacy derived data nanalysis
@@ -445,7 +445,7 @@ if __name__ == "__main__":
             print("ll_osent_verb_bool[k]=\n", m_in.ll_osent_verb_bool[k])
             print("ll_osent_wstart_loc[k]=\n", m_in.ll_osent_wstart_loc[k])
             if verbose:
-                print("lll_ilabel=\n", m_in.lll_ilabel)
+                print("lll_ex_ilabel=\n", m_in.lll_ex_ilabel)
 
 
     def main2(add, remove):

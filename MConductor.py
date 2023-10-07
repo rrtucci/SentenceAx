@@ -575,7 +575,7 @@ class MConductor:
         bout = self.model.batch_out
         num_samples = len(bout.l_orig_sent)
         l_sentL = redoL(bout.l_orig_sent)
-        lll_ilabel = bout.lll_ilabel
+        lll_ex_ilabel = bout.lll_ex_ilabel
         lll_word_loc = []
 
         lines = []
@@ -593,7 +593,7 @@ class MConductor:
                        len(bout.l_orig_sent[sam_id0])
 
                 sentL = l_sentL[sam_id0].strip() + UNUSED_TOKENS_STR
-                ll_ilabel = lll_ilabel[sam_id]
+                ll_ilabel = lll_ex_ilabel[sam_id]
                 for ilabels in ll_ilabel:
                     # You can use x.item() to get a Python number
                     # from a torch tensor that has one element

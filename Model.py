@@ -304,7 +304,7 @@ class Model(pl.LightningModule):
         # third (inner) list over number of labels in a line
         # after padding and adding the 3 unused tokens
         batch_size, num_depths, num_words = \
-            self.batch_m_in.lll_ilabel.shape
+            self.batch_m_in.lll_ex_ilabel.shape
 
         # `loss_fun` is not used in this function anymore
         # loss_fun, lstm_loss = 0, 0
@@ -388,14 +388,14 @@ class Model(pl.LightningModule):
         llll_pred_icode = []  # all_depth_predictions
         lll_confi = []  # all_depth_confidences
         batch_size, num_words, _ = lll_word_score.shape
-        self.batch_m_in.lll_ilabel = \
-            self.batch_m_in.lll_ilabel.long()
+        self.batch_m_in.lll_ex_ilabel = \
+            self.batch_m_in.lll_ex_ilabel.long()
         for depth, lll_word_score0 in enumerate(llll_word_score):
             if ttt == 'train':
                 l_loss_input = \
                     lll_word_score0.reshape(batch_size * num_words, -1)
                 l_loss_target = self.batch_m_in. \
-                                    lll_ilabel[:, depth, :].reshape(-1)
+                                    lll_ex_ilabel[:, depth, :].reshape(-1)
                 batch_loss += self.loss_fun(l_loss_input, l_loss_target)
             else:
                 lll_soft_word_score = \
@@ -407,7 +407,7 @@ class Model(pl.LightningModule):
                 # second list over extractions
                 # third (inner) list over number of labels in a line
                 ll_pred_bool = \
-                    (self.batch_m_in.lll_ilabel[:, 0, :] != -100).float()
+                    (self.batch_m_in.lll_ex_ilabel[:, 0, :] != -100).float()
 
                 # * is element-wise multiplication of tensors
                 ll_pred_bool = \
@@ -458,16 +458,16 @@ class Model(pl.LightningModule):
                 llll_word_score.fill_(0)
 
                 # for checking test set
-                # lll_ilabel = copy(llll_pred_icode)
-                # ll_ilabel[lll_ilabel == -100] = 0
-                llll_icode = copy(llll_pred_icode)
+                # lll_ex_ilabel = copy(llll_pred_icode)
+                # ll_ilabel[lll_ex_ilabel == -100] = 0
+                llll_ex_icode = copy(llll_pred_icode)
 
-                llll_icode = llll_icode.unsqueeze(-1)
-                number_depths = llll_icode.shape[1]
+                llll_ex_icode = llll_ex_icode.unsqueeze(-1)
+                number_depths = llll_ex_icode.shape[1]
                 llll_word_score = llll_word_score[:, :number_depths, :, :]
                 llll_word_score.scatter_(
                     dim=3,
-                    index=llll_icode.long(),
+                    index=llll_ex_icode.long(),
                     src=1)
 
                 for constraint, con_weight in self.con_to_weight.items():
@@ -481,7 +481,7 @@ class Model(pl.LightningModule):
 
         batch_m_out = MOutput(lll_osent_icode,
                               llll_pred_icode,
-                              llll_true_icode,
+                              llll_true_ex_icode,
                               lll_confi,
                               batch_loss,
                               task,
@@ -603,9 +603,9 @@ class Model(pl.LightningModule):
             batch_id,
             "tune")
 
-        # tune_out_d = {"lll_ilabel": lll_ilabel,
+        # tune_out_d = {"lll_ex_ilabel": lll_ex_ilabel,
         #               "lll_confi": lll_confi,
-        #               "ground_truth": batch_m_in.lll_ilabel,
+        #               "ground_truth": batch_m_in.lll_ex_ilabel,
         #               "l_orig_sent": batch_m_in.l_orig_sent}
         # tune_out_d = OrderedDict(tune_out_d)
 
@@ -666,7 +666,7 @@ class Model(pl.LightningModule):
                 for batch_m_out in l_batch_m_out:
                     l_orig_sent = batch_m_out.get_l_orig_sent()
                     self.metric(l_orig_sent,
-                                batch_m_out.llll_icode,
+                                batch_m_out.llll_ex_icode,
                                 batch_m_out.llll_true_ilabel)
                 metrics_d = self.metric.get_score_d(do_reset=True)
 
@@ -685,8 +685,8 @@ class Model(pl.LightningModule):
                 for batch_m_out in l_batch_m_out:
                     l_orig_sent = batch_m_out.get_l_orig_sent()
                     self.metric(l_orig_sent,
-                                batch_m_out.llll_icode,
-                                batch_m_out.llll_true_icode)
+                                batch_m_out.llll_ex_icode,
+                                batch_m_out.llll_true_ex_icode)
                 metrics_d = self.metric.get_score_d(do_reset=True)
 
             eval_out_d = {"eval_f1": metrics_d["ex_f1"],
@@ -785,9 +785,9 @@ class Model(pl.LightningModule):
         """
         fix_d = self.metric.fix_d
 
-        lll_ilabel = batch_m_out.lll_ilabel
+        lll_ex_ilabel = batch_m_out.lll_ex_ilabel
         lll_confi = batch_m_out.lll_confi
-        num_samples, num_depths, _ = lll_ilabel.shape
+        num_samples, num_depths, _ = lll_ex_ilabel.shape
         l_orig_sent = batch_m_out.ll_osent_icode
 
         osent_to_l_pred_ex = {}
@@ -802,7 +802,7 @@ class Model(pl.LightningModule):
                     osent_to_l_pred_ex[orig_sent] = []
             for depth in range(num_depths):
                 num_words = len(get_words(orig_sentL))
-                ex_ilabels = lll_ilabel[sample_id][depth][:num_words]
+                ex_ilabels = lll_ex_ilabel[sample_id][depth][:num_words]
                 if sum(ex_ilabels) == 0:  # extractions completed
                     break
                 ex = SaxExtraction.get_ex_from_ilabels(
@@ -865,9 +865,9 @@ class Model(pl.LightningModule):
         correct = True
         total_num_ccsents1 = 0
         total_num_ccsents2 = 0
-        lll_ilabel = batch_m_out.lll_ilabel
-        num_samples, num_depths, _ = lll_ilabel.shape
-        # true_lll_ilabel = self.true_batch_m_out.lll_label
+        lll_ex_ilabel = batch_m_out.lll_ex_ilabel
+        num_samples, num_depths, _ = lll_ex_ilabel.shape
+        # true_lll_ex_ilabel = self.true_batch_m_out.lll_label
         l_orig_sent = [batch_m_out.ll_osent_icode for
                        k in range(num_samples)]
         l_pred_str = []
@@ -880,7 +880,7 @@ class Model(pl.LightningModule):
             l_orig_sent = []
             for depth in range(num_depths):
                 num_words = len(get_words(orig_sent))
-                l_ilabel = lll_ilabel[id][depth][:num_words].tolist()
+                l_ilabel = lll_ex_ilabel[id][depth][:num_words].tolist()
                 ll_ilabel.append(l_ilabel)
             tree = CCTree(orig_sent, ll_ilabel)
 

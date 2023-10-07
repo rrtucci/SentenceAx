@@ -180,11 +180,11 @@ def redoL(x):
         return [a + UNUSED_TOKENS_STR for a in x]
 
 
-# Don't use, even if the inner dimmension of lll_ilabel
+# Don't use, even if the inner dimmension of lll_ex_ilabel
 # does not agree with the number of words in osent2
-# def unL_lll(lll_ilabel):
+# def unL_lll(lll_ex_ilabel):
 #     return [[l_ilabel[:-3] for l_ilabel in ll_ilabel]
-#             for ll_ilabel in lll_ilabel]
+#             for ll_ilabel in lll_ex_ilabel]
 
 def use_ascii_quotes(line):
     """
@@ -220,14 +220,14 @@ def replace_in_list(l_x, x, new_x):
     l_x[k] = new_x
 
 
-def sax_sniffer(name, osent2_to_exs, lll_ilabel):
+def sax_sniffer(name, osent2_to_exs, lll_ex_ilabel):
     """
 
     Parameters
     ----------
     name: str
     osent2_to_exs: dict[str, list[SaxExtraction]]
-    lll_ilabel: list[list[list[int]]]
+    lll_ex_ilabel: list[list[list[int]]]
 
     Returns
     -------
@@ -237,7 +237,7 @@ def sax_sniffer(name, osent2_to_exs, lll_ilabel):
     print(name + " sniffer")
     for sam, (osent2, exs) in enumerate(osent2_to_exs.items()):
         if "Philip Russell" in osent2:
-            print(lll_ilabel[sam])
+            print(lll_ex_ilabel[sam])
             for ex in exs:
                 print(ex.arg1, ex.rel, ex.arg2)
 

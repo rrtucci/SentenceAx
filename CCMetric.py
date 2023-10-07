@@ -48,8 +48,8 @@ class CCMetric:
 
     def __call__(self,
                  l_osent,
-                 pred_lll_ilabel,
-                 true_lll_ilabel):
+                 pred_lll_ex_ilabel,
+                 true_lll_ex_ilabel):
         """
 
         ccnodes  when we give it the complete ccnodes
@@ -59,8 +59,8 @@ class CCMetric:
         Parameters
         ----------
         l_osent: list[str]
-        pred_lll_ilabel: list[list[list[int]]]
-        true_lll_ilabel: list[list[list[int]]]
+        pred_lll_ex_ilabel: list[list[list[int]]]
+        true_lll_ex_ilabel: list[list[list[int]]]
 
         Returns
         -------
@@ -68,16 +68,16 @@ class CCMetric:
 
         """
 
-        num_samples = len(true_lll_ilabel)
+        num_samples = len(true_lll_ex_ilabel)
         print("Entering samples into CCMetric instance via its __call__() "
               "method.")
         print("number of samples=", num_samples)
         for k in range(num_samples):
             pred_ccnodes = CCTree(l_osent[k],
-                                  pred_lll_ilabel[k],
+                                  pred_lll_ex_ilabel[k],
                                   calc_tree_struc=True).ccnodes
             true_ccnodes = CCTree(l_osent[k],
-                                  true_lll_ilabel[k],
+                                  true_lll_ex_ilabel[k],
                                   calc_tree_struc=True).ccnodes
 
             self.report_whole.absorb_new_sample(pred_ccnodes, true_ccnodes)
@@ -182,14 +182,14 @@ if __name__ == "__main__":
             in_lines = f.readlines()
 
         l_osent = []
-        lll_ilabel = []
+        lll_ex_ilabel = []
         ll_ilabel = []
         for in_line in in_lines:
             if in_line:
                 if in_line[0].isalpha():
                     l_osent.append(in_line.strip())
                     if ll_ilabel:
-                        lll_ilabel.append(ll_ilabel)
+                        lll_ex_ilabel.append(ll_ilabel)
                     ll_ilabel = []
                 elif in_line[0].isdigit():
                     words = get_words(in_line)
@@ -197,8 +197,8 @@ if __name__ == "__main__":
                     ll_ilabel.append([int(x) for x in words])
         # last one
         if ll_ilabel:
-            lll_ilabel.append(ll_ilabel)
-        cc_met(l_osent, lll_ilabel, lll_ilabel)
+            lll_ex_ilabel.append(ll_ilabel)
+        cc_met(l_osent, lll_ex_ilabel, lll_ex_ilabel)
         score_d = cc_met.get_score_d(do_reset=False)
         print(score_d)
         # this gives nan if do_reset = True

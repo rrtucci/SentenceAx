@@ -44,12 +44,12 @@ class SaxDataSet(Dataset):
         data_d = self.padder.padded_data_d
 
         self.num_samples, self.num_depths, self.num_words = \
-            data_d["lll_ilabel"].shape
+            data_d["lll_ex_ilabel"].shape
 
-        self.xtypes = [name for name in data_d.keys() if name != "lll_ilabel"]
+        self.xtypes = [name for name in data_d.keys() if name != "lll_ex_ilabel"]
         self.x = torch.cat([data_d[xtype] for xtype in self.xtypes], dim=1)
 
-        self.y = data_d["lll_ilabel"]
+        self.y = data_d["lll_ex_ilabel"]
 
     def __getitem__(self, sample_id):
         """

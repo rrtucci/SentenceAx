@@ -48,7 +48,7 @@ class Model(pl.LightningModule):
             return torch.optim.Adam(self.parameters(), lr=0.02)
 
     This class has an abstract class as its parent. Uninherited methods
-    start with an underscore.
+    start with `sax_`.
 
     
         batch_d={
@@ -356,17 +356,17 @@ class Model(pl.LightningModule):
                 if not valid_extraction:
                     break
         # outsource everything after do loop to a new function
-        return self._calc_forward_output(
+        return self.sax_calc_forward_output(
             batch_m_in,
             ttt,
             lll_word_score,
             llll_word_score)
 
-    def _calc_forward_output(self,
-                             batch_m_in,
-                             ttt,
-                             lll_word_score,
-                             llll_word_score):
+    def sax_calc_forward_output(self,
+                                batch_m_in,
+                                ttt,
+                                lll_word_score,
+                                llll_word_score):
         """
         not inherited method. used in forward() method
 
@@ -429,7 +429,7 @@ class Model(pl.LightningModule):
                     [lll.unsqueeze(1) for lll in llll_word_score], dim=1)
                 llll_word_score = torch.softmax(llll_word_score, dim=-1)
 
-                con_loss = Model._constrained_loss(
+                con_loss = Model.sax_constrained_loss(
                     batch_m_in,
                     llll_word_score,
                     self.con_to_weight) / batch_size
@@ -471,7 +471,7 @@ class Model(pl.LightningModule):
                     src=1)
 
                 for constraint, con_weight in self.con_to_weight.items():
-                    con_loss = Model._constrained_loss(
+                    con_loss = Model.sax_constrained_loss(
                         batch_m_in,
                         llll_word_score,
                         {constraint: con_weight})
@@ -479,20 +479,18 @@ class Model(pl.LightningModule):
                         self.con_to_l_loss[constraint] = []
                     self.con_to_l_loss[constraint].append(con_loss)
 
-        batch_m_out = MOutput(lll_osent_icode,
+        batch_m_out = MOutput(batch_m_in.l_orig_sent,
+                              batch_m_in.lll_ex_ilabel,
                               llll_pred_icode,
-                              llll_true_ex_icode,
                               lll_confi,
-                              batch_loss,
-                              task,
-                              self.auto_tokenizer)
+                              batch_loss)
 
         return batch_m_out
 
     @staticmethod
-    def _constrained_loss(batch_m_in,
-                          llll_word_score,
-                          con_to_weight):
+    def sax_constrained_loss(batch_m_in,
+                             llll_word_score,
+                             con_to_weight):
         """
         similar to Openie6.model.constrained_loss()
         not inherited method
@@ -545,7 +543,7 @@ class Model(pl.LightningModule):
             hinge_loss += con_to_weight['hve'] * ll_ex_loss.sum()
 
         if 'posm' in con_to_weight:
-            llll_index = batch_m_in.ll_osent_pos_loc.\
+            llll_index = batch_m_in.ll_osent_pos_loc. \
                 unsqueeze(1).unsqueeze(3).repeat(1, num_depths, 1, icode_dim)
             llll_confi = torch.gather(
                 input=llll_word_score,
@@ -610,7 +608,7 @@ class Model(pl.LightningModule):
         # tune_out_d = OrderedDict(tune_out_d)
 
         if self.params.d["mode"] != 'test':
-            self._write_output(batch_m_out, batch_id)
+            self.sax_write_output(batch_m_out, batch_id)
 
         return batch_m_out
 
@@ -634,7 +632,7 @@ class Model(pl.LightningModule):
         """
         return self.validation_step(batch_m_in, batch_id, ttt="test")
 
-    def _eval_metrics_at_epoch_end(self, l_batch_m_out, ttt):
+    def sax_eval_metrics_at_epoch_end(self, l_batch_m_out, ttt):
         """
         similar to Openie6.model.evaluation_end()
         not inherited method, used in *_epoch_end methods
@@ -664,10 +662,9 @@ class Model(pl.LightningModule):
                 metrics_d = {'P_exact': 0, 'R_exact': 0, 'F1_exact': 0}
             else:
                 for batch_m_out in l_batch_m_out:
-                    l_orig_sent = batch_m_out.get_l_orig_sent()
-                    self.metric(l_orig_sent,
-                                batch_m_out.llll_ex_icode,
-                                batch_m_out.llll_true_ilabel)
+                    self.metric(batch_m_out.l_orig_sent,
+                                batch_m_out.lll_ex_ilabel,
+                                batch_m_out.lll_ex_ilabel)
                 metrics_d = self.metric.get_score_d(do_reset=True)
 
             val_acc = metrics_d["F1_exact"]
@@ -718,7 +715,7 @@ class Model(pl.LightningModule):
 
         """
         eval_out_d = \
-            self._eval_metrics_at_epoch_end(l_batch_m_out, "tune")
+            self.sax_eval_metrics_at_epoch_end(l_batch_m_out, "tune")
         val_ee_out_d = {}
         if eval_out_d:
             val_ee_out_d = {"log": eval_out_d,
@@ -741,7 +738,7 @@ class Model(pl.LightningModule):
 
         """
         self.eval_out_d = \
-            self._eval_metrics_at_epoch_end(l_batch_m_out, ttt='test')
+            self.sax_eval_metrics_at_epoch_end(l_batch_m_out, ttt='test')
         test_ee_out_d = {"log": self.eval_out_d,
                          "progress_bar": self.eval_out_d,
                          "test_acc": self.eval_out_d["eval_f1"]}
@@ -771,7 +768,7 @@ class Model(pl.LightningModule):
         """
         return
 
-    def _write_if_task_ex(self, batch_m_out, batch_id):
+    def sax_write_if_task_ex(self, batch_m_out, batch_id):
         """
 
         Parameters
@@ -847,7 +844,7 @@ class Model(pl.LightningModule):
             with open(fpath, fmode) as allen_f:
                 allen_f.write('\n'.join(l_pred_allen_str) + '\n')
 
-    def _write_if_task_cc(self, batch_m_out, batch_id):
+    def sax_write_if_task_cc(self, batch_m_out, batch_id):
         """
 
         Parameters
@@ -903,7 +900,7 @@ class Model(pl.LightningModule):
         with open(fpath, fmode) as pred_f:
             pred_f.write('\n'.join(l_pred_str) + '\n')
 
-    def _write_output(self, batch_m_out, batch_id):
+    def sax_write_output(self, batch_m_out, batch_id):
         """
         similar to Openie6.model.write_to_file()
 
@@ -918,8 +915,8 @@ class Model(pl.LightningModule):
         """
         batch_m_out.move_to_cpu()
         if self.params.task == "ex":
-            self._write_if_task_ex(batch_m_out, batch_id)
+            self.sax_write_if_task_ex(batch_m_out, batch_id)
         elif self.params.task == "cc":
-            self._write_if_task_cc(batch_m_out, batch_id)
+            self.sax_write_if_task_cc(batch_m_out, batch_id)
         else:
             assert False

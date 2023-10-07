@@ -63,9 +63,9 @@ class ExMetric:
         if not self.osentL_to_exs:
             self.osentL_to_exs = \
                 AllenTool.get_osent2_to_exs_from_lll_ex_ilabel(l_osentL,
-                                                            lll_ex_ilabel,
-                                                            ll_confi,
-                                                            self.fix_d)
+                                                               lll_ex_ilabel,
+                                                               ll_confi,
+                                                               self.fix_d)
         else:
             assert False, "This __call__ is redundant. osentL_to_exs" \
                           " has already been entered in the " \

@@ -79,7 +79,7 @@ class Model(pl.LightningModule):
     ----------
     auto_tokenizer: AutoTokenizer
     base_model: AutoModel
-    compress_layer: self.base_model.encoder.layer
+    ilabelling_layer: self.base_model.encoder.layer
     con_to_weight: dict[str, float]
     dropout_fun: nn.Dropout
     embedding: Embedding
@@ -91,7 +91,7 @@ class Model(pl.LightningModule):
     merge_layer: nn.Linear
     metric: CCMetric | ExMetric
     params: Params
-    # inherited
+    # some inherited attributes that won't be used
     # hparams
     # logger
     # trainer
@@ -156,7 +156,7 @@ class Model(pl.LightningModule):
                                       self.hidden_size)
         self.merge_layer = nn.Linear(self.hidden_size,
                                      ILABELLING_DIM)  # 300
-        self.compress_layer = nn.Linear(ILABELLING_DIM,  # 300
+        self.ilabelling_layer = nn.Linear(ILABELLING_DIM,  # 300
                                         NUM_ILABELS)  # 6
 
         self.loss_fun = nn.CrossEntropyLoss()
@@ -189,6 +189,7 @@ class Model(pl.LightningModule):
         self.con_to_weight = {l_constraint[k]: float(l_con_weight[k])
                               for k in range(len(l_constraint)) if
                               l_constraint[k]}
+        self.l_batch_m_out = []
 
     def configure_optimizers(self):
         """
@@ -343,7 +344,7 @@ class Model(pl.LightningModule):
                 lll_word_hidden_state += lll_pred_code
 
             lll_word_hidden_state = self.merge_layer(lll_word_hidden_state)
-            lll_word_score = self.compress_layer(lll_word_hidden_state)
+            lll_word_score = self.ilabelling_layer(lll_word_hidden_state)
             llll_word_score.append(lll_word_score)
 
             depth += 1
@@ -615,6 +616,7 @@ class Model(pl.LightningModule):
         if self.params.d["mode"] != 'test':
             self.sax_write_output(batch_m_out, batch_id)
 
+        self.l_batch_m_out.append(batch_m_out)
         return batch_m_out
 
     def test_step(self, batch_m_in, batch_id):
@@ -637,7 +639,7 @@ class Model(pl.LightningModule):
         """
         return self.validation_step(batch_m_in, batch_id, ttt="test")
 
-    def sax_eval_metrics_at_epoch_end(self, l_batch_m_out, ttt):
+    def sax_eval_metrics_at_epoch_end(self, ttt):
         """
         similar to Openie6.model.evaluation_end()
         not inherited method, used in *_epoch_end methods
@@ -647,7 +649,6 @@ class Model(pl.LightningModule):
 
         Parameters
         ----------
-        l_batch_out: list[MOutput]
         ttt: str
             either "train", "tune", "test"
 
@@ -659,14 +660,14 @@ class Model(pl.LightningModule):
         """
         eval_epoch_end_d = None
         if self.params.d["mode"] == 'test':
-            for batch_m_out in l_batch_m_out:
+            for batch_m_out in self.l_batch_m_out:
                 batch_m_out.move_to_cpu()
 
         if self.params.task == "cc":
             if 'predict' in self.params.mode:
                 metrics_d = {'P_exact': 0, 'R_exact': 0, 'F1_exact': 0}
             else:
-                for batch_m_out in l_batch_m_out:
+                for batch_m_out in self.l_batch_m_out:
                     self.metric(
                         batch_m_out.l_orig_sent,  # meta data
                         batch_m_out.get_pred_lll_ex_ilabel(),  # predictions
@@ -686,7 +687,7 @@ class Model(pl.LightningModule):
                              'ex_auc': 0,
                              'ex_last_f1': 0}
             else:
-                for batch_m_out in l_batch_m_out:
+                for batch_m_out in self.l_batch_m_out:
                     self.metric(
                         batch_m_out.l_orig_sent,  # meta data
                         batch_m_out.get_lll_pred_ex_ilabel(),  # predictions
@@ -707,13 +708,9 @@ class Model(pl.LightningModule):
         #     self.con_to_l_loss = dict()
         return eval_epoch_end_d
 
-    def validation_epoch_end(self, l_batch_m_out):
+    def on_validation_epoch_end(self):
         """
         inherited method
-
-        Parameters
-        ----------
-        l_batch_m_out: list[MOutput]
 
         Returns
         -------
@@ -722,22 +719,18 @@ class Model(pl.LightningModule):
 
         """
         eval_epoch_end_d = \
-            self.sax_eval_metrics_at_epoch_end(l_batch_m_out,
-                                               "tune")
+            self.sax_eval_metrics_at_epoch_end("tune")
         val_ee_out_d = {}
         if eval_epoch_end_d:
             val_ee_out_d = {"log": eval_epoch_end_d,
                             "eval_acc": eval_epoch_end_d["eval_f1"]}
 
+        self.l_batch_m_out.clear() # free memory
         return val_ee_out_d
 
-    def test_epoch_end(self, l_batch_m_out):
+    def on_test_epoch_end(self):
         """
         inherited method
-
-        Parameters
-        ----------
-        l_batch_m_out: list[MOutput]
 
         Returns
         -------
@@ -746,13 +739,13 @@ class Model(pl.LightningModule):
 
         """
         self.eval_epoch_end_d = \
-            self.sax_eval_metrics_at_epoch_end(l_batch_m_out,
-                                               ttt='test')
+            self.sax_eval_metrics_at_epoch_end(ttt='test')
         test_ee_out_d = {"log": self.eval_epoch_end_d,
                          "progress_bar": self.eval_epoch_end_d,
                          "test_acc": self.eval_epoch_end_d["eval_f1"]}
         # self.results = d_eval_results # never used!
 
+        self.l_batch_m_out.clear()  # free memory
         return test_ee_out_d
 
     def train_dataloader(self):
@@ -929,3 +922,67 @@ class Model(pl.LightningModule):
             self.sax_write_if_task_cc(batch_m_out, batch_id)
         else:
             assert False
+
+    def get_labels(self):
+        """
+                similar to Openie6.run.get_labels()
+        ILABEL_TO_EXTAG={0: 'NONE', 1: 'ARG1', 2: 'REL', 3: 'ARG2',
+                 4: 'ARG2', 5: 'NONE'}
+
+
+        Returns
+        -------
+
+        """
+
+        lines = []
+        batch_id = 0
+        sam = 0
+        depth = 0
+        count = 0
+        prev_osent1 = ''
+        
+        l_orig_sent = self.l_batch_m_out.l_orig_sent
+        lll_osent_loc = []
+        
+        num_samples = len(l_orig_sent)
+        for sam1 in range(num_samples):#i
+            osent1 = l_orig_sent[sam1]
+            l_word1 = get_words(osent1)
+            lll_osent_loc[sam1].append(list(range(len(l_word1))))
+
+            lines.append('\n' + osent1)
+            for word_loc in range(len(l_word1)): #j
+                osent = l_orig_sent[sam]
+                l_word = get_words(osent)
+                assert len(lll_osent_loc[sam1][word_loc]) == len(l_word)
+                lll_pred_ex_icode = self.l_batch_m_out[
+                    batch_id].llll_pred_ex_icode[sam]
+
+                # all_extractions, all_str_l_ilabel, len_exts = [], [], []
+                for ll_pred_ex_icode in lll_pred_ex_icode:
+                    if ll_pred_ex_icode.sum().item() == 0:
+                        break
+
+                    l_ilabel = [0] * len(l_word1)
+                    ll_pred_ex_icode = ll_pred_ex_icode[:len(l_word)].tolist()
+                    for idx, icode in enumerate(
+                            sorted(lll_osent_loc[sam1][word_loc])):
+                        l_ilabel[icode] = ll_pred_ex_icode[idx]
+
+                    l_ilabel = l_ilabel[:-3]
+                    if 1 not in prediction and 2 not in prediction:
+                        continue
+
+                    str_l_ilabel = ' '.join([label_dict[x] for x in l_ilabel])
+                    lines.append(str_l_ilabel)
+
+                depth += 1
+                sam += 1
+                if sam == len(self.l_batch_m_out[batch_id].l_orig_sent):
+                    sam = 0
+                    batch_id += 1
+
+        lines.append('\n')
+        return lines
+

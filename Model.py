@@ -87,7 +87,6 @@ class Model(pl.LightningModule):
     hidden_size: int
     init_name_to_param: dict[str, variable]
     iterative_transformer: self.base_model.encoder.layer
-    l_batch_m_out: list[MOutput]
     loss_fun: nn.CrossEntropyLoss
     merge_layer: nn.Linear
     metric: CCMetric | ExMetric
@@ -185,8 +184,6 @@ class Model(pl.LightningModule):
         self.con_to_weight = {l_constraint[k]: float(l_con_weight[k])
                               for k in range(len(l_constraint)) if
                               l_constraint[k]}
-
-        self.l_batch_m_out = None
 
     def configure_optimizers(self):
         """
@@ -635,7 +632,7 @@ class Model(pl.LightningModule):
         """
         return self.validation_step(batch_m_in, batch_id, ttt="test")
 
-    def sax_eval_metrics_at_epoch_end(self, ttt):
+    def sax_eval_metrics_at_epoch_end(self, l_batch_m_out, ttt):
         """
         similar to Openie6.model.evaluation_end()
         not inherited method, used in *_epoch_end methods
@@ -645,6 +642,7 @@ class Model(pl.LightningModule):
 
         Parameters
         ----------
+        l_batch_out: list[MOutput]
         ttt: str
             either "train", "tune", "test"
 
@@ -656,14 +654,14 @@ class Model(pl.LightningModule):
         """
         eval_out_d = None
         if self.params.d["mode"] == 'test':
-            for batch_m_out in self.l_batch_m_out:
+            for batch_m_out in l_batch_m_out:
                 batch_m_out.move_to_cpu()
 
         if self.params.task == "cc":
             if 'predict' in self.params.mode:
                 metrics_d = {'P_exact': 0, 'R_exact': 0, 'F1_exact': 0}
             else:
-                for batch_m_out in self.l_batch_m_out:
+                for batch_m_out in l_batch_m_out:
                     self.metric(
                         batch_m_out.l_orig_sent,  # meta data
                         batch_m_out.get_pred_lll_ex_ilabel(),  # predictions
@@ -683,7 +681,7 @@ class Model(pl.LightningModule):
                              'ex_auc': 0,
                              'ex_last_f1': 0}
             else:
-                for batch_m_out in self.l_batch_m_out:
+                for batch_m_out in l_batch_m_out:
                     self.metric(
                         batch_m_out.l_orig_sent,  # meta data
                         batch_m_out.get_lll_pred_ex_ilabel(),  # predictions
@@ -704,9 +702,13 @@ class Model(pl.LightningModule):
         #     self.con_to_l_loss = dict()
         return eval_out_d
 
-    def validation_epoch_end(self):
+    def validation_epoch_end(self, l_batch_m_out):
         """
         inherited method
+
+        Parameters
+        ----------
+        l_batch_m_out: list[MOutput]
 
         Returns
         -------
@@ -715,7 +717,8 @@ class Model(pl.LightningModule):
 
         """
         eval_out_d = \
-            self.sax_eval_metrics_at_epoch_end("tune")
+            self.sax_eval_metrics_at_epoch_end(l_batch_m_out,
+                                               "tune")
         val_ee_out_d = {}
         if eval_out_d:
             val_ee_out_d = {"log": eval_out_d,
@@ -723,9 +726,13 @@ class Model(pl.LightningModule):
 
         return val_ee_out_d
 
-    def test_epoch_end(self):
+    def test_epoch_end(self, l_batch_m_out):
         """
         inherited method
+
+        Parameters
+        ----------
+        l_batch_m_out: list[MOutput]
 
         Returns
         -------
@@ -734,7 +741,8 @@ class Model(pl.LightningModule):
 
         """
         self.eval_out_d = \
-            self.sax_eval_metrics_at_epoch_end(ttt='test')
+            self.sax_eval_metrics_at_epoch_end(l_batch_m_out,
+                                               ttt='test')
         test_ee_out_d = {"log": self.eval_out_d,
                          "progress_bar": self.eval_out_d,
                          "test_acc": self.eval_out_d["eval_f1"]}

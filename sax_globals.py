@@ -20,27 +20,30 @@ params_d = parameters dictionary
 # CCTAGS_TUNE_FP = "input_data/cctags_tune.txt"
 # CCTAGS_TEST_FP = "input_data/cctags_test.txt"
 
-
-CCTAGS_TRAIN_FP = 'input_data/openie-data/ptb-train.labels'
-CCTAGS_TUNE_FP = 'input_data/openie-data/ptb-dev.labels'
-CCTAGS_TEST_FP = 'input_data/openie-data/ptb-test.labels'
-
 # # file paths for training, tuning and testing extags (ex=extraction)
-# EXTAGS_FP = "input_data/extags_all.txt"
 # EXTAGS_TRAIN_FP = "input_data/extags_train.txt"
 # # dev=development=validation=tuning
 # EXTAGS_TUNE_FP = "input_data/extags_tune.txt"
 # EXTAGS_TEST_FP = "input_data/extags_test.txt"
 
-EXTAGS_TRAIN_FP = 'input_data/openie-data/openie4_labels'
-EXTAGS_TUNE_FP = 'input_data/carb-data/dev.txt'
-EXTAGS_TEST_FP = 'input_data/carb-data/test.txt'
-
-# used by AutoModel and AutoTokenizer
-CACHE_DIR = 'input_data/pretrained_cache'
+INPUT_DIR = "input_data"
+CACHE_DIR = INPUT_DIR + '/pretrained_cache'
 WEIGHTS_DIR = "weights"
-PREDICTIONS_DIR = "predictions"
+PRED_DIR = "predictions"
 RESCORE_DIR = "rescore"
+
+CCTAGS_TRAIN_FP = 'input_data/openie-data/ptb-train.labels'
+CCTAGS_TUNE_FP = 'input_data/openie-data/ptb-dev.labels'
+CCTAGS_TEST_FP = 'input_data/openie-data/ptb-test.labels'
+CC_PRED_FP = PRED_DIR + '/cc.txt'
+CC_WEIGHTS_FP = ""
+
+EXTAGS_TRAIN_FP = INPUT_DIR + '/openie-data/openie4_labels'
+EXTAGS_TUNE_FP = INPUT_DIR + '/carb-data/dev.txt'
+EXTAGS_TEST_FP = INPUT_DIR + '/carb-data/test.txt'
+EX_PRED_FP = PRED_DIR + '/ex.txt'
+EX_WEIGHTS_FP=""
+
 
 QUOTES = "\"\'"  # 2
 BRACKETS = "(){}[]<>"  # 8

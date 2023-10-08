@@ -91,6 +91,11 @@ class Model(pl.LightningModule):
     merge_layer: nn.Linear
     metric: CCMetric | ExMetric
     params: Params
+    # inherited
+    # hparams
+    # logger
+    # trainer
+    # on_gpu
 
 
 
@@ -844,7 +849,7 @@ class Model(pl.LightningModule):
         with open(fpath, fmode) as pred_f:
             pred_f.write('\n'.join(l_pred_str) + '\n')
         if "write_allennlp" in self.params.d:
-            fpath = PREDICTIONS_DIR + "/allen.txt"
+            fpath = PRED_DIR + "/allen.txt"
             with open(fpath, fmode) as allen_f:
                 allen_f.write('\n'.join(l_pred_allen_str) + '\n')
 

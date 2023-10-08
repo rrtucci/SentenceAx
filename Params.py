@@ -91,16 +91,16 @@ class Params:
         # this is repeated at begin and end.
         # elif self.task == "ex" and self.mode == "splitpredict":
         #     self.d = {
-        #         "cc_self.model_fp": WEIGHTS_DIR +
-        #                     "/cc_self.model/epoch=28_eval_acc=0.854.ckpt",
+        #         "cc_weights_fp": WEIGHTS_DIR +
+        #                     "/cc_model/epoch=28_eval_acc=0.854.ckpt",
         #         "gpus": 1,
         #         # "inp": "sentences.txt",
         #         "self.mode": "splitpredict",
         #         "num_extractions": 5,
-        #         "ex_self.model_fp": WEIGHTS_DIR +
-        #                     "/ex_self.model/epoch=14_eval_acc=0.551_v0.ckpt",
+        #         "ex_weights_fp": WEIGHTS_DIR +
+        #                     "/ex_model/epoch=14_eval_acc=0.551_v0.ckpt",
         #         #"out": "predictions.txt",
-        #         # "rescore_self.model": WEIGHTS_DIR + "/rescore_self.model",
+        #         # "rescore_model": WEIGHTS_DIR + "/rescore_model",
         #         "rescoring": True,
         #         "self.task": "ex"
         #     }
@@ -119,7 +119,7 @@ class Params:
                 "self.mode": "train_test",
                 "self.model_str": "bert-base-cased",
                 "optimizer": "adamW",
-                # "save": WEIGHTS_DIR + "/warmup_ex_self.model",
+                # "save": WEIGHTS_DIR + "/warmup_ex_model",
                 "self.task": "ex"
             }
 
@@ -132,7 +132,7 @@ class Params:
         #         "gpus": 1,
         #         "self.mode": "test",
         #         "self.model_str": "bert-base-cased",
-        #         # "save": WEIGHTS_DIR + "/warmup_ex_self.model",
+        #         # "save": WEIGHTS_DIR + "/warmup_ex_model",
         #         "self.task": "ex"
         #     }
 
@@ -146,7 +146,7 @@ class Params:
         #         "self.mode": "predict",
         #         "self.model_str": "bert-base-cased",
         #         #"out": "predictions.txt",
-        #         # "save": WEIGHTS_DIR + "/warmup_ex_self.model",
+        #         # "save": WEIGHTS_DIR + "/warmup_ex_model",
         #         "self.task": "ex"
         #     }
 
@@ -159,8 +159,8 @@ class Params:
             self.d = {
                 "accumulate_grad_batches": 2,
                 "batch_size": 16,
-                "checkpoint_fp":
-                    WEIGHTS_DIR + "/warmup_ex_self.model-epoch=13_eval_acc=0.544.ckpt",
+                "suggested_checkpoint_fp":
+                    WEIGHTS_DIR + "/warmup_ex_model-epoch=13_eval_acc=0.544.ckpt",
                 "constraint_str": "posm_hvc_hvr_hve",
                 "con_weight_str": "3_3_3_3",
                 "epochs": 16,
@@ -172,7 +172,7 @@ class Params:
                 "self.model_str": "bert-base-cased",
                 "multi_opt": True,
                 "optimizer": "adam",
-                # "save": WEIGHTS_DIR + "/ex_self.model",
+                # "save": WEIGHTS_DIR + "/ex_model",
                 "save_k": 3,
                 "self.task": "ex",
                 "val_check_interval": 0.1,
@@ -185,7 +185,7 @@ class Params:
                 "gpus": 1,
                 "self.mode": "test",
                 "self.model_str": "bert-base-cased",
-                # "save": WEIGHTS_DIR + "/ex_self.model",
+                # "save": WEIGHTS_DIR + "/ex_model",
                 "self.task": "ex"
             }
 
@@ -197,7 +197,7 @@ class Params:
                 "self.mode": "predict",
                 "self.model_str": "bert-base-cased",
                 # "out": "predictions.txt",
-                # "save": WEIGHTS_DIR + "/ex_self.model",
+                # "save": WEIGHTS_DIR + "/ex_model",
                 "self.task": "ex"
             }
 
@@ -212,7 +212,7 @@ class Params:
                 "self.mode": "train_test",
                 "self.model_str": "bert-large-cased",
                 "optimizer": "adamW",
-                # "save": WEIGHTS_DIR + "/cc_self.model",
+                # "save": WEIGHTS_DIR + "/cc_model",
                 "self.task": "cc"
             }
 
@@ -223,16 +223,16 @@ class Params:
         # It is a repeat.
         elif self.task == "ex" and self.mode == "splitpredict":
             self.d = {
-                "cc_self.model_fp":
-                    WEIGHTS_DIR + "/cc_self.model-epoch=28_eval_acc=0.854.ckpt",
+                "cc_weights_fp":
+                    WEIGHTS_DIR + "/cc_model-epoch=28_eval_acc=0.854.ckpt",
                 "gpus": 1,
                 # "inp": "carb_subset/data/carb_sentences.txt",
                 "self.mode": "splitpredict",
                 "num_extractions": MAX_EX_DEPTH,
-                "ex_self.model_fp":
-                    WEIGHTS_DIR + "/ex_self.model/epoch=14_eval_acc=0.551_v0.ckpt",
+                "ex_weights_fp":
+                    WEIGHTS_DIR + "/ex_model/epoch=14_eval_acc=0.551_v0.ckpt",
                 # "out": WEIGHTS_DIR + "/results/final",
-                # "rescore_self.model": WEIGHTS_DIR + "/rescore_self.model",
+                # "rescore_model": WEIGHTS_DIR + "/rescore_model",
                 "rescoring": True,
                 "self.task": "ex"
             }
@@ -244,7 +244,7 @@ class Params:
             {
                 "batch_size": 32,
                 "build_cache": True,
-                "checkpoint_fp": "",
+                "suggested_checkpoint_fp": "",
                 "con_weight_str": "1",  # for multiple constraints "1_1_1"
                 "dropout_fun": 0.0,
                 "gpus": 1,

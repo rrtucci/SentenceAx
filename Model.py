@@ -83,7 +83,7 @@ class Model(pl.LightningModule):
     con_to_weight: dict[str, float]
     dropout_fun: nn.Dropout
     embedding: Embedding
-    eval_out_d: dict[str, Any]
+    eval_epoch_end_d: dict[str, Any]
     hidden_size: int
     init_name_to_param: dict[str, variable]
     iterative_transformer: self.base_model.encoder.layer
@@ -161,7 +161,7 @@ class Model(pl.LightningModule):
         elif self.params.task == "cc":
             self.metric = CCMetric()
 
-        self.eval_out_d = {}  # filled in test_epoch_end()
+        self.eval_epoch_end_d = {}  # filled in test_epoch_end()
 
         # self.init_name_to_param=None #Openie6 has this as Model attribute but
         # not us
@@ -649,10 +649,10 @@ class Model(pl.LightningModule):
         Returns
         -------
         dict[str, Any]
-            eval_out_d
+            eval_epoch_end_d
 
         """
-        eval_out_d = None
+        eval_epoch_end_d = None
         if self.params.d["mode"] == 'test':
             for batch_m_out in l_batch_m_out:
                 batch_m_out.move_to_cpu()
@@ -671,7 +671,7 @@ class Model(pl.LightningModule):
 
             val_acc = metrics_d["F1_exact"]
             # val_auc = 0
-            eval_out_d = {"eval_f1": val_acc,
+            eval_epoch_end_d = {"eval_f1": val_acc,
                           "eval_p": metrics_d["P_exact"],
                           "eval_r": metrics_d["R_exact"]}
 
@@ -688,11 +688,11 @@ class Model(pl.LightningModule):
                         batch_m_out.get_ll_pred_ex_confi()) # scores
                 metrics_d = self.metric.get_score_d(do_reset=True)
 
-            eval_out_d = {"eval_f1": metrics_d["ex_f1"],
+            eval_epoch_end_d = {"eval_f1": metrics_d["ex_f1"],
                           "eval_auc": metrics_d["ex_auc"],
                           "eval_last_f1": metrics_d["ex_last_f1"]}
 
-        print('\nResults:\n' + str(eval_out_d))
+        print('\nResults:\n' + str(eval_epoch_end_d))
         # For computing the constraint violations
         # if hasattr(self, 'con_to_l_loss') and \
         # self.params.d["constraint_str"] != '':
@@ -700,7 +700,7 @@ class Model(pl.LightningModule):
         #         self.con_to_l_loss[key] = sum(self.con_to_l_loss[key]).item()
         #     print('\nViolations: ', self.con_to_l_loss)
         #     self.con_to_l_loss = dict()
-        return eval_out_d
+        return eval_epoch_end_d
 
     def validation_epoch_end(self, l_batch_m_out):
         """
@@ -716,13 +716,13 @@ class Model(pl.LightningModule):
             val_ee_out_d
 
         """
-        eval_out_d = \
+        eval_epoch_end_d = \
             self.sax_eval_metrics_at_epoch_end(l_batch_m_out,
                                                "tune")
         val_ee_out_d = {}
-        if eval_out_d:
-            val_ee_out_d = {"log": eval_out_d,
-                            "eval_acc": eval_out_d["eval_f1"]}
+        if eval_epoch_end_d:
+            val_ee_out_d = {"log": eval_epoch_end_d,
+                            "eval_acc": eval_epoch_end_d["eval_f1"]}
 
         return val_ee_out_d
 
@@ -740,12 +740,12 @@ class Model(pl.LightningModule):
             test_ee_out_d
 
         """
-        self.eval_out_d = \
+        self.eval_epoch_end_d = \
             self.sax_eval_metrics_at_epoch_end(l_batch_m_out,
                                                ttt='test')
-        test_ee_out_d = {"log": self.eval_out_d,
-                         "progress_bar": self.eval_out_d,
-                         "test_acc": self.eval_out_d["eval_f1"]}
+        test_ee_out_d = {"log": self.eval_epoch_end_d,
+                         "progress_bar": self.eval_epoch_end_d,
+                         "test_acc": self.eval_epoch_end_d["eval_f1"]}
         # self.results = d_eval_results # never used!
 
         return test_ee_out_d

@@ -323,8 +323,8 @@ class MConductor:
                 trainer.test(
                     self.model,
                     test_dataloaders=self.dloader.get_ttt_dataloaders("test"))
-                eval_out_d = self.model.eval_out_d
-                test_f.write(f'{checkpoint_path}\t{eval_out_d}\n')
+                eval_epoch_end_d = self.model.eval_epoch_end_d
+                test_f.write(f'{checkpoint_path}\t{eval_epoch_end_d}\n')
                 # note test_f created outside loop.
                 # refresh/clear/flush test_f after each write
                 test_f.flush()

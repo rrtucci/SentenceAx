@@ -36,13 +36,13 @@ CCTAGS_TRAIN_FP = 'input_data/openie-data/ptb-train.labels'
 CCTAGS_TUNE_FP = 'input_data/openie-data/ptb-dev.labels'
 CCTAGS_TEST_FP = 'input_data/openie-data/ptb-test.labels'
 CC_PRED_FP = PRED_DIR + '/cc.txt'
-CC_WEIGHTS_FP = ""
+CC_FIN_WEIGHTS_FP = ""
 
 EXTAGS_TRAIN_FP = INPUT_DIR + '/openie-data/openie4_labels'
 EXTAGS_TUNE_FP = INPUT_DIR + '/carb-data/dev.txt'
 EXTAGS_TEST_FP = INPUT_DIR + '/carb-data/test.txt'
 EX_PRED_FP = PRED_DIR + '/ex.txt'
-EX_WEIGHTS_FP=""
+EX_FIN_WEIGHTS_FP= ""
 
 
 QUOTES = "\"\'"  # 2

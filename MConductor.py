@@ -352,9 +352,9 @@ class MConductor:
         #             mapping=None,
         #             conj_word_mapping=None):
         if self.params.task == 'cc':
-            self.params.d["suggested_checkpoint_fp"] = CC_WEIGHTS_FP
+            self.params.d["suggested_checkpoint_fp"] = CC_FIN_WEIGHTS_FP
         if self.params.task == 'ex':
-            self.params.d["suggested_checkpoint_fp"] = EX_WEIGHTS_FP
+            self.params.d["suggested_checkpoint_fp"] = EX_FIN_WEIGHTS_FP
 
         checkpoint_fp = self.get_checkpoint_fp()
         self.update_params(checkpoint_fp)
@@ -384,7 +384,7 @@ class MConductor:
         self.cc_fix_d = {}
         if not new_pred_fp:
             self.params.d["task"] = self.params.task = 'cc'
-            self.params.d["suggested_checkpoint_fp"] = CC_WEIGHTS_FP
+            self.params.d["suggested_checkpoint_fp"] = CC_FIN_WEIGHTS_FP
             self.params.d["model_str"] = 'bert-base-cased'
             self.params.d["mode"] = self.params.mode = 'predict'
             self.predict()
@@ -438,7 +438,7 @@ class MConductor:
 
     def splitpredict_do_ex_second(self):
         self.params.d["task"] = self.params.task = 'ex'
-        self.params.d["suggested_checkpoint_fp"] = EX_WEIGHTS_FP
+        self.params.d["suggested_checkpoint_fp"] = EX_FIN_WEIGHTS_FP
         self.params.d["model_str"] = 'bert-base-cased'
         pred_test_dataloader = self.dloader.get_ttt_dataloaders(
             "test", self.l_pred_sentL)

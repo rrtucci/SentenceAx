@@ -25,13 +25,16 @@ class ExMetric:
     
     """
 
-    def __init__(self, osentL_to_exs=None, fix_d=None, use_carb_ex=False):
+    def __init__(self,
+                 osentL_to_exs=None,
+                 fix_d=None,
+                 use_carb_ex=False):
         """
         
         Parameters
         ----------
         osentL_to_exs: dict[str, list[SaxExtraction]]
-        fix_d; dict[str, str]
+        fix_d: dict[str, str]
         use_carb_ex: bool
         """
         self.tune_fpbenchmark = Benchmark('carb_subset/data/gold/dev.tsv')

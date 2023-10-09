@@ -60,7 +60,8 @@ class Model(pl.LightningModule):
     
         "text": str
     
-        "verb_bools": list[int], a list of 0, 1, 1 if word in text is a verb and 0 if not
+        "verb_bools": list[int],
+            a list of 0, 1, 1 if word in text is a verb and 0 if not
     
         "verb_locs": list[int], locations of verbs  in text
     
@@ -96,8 +97,6 @@ class Model(pl.LightningModule):
     # logger
     # trainer
     # on_gpu
-
-
 
     """
 
@@ -157,7 +156,7 @@ class Model(pl.LightningModule):
         self.merge_layer = nn.Linear(self.hidden_size,
                                      ILABELLING_DIM)  # 300
         self.ilabelling_layer = nn.Linear(ILABELLING_DIM,  # 300
-                                        NUM_ILABELS)  # 6
+                                          NUM_ILABELS)  # 6
 
         self.loss_fun = nn.CrossEntropyLoss()
 
@@ -402,8 +401,8 @@ class Model(pl.LightningModule):
             if ttt == 'train':
                 l_loss_input = \
                     lll_word_score0.reshape(batch_size * num_words, -1)
-                l_loss_target = self.batch_m_in. \
-                                    lll_ex_ilabel[:, depth, :].reshape(-1)
+                l_loss_target = \
+                    self.batch_m_in.lll_ex_ilabel[:, depth, :].reshape(-1)
                 batch_loss += self.loss_fun(l_loss_input, l_loss_target)
             else:
                 lll_soft_word_score = \
@@ -479,15 +478,15 @@ class Model(pl.LightningModule):
             #         index=llll_ilabel.long(),
             #         src=1)
 
-                # not used
-                # for constraint, con_weight in self.con_to_weight.items():
-                #     con_loss = Model.sax_constrained_loss(
-                #         batch_m_in,
-                #         llll_word_score,
-                #         {constraint: con_weight})
-                #     if constraint not in self.con_to_l_loss:
-                #         self.con_to_l_loss[constraint] = []
-                #     self.con_to_l_loss[constraint].append(con_loss)
+            # not used
+            # for constraint, con_weight in self.con_to_weight.items():
+            #     con_loss = Model.sax_constrained_loss(
+            #         batch_m_in,
+            #         llll_word_score,
+            #         {constraint: con_weight})
+            #     if constraint not in self.con_to_l_loss:
+            #         self.con_to_l_loss[constraint] = []
+            #     self.con_to_l_loss[constraint].append(con_loss)
 
         batch_m_out = MOutput(batch_m_in.l_orig_sent,
                               batch_m_in.lll_ex_ilabel,
@@ -618,7 +617,7 @@ class Model(pl.LightningModule):
         # tune_out_d = OrderedDict(tune_out_d)
 
         if self.params.d["mode"] != 'test':
-            self.sax_write_output(batch_m_out, batch_id)
+            self.sax_write_output(batch_id)
 
         self.l_batch_m_out.append(batch_m_out)
         return batch_m_out
@@ -632,7 +631,7 @@ class Model(pl.LightningModule):
 
         Parameters
         ----------
-        batch_m_out: MOutput
+        batch_m_in: MInput
         batch_id: int
 
         Returns
@@ -682,8 +681,8 @@ class Model(pl.LightningModule):
             val_acc = metrics_d["F1_exact"]
             # val_auc = 0
             eval_epoch_end_d = {"eval_f1": val_acc,
-                          "eval_p": metrics_d["P_exact"],
-                          "eval_r": metrics_d["R_exact"]}
+                                "eval_p": metrics_d["P_exact"],
+                                "eval_r": metrics_d["R_exact"]}
 
         elif self.params.task == "ex":
             if 'predict' in self.params.d["mode"]:
@@ -695,12 +694,13 @@ class Model(pl.LightningModule):
                     self.metric(
                         batch_m_out.l_orig_sent,  # meta data
                         Li(batch_m_out.lll_pred_ex_ilabel),  # predictions
-                        Li(batch_m_out.ll_pred_ex_confi)) # scores
-                metrics_d = self.metric.get_score_d(do_reset=True)
+                        Li(batch_m_out.ll_pred_ex_confi))  # scores
+                metrics_d = self.metric.get_score_d(ttt,
+                                                    do_reset=True)
 
             eval_epoch_end_d = {"eval_f1": metrics_d["ex_f1"],
-                          "eval_auc": metrics_d["ex_auc"],
-                          "eval_last_f1": metrics_d["ex_last_f1"]}
+                                "eval_auc": metrics_d["ex_auc"],
+                                "eval_last_f1": metrics_d["ex_last_f1"]}
 
         print('\nResults:\n' + str(eval_epoch_end_d))
         # For computing the constraint violations
@@ -729,7 +729,7 @@ class Model(pl.LightningModule):
             val_ee_out_d = {"log": eval_epoch_end_d,
                             "eval_acc": eval_epoch_end_d["eval_f1"]}
 
-        self.l_batch_m_out.clear() # free memory
+        self.l_batch_m_out.clear()  # free memory
         return val_ee_out_d
 
     def on_test_epoch_end(self):
@@ -774,7 +774,7 @@ class Model(pl.LightningModule):
         """
         return
 
-    def sax_write_if_task_ex(self, batch_m_out, batch_id):
+    def sax_write_if_task_ex(self, batch_id):
         """
 
         Parameters
@@ -788,6 +788,7 @@ class Model(pl.LightningModule):
         """
         fix_d = self.metric.fix_d
 
+        batch_m_out = self.l_batch_m_out[batch_id]
         lll_ex_ilabel = batch_m_out.lll_ex_ilabel
         ll_pred_ex_confi = batch_m_out.ll_pred_ex_confi
         num_samples, num_depths, _ = lll_ex_ilabel.shape
@@ -850,7 +851,7 @@ class Model(pl.LightningModule):
             with open(fpath, fmode) as allen_f:
                 allen_f.write('\n'.join(l_pred_allen_str) + '\n')
 
-    def sax_write_if_task_cc(self, batch_m_out, batch_id):
+    def sax_write_if_task_cc(self, batch_id):
         """
 
         Parameters
@@ -863,27 +864,25 @@ class Model(pl.LightningModule):
 
         """
         fix_d = self.metric.fix_d
+        batch_m_out = self.l_batch_m_out[batch_id]
 
-        sample_id = 0
         correct = True
         total_num_ccsents1 = 0
         total_num_ccsents2 = 0
         lll_ex_ilabel = batch_m_out.lll_ex_ilabel
         num_samples, num_depths, _ = lll_ex_ilabel.shape
         # true_lll_ex_ilabel = self.true_batch_m_out.lll_label
-        l_orig_sent = [batch_m_out.ll_osent_icode for
-                       k in range(num_samples)]
+        l_orig_sent = batch_m_out.l_orig_sent
         l_pred_str = []
         ll_spanned_word = []
         ll_spanned_loc = []
-        for id in range(len(l_orig_sent)):
-            sample_id += 1
-            orig_sent = l_orig_sent[id]
+        for sam in range(len(l_orig_sent)):
+            orig_sent = l_orig_sent[sam]
             ll_ilabel = []
             l_orig_sent = []
             for depth in range(num_depths):
                 num_words = len(get_words(orig_sent))
-                l_ilabel = lll_ex_ilabel[id][depth][:num_words].tolist()
+                l_ilabel = lll_ex_ilabel[sam][depth][:num_words].tolist()
                 ll_ilabel.append(l_ilabel)
             tree = CCTree(orig_sent, ll_ilabel)
 
@@ -906,7 +905,7 @@ class Model(pl.LightningModule):
         with open(fpath, fmode) as pred_f:
             pred_f.write('\n'.join(l_pred_str) + '\n')
 
-    def sax_write_output(self, batch_m_out, batch_id):
+    def sax_write_output(self, batch_id):
         """
         similar to Openie6.model.write_to_file()
 
@@ -919,10 +918,11 @@ class Model(pl.LightningModule):
         None
 
         """
+        batch_m_out = self.l_batch_m_out[batch_id]
         batch_m_out.move_to_cpu()
         if self.params.task == "ex":
-            self.sax_write_if_task_ex(batch_m_out, batch_id)
+            self.sax_write_if_task_ex(batch_id)
         elif self.params.task == "cc":
-            self.sax_write_if_task_cc(batch_m_out, batch_id)
+            self.sax_write_if_task_cc(batch_id)
         else:
             assert False

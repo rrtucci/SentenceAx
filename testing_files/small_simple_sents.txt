@@ -83,8 +83,8 @@ Hercule Poirot was in the Brussels police force by 1893 . [unused1] [unused2] [u
 Hercule Poirot was in the Brussels police force by 1893
 22.
 Christie strongly implies that this `` quiet retreat in the Ardennes '' near Spa is the Hercule Poirot family home . [unused1] [unused2] [unused3]
-Christie strongly implies that this `` quiet retreat in the Ardennes '' near Spa is the Hercule Poirot family home
-this `` quiet retreat in the Ardennes '' near Spa is the Hercule Poirot family home
+Christie strongly implies that this `` quiet retreat in the Ardennes `` near Spa is the Hercule Poirot family home
+this `` quiet retreat in the Ardennes `` near Spa is the Hercule Poirot family home
 23.
 Christie is purposefully vague , as Poirot is thought to be elderly even in the early Hercule Poirot novels , and in An Autobiography '' she admitted that she already imagined him to be an old man in 1920 . [unused1] [unused2] [unused3]
 she to be an old man in 1920
@@ -419,7 +419,7 @@ he is played by David Mitchell
 one sketch sees him identifying a killer due to her use of `` the evil voice
 him identifying a killer
 a later sketch sees him meeting a ship captain
-him meeting That Mitchell and Webb Look , where he is played by David Mitchell one sketch sees him identifying a killer due to her use of `` the evil voice '' -- a voice that only murderers use -- admitting that he otherwise had no evidence , and a later sketch sees him meeting a ship captain who is also played by Mitchell
+him meeting That Mitchell and Webb Look , where he is played by David Mitchell one sketch sees him identifying a killer due to her use of `` the evil voice `` -- a voice that only murderers use -- admitting that he otherwise had no evidence , and a later sketch sees him meeting a ship captain who is also played by Mitchell
 98.
 Hercule Poirot is a fictional Belgian detective . [unused1] [unused2] [unused3]
 Hercule Poirot is a fictional Belgian detective
@@ -540,7 +540,7 @@ it was precisely because of the demonstrated inadequacy of such methods
 Kraepelin developed Emil Kraepelin new diagnostic system
 131.
 Kraepelin is specifically credited with the classification of what was previously considered to be a unitary concept of psychosis , into two distinct forms ( known as the Kraepelinian dichotomy ) : Drawing on Emil Kraepelin long-term research , and using the criteria of course , outcome and prognosis , Emil Kraepelin developed the concept of dementia praecox , which Emil Kraepelin defined as the `` sub-acute development of a peculiar simple condition of mental weakness occurring at a youthful age '' . [unused1] [unused2] [unused3]
-Emil Kraepelin developed the concept of dementia praecox , which Emil Kraepelin defined as the `` sub-acute development of a peculiar simple condition of mental weakness occurring at a youthful age ''
+Emil Kraepelin developed the concept of dementia praecox , which Emil Kraepelin defined as the `` sub-acute development of a peculiar simple condition of mental weakness occurring at a youthful age ``
 Kraepelin is specifically credited
 the concept of dementia praecox defined as the `` sub-acute development of a peculiar simple condition of mental weakness
 a peculiar simple condition of mental weakness occurring at a youthful age
@@ -686,7 +686,7 @@ Commissioned by Philips to publicise the museum , Evoluon was shown as a trade t
 Evoluon was shown as a trade test colour film on the BBC
 167.
 In this philosophical school of thought , the aim is to instill students with the `` essentials '' of academic knowledge , enacting a back-to-basics approach . [unused1] [unused2] [unused3]
-the aim is to instill students with the `` essentials '' of academic knowledge In this philosophical school of thought
+the aim is to instill students with the `` essentials `` of academic knowledge In this philosophical school of thought
 168.
 This core curriculum involves such areas that include the study of the surrounding environment , basic natural laws , and the disciplines that promote a happier , more educated living . [unused1] [unused2] [unused3]
 This core curriculum involves such areas that include the study of the surrounding environment , basic natural laws , and the disciplines
@@ -721,7 +721,7 @@ One point that Bagley noted was that students in the U.S. were not getting an ed
 One point noted Bagley
 students in Europe were the same age
 One point that Bagley noted was that students in the U.S. were not getting an education on the same levels as students in Europe
-students in the U.S. were not getting an education
+students in the U.S . were not getting an education
 177.
 A recent branch has emerged within the essentialist school of thought called `` neoessentialism '' . [unused1] [unused2] [unused3]
 A recent branch has emerged within the essentialist school of thought
@@ -745,10 +745,10 @@ Lastly , Bagley wrote of the importance of accuracy , thoroughness and effort on
 Bagley wrote of the importance of accuracy , thoroughness and effort
 183.
 Another important essentialist is E.D. Hirsch ( 1928 - ) . [unused1] [unused2] [unused3]
-Another important essentialist is E.D. Hirsch
+Another important essentialist is E.D . Hirsch
 184.
 The Core Knowledge Schools were founded on the philosophy of essentialist E.D. Hirsch . [unused1] [unused2] [unused3]
-The Core Knowledge Schools were founded on the philosophy of essentialist E.D. Hirsch
+The Core Knowledge Schools were founded on the philosophy of essentialist E.D . Hirsch
 185.
 Although it is difficult to maintain a pure and strict essentialist-only curriculum , these schools have the central aim of establishing a common knowledge base for all citizens . [unused1] [unused2] [unused3]
 these schools have the central aim of establishing a common knowledge base for all citizens
@@ -880,7 +880,7 @@ This unity of purpose lies at the heart of the progressive education philosophy
 216.
 ( Cremin , 282 ) Based on Flexner 's demand that the modern curriculum `` include nothing for which an affirmative case can not be made out '' ( Cremin , 281 ) the new school organized its activities around four fundamental fields : science , industry , aesthetics and civics . [unused1] [unused2] [unused3]
 Cremin Based on Flexner 's demand that the modern curriculum `` include nothing
-the modern curriculum include nothing for which an affirmative case can not be made out ''
+the modern curriculum include nothing for which an affirmative case can not be made out ``
 an affirmative case can not be made out
 the new school organized its activities
 217.
@@ -945,7 +945,7 @@ some people felt that social welfare of young men should be maintained through e
 social welfare of young men should be maintained
 232.
 Soon after his return to the U.S. , Boyce incorporated the Boy Scouts of America on February 8 , 1910 . [unused1] [unused2] [unused3]
-Boyce incorporated the Boy Scouts of America on February 8 Soon after his return to the U.S.
+Boyce incorporated the Boy Scouts of America on February 8 Soon after his return to the U.S .
 233.
 A rethinking of education theory following that , along with the subsequent and prevailing conservative political climate , helped to cause progressivism to fall from favor . [unused1] [unused2] [unused3]
 A rethinking of education theory following that , along with the subsequent and prevailing conservative political climate , helped to cause progressivism to fall from favor
@@ -1154,8 +1154,8 @@ the cell is being charged
 Electrode becomes the positive When the cell is being charged
 286.
 Many devices have other electrodes to control operation , e.g. , base , gate , control grid . [unused1] [unused2] [unused3]
-Many devices have other electrodes to control operation , e.g. , base , gate , control grid
-Many devices have to control operation , e.g. , base , gate , control grid
+Many devices have other electrodes to control operation , e.g . , base , gate , control grid
+Many devices have to control operation , e.g . , base , gate , control grid
 287.
 In a three-electrode cell , a counter electrode , also called Electrode , is used only to make a connection to Electrode so that a current can be applied to Electrode . [unused1] [unused2] [unused3]
 a counter electrode also called Electrode
@@ -1191,7 +1191,7 @@ The other theory claims that Epistolary novel arose from miscellanies of letters
 Epistolary novel arose from miscellanies of letters and poetry
 295.
 The first truly epistolary novel , the Spanish `` Prison of Love '' ( Carcel de amor ) ( c. 1485 ) by Diego de San Pedro , belongs to a tradition of novels in which a large number of inserted letters already dominated the narrative . [unused1] [unused2] [unused3]
-The first truly epistolary novel , the Spanish `` Prison of Love '' ( Carcel de amor ) ( c. 1485 ) by Diego de San Pedro belongs to a tradition of novels
+The first truly epistolary novel , the Spanish `` Prison of Love `` ( Carcel de amor ) ( c. 1485 ) by Diego de San Pedro belongs to a tradition of novels
 a large number of inserted letters dominated the narrative novels already
 296.
 The immensely famous Letters of a Portuguese Nun ( Lettres portugaises ) ( 1669 ) generally attributed to Gabriel-Joseph de La Vergne , comte de Guilleragues , though a small minority still regard Marianna Alcoforado as the author , is claimed to be intended to be part of a miscellany of Guilleragues prose and poetry . [unused1] [unused2] [unused3]
@@ -1271,7 +1271,7 @@ the intervention to be harmful
 49 % concluded that evidence `` did not support either benefit or harm
 evidence did not support either benefit or harm
 the intervention to be beneficial
-7 % concluded that the intervention was `` likely to be harmful '' , and 49 % concluded that evidence `` did not support either benefit or harm
+7 % concluded that the intervention was `` likely to be harmful `` , and 49 % concluded that evidence `` did not support either benefit or harm
 A 2007 analysis of 1016 systematic reviews from all 50 Cochrane Collaboration Review Groups found that 44 % of the reviews concluded that the intervention was `` likely to be beneficial
 44 % of the reviews concluded that the intervention was `` likely to be beneficial
 the intervention was likely to be beneficial
@@ -1336,7 +1336,7 @@ Traces of evidence-based medicine 's origin can be found in ancient Greece
 The explicit methodologies used to determine `` best evidence '' were largely established by the McMaster University research group led by David Sackett and Gordon Guyatt . [unused1] [unused2] [unused3]
 The explicit methodologies used to determine `` best evidence
 The explicit methodologies to determine best evidence
-The explicit methodologies used to determine `` best evidence '' were largely established by the McMaster University research group
+The explicit methodologies used to determine `` best evidence `` were largely established by the McMaster University research group
 the McMaster University research group led by David Sackett and Gordon Guyatt
 329.
 Guyatt later coined the term `` Evidence-based medicine '' in 1990 . [unused1] [unused2] [unused3]
@@ -1344,10 +1344,10 @@ Guyatt coined the term in 1990 later
 330.
 Where approval for a drug has been given , and subsequent Evidence-based medicine findings indicating that a drug may be less safe than originally anticipated , some insurers in the U.S. have reacted very cautiously and withdrawn funding . [unused1] [unused2] [unused3]
 approval for a drug has been given
-some insurers in the U.S. withdrawn funding
+some insurers in the U.S . withdrawn funding
 subsequent Evidence-based medicine findings indicating that a drug may be less safe
 a drug may be less safe than originally anticipated
-some insurers in the U.S. have reacted very cautiously
+some insurers in the U.S . have reacted very cautiously
 331.
 However , evidence came to light about safety concerns with the new drug which caused some insurers to stop funding Evidence-based medicine even though marketing approval was not withdrawn . [unused1] [unused2] [unused3]
 evidence came to light
@@ -1460,7 +1460,7 @@ A Case against the GO TO Statement was published as a letter in CACM then
 357.
 Editor Niklaus Wirth gave this letter the heading `` Go To Statement Considered Harmful '' , which introduced the phrase `` considered harmful '' into computing . [unused1] [unused2] [unused3]
 Editor Niklaus Wirth gave this letter
-Statement Considered Harmful '' introduced the phrase `` considered harmful '' into computing
+Statement Considered Harmful `` introduced the phrase `` considered harmful `` into computing
 358.
 Edsger W. Dijkstra also strongly opposed the teaching of BASIC . [unused1] [unused2] [unused3]
 Edsger W. Dijkstra strongly opposed the teaching of BASIC
@@ -1583,7 +1583,7 @@ Madge is sister of hers
 Agatha Christie attributed the inspiration for the character of Miss Marple to a number of sources : Miss Marple was `` the sort of old lady who would have been rather like some of my step grandmother 's Ealing cronies -- old ladies whom I have met in so many villages where I have gone to stay as a girl '' . [unused1] [unused2] [unused3]
 Agatha Christie attributed the inspiration for the character of Miss Marple to a number of sources
 I to stay as a girl
-Miss Marple was the sort of old lady who would have been rather like some of my step grandmother 's Ealing cronies -- old ladies whom I have met in so many villages where I have gone to stay as a girl ''
+Miss Marple was the sort of old lady who would have been rather like some of my step grandmother 's Ealing cronies -- old ladies whom I have met in so many villages where I have gone to stay as a girl ``
 the sort of old lady would have been rather
 old ladies have met in so many villages
 I have gone to stay as a girl
@@ -1652,7 +1652,7 @@ Mrs. McGillicuddy Saw
 the changes made in the plot were typical of the series
 406.
 In Miss Marple , Mrs. McGillicuddy does not see anything because there is no Mrs. [unused1] [unused2] [unused3]
-Mrs. McGillicuddy does not see anything because there is no Mrs. In Miss Marple
+Mrs. McGillicuddy does not see anything because there is no Mrs . In Miss Marple
 407.
 Miss Marple herself sees an apparent murder committed on a train running alongside hers . [unused1] [unused2] [unused3]
 Miss Marple sees an apparent murder committed on a train
@@ -1753,7 +1753,7 @@ BBC Radio 4 dramatised all of the novels from 1993-2001 with June Whitfield as M
 BBC Radio 4 dramatised all of the novels from 1993-2001 with June Whitfield as Miss Marple
 429.
 Miss Marple was also referenced multiple times in the episode `` Paris '' of the BBC Radio 4 program Cabin Pressure . [unused1] [unused2] [unused3]
-Miss Marple was referenced multiple times in the episode `` Paris '' of the BBC Radio 4 program Cabin Pressure
+Miss Marple was referenced multiple times in the episode `` Paris `` of the BBC Radio 4 program Cabin Pressure
 430.
 Miss Marple is the sort of old lady who would have been rather like some of my step grandmother 's Ealing cronies -- old ladies whom I have met in so many villages where I have gone to stay as a girl '' . [unused1] [unused2] [unused3]
 Miss Marple is the sort of old lady who would have been rather like some of my step grandmother 's Ealing cronies -- old ladies whom I have met in so many villages
@@ -1836,8 +1836,8 @@ Perennialism was a solution proposed in response to what was considered by many 
 a solution proposed
 449.
 One of the most remarkable features of American society is that the difference between the `` uneducated '' and the `` educated '' is so slight . [unused1] [unused2] [unused3]
-One of the most remarkable features of American society is that the difference between the `` uneducated '' and the `` educated '' is so slight
-the difference between the `` uneducated '' and the `` educated is so slight
+One of the most remarkable features of American society is that the difference between the `` uneducated `` and the `` educated `` is so slight
+the difference between the `` uneducated `` and the `` educated is so slight
 450.
 In a highly negative review of the book , Dewey wrote a series of articles in The Social Frontier which began by applauding Hutchins ' attack on `` the aimlessness of our present educational scheme . [unused1] [unused2] [unused3]
 Dewey wrote a series of articles in The Social Frontier In a highly negative review of the book

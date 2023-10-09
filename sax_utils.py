@@ -2,6 +2,7 @@ from collections import defaultdict
 import random
 import numpy as np
 import torch
+import spacy
 import nltk
 from Params import *
 from math import floor
@@ -50,6 +51,11 @@ def get_words(sent, algo="nltk"):
     and periods with blank space before and after. Hence, using `get_words(
     )` with the "ss" algo will be sufficient for most purposes.
 
+    nlkt and spacy both split '[unused1]' into '[', 'unused1', ']' so if
+    want POS to split it also, use nlkt or spacy.
+
+    Spacy slow for tokenizing only.
+
 
     Parameters
     ----------
@@ -77,8 +83,21 @@ def get_words(sent, algo="nltk"):
             return li0
         else:
             return []
+    elif algo == "spacy":
+        # slow for just tokenizing
+        nlp = spacy.load("en_core_web_sm")
+        if "[unused" in sent:
+            doc = nlp(undoL(sent))
+            return [tok.text for tok in doc] + UNUSED_TOKENS
+        else:
+            doc = nlp(sent)
+            return [tok.text for tok in doc]
+
     elif algo == "nltk":
-        return nltk.word_tokenize(sent)
+        if "[unused" in sent:
+            return nltk.word_tokenize(undoL(sent)) + UNUSED_TOKENS
+        else:
+            return nltk.word_tokenize(sent)
     else:
         assert False
 
@@ -317,7 +336,7 @@ if __name__ == "__main__":
 
     def main3():
         sent1 = 'This is a great quote: "To be, or not to be".'
-        sent2 = 'This is a great quote : " To be, or not to be " . '
+        sent2 = 'This is a great quote : " To be, or not to be [unused1] " . '
         print(get_words(sent1))
         print(get_words(sent2))
 

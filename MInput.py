@@ -13,7 +13,7 @@ class MInput:
     ----------
     auto_tokenizer: AutoTokenizer
     l_orig_sent: list[str]
-    ll_osent_ilabel: list[list[int]]
+    ll_osent_icode: list[list[int]]
     ll_osent_pos_bool: list[list[int]]
     ll_osent_pos_loc: list[list[int]]
     ll_osent_verb_bool: list[list[int]]
@@ -55,7 +55,7 @@ class MInput:
         # each word of orig_sent may be encoded with more than one ilabel
         # os = original sentence
         self.ll_osent_wstart_loc = []  # shape=(num_samples, encoding len)
-        self.ll_osent_ilabel = []  # shape=(num_samples, encoding len
+        self.ll_osent_icode = []  # shape=(num_samples, encoding len
 
         self.use_spacy_model = use_spacy_model
         if self.use_spacy_model:
@@ -294,8 +294,8 @@ class MInput:
         """
         l_orig_sent = []
         ll_osent_wstart_loc = []  # similar to word_starts
-        ll_osent_ilabel = []  # similar to input_ids
-        ll_ex_ilabels = []  # similar to targets target=extraction
+        ll_osent_icode = []  # similar to input_ids
+        lll_ex_ilabel = []  # similar to targets target=extraction
         sentL = None  # similar to `sentence`
 
         with open(in_fp, "r") as f:
@@ -315,7 +315,7 @@ class MInput:
                 return True
             return False
 
-        l_ex_ilabels = []
+        ll_ex_ilabel = []
         prev_line = None
         for k, line in enumerate(lines):
             line = line.strip()
@@ -327,61 +327,64 @@ class MInput:
                 # print("kklop-1st", k, line)
                 sentL = line
                 encoding_d = self.auto_tokenizer.batch_encode_plus(
-                    get_words(sentL))
-                # print("encoding_d", encoding_d)
-                osent_ilabels = [BOS_ICODE]
+                    get_words(sentL),
+                    add_special_tokens=False)
+                # print("encoding_d", e.ncoding_d)
+                osent_icodes = [BOS_ICODE]
                 osent_wstart_locs = []
-                # encoding_d['input_ids'] is a ll_ilabel
-                for ilabels in encoding_d['input_ids']:
+                # encoding_d['input_ids'] is a ll_icode
+                for icodes in encoding_d['input_ids']:
                     # print("ppokl" , k)
                     # special spacy tokens like \x9c have zero length
-                    if len(ilabels) == 0:
-                        ilabels = [100]
+                    if len(icodes) == 0:
+                        icodes = [100]
                     # note osent_wstart_locs[0]=1 because first
-                    # ilabels =[BOS_ICODE]
-                    osent_wstart_locs.append(len(osent_ilabels))
-                    # same as ilabels.extend(ilabels)
-                    osent_ilabels += ilabels
-                osent_ilabels.append(EOS_ICODE)
-                assert len(sentL.split()) == len(osent_wstart_locs)
+                    # icodes =[BOS_ICODE]
+                    osent_wstart_locs.append(len(osent_icodes))
+                    # same as osent_icodes.extend(icodes)
+                    osent_icodes += icodes
+                osent_icodes.append(EOS_ICODE)
+                # print("lmki", sentL)
+                # print("lmklo", osent_wstart_locs)
+
             elif is_tag_line_of_sample(line):
                 # print("sdfrg-tag", k)
                 ex_ilabels = [EXTAG_TO_ILABEL[tag] for tag in
                               get_words(line)]
                 # print("nnmk-line number= " + str(k))
                 # assert len(ex_ilabels) == len(osent_wstart_locs)
-                l_ex_ilabels.append(ex_ilabels)
-                # print("dfgthj", l_ex_ilabels)
+                ll_ex_ilabel.append(ex_ilabels)
+                # print("dfgthj", ll_ex_ilabel)
             else:
                 pass
             if is_end_of_sample(k, prev_line, line):
                 # print("ddft-end", k)
-                if len(ll_osent_ilabel) == 0:
-                    ll_osent_ilabel = [[0]]
+                if len(ll_osent_icode) == 0:
+                    ll_osent_icode = [[0]]
 
                 if len(sentL.split()) > 100:
                     assert False, "sentence longer than 100"
                 else:
-                    ll_osent_ilabel.append(deepcopy(osent_ilabels))
-                    # print("dfeg", ll_osent_ilabel)
-                    osent_ilabels = []
+                    ll_osent_icode.append(deepcopy(osent_icodes))
+                    # print("dfeg", ll_osent_icode)
+                    osent_icodes = []
                     orig_sent = undoL(sentL)
                     l_orig_sent.append(orig_sent)
 
                     # note that if li=[2,3]
                     # then li[:100] = [2,3]
                     # print("sdftty", l_ex_ilabels)
-                    ll_ex_ilabels.append(deepcopy(l_ex_ilabels))
-                    l_ex_ilabels = []
+                    lll_ex_ilabel.append(deepcopy(ll_ex_ilabel))
+                    ll_ex_ilabel = []
                     ll_osent_wstart_loc.append(deepcopy(osent_wstart_locs))
                     osent_wstart_locs = []
 
             prev_line = line
 
         self.l_orig_sent = l_orig_sent
-        # ll_osent_ilabel add extra term [0] at beginnig
-        self.ll_osent_ilabel = ll_osent_ilabel[1:]
-        self.lll_ex_ilabel = ll_ex_ilabels
+        # ll_osent_icode add extra term [0] at beginnig
+        self.ll_osent_icode = ll_osent_icode[1:]
+        self.lll_ex_ilabel = lll_ex_ilabel
         self.ll_osent_wstart_loc = ll_osent_wstart_loc
 
         num_samples = len(l_orig_sent)
@@ -390,7 +393,7 @@ class MInput:
             for x in li:
                 assert len(x) == num_samples
 
-        check_len([self.ll_osent_ilabel,
+        check_len([self.ll_osent_icode,
                    self.lll_ex_ilabel,
                    self.ll_osent_wstart_loc])
 
@@ -437,8 +440,9 @@ if __name__ == "__main__":
         for k in range(0, 5):
             print("************** k=", k)
             print("num_samples=", len(m_in.l_orig_sent))
-            print("l_orig_sent[k]=", m_in.l_orig_sent[k])
-            print("ll_osent_ilabel[k]=\n", m_in.ll_osent_ilabel[k])
+            print("get_words(l_osentL[k])=",
+                  get_words(redoL(m_in.l_orig_sent[k])))
+            print("ll_osent_icode[k]=\n", m_in.ll_osent_icode[k])
             print("ll_osent_pos_loc[k]=\n", m_in.ll_osent_pos_loc[k])
             print("ll_osent_pos_bool[k]=\n", m_in.ll_osent_pos_bool[k])
             print("ll_osent_verb_loc[k]=\n", m_in.ll_osent_verb_loc[k])

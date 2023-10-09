@@ -93,7 +93,8 @@ class Model(pl.LightningModule):
     metric: CCMetric | ExMetric
     params: Params
     # some inherited attributes that won't be used
-    # hparams
+    # hparams (dictionary, Used by Openie6, not by us.
+    #    We use the class Params instead.)
     # logger
     # trainer
     # on_gpu

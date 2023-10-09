@@ -168,8 +168,8 @@ class SaxDataPadder:
         #     'verb_locs': verb_locs
         # }
 
-        padded_ll_osent_ilabel = SaxDataPadder. \
-            get_padded_ll_x(self.m_in.ll_osent_ilabel)
+        padded_ll_osent_icode = SaxDataPadder. \
+            get_padded_ll_x(self.m_in.ll_osent_icode)
 
         padded_lll_ex_ilabel = SaxDataPadder. \
             get_padded_lll_ex_ilabel(self.m_in.lll_ex_ilabel)
@@ -178,7 +178,7 @@ class SaxDataPadder:
             get_padded_ll_x(self.m_in.ll_osent_wstart_loc)
 
         padded_data_d = OrderedDict(
-            {'ll_osent_ilabel': padded_ll_osent_ilabel,
+            {'ll_osent_icode': padded_ll_osent_icode,
              'lll_ex_ilabel': padded_lll_ex_ilabel,
              'll_osent_wstart_loc': padded_ll_osent_wstart_loc})
 

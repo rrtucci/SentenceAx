@@ -386,13 +386,15 @@ class Model(pl.LightningModule):
         Returns
         -------
         torch.Tensor, torch.Tensor, torch.Tensor
-            llll_pred_icode, lll_pred_ex_confi, batch_loss
+            llll_pred_ex_ilabel, lll_pred_ex_confi, batch_loss
 
 
         """
         batch_loss = 0
-        llll_pred_icode = []  # all_depth_predictions
+        llll_pred_ex_ilabel = []  # all_depth_predictions
+        lll_pred_ex_ilabel0 = []  # all_depth_predictions after cat dim=1
         lll_pred_ex_confi = []  # all_depth_confidences
+        ll_pred_ex_confi0 = []  # all_depth_confidences after cat dim=1
         batch_size, num_words, _ = lll_word_score.shape
         self.batch_m_in.lll_ex_ilabel = \
             self.batch_m_in.lll_ex_ilabel.long()
@@ -425,7 +427,7 @@ class Model(pl.LightningModule):
                     torch.sum(ll_norm_log_prob, dim=1))
 
                 # this unsqueezes depth dim=1
-                llll_pred_icode.append(ll_pred_ilabel.unsqueeze(1))
+                llll_pred_ex_ilabel.append(ll_pred_ilabel.unsqueeze(1))
                 lll_pred_ex_confi.append(l_confi.unsqueeze(1))
 
         if ttt == 'train':
@@ -452,43 +454,45 @@ class Model(pl.LightningModule):
             # if A and B are of shape (3, 4):
             # torch.cat([A, B], dim=0) will be of shape (6, 4)
             # torch.stack([A, B], dim=0) will be of shape (2, 3, 4)
-            llll_pred_icode = torch.cat(llll_pred_icode, dim=1)
-            lll_pred_ex_confi = torch.cat(lll_pred_ex_confi, dim=1)
+            lll_pred_ex_ilabel0 = torch.cat(llll_pred_ex_ilabel, dim=1)
+            ll_pred_ex_confi0 = torch.cat(lll_pred_ex_confi, dim=1)
 
-            if self.constraint_str and \
-                    'predict' not in self.params.d["mode"] and \
-                    self.params.d["batch_size"] != 1:
-                llll_word_score = torch.cat([lll.unsqueeze(1) for
-                                             lll in llll_word_score], dim=1)
-                # this fills tensor with 0's
-                llll_word_score.fill_(0)
+            # not used
+            # if self.constraint_str and \
+            #         'predict' not in self.params.d["mode"] and \
+            #         self.params.d["batch_size"] != 1:
+            #     llll_word_score = torch.cat([lll.unsqueeze(1) for
+            #                                  lll in llll_word_score], dim=1)
+            #     # this fills tensor with 0's
+            #     llll_word_score.fill_(0)
+            # 
+            #     # for checking test set
+            #     # lll_ex_ilabel = copy(lll_pred_ex_ilabel)
+            #     # ll_ilabel[lll_ex_ilabel == -100] = 0
+            #     lll_pred_ex_ilabel = copy(lll_pred_ex_ilabel)
+            # 
+            #     llll_ilabel = lll_pred_ex_ilabel.unsqueeze(-1)
+            #     number_depths = llll_ilabel.shape[1]
+            #     llll_word_score = llll_word_score[:, :number_depths, :, :]
+            #     llll_word_score.scatter_(
+            #         dim=3,
+            #         index=llll_ilabel.long(),
+            #         src=1)
 
-                # for checking test set
-                # lll_ex_ilabel = copy(llll_pred_icode)
-                # ll_ilabel[lll_ex_ilabel == -100] = 0
-                llll_pred_ex_icode = copy(llll_pred_icode)
-
-                llll_pred_ex_icode = llll_pred_ex_icode.unsqueeze(-1)
-                number_depths = llll_pred_ex_icode.shape[1]
-                llll_word_score = llll_word_score[:, :number_depths, :, :]
-                llll_word_score.scatter_(
-                    dim=3,
-                    index=llll_pred_ex_icode.long(),
-                    src=1)
-
-                for constraint, con_weight in self.con_to_weight.items():
-                    con_loss = Model.sax_constrained_loss(
-                        batch_m_in,
-                        llll_word_score,
-                        {constraint: con_weight})
-                    if constraint not in self.con_to_l_loss:
-                        self.con_to_l_loss[constraint] = []
-                    self.con_to_l_loss[constraint].append(con_loss)
+                # not used
+                # for constraint, con_weight in self.con_to_weight.items():
+                #     con_loss = Model.sax_constrained_loss(
+                #         batch_m_in,
+                #         llll_word_score,
+                #         {constraint: con_weight})
+                #     if constraint not in self.con_to_l_loss:
+                #         self.con_to_l_loss[constraint] = []
+                #     self.con_to_l_loss[constraint].append(con_loss)
 
         batch_m_out = MOutput(batch_m_in.l_orig_sent,
                               batch_m_in.lll_ex_ilabel,
-                              llll_pred_icode,
-                              lll_pred_ex_confi,
+                              lll_pred_ex_ilabel0,
+                              ll_pred_ex_confi0,
                               batch_loss)
 
         return batch_m_out
@@ -670,8 +674,8 @@ class Model(pl.LightningModule):
                 for batch_m_out in self.l_batch_m_out:
                     self.metric(
                         batch_m_out.l_orig_sent,  # meta data
-                        batch_m_out.get_pred_lll_ex_ilabel(),  # predictions
-                        batch_m_out.lll_ex_ilabel)  # ground truth
+                        Li(batch_m_out.lll_pred_ex_ilabel),  # predictions
+                        Li(batch_m_out.lll_ex_ilabel))  # ground truth
 
                 metrics_d = self.metric.get_score_d(do_reset=True)
 
@@ -690,8 +694,8 @@ class Model(pl.LightningModule):
                 for batch_m_out in self.l_batch_m_out:
                     self.metric(
                         batch_m_out.l_orig_sent,  # meta data
-                        batch_m_out.get_lll_pred_ex_ilabel(),  # predictions
-                        batch_m_out.get_ll_pred_ex_confi()) # scores
+                        Li(batch_m_out.lll_pred_ex_ilabel),  # predictions
+                        Li(batch_m_out.ll_pred_ex_confi)) # scores
                 metrics_d = self.metric.get_score_d(do_reset=True)
 
             eval_epoch_end_d = {"eval_f1": metrics_d["ex_f1"],
@@ -785,7 +789,7 @@ class Model(pl.LightningModule):
         fix_d = self.metric.fix_d
 
         lll_ex_ilabel = batch_m_out.lll_ex_ilabel
-        lll_pred_ex_confi = batch_m_out.lll_pred_ex_confi
+        ll_pred_ex_confi = batch_m_out.ll_pred_ex_confi
         num_samples, num_depths, _ = lll_ex_ilabel.shape
         l_orig_sent = batch_m_out.ll_osent_icode
 
@@ -805,7 +809,7 @@ class Model(pl.LightningModule):
                 if sum(ex_ilabels) == 0:  # extractions completed
                     break
                 ex = SaxExtraction.get_ex_from_ilabels(
-                    ex_ilabels, orig_sentL, lll_pred_ex_confi[sample_id][depth])
+                    ex_ilabels, orig_sentL, ll_pred_ex_confi[sample_id][depth])
                 if ex.arg1 and ex.rel:
                     if fix_d:
                         orig_sent0 = fix_d[orig_sent]
@@ -922,67 +926,3 @@ class Model(pl.LightningModule):
             self.sax_write_if_task_cc(batch_m_out, batch_id)
         else:
             assert False
-
-    def get_labels(self):
-        """
-                similar to Openie6.run.get_labels()
-        ILABEL_TO_EXTAG={0: 'NONE', 1: 'ARG1', 2: 'REL', 3: 'ARG2',
-                 4: 'ARG2', 5: 'NONE'}
-
-
-        Returns
-        -------
-
-        """
-
-        lines = []
-        batch_id = 0
-        sam = 0
-        depth = 0
-        count = 0
-        prev_osent1 = ''
-        
-        l_orig_sent = self.l_batch_m_out.l_orig_sent
-        lll_osent_loc = []
-        
-        num_samples = len(l_orig_sent)
-        for sam1 in range(num_samples):#i
-            osent1 = l_orig_sent[sam1]
-            l_word1 = get_words(osent1)
-            lll_osent_loc[sam1].append(list(range(len(l_word1))))
-
-            lines.append('\n' + osent1)
-            for word_loc in range(len(l_word1)): #j
-                osent = l_orig_sent[sam]
-                l_word = get_words(osent)
-                assert len(lll_osent_loc[sam1][word_loc]) == len(l_word)
-                lll_pred_ex_icode = self.l_batch_m_out[
-                    batch_id].llll_pred_ex_icode[sam]
-
-                # all_extractions, all_str_l_ilabel, len_exts = [], [], []
-                for ll_pred_ex_icode in lll_pred_ex_icode:
-                    if ll_pred_ex_icode.sum().item() == 0:
-                        break
-
-                    l_ilabel = [0] * len(l_word1)
-                    ll_pred_ex_icode = ll_pred_ex_icode[:len(l_word)].tolist()
-                    for idx, icode in enumerate(
-                            sorted(lll_osent_loc[sam1][word_loc])):
-                        l_ilabel[icode] = ll_pred_ex_icode[idx]
-
-                    l_ilabel = l_ilabel[:-3]
-                    if 1 not in prediction and 2 not in prediction:
-                        continue
-
-                    str_l_ilabel = ' '.join([label_dict[x] for x in l_ilabel])
-                    lines.append(str_l_ilabel)
-
-                depth += 1
-                sam += 1
-                if sam == len(self.l_batch_m_out[batch_id].l_orig_sent):
-                    sam = 0
-                    batch_id += 1
-
-        lines.append('\n')
-        return lines
-

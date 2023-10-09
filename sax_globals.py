@@ -31,6 +31,7 @@ CACHE_DIR = INPUT_DIR + '/pretrained_cache'
 WEIGHTS_DIR = "weights"
 PRED_DIR = "predictions"
 RESCORE_DIR = "rescore"
+CC_METRIC_STORE_DIR = "cc_metric_saved"
 
 CCTAGS_TRAIN_FP = 'input_data/openie-data/ptb-train.labels'
 CCTAGS_TUNE_FP = 'input_data/openie-data/ptb-dev.labels'

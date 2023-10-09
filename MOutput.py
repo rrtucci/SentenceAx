@@ -12,7 +12,7 @@ class MOutput:
     in_cpu: bool
     lll_pred_ex_confi: torch.Tensor
     lll_osent_icode: torch.Tensor
-    llll_pred_ex_icode: torch.Tensor]
+    llll_pred_ex_ilabel: torch.Tensor]
     batch_loss: torch.Tensor
     task: str
     """
@@ -20,8 +20,8 @@ class MOutput:
     def __init__(self,
                  l_orig_sent,
                  lll_ex_ilabel,
-                 llll_pred_ex_icode,
-                 lll_pred_ex_confi,
+                 lll_pred_ex_ilabel,
+                 ll_pred_ex_confi,
                  batch_loss):
         """
         The inputs to the constractor are torch.Tensor and in gpu. They get
@@ -34,8 +34,8 @@ class MOutput:
         ----------
         l_orig_sent: list[str]
         lll_ex_ilabel: torch.Tensor
-        llll_pred_ex_icode: torch.Tensor
-        lll_pred_ex_confi: torch.Tensor
+        lll_pred_ex_ilabel: torch.Tensor
+        ll_pred_ex_confi: torch.Tensor
         batch_loss: torch.Tensor
         task: str
         auto_tokenizer: AutoTokenizer
@@ -43,8 +43,8 @@ class MOutput:
         """
         self.l_orig_sent = l_orig_sent
         self.lll_ex_ilabel = lll_ex_ilabel
-        self.llll_pred_ex_icode = llll_pred_ex_icode
-        self.lll_pred_ex_confi = lll_pred_ex_confi
+        self.lll_pred_ex_ilabel = lll_pred_ex_ilabel
+        self.ll_pred_ex_confi = ll_pred_ex_confi
         self.batch_loss = batch_loss
 
         self.in_cpu = False
@@ -61,11 +61,11 @@ class MOutput:
         self.in_cpu = True
 
         self.lll_ex_ilabel = self.lll_ex_ilabel.cpu()
-        self.llll_pred_ex_icode = self.llll_pred_ex_icode.cpu()
-        self.lll_pred_ex_confi = self.lll_pred_ex_confi.cpu()
+        self.lll_pred_ex_ilabel = self.lll_pred_ex_ilabel.cpu()
+        self.ll_pred_ex_confi = self.ll_pred_ex_confi.cpu()
         self.batch_loss = self.batch_loss.cpu()
 
-        self.lll_pred_ex_confi = (self.lll_pred_ex_confi * 100).round() / 100
+        self.ll_pred_ex_confi = (self.ll_pred_ex_confi * 100).round() / 100
 
     # def get_l_orig_sent(self):
     #     """
@@ -91,21 +91,16 @@ class MOutput:
     #     else:
     #         assert False
     #     l_orig_sentL = redoL(self.get_l_orig_sent())
-    #     num_samples = len(self.llll_pred_ex_icode)
-    #     num_depths = len(self.llll_pred_ex_icode[0])
+    #     num_samples = len(self.llll_pred_ex_ilabel)
+    #     num_depths = len(self.llll_pred_ex_ilabel[0])
     #     # sent_len = len(self.lll_ex_ilabel[0][0])
     #     lll_word = []
     #     for sam in range(num_samples):
     #         ll_word = []
     #         for depth in range(num_depths):
     #             ll_word.append(
-    #                 translator(self.llll_pred_ex_icode[sam][depth],
+    #                 translator(self.llll_pred_ex_ilabel[sam][depth],
     #                            l_orig_sentL[sam]))
     #         lll_word.append(ll_word)
     #     return lll_word
-    
-    def get_lll_pred_ex_ilabel(self):
-        pass
-    
-    def get_ll_pred_ex_confi(self):
-        pass
+

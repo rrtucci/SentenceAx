@@ -11,7 +11,7 @@ class CCMetric:
 
     Attributes
     ----------
-    dump_dir: str
+    store_dir: str
     fix_d: dict[str, str]
     report_exact: CCReport
     report_inner: CCReport
@@ -21,13 +21,17 @@ class CCMetric:
 
     """
 
-    def __init__(self, dump_dir=None, fix_d=None):
+    def __init__(self, store_dir=None, fix_d=None):
         """
 
         Parameters
         ----------
-        dump_dir: str
+        store_dir: str
         fix_d: dict[str, str]
+
+        Returns
+        -------
+        CCMetric
         """
         self.report_whole = CCReport("whole")
         self.report_outer = CCReport("outer")
@@ -35,14 +39,14 @@ class CCMetric:
         self.report_exact = CCReport("exact")
         # self.n_complete = 0 # not used
         # self.n_sentence = 0 # not used
-        self.dump_dir = dump_dir
-        if self.dump_dir:
-            if os.path.exists(dump_dir + '/l_osent.pkl'):
-                os.remove(dump_dir + '/l_osent.pkl')
-            if os.path.exists(dump_dir + '/l_pred_ccnodes.pkl'):
-                os.remove(dump_dir + '/l_pred_ccnodes.pkl')
-            if os.path.exists(dump_dir + '/l_true_ccnodes.pkl'):
-                os.remove(dump_dir + '/l_true_ccnodes.pkl')
+        self.store_dir = store_dir
+        if self.store_dir:
+            if os.path.exists(store_dir + '/l_osent.pkl'):
+                os.remove(store_dir + '/l_osent.pkl')
+            if os.path.exists(store_dir + '/l_pred_ccnodes.pkl'):
+                os.remove(store_dir + '/l_pred_ccnodes.pkl')
+            if os.path.exists(store_dir + '/l_true_ccnodes.pkl'):
+                os.remove(store_dir + '/l_true_ccnodes.pkl')
 
         self.fix_d = fix_d
 
@@ -59,8 +63,8 @@ class CCMetric:
         Parameters
         ----------
         l_osent: list[str]
-        lll_pred_ex_ilabel: list[list[list[int]]]
-        lll_ex_ilabel: list[list[list[int]]]
+        lll_pred_ex_ilabel: list[list[list[[int]]]
+        lll_ex_ilabel: list[list[list[[int]]]
 
         Returns
         -------
@@ -85,13 +89,13 @@ class CCMetric:
             self.report_inner.absorb_new_sample(pred_ccnodes, true_ccnodes)
             self.report_exact.absorb_new_sample(pred_ccnodes, true_ccnodes)
 
-            if self.dump_dir:
+            if self.store_dir:
                 pickle.dump(l_osent[k],
-                            open(self.dump_dir + '/l_osent.pkl', 'ab'))
+                            open(self.store_dir + '/l_osent.pkl', 'ab'))
                 pickle.dump(pred_ccnodes, open(
-                    self.dump_dir + '/l_pred_ccnodes.pkl', 'ab'))
+                    self.store_dir + '/l_pred_ccnodes.pkl', 'ab'))
                 pickle.dump(true_ccnodes, open(
-                    self.dump_dir + '/l_true_ccnodes.pkl', 'ab'))
+                    self.store_dir + '/l_true_ccnodes.pkl', 'ab'))
 
     def reset(self):
         """
@@ -109,7 +113,19 @@ class CCMetric:
         # self.n_sentence = 0
 
     def get_score_d(self, do_reset=False):
-        # similar to Openie6.metric.Conjunction.get_metric()
+        """
+        similar to Openie6.metric.Conjunction.get_metric()
+
+
+        Parameters
+        ----------
+        do_reset: bool
+
+        Returns
+        -------
+        dict[str, float]
+
+        """
 
         score_d = dict()
         score_d['P_exact'] = self.report_exact.overall_scorer.precision()

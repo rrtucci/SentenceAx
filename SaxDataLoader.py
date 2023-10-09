@@ -201,13 +201,13 @@ class SaxDataLoader:
         # if predict in params.mode, all 3 returned dataset are equal
         return train_dataset, tune_dataset, test_dataset  # , vocab, orig_sents
 
-    def get_ttt_dataloaders(self, ttt_kind):
+    def get_ttt_dataloaders(self, ttt):
         """
         # this method calls DataLoader
 
         Parameters
         ----------
-        ttt_kind: str
+        ttt: str
 
         Returns
         -------
@@ -218,18 +218,18 @@ class SaxDataLoader:
         train_dataset, tune_dataset, test_dataset = \
             self.get_ttt_datasets()
 
-        if ttt_kind == "train":
+        if ttt == "train":
             return DataLoader(train_dataset,
                               batch_size=self.params.d["batch_size"],
                               # collate_fn=None,
                               shuffle=True,
                               num_workers=1)
-        elif ttt_kind == "tune":
+        elif ttt == "tune":
             return DataLoader(tune_dataset,
                               batch_size=self.params.d["batch_size"],
                               # collate_fn=None,
                               num_workers=1)
-        elif ttt_kind == "test":
+        elif ttt == "test":
             return DataLoader(test_dataset,
                               batch_size=self.params.d["batch_size"],
                               # collate_fn=None,

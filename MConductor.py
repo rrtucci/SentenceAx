@@ -108,6 +108,7 @@ class MConductor:
 
         Returns
         -------
+        ModelCheckpoint
 
         """
         return ModelCheckpoint(
@@ -126,6 +127,7 @@ class MConductor:
 
         Returns
         -------
+        list[str]
 
         """
         if "suggested_checkpoint_fp" in self.params.d:
@@ -139,6 +141,7 @@ class MConductor:
 
         Returns
         -------
+        str
 
         """
         all_paths = self.get_all_checkpoint_fp()
@@ -154,35 +157,39 @@ class MConductor:
 
         Returns
         -------
+        TensorBoardLogger
 
         """
 
         # the current log file will have no number prefix,
         # stored ones will.
-        assert os.path.exists(self.params.log_dir() + "/" + self.params.mode)
+        assert os.path.exists(
+            self.params.log_dir() + "/" + self.params.mode)
         num_numbered_logs = len(
             list(glob(self.params.log_dir() + f'/{self.params.mode}_*')))
         new_id = num_numbered_logs + 1
         print('Retiring current log file by changing its name')
-        print(shutil.move(self.params.log_dir() + f'/{self.params.mode}',
-                          self.params.log_dir() + f'/{self.params.mode}_{new_id}'))
+        print(shutil.move(
+            self.params.log_dir() + f'/{self.params.mode}',
+            self.params.log_dir() + f'/{self.params.mode}_{new_id}'))
         logger = TensorBoardLogger(
             save_dir=WEIGHTS_DIR,
             name='logs',
             version=self.params.mode + '.part')
         return logger
 
-    def get_trainer(self, logger, checkpoint_fp,
-                    use_minimal):
+    def get_trainer(self, logger, checkpoint_fp, use_minimal):
         """
 
         Parameters
         ----------
-        logger
-        checkpoint_fp
+        logger: TensorBoardLogger | None
+        checkpoint_fp: str | None
+        use_minimal: bool
 
         Returns
         -------
+        Trainer
 
         """
         # trainer = Trainer(
@@ -228,10 +235,11 @@ class MConductor:
 
         Parameters
         ----------
-        checkpoint_fp
+        checkpoint_fp: str
 
         Returns
         -------
+        None
 
         """
         if self.has_cuda:
@@ -241,7 +249,7 @@ class MConductor:
             loaded_params = torch.load(
                 checkpoint_fp, map_location=map_loc)["params"]
 
-        self.params.d = merge_dicts(loaded_params.d,
+        self.params.d = merge_dicts(loaded_params,
                                     default_d=self.params.d)
 
     def train(self):
@@ -272,6 +280,7 @@ class MConductor:
 
         Returns
         -------
+        None
 
         """
         checkpoint_fp = self.get_checkpoint_fp()
@@ -294,12 +303,9 @@ class MConductor:
         """
         similar to Openie6.run.test()
 
-
-        Parameters
-        ----------
-
         Returns
         -------
+        None
 
         """
         checkpoint_fp = self.get_checkpoint_fp()
@@ -340,7 +346,6 @@ class MConductor:
         Parameters
         ----------
 
-
         Returns
         -------
 
@@ -376,7 +381,8 @@ class MConductor:
             test_dataloaders=test_dloader if
             test_dloader else self.dloader.get_ttt_dataloaders("test"))
         end_time = time()
-        print(f'Total Time taken = {(end_time - start_time) / 60:2f} minutes')
+        minutes = (end_time - start_time) / 60
+        print(f'Total Time taken = {minutes : 2f} minutes')
 
     def splitpredict_do_cc_first(self,
                                  new_pred_fp):

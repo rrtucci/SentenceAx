@@ -95,14 +95,14 @@ class Params:
         #                     "/cc_model/epoch=28_eval_acc=0.854.ckpt",
         #         "gpus": 1,
         #         # "inp": "sentences.txt",
-        #         "self.mode": "splitpredict",
+        #         "mode": "splitpredict",
         #         "num_extractions": 5,
         #         "ex_weights_fp": WEIGHTS_DIR +
         #                     "/ex_model/epoch=14_eval_acc=0.551_v0.ckpt",
         #         #"out": "predictions.txt",
         #         # "rescore_model": WEIGHTS_DIR + "/rescore_model",
         #         "rescoring": True,
-        #         "self.task": "ex"
+        #         "task": "ex"
         #     }
 
         ## Training self.model
@@ -116,11 +116,11 @@ class Params:
                 "gpus": 1,
                 "iterative_layers": 2,
                 "lr": 2E-5,
-                "self.mode": "train_test",
+                "mode": "train_test",
                 "self.model_str": "bert-base-cased",
                 "optimizer": "adamW",
                 # "save": WEIGHTS_DIR + "/warmup_ex_model",
-                "self.task": "ex"
+                "task": "ex"
             }
 
         # Testing:
@@ -130,10 +130,10 @@ class Params:
         #     self.d = {
         #         "batch_size": 24,
         #         "gpus": 1,
-        #         "self.mode": "test",
-        #         "self.model_str": "bert-base-cased",
+        #         "mode": "test",
+        #         "model_str": "bert-base-cased",
         #         # "save": WEIGHTS_DIR + "/warmup_ex_model",
-        #         "self.task": "ex"
+        #         "task": "ex"
         #     }
 
         # Predicting
@@ -143,11 +143,11 @@ class Params:
         #     self.d = {
         #         "gpus": 1,
         #         # "inp": "sentences.txt",
-        #         "self.mode": "predict",
-        #         "self.model_str": "bert-base-cased",
+        #         "mode": "predict",
+        #         "model_str": "bert-base-cased",
         #         #"out": "predictions.txt",
         #         # "save": WEIGHTS_DIR + "/warmup_ex_model",
-        #         "self.task": "ex"
+        #         "task": "ex"
         #     }
 
         ### Constrained self.model
@@ -168,13 +168,13 @@ class Params:
                 "gradient_clip_val": 1,
                 "iterative_layers": 2,
                 "lr": 2E-5,
-                "self.mode": "resume",
-                "self.model_str": "bert-base-cased",
+                "mode": "resume",
+                "model_str": "bert-base-cased",
                 "multi_opt": True,
                 "optimizer": "adam",
                 # "save": WEIGHTS_DIR + "/ex_model",
                 "save_k": 3,
-                "self.task": "ex",
+                "task": "ex",
                 "val_check_interval": 0.1,
                 "wreg": 1
             }
@@ -183,10 +183,10 @@ class Params:
             self.d = {
                 "batch_size": 16,
                 "gpus": 1,
-                "self.mode": "test",
-                "self.model_str": "bert-base-cased",
+                "mode": "test",
+                "model_str": "bert-base-cased",
                 # "save": WEIGHTS_DIR + "/ex_model",
-                "self.task": "ex"
+                "task": "ex"
             }
 
         # Predicting
@@ -194,11 +194,11 @@ class Params:
             self.d = {
                 "gpus": 1,
                 # "inp": "sentences.txt",
-                "self.mode": "predict",
-                "self.model_str": "bert-base-cased",
+                "mode": "predict",
+                "model_str": "bert-base-cased",
                 # "out": "predictions.txt",
                 # "save": WEIGHTS_DIR + "/ex_model",
-                "self.task": "ex"
+                "task": "ex"
             }
 
         ### Running CCNode Analysis
@@ -209,11 +209,11 @@ class Params:
                 "gpus": 1,
                 "iterative_layers": 2,
                 "lr": 2E-5,
-                "self.mode": "train_test",
-                "self.model_str": "bert-large-cased",
+                "mode": "train_test",
+                "model_str": "bert-large-cased",
                 "optimizer": "adamW",
                 # "save": WEIGHTS_DIR + "/cc_model",
-                "self.task": "cc"
+                "task": "cc"
             }
 
         ### Final self.model
@@ -227,14 +227,14 @@ class Params:
                     WEIGHTS_DIR + "/cc_model-epoch=28_eval_acc=0.854.ckpt",
                 "gpus": 1,
                 # "inp": "carb_subset/data/carb_sentences.txt",
-                "self.mode": "splitpredict",
+                "mode": "splitpredict",
                 "num_extractions": MAX_EX_DEPTH,
                 "ex_weights_fp":
                     WEIGHTS_DIR + "/ex_model/epoch=14_eval_acc=0.551_v0.ckpt",
                 # "out": WEIGHTS_DIR + "/results/final",
                 # "rescore_model": WEIGHTS_DIR + "/rescore_model",
                 "rescoring": True,
-                "self.task": "ex"
+                "task": "ex"
             }
         else:
             self.d = {}
@@ -250,7 +250,7 @@ class Params:
                 "gpus": 1,
                 "iterative_layers": 2,
                 "lr": 2E-5,
-                "self.model_str": "bert-base-cased",
+                "model_str": "bert-base-cased",
                 "num_extractions": MAX_EX_DEPTH,
                 "optimizer": "adamW",
                 "save_k": 1,

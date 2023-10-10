@@ -1,4 +1,6 @@
 from sax_globals import *
+from pprint import pprint
+
 
 class Params:
     """
@@ -37,56 +39,75 @@ class Params:
     Attributes
     ----------
     d: dict[str, Any]
-    id: int
+    pid: int
     mode: str
     task: str
 
     """
-    def __init__(self, id):
+
+    def __init__(self, pid):
         """
 
         Parameters
         ----------
-        id: int
+        pid: int
         """
-        self.id = id
-        id_to_pair = {
-        0: ("", ""),
-        1: ("ex", "train_test"),
-        2: ("ex", "test"),
-        3: ("ex", "predict"),
-        4: ("ex", "resume"),
-        5: ("cc", "train_test"),
-        6: ("ex", "splitpredict")
+        self.pid = pid
+        pid_to_pair = {
+            0: ("", ""),
+            1: ("ex", "train_test"),
+            2: ("ex", "test"),
+            3: ("ex", "predict"),
+            4: ("ex", "resume"),
+            5: ("cc", "train_test"),
+            6: ("ex", "splitpredict")
         }
-        
-        self.task, self.mode = id_to_pair[id]
-        self.d = self.get_d()
 
-    def get_d(self):  
-        if self.task == "":
-            print("******************************self.task is empty")
+        self.task, self.mode = pid_to_pair[pid]
+        self.d = self.get_d()
+        self.describe_self()
+
+    def describe_self(self):
+        """
+
+        Returns
+        -------
+        None
+
+        """
+        print("***************** new params")
+        print(f"new params: "
+              f"pid={str(self.pid)}, task='{self.task}', mode='{self.mode}'")
+        print("params=")
+        pprint(self.d)
+
+    def get_d(self):
+        """
+        Do not define capitalized global and self.d key for the same
+        parameter. Define one or the other but not both
+
+
+        define `self.d` in jupyter notebook before running any subroutines
+        that use it. The file `custom_self.d.txt` gives some pointers on how
+        to define a custom self.d.
+
+
+        Returns
+        -------
+        dict[str, Any]
+
+        """
+        if not self.task:
+            print("****self.task is empty")
         else:
             assert self.task in ["ex", "cc"]
-            print("self.task=", self.task)
-        
-        if self.mode == "":
-            print("******************************self.mode is empty")
+
+        if not self.mode:
+            print("****self.mode is empty")
         else:
             assert self.mode in ["predict", "train_test", "splitpredict",
-                            "resume", "test"]
-            print("self.mode=", self.mode)
-        
-        
-        # Do not define capitalized global and self.d key for the same
-        # parameter. Define one or the other but not both
-        
-        
-            # define `self.d` in jupyter notebook before running any
-            # subroutines that use it. The file `custom_self.d.txt` gives
-            # some pointers on how to define a custom self.d.
-        
-    def get_d(self):
+                                 "resume", "test"]
+
         ## Running self.model
         # this is repeated at begin and end.
         # elif self.task == "ex" and self.mode == "splitpredict":
@@ -238,7 +259,7 @@ class Params:
             }
         else:
             self.d = {}
-            print("***********************self.d is empty")
+            print("****self.d is empty without defaults")
 
         default_d = \
             {
@@ -262,7 +283,7 @@ class Params:
         self.d = merge_dicts(self.d, default_d)
 
         return self.d
-    
+
     def num_depths(self):
         """
 
@@ -275,7 +296,7 @@ class Params:
             return MAX_EX_DEPTH
         elif self.task == "cc":
             return MAX_CC_DEPTH
-    
+
     def tag_to_ilabel(self):
         """
 
@@ -288,7 +309,7 @@ class Params:
             return EXTAG_TO_ILABEL
         elif self.task == "cc":
             return CCTAG_TO_ILABEL
-    
+
     def log_dir(self):
         """
 

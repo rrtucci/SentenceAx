@@ -47,6 +47,13 @@ class MConductor:
 
     def __init__(self, params):
         """
+        A new
+        ModelCheckpoint
+        AutoTokenizer,
+        SaxDataLoader,
+        TensorBoardLogger
+
+        is created everytime this constructor is called
 
 
         """
@@ -125,6 +132,9 @@ class MConductor:
         """
         similar to Openie6.run.get_checkpoint_fp()
 
+        more than one checkpoint only used by self.test()
+        and those who call it.
+
         Returns
         -------
         list[str]
@@ -148,9 +158,12 @@ class MConductor:
         assert len(all_paths) == 1
         return all_paths[0]
 
-    def get_logger(self):
+    def get_logger(self, ttt):
         """
         similar to Openie6.run.get_logger()
+
+        Logger depends on params.task and params.mode.
+        Start new logger everytime start a new trainer.
 
         Parameters
         ----------
@@ -164,18 +177,18 @@ class MConductor:
         # the current log file will have no number prefix,
         # stored ones will.
         assert os.path.exists(
-            self.params.log_dir() + "/" + self.params.mode)
+            self.params.log_dir() + "/" + ttt)
         num_numbered_logs = len(
-            list(glob(self.params.log_dir() + f'/{self.params.mode}_*')))
+            list(glob(self.params.log_dir() + f'/{ttt}_*')))
         new_id = num_numbered_logs + 1
         print('Retiring current log file by changing its name')
         print(shutil.move(
-            self.params.log_dir() + f'/{self.params.mode}',
-            self.params.log_dir() + f'/{self.params.mode}_{new_id}'))
+            self.params.log_dir() + f'/{ttt}',
+            self.params.log_dir() + f'/{ttt}_{new_id}'))
         logger = TensorBoardLogger(
             save_dir=WEIGHTS_DIR,
             name='logs',
-            version=self.params.mode + '.part')
+            version=ttt + '.part')
         return logger
 
     def get_trainer(self, logger, checkpoint_fp, use_minimal):
@@ -256,14 +269,15 @@ class MConductor:
         """
         similar to Openie6.run.train()
 
+        trainer.fit()
+
         Returns
         -------
 
         """
         # train is the only mode that doesn't require update_params()
         self.model = Model(self.params.d, self.auto_tokenizer)
-        logger = self.get_logger()
-        trainer = self.get_trainer(logger,
+        trainer = self.get_trainer(self.get_logger("train"),
                                    checkpoint_fp=None,
                                    use_minimal=False)
         trainer.fit(
@@ -277,6 +291,8 @@ class MConductor:
         """
         similar to Openie6.run.resume()
 
+        trainer.fit()
+
 
         Returns
         -------
@@ -288,8 +304,7 @@ class MConductor:
         # update_params() because it is called first
         self.update_params(checkpoint_fp)
         self.model = Model(self.params.d, self.auto_tokenizer)
-        logger = self.get_logger()
-        trainer = self.get_trainer(logger,
+        trainer = self.get_trainer(self.get_logger("tune"),
                                    checkpoint_fp,
                                    use_minimal=False)
         trainer.fit(
@@ -302,6 +317,7 @@ class MConductor:
     def test(self):
         """
         similar to Openie6.run.test()
+        trainer.test()
 
         Returns
         -------
@@ -320,8 +336,10 @@ class MConductor:
         if self.params.task == "cc" and self.cc_fix_d:
             self.model.metric.fix_d = self.cc_fix_d
 
-        logger = self.get_logger()
+
         with open(WEIGHTS_DIR + '/logs/test.txt', 'w') as test_f:
+            logger = self.get_logger("test")
+            # one checkpoint at end of each epoch
             for checkpoint_fp in self.get_all_checkpoint_fp():
                 trainer = self.get_trainer(logger,
                                            checkpoint_fp,
@@ -342,6 +360,8 @@ class MConductor:
                 test_dloader=None):
         """
         similar to Openie6.run.predict()
+
+        trainer.test()
 
         Parameters
         ----------
@@ -386,6 +406,17 @@ class MConductor:
 
     def splitpredict_do_cc_first(self,
                                  new_pred_fp):
+        """
+        no trainer
+
+        Parameters
+        ----------
+        new_pred_fp
+
+        Returns
+        -------
+
+        """
         self.ex_fix_d = {}
         self.cc_fix_d = {}
         if not new_pred_fp:
@@ -408,10 +439,10 @@ class MConductor:
                 words = ll_spanned_word[sample_id]
                 self.cc_fix_d[l_pred_sent[??]] = " ".join(words)
 
-                l_orig_sentL.append(l_pred_sent[0] + UNUSED_TOKENS_STR)
+                l_orig_sentL.append(redoL(l_pred_sent[0]))
                 for sent in l_pred_sent:
                     self.ex_fix_d[sent] = l_pred_sent[0]
-                    l_pred_sentL.append(sent + UNUSED_TOKENS_STR)
+                    l_pred_sentL.append(redoL(sent))
             # this not done when reading from split_pred_fp
             # l_orig_sentL.append('\
 
@@ -443,11 +474,17 @@ class MConductor:
         self.l_orig_sentL = l_orig_sentL
 
     def splitpredict_do_ex_second(self):
+        """
+        no trainer
+
+        Returns
+        -------
+
+        """
         self.params.d["task"] = self.params.task = 'ex'
         self.params.d["suggested_checkpoint_fp"] = EX_FIN_WEIGHTS_FP
         self.params.d["model_str"] = 'bert-base-cased'
-        pred_test_dataloader = self.dloader.get_ttt_dataloaders(
-            "test", self.l_pred_sentL)
+        pred_test_dataloader = self.dloader.get_ttt_dataloaders("test")
 
         self.predict(test_dloader=pred_test_dataloader)
 
@@ -544,9 +581,89 @@ class MConductor:
     #         predictions_f.write('\n'.join(all_predictions) + '\n')
     #         predictions_f.close()
 
+    def rescore(self):
+        print()
+        print("Starting re-scoring ...")
+        print()
+
+        sentence_line_nums, prev_line_num, no_extractions = set(), 0, dict()
+        curr_line_num = 0
+        for sentence_str in model.all_predictions_oie:
+            sentence_str = sentence_str.strip('\n')
+            num_extrs = len(sentence_str.split('\n')) - 1
+            if num_extrs == 0:
+                if curr_line_num not in no_extractions:
+                    no_extractions[curr_line_num] = []
+                no_extractions[curr_line_num].append(sentence_str)
+                continue
+            curr_line_num = prev_line_num + num_extrs
+            sentence_line_nums.add(
+                curr_line_num)  # check extra empty lines, example with no extractions
+            prev_line_num = curr_line_num
+
+        # testing rescoring
+        inp_fp = model.predictions_f_allennlp
+        rescored = rescore(inp_fp, model_dir=hparams.rescore_model,
+                           batch_size=256)
+
+        all_predictions, sentence_str = [], ''
+        for line_i, line in enumerate(rescored):
+            fields = line.split('\t')
+            sentence = fields[0]
+            confidence = float(fields[2])
+
+            if line_i == 0:
+                sentence_str = f'{sentence}\n'
+                exts = []
+            if line_i in sentence_line_nums:
+                exts = sorted(exts, reverse=True,
+                              key=lambda x: float(x.split()[0][:-1]))
+                exts = exts[:hparams.num_extractions]
+                all_predictions.append(sentence_str + ''.join(exts))
+                sentence_str = f'{sentence}\n'
+                exts = []
+            if line_i in no_extractions:
+                for no_extraction_sentence in no_extractions[line_i]:
+                    all_predictions.append(f'{no_extraction_sentence}\n')
+
+            arg1 = re.findall("<arg1>.*</arg1>", fields[1])[0].strip(
+                '<arg1>').strip('</arg1>').strip()
+            rel = re.findall("<rel>.*</rel>", fields[1])[0].strip(
+                '<rel>').strip('</rel>').strip()
+            arg2 = re.findall("<arg2>.*</arg2>", fields[1])[0].strip(
+                '<arg2>').strip('</arg2>').strip()
+            extraction = Extraction(pred=rel, head_pred_index=None,
+                                    sent=sentence,
+                                    confidence=math.exp(confidence), index=0)
+            extraction.addArg(arg1)
+            extraction.addArg(arg2)
+            if hparams.type == 'sentences':
+                ext_str = data.ext_to_sentence(extraction) + '\n'
+            else:
+                ext_str = data.ext_to_string(extraction) + '\n'
+            exts.append(ext_str)
+
+        exts = sorted(exts, reverse=True,
+                      key=lambda x: float(x.split()[0][:-1]))
+        exts = exts[:hparams.num_extractions]
+        all_predictions.append(sentence_str + ''.join(exts))
+
+        if line_i + 1 in no_extractions:
+            for no_extraction_sentence in no_extractions[line_i + 1]:
+                all_predictions.append(f'{no_extraction_sentence}\n')
+
+        if hparams.out != None:
+            print('Predictions written to ', hparams.out)
+            predictions_f = open(hparams.out, 'w')
+            predictions_f.write('\n'.join(all_predictions) + '\n')
+            predictions_f.close()
+        return
+
     def splitpredict(self):
         """
         similar to Openie6.run.splitpredict()
+
+        calls self.predict() and self.rescore()
 
 
         Returns
@@ -561,8 +678,7 @@ class MConductor:
         self.splitpredict_do_cc_first()
         self.splitpredict_do_ex_second()
         if "rescoring" in self.params.d:
-            # self.splitpredict_do_rescoring()
-            print("rescoring not implented yet")
+            self.rescore()
 
     def write_extags_file_from_predictions(self):
         """
@@ -632,6 +748,15 @@ class MConductor:
         lines.append('\n')
         with open(self.pred_fp, "w") as f:
             f.writelines(lines)
+
+    def run(self):
+        """
+        similar to Openie6.run.main()
+
+        Returns
+        -------
+
+        """
 # NOTE
 # run.prepare_test_dataset() never used
 # def prepare_test_dataset(hparams, model, sentences, orig_sentences,

@@ -103,4 +103,3 @@ class MOutput:
     #                            l_orig_sentL[sam]))
     #         lll_word.append(ll_word)
     #     return lll_word
-

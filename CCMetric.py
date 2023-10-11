@@ -112,13 +112,16 @@ class CCMetric:
         # self.n_complete = 0
         # self.n_sentence = 0
 
-    def get_score_d(self, do_reset=False):
+    def get_score_d(self, ttt, do_reset=False):
         """
         similar to Openie6.metric.Conjunction.get_metric()
 
 
         Parameters
         ----------
+        ttt: str
+            never used,  except as placeholder.
+            ExMetric.get_score_d() has same signature and uses it.
         do_reset: bool
 
         Returns

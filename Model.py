@@ -590,15 +590,16 @@ class Model(pl.LightningModule):
 
         return batch_m_out
 
-    def validation_step(self, batch_m_in, batch_id, ttt):
+    def validation_step(self, batch_m_in, batch_id):
         """
         inherited method
+
+        called by `validation_step()`
 
         Parameters
         ----------
         batch_m_in: MInput
         batch_id: int
-        ttt: str
 
         Returns
         -------
@@ -617,8 +618,10 @@ class Model(pl.LightningModule):
         #               "l_orig_sent": batch_m_in.l_orig_sent}
         # tune_out_d = OrderedDict(tune_out_d)
 
-        if self.params.d["mode"] != 'test':
-            self.sax_write_output(batch_id)
+        # when this method is called by `test_step()`,
+        # skip the writing part
+        if self.params.mode != 'test':
+            self.sax_write_batch_sents_out(batch_id)
 
         self.l_batch_m_out.append(batch_m_out)
         return batch_m_out
@@ -778,6 +781,8 @@ class Model(pl.LightningModule):
     def sax_write_if_task_ex(self, batch_id):
         """
 
+        called by `sax_write_batch_sents_out()`
+
         Parameters
         ----------
         batch_id: int
@@ -790,9 +795,9 @@ class Model(pl.LightningModule):
         fix_d = self.metric.fix_d
 
         batch_m_out = self.l_batch_m_out[batch_id]
-        lll_ex_ilabel = batch_m_out.lll_ex_ilabel
-        ll_pred_ex_confi = batch_m_out.ll_pred_ex_confi
-        num_samples, num_depths, _ = lll_ex_ilabel.shape
+        lll_ilabel = batch_m_out.lll_pred_ex_ilabel
+        ll_confi = batch_m_out.ll_pred_ex_confi
+        num_samples, num_depths, _ = lll_ilabel.shape
         l_orig_sent = batch_m_out.ll_osent_icode
 
         osent_to_l_pred_ex = {}
@@ -807,11 +812,11 @@ class Model(pl.LightningModule):
                     osent_to_l_pred_ex[orig_sent] = []
             for depth in range(num_depths):
                 num_words = len(get_words(orig_sentL))
-                ex_ilabels = lll_ex_ilabel[sample_id][depth][:num_words]
+                ex_ilabels = lll_ilabel[sample_id][depth][:num_words]
                 if sum(ex_ilabels) == 0:  # extractions completed
                     break
                 ex = SaxExtraction.get_ex_from_ilabels(
-                    ex_ilabels, orig_sentL, ll_pred_ex_confi[sample_id][depth])
+                    ex_ilabels, orig_sentL, ll_confi[sample_id][depth])
                 if ex.arg1 and ex.rel:
                     if fix_d:
                         orig_sent0 = fix_d[orig_sent]
@@ -847,13 +852,15 @@ class Model(pl.LightningModule):
         fpath = self.params.task + ".txt"
         with open(fpath, fmode) as pred_f:
             pred_f.write('\n'.join(l_pred_str) + '\n')
-        if "write_allennlp" in self.params.d:
+        if self.params.d["write_allen_file"]:
             fpath = PRED_DIR + "/allen.txt"
             with open(fpath, fmode) as allen_f:
                 allen_f.write('\n'.join(l_pred_allen_str) + '\n')
 
     def sax_write_if_task_cc(self, batch_id):
         """
+
+        called by `sax_write_batch_sents_out()`
 
         Parameters
         ----------
@@ -906,9 +913,11 @@ class Model(pl.LightningModule):
         with open(fpath, fmode) as pred_f:
             pred_f.write('\n'.join(l_pred_str) + '\n')
 
-    def sax_write_output(self, batch_id):
+    def sax_write_batch_sents_out(self, batch_id):
         """
         similar to Openie6.model.write_to_file()
+
+        called by self.validation_step()
 
         Parameters
         ----------

@@ -269,6 +269,7 @@ class Params:
                 "con_weight_str": "1",  # for multiple constraints "1_1_1"
                 "dropout_fun": 0.0,
                 "gpus": 1,
+                "gradient_clip_val": 5,
                 "iterative_layers": 2,
                 "lr": 2E-5,
                 "model_str": "bert-base-cased",
@@ -276,7 +277,9 @@ class Params:
                 "optimizer": "adamW",
                 "save_k": 1,
                 "val_check_interval": 1.0,
-                "wreg": 0
+                "wreg": 0,
+                "write_allen_file": True,
+                "write_extags_file": True
             }
 
         from sax_utils import merge_dicts

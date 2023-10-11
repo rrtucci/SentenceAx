@@ -38,14 +38,15 @@ class MConductor:
         input, target = batch
     
     
-
+    # NOTE
+    # run.prepare_test_dataset() never used
 
     Refs:
     https://spacy.io/usage/spacy-101/
 
     """
 
-    def __init__(self, params):
+    def __init__(self, params, save=True):
         """
         A new
         ModelCheckpoint
@@ -73,7 +74,11 @@ class MConductor:
             self.test_fp = EXTAGS_TEST_FP
             self.pred_fp = EX_PRED_FP
 
-        self.checkpoint_callback = self.get_checkpoint_callback()
+        if save:
+            self.checkpoint_callback = self.get_checkpoint_callback()
+        else:
+            self.checkpoint_callback = None
+
 
         do_lower_case = ('uncased' in self.params.d["model_str"])
         self.auto_tokenizer = AutoTokenizer.from_pretrained(
@@ -336,7 +341,6 @@ class MConductor:
         if self.params.task == "cc" and self.cc_fix_d:
             self.model.metric.fix_d = self.cc_fix_d
 
-
         with open(WEIGHTS_DIR + '/logs/test.txt', 'w') as test_f:
             logger = self.get_logger("test")
             # one checkpoint at end of each epoch
@@ -356,8 +360,7 @@ class MConductor:
         shutil.move(WEIGHTS_DIR + f'/logs/test.part',
                     WEIGHTS_DIR + f'/logs/test')
 
-    def predict(self,
-                test_dloader=None):
+    def predict(self):
         """
         similar to Openie6.run.predict()
 
@@ -404,8 +407,7 @@ class MConductor:
         minutes = (end_time - start_time) / 60
         print(f'Total Time taken = {minutes : 2f} minutes')
 
-    def splitpredict_do_cc_first(self,
-                                 new_pred_fp):
+    def splitpredict_do_cc(self):
         """
         no trainer
 
@@ -431,7 +433,7 @@ class MConductor:
             ll_spanned_word = self.cc_ll_spanned_word
 
             l_pred_sentL = []
-            l_orig_sentL = []
+            l_osentL = []
             for sample_id, pred_str in enumerate(l_pred_str):
                 l_pred_sent = pred_str.strip('\n').split('\n')
 
@@ -439,12 +441,12 @@ class MConductor:
                 words = ll_spanned_word[sample_id]
                 self.cc_fix_d[l_pred_sent[??]] = " ".join(words)
 
-                l_orig_sentL.append(redoL(l_pred_sent[0]))
+                l_osentL.append(redoL(l_pred_sent[0]))
                 for sent in l_pred_sent:
                     self.ex_fix_d[sent] = l_pred_sent[0]
                     l_pred_sentL.append(redoL(sent))
             # this not done when reading from split_pred_fp
-            # l_orig_sentL.append('\
+            # l_osentL.append('\
 
             # Never used:
             # count = 0
@@ -453,7 +455,7 @@ class MConductor:
             #         count += 1
             #     else:
             #         count += len(l_spanned_loc)
-            # assert count == len(l_orig_sentL) - 1
+            # assert count == len(l_osentL) - 1
 
         else:
             with open(self.pred_fp, 'r') as f:
@@ -462,18 +464,18 @@ class MConductor:
             lines = content.split('\n\n')
 
             l_pred_sentL = []
-            l_orig_sentL = []
+            l_osentL = []
             for line in lines:
                 if len(line) > 0:
                     l_pred_sent = line.strip().split('\n')
-                    l_orig_sentL.append(l_pred_sent[0] + UNUSED_TOKENS_STR)
+                    l_osentL.append(l_pred_sent[0] + UNUSED_TOKENS_STR)
                     for sent in l_pred_sent:
                         self.ex_fix_d[sent] = l_pred_sent[0]
                         l_pred_sentL.append(sent + UNUSED_TOKENS_STR)
         self.l_pred_sentL = l_pred_sentL
-        self.l_orig_sentL = l_orig_sentL
+        self.l_osentL = l_osentL
 
-    def splitpredict_do_ex_second(self):
+    def splitpredict_do_ex(self):
         """
         no trainer
 
@@ -490,7 +492,8 @@ class MConductor:
 
         with_confis = False
         # Does same thing as Openie6's run.get_labels()
-        self.write_extags_file_from_predictions()
+        if self.params.d["write_extags_file"]:
+            self.write_extags_file_from_preds()
 
     # def splitpredict_do_rescoring(self):
     #     self.params.d["write_allennlp"] = True
@@ -552,7 +555,7 @@ class MConductor:
     #
     #         # why must confi be exponentiated?
     #
-    #         extraction = SaxExtraction(orig_sentL=orig_senL,
+    #         extraction = SaxExtraction(osentL=orig_senL,
     #                                    arg1=arg1,
     #                                    rel=rel,
     #                                    arg2=arg2,
@@ -581,7 +584,7 @@ class MConductor:
     #         predictions_f.write('\n'.join(all_predictions) + '\n')
     #         predictions_f.close()
 
-    def rescore(self):
+    def splitpredict_do_rescore(self):
         print()
         print("Starting re-scoring ...")
         print()
@@ -675,165 +678,95 @@ class MConductor:
         #                  train_dataloader, val_dataloader, test_dataloader,
         #                  all_sentences):
 
-        self.splitpredict_do_cc_first()
-        self.splitpredict_do_ex_second()
+        self.splitpredict_do_cc()
+        self.splitpredict_do_ex()
         if "rescoring" in self.params.d:
             self.rescore()
 
-    def write_extags_file_from_predictions(self):
+    def write_extags_file_from_preds(self,
+                                     l_osentL,
+                                     l_sentL,
+                                     lll_sent_loc,
+                                     pred_out_fp):
         """
         similar to Openie6.run.get_labels()
         ILABEL_TO_EXTAG={0: 'NONE', 1: 'ARG1', 2: 'REL', 3: 'ARG2',
                  4: 'ARG2', 5: 'NONE'}
 
+        called by `splitpredict_do_ex()`
+
 
         Parameters
         ----------
+        
+        l_osentL
         l_sentL
-        l_word_locs
+        lll_sent_loc
+        pred_out_fp
 
         Returns
         -------
+        None
 
         """
-        bout = self.model.batch_out
-        num_samples = len(bout.l_orig_sent)
-        l_sentL = redoL(bout.l_orig_sent)
-        lll_ex_ilabel = bout.lll_ex_ilabel
-        lll_word_loc = []
+        l_m_out = self.model.l_batch_m_out
 
         lines = []
-        sam_id0 = 0
-        ex_id0 = 0
-        word_id0 = 0
+        batch_id0 = 0  # similar to idx1
+        sam_id0 = 0  # similar to idx2
+        cum_sam_id0 = 0  # similar to idx3
+        # i similar to cum_sent
+        # j similar to jsent
 
-        for sam_id in range(num_samples):
-            words = get_words(undoL(l_sentL[sam_id]))
-            lll_word_loc[sam_id].append(list(range(len(words))))
-
-            lines.append('\n' + undoL(l_sentL[sam_id]))
-            for ex_id in range(len(lll_word_loc[sam_id])):
-                assert len(lll_word_loc[sam_id][ex_id]) == \
-                       len(bout.l_orig_sent[sam_id0])
-
-                sentL = l_sentL[sam_id0].strip() + UNUSED_TOKENS_STR
-                ll_ilabel = lll_ex_ilabel[sam_id]
-                for ilabels in ll_ilabel:
+        for ibatch in range(len(lll_sent_loc)):
+            osent = undoL(l_osentL[ibatch])
+            if len(lll_sent_loc[ibatch]) == 0:
+                lll_sent_loc[ibatch].append(list(range(len(osent))))
+            lines.append('\n' + osent)
+            num_sam = len(lll_sent_loc[ibatch])
+            for jsam in range(num_sam):
+                sent = l_m_out[batch_id0].l_osent[sam_id0]
+                sentL = redoL(sent)  # similar to `sentence`
+                assert len(lll_sent_loc[ibatch][jsam]) == \
+                       len(get_words(sent))
+                assert sentL == l_sentL[cum_sam_id0]
+                # similar to predictions
+                ll_pred_ilabel = \
+                    l_m_out[batch_id0].lll_pred_ilabel[sam_id0]
+                for l_pred_ilabel in ll_pred_ilabel:
                     # You can use x.item() to get a Python number
                     # from a torch tensor that has one element
-                    if pred_ilabels.sum().item() == 0:
+                    if l_pred_ilabel.sum().item() == 0:
                         break
 
-                    ilabels = [0] * len(get_words(sentL))
-                    pred_ilabels = pred_ilabels[:len(sentL.split())].tolist()
-                    for k, loc in enumerate(
-                            sorted(lll_word_loc[sam_id][ex_id])):
-                        ilabels[loc] = pred_ilabels[k]
+                    l_ilabel = [0] * (len(get_words(osent)) +3)
+                    l_pred_ilabel = \
+                        l_pred_ilabel[:len(get_words(sentL))].tolist()
+                    for k, sent_loc in enumerate(
+                            sorted(lll_sent_loc[ibatch][jsam])):
+                        l_ilabel[sent_loc] = l_pred_ilabel[k]
 
-                    ilabels = ilabels[:-3]
+                    assert len(l_ilabel) == len(osent) + 3
+                    l_ilabel = l_ilabel[:-3]
                     # 1: arg1, 2: rel
-                    if 1 not in pred_ilabels and 2 not in pred_ilabels:
+                    if 1 not in l_pred_ilabel and 2 not in l_pred_ilabel:
                         continue  # not a pass
 
                     str_extags = \
-                        ' '.join([ILABEL_TO_EXTAG[i] for i in ilabels])
+                        ' '.join([ILABEL_TO_EXTAG[i] for i in l_ilabel])
                     lines.append(str_extags)
 
-                word_id0 += 1
-                ex_id0 += 1
-                if ex_id0 == len(bout.l_orig_sent[sam_id0]):
-                    ex_id0 = 0
-                    sam_id0 += 1
+                cum_sam_id0 += 1
+                sam_id0 += 1
+                if sam_id0 == len(l_m_out[batch_id0].l_osent):
+                    sam_id0 = 0
+                    batch_id0 += 1
 
         lines.append('\n')
-        with open(self.pred_fp, "w") as f:
+        with open(pred_out_fp, "w") as f:
             f.writelines(lines)
 
     def run(self):
-        """
-        similar to Openie6.run.main()
+        for process in self.params.mode.split('_'):
+            globals()[process]()
 
-        Returns
-        -------
-
-        """
-# NOTE
-# run.prepare_test_dataset() never used
-# def prepare_test_dataset(hparams, model, sentences, orig_sentences,
-#                          sentence_indices_list):
-#     label_dict = {0: 'NONE', 1: 'ARG1', 2: 'REL', 3: 'ARG2',
-#                   4: 'LOC', 5: 'TYPE'}
-#
-#     lines = []
-#
-#     outputs = model.outputs
-#
-#     idx1, idx2, idx3 = 0, 0, 0
-#     count = 0
-#     for i in range(len(sentence_indices_list)):
-#         if len(sentence_indices_list[i]) == 0:
-#             sentence = orig_sentences[i].split('[unused1]')[0].strip().split()
-#             sentence_indices_list[i].append(list(range(len(sentence))))
-#
-#         for j in range(len(sentence_indices_list[i])):
-#             try:
-#                 assert len(sentence_indices_list[i][j]) == len(
-#                     outputs[idx1]['meta_data'][
-#                         idx2].strip().split()), ipdb.set_trace()
-#             except:
-#                 ipdb.set_trace()
-#             sentence = outputs[idx1]['meta_data'][
-#                            idx2].strip() + ' [unused1] [unused2] [unused3]'
-#             assert sentence == sentences[idx3]
-#             original_sentence = orig_sentences[i]
-#             predictions = outputs[idx1]['predictions'][idx2]
-#
-#             all_extractions, all_str_labels, len_exts = [], [], []
-#             for prediction in predictions:
-#                 if prediction.sum().item() == 0:
-#                     break
-#
-#                 if hparams.rescoring != 'others':
-#                     lines.append(original_sentence)
-#
-#                 labels = [0] * len(original_sentence.strip().split())
-#                 prediction = prediction[:len(sentence.split())].tolist()
-#                 for idx, value in enumerate(sorted(sentence_indices_list[i][j])):
-#                     labels[value] = prediction[idx]
-#                 labels[-3:] = prediction[-3:]
-#                 str_labels = ' '.join([label_dict[x] for x in labels])
-#                 if hparams.rescoring == 'first':
-#                     lines.append(str_labels)
-#                 elif hparams.rescoring == 'max':
-#                     for _ in range(5):
-#                         lines.append(str_labels)
-#                 elif hparams.rescoring == 'others':
-#                     all_str_labels.append(str_labels)
-#                     labels_3 = np.array(labels[:-3])
-#                     extraction = ' '.join(np.array(original_sentence.split())[
-#                                               np.where(labels_3 != 0)])
-#                     all_extractions.append(extraction)
-#                     len_exts.append(len(extraction.split()))
-#                 else:
-#                     assert False
-#
-#             if hparams.rescoring == 'others':
-#                 for ext_i, extraction in enumerate(all_extractions):
-#                     other_extractions = ' '.join(
-#                         all_extractions[:ext_i] + all_extractions[ext_i + 1:])
-#                     other_len_exts = sum(len_exts[:ext_i]) + sum(
-#                         len_exts[ext_i + 1:])
-#                     input = original_sentence + ' ' + other_extractions
-#                     lines.append(input)
-#                     output = all_str_labels[ext_i] + ' ' + ' '.join(
-#                         ['NONE'] * other_len_exts)
-#                     lines.append(output)
-#
-#             idx3 += 1
-#             idx2 += 1
-#             if idx2 == len(outputs[idx1]['meta_data']):
-#                 idx2 = 0
-#                 idx1 += 1
-#
-#     lines.append('\n')
-#     return lines

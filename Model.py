@@ -904,9 +904,9 @@ class Model(pl.LightningModule):
 
             l_pred_str.append(pred_str)
         # list1 + list2 is the same as list1.extend(list2)
-        self.cc_ll_spanned_word += ll_spanned_word
-        self.cc_l_pred_str += l_pred_str
-        self.cc_ll_spanned_loc += ll_spanned_loc
+        self.ll_cc_spanned_word += ll_spanned_word
+        self.l_cc_pred_str += l_pred_str
+        self.ll_cc_spanned_loc += ll_spanned_loc
 
         fmode = "w" if batch_id == 0 else "a"
         fpath = self.params.task + ".txt"

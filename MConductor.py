@@ -105,9 +105,9 @@ class MConductor:
 
         self.constraint_str_d = dict()
 
-        self.cc_ll_spanned_word = []
-        self.cc_ll_spanned_loc = []
-        self.cc_l_pred_str = []
+        self.ll_cc_spanned_word = []
+        self.ll_cc_spanned_loc = []
+        self.l_cc_pred_str = []
 
         self.ex_l_pred_str = None
 
@@ -427,10 +427,10 @@ class MConductor:
             self.params.d["model_str"] = 'bert-base-cased'
             self.params.d["mode"] = self.params.mode = 'predict'
             self.predict()
-            l_pred_str = self.cc_l_pred_str
-            ll_spanned_loc = self.cc_ll_spanned_loc
+            l_pred_str = self.l_cc_pred_str
+            ll_spanned_loc = self.ll_cc_spanned_loc
             assert len(l_pred_str) == len(ll_spanned_loc)
-            ll_spanned_word = self.cc_ll_spanned_word
+            ll_spanned_word = self.ll_cc_spanned_word
 
             l_pred_sentL = []
             l_osentL = []
@@ -495,94 +495,6 @@ class MConductor:
         if self.params.d["write_extags_file"]:
             self.write_extags_file_from_preds()
 
-    # def splitpredict_do_rescoring(self):
-    #     self.params.d["write_allennlp"] = True
-    #     print()
-    #     print("Starting re-scoring ...")
-    #     print()
-    #
-    #     sentence_line_nums = set()
-    #     prev_line_num = 0
-    #     no_extractions = {}
-    #     curr_line_num = 0
-    #     for sentence_str in self.all_predictions_oie:
-    #         sentence_str = sentence_str.strip('\n')
-    #         num_extrs = len(sentence_str.split('\n')) - 1
-    #         if num_extrs == 0:
-    #             if curr_line_num not in no_extractions:
-    #                 no_extractions[curr_line_num] = []
-    #             no_extractions[curr_line_num].append(sentence_str)
-    #             continue
-    #         curr_line_num = prev_line_num + num_extrs
-    #         sentence_line_nums.add(
-    #             curr_line_num)  # check extra empty lines,
-    #         # example with no extractions
-    #         prev_line_num = curr_line_num
-    #
-    #     # testing rescoring
-    #     in_fp = self.model.predictions_f_allennlp
-    #     rescored = self.rescore(in_fp,
-    #                             model_dir=RESCORE_DIR,
-    #                             batch_size=256)
-    #
-    #     all_predictions = []
-    #     sentence_str = ''
-    #     for line_i, line in enumerate(rescored):
-    #         fields = line.split('\t')
-    #         sentence = fields[0]
-    #         confi = float(fields[2])
-    #
-    #         if line_i == 0:
-    #             sentence_str = f'{sentence}\n'
-    #             exts = []
-    #         if line_i in sentence_line_nums:
-    #             exts = sorted(exts, reverse=True,
-    #                           key=lambda x: float(x.split()[0][:-1]))
-    #             exts = exts[:self.params.d["num_extractions"]]
-    #             all_predictions.append(sentence_str + ''.join(exts))
-    #             sentence_str = f'{sentence}\n'
-    #             exts = []
-    #         if line_i in no_extractions:
-    #             for no_extraction_sentence in no_extractions[line_i]:
-    #                 all_predictions.append(f'{no_extraction_sentence}\n')
-    #
-    #         arg1 = re.findall("<arg1>.*</arg1>", fields[1])[0].strip(
-    #             '<arg1>').strip('</arg1>').strip()
-    #         rel = re.findall("<rel>.*</rel>", fields[1])[0].strip(
-    #             '<rel>').strip('</rel>').strip()
-    #         arg2 = re.findall("<arg2>.*</arg2>", fields[1])[0].strip(
-    #             '<arg2>').strip('</arg2>').strip()
-    #
-    #         # why must confi be exponentiated?
-    #
-    #         extraction = SaxExtraction(osentL=orig_senL,
-    #                                    arg1=arg1,
-    #                                    rel=rel,
-    #                                    arg2=arg2,
-    #                                    confi=math.exp(confi))
-    #         extraction.arg1 = arg1
-    #         extraction.arg2 = arg2
-    #         if self.params.d["type"] == 'sentences':
-    #             ext_str = extraction.get_simple_sent() + '\n'
-    #         else:
-    #             ext_str = extraction.get_simple_sent() + '\n'
-    #         exts.append(ext_str)
-    #
-    #     exts = sorted(exts, reverse=True,
-    #                   key=lambda x: float(x.split()[0][:-1]))
-    #     exts = exts[:self.params.d["num_extractions"]]
-    #     all_predictions.append(sentence_str + ''.join(exts))
-    #
-    #     if line_i + 1 in no_extractions:
-    #         for no_extraction_sentence in no_extractions[line_i + 1]:
-    #             all_predictions.append(f'{no_extraction_sentence}\n')
-    #
-    #     if self.pred_fname:
-    #         fpath = PRED_DIR + "/" + self.pred_fname
-    #         print('Predictions written to ', fpath)
-    #         predictions_f = open(fpath, 'w')
-    #         predictions_f.write('\n'.join(all_predictions) + '\n')
-    #         predictions_f.close()
 
     def splitpredict_do_rescore(self):
         print()

@@ -59,7 +59,6 @@ class MConductor:
 
         """
         self.params = params
-        self.has_been_saved = False
         self.has_cuda = torch.cuda.is_available()
         warnings.filterwarnings('ignore')
 
@@ -463,8 +462,6 @@ class MConductor:
                     for sent in l_pred_sent:
                         self.ex_sent_to_words[sent] = l_pred_sent[0]
                         l_pred_sentL.append(sent + UNUSED_TOKENS_STR)
-        self.l_pred_sentL = l_pred_sentL
-        self.l_osentL = l_osentL
 
         return l_osentL, l_ccsentL, lll_cc_spanned_loc
 

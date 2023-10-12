@@ -170,7 +170,7 @@ class Model(pl.LightningModule):
         if self.params.task == "ex":
             self.metric = ExMetric(self.params.d)
             self.ex_sent_to_sent = self.metric.sent_to_sent
-            self.cc_sent_to_sent = None
+            self.cc_sent_to_words = None
         elif self.params.task == "cc":
             self.metric = CCMetric()
             self.cc_sent_to_words = self.metric.sent_to_words
@@ -200,9 +200,10 @@ class Model(pl.LightningModule):
                               for k in range(len(l_constraint)) if
                               l_constraint[k]}
 
-        self.l_cc_pred_str = []
-        self.ll_cc_spanned_word = []
-        self.ll_cc_spanned_loc = []
+        self.l_cc_pred_str = [] # all_predictions_conj
+        self.ll_cc_spanned_word = [] # all_conjunct_words_conj
+        self.ll_cc_spanned_loc = [] # all_sentence_indices_conj
+        self.l_ex_pred_str = [] # all_predictions_oie
 
         self.l_batch_m_out = []
 
@@ -844,8 +845,8 @@ class Model(pl.LightningModule):
                         if ex.is_not_in(
                                 osent_to_l_pred_ex[orig_sent]):
                             osent_to_l_pred_ex[orig_sent].append(ex)
-        l_pred_str = []
-        l_pred_allen_str = []
+        l_pred_str = [] # similar to `all_pred`
+        l_pred_allen_str = [] # similar to `all_pred_allen_nlp`
         for sample_id, l_pred_ex in enumerate(osent_to_l_pred_ex):
             orig_sentL = redoL(l_orig_sent[sample_id])
             str0 = ""
@@ -873,6 +874,8 @@ class Model(pl.LightningModule):
             with open(fpath, fmode) as allen_f:
                 allen_f.write('\n'.join(l_pred_allen_str) + '\n')
 
+        self.l_ex_pred_str = l_pred_str
+
     def sax_write_if_task_cc(self, batch_id):
         """
 
@@ -896,9 +899,9 @@ class Model(pl.LightningModule):
         num_samples, num_depths, _ = lll_ex_ilabel.shape
         # true_lll_ex_ilabel = self.true_batch_m_out.lll_label
         l_orig_sent = batch_m_out.l_orig_sent
-        self.l_cc_pred_str = []
-        self.ll_cc_spanned_word = []
-        self.ll_cc_spanned_loc = []
+        l_cc_pred_str = []
+        ll_cc_spanned_word = []
+        ll_cc_spanned_loc = []
         l_pred_str = []
         ll_spanned_word = []
         ll_spanned_loc = []
@@ -922,14 +925,18 @@ class Model(pl.LightningModule):
 
             l_pred_str.append(pred_str)
         # list1 + list2 is the same as list1.extend(list2)
-        self.ll_cc_spanned_word += ll_spanned_word
-        self.l_cc_pred_str += l_pred_str
-        self.ll_cc_spanned_loc += ll_spanned_loc
+        ll_cc_spanned_word += ll_spanned_word
+        l_cc_pred_str += l_pred_str
+        ll_cc_spanned_loc += ll_spanned_loc
 
         fmode = "w" if batch_id == 0 else "a"
         fpath = self.params.task + ".txt"
         with open(fpath, fmode) as pred_f:
             pred_f.write('\n'.join(l_pred_str) + '\n')
+
+        self.l_cc_pred_str = l_cc_pred_str
+        self.ll_cc_spanned_word = ll_cc_spanned_word
+        self.ll_cc_spanned_loc = ll_cc_spanned_loc
 
     def sax_write_batch_sents_out(self, batch_id):
         """

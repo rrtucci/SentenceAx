@@ -79,7 +79,6 @@ class MConductor:
         else:
             self.checkpoint_callback = None
 
-
         do_lower_case = ('uncased' in self.params.d["model_str"])
         self.auto_tokenizer = AutoTokenizer.from_pretrained(
             self.params.d["model_str"],
@@ -103,14 +102,12 @@ class MConductor:
                                      self.tune_fp,
                                      self.test_fp)
 
-        self.ll_cc_spanned_word = []
-        self.ll_cc_spanned_loc = []
-        self.l_cc_pred_str = []
-
-        self.ex_l_pred_str = None
+        self.pred_out_fp = PRED_OUT_FP
+        self.pred_in_fp = PRED_IN_FP
+        self.rescore_in_fp = RESCORE_IN_FP
+        self.rescore_out_fp = RESCORE_OUT_FP
 
         self.model = None
-
 
     def get_checkpoint_callback(self):
         """
@@ -416,10 +413,7 @@ class MConductor:
         -------
 
         """
-        self.ex_sent_to_sent = {}
-        self.cc_sent_to_words = {}
         if not pred_in_fp:
-            self.params.d["task"] = self.params.task = 'cc'
             self.params.d["suggested_checkpoint_fp"] = CC_FIN_WEIGHTS_FP
             self.params.d["model_str"] = 'bert-base-cased'
             self.params.d["mode"] = self.params.mode = 'predict'
@@ -472,7 +466,13 @@ class MConductor:
         self.l_pred_sentL = l_pred_sentL
         self.l_osentL = l_osentL
 
-    def splitpredict_do_ex(self, pred_out_fp):
+        return l_osentL, l_ccsentL, lll_cc_spanned_loc
+
+    def splitpredict_do_ex(self,
+                           pred_out_fp,
+                           l_osentL,
+                           l_ccsentL,
+                           lll_cc_spanned_loc):
         """
         no trainer
 
@@ -480,7 +480,6 @@ class MConductor:
         -------
 
         """
-        self.params.d["task"] = self.params.task = 'ex'
         self.params.d["suggested_checkpoint_fp"] = EX_FIN_WEIGHTS_FP
         self.params.d["model_str"] = 'bert-base-cased'
         pred_test_dataloader = self.dloader.get_ttt_dataloaders("test")
@@ -492,9 +491,8 @@ class MConductor:
         if self.params.d["write_extags_file"]:
             self.write_extags_file_from_preds(l_osentL,
                                               l_ccsentL,
-                                              ll_cc_spanned_loc,
+                                              lll_cc_spanned_loc,
                                               pred_out_fp)
-
 
     def splitpredict_do_rescore(self, rescore_in_fp, rescore_out_fp):
         print()
@@ -591,16 +589,29 @@ class MConductor:
         #                  train_dataloader, val_dataloader, test_dataloader,
         #                  all_sentences):
 
-        self.splitpredict_do_cc(pred_in_fp)
-        self.splitpredict_do_ex(pred_out_fp)
-        if "rescoring" in self.params.d:
-            self.rescore(rescore_in_fp, rescore_out_fp)
+        self.cc_sent_to_words = {}
+        self.ex_sent_to_sent = {}
+        self.params["write_allen_file"] = True
 
-    def write_extags_file_from_preds(self,
-                                     l_osentL, # orig_sentences
-                                     l_ccsentL, #  sentences
-                                     ll_cc_spanned_loc, # sentence_indices_list
-                                     pred_out_fp):
+        self.params.d["task"] = self.params.task = "cc"
+        l_osentL, l_ccsentL, lll_cc_spanned_loc = \
+            self.splitpredict_do_cc(self.pred_in_fp)
+
+        self.params.d["task"] = self.params.task = "ex"
+        self.splitpredict_do_ex(self.pred_out_fp,
+                                l_osentL,
+                                l_ccsentL,
+                                lll_cc_spanned_loc)
+
+        if "rescoring" in self.params.d:
+            self.rescore(self.rescore_in_fp, self.rescore_out_fp)
+
+    def write_extags_file_from_preds(
+            self,
+            l_osentL,  # orig_sentences
+            l_ccsentL,  # sentences
+            lll_cc_spanned_loc,  # sentence_indices_list
+            pred_out_fp):
         """
         similar to Openie6.run.get_labels()
         ILABEL_TO_EXTAG={0: 'NONE', 1: 'ARG1', 2: 'REL', 3: 'ARG2',
@@ -613,8 +624,8 @@ class MConductor:
         ----------
         
         l_osentL
-        l_sentL
-        lll_sent_loc
+        l_ccsentL
+        lll_cc_spanned_loc
         pred_out_fp
 
         Returns
@@ -628,21 +639,22 @@ class MConductor:
         batch_id0 = 0  # similar to idx1
         sam_id0 = 0  # similar to idx2
         cum_sam_id0 = 0  # similar to idx3
-        # i similar to cum_sent
-        # j similar to jsent
+        # isam similar to i
+        # jccsent similar to j
 
-        for ibatch in range(len(lll_sent_loc)):
-            osent = undoL(l_osentL[ibatch])
-            if len(lll_sent_loc[ibatch]) == 0:
-                lll_sent_loc[ibatch].append(list(range(len(osent))))
+        for isam in range(len(lll_cc_spanned_loc)):
+            osent = undoL(l_osentL[isam])
+            if len(lll_cc_spanned_loc[isam]) == 0:
+                lll_cc_spanned_loc[isam].append(list(range(len(osent))))
             lines.append('\n' + osent)
-            num_sam = len(lll_sent_loc[ibatch])
-            for jsam in range(num_sam):
-                sent = l_m_out[batch_id0].l_osent[sam_id0]
-                sentL = redoL(sent)  # similar to `sentence`
-                assert len(lll_sent_loc[ibatch][jsam]) == \
-                       len(get_words(sent))
-                assert sentL == l_sentL[cum_sam_id0]
+            num_ccsent = len(lll_cc_spanned_loc[isam])
+            for jccsent in range(num_ccsent):
+                osent = l_m_out[batch_id0].l_osent[sam_id0]
+                osentL = redoL(osent)
+                osentL_words = get_words(osentL)
+                assert len(lll_cc_spanned_loc[isam][jccsent]) == \
+                       len(osentL_words)
+                assert osentL == l_ccsentL[cum_sam_id0]
                 # similar to predictions
                 ll_pred_ilabel = \
                     l_m_out[batch_id0].lll_pred_ilabel[sam_id0]
@@ -652,14 +664,14 @@ class MConductor:
                     if l_pred_ilabel.sum().item() == 0:
                         break
 
-                    l_ilabel = [0] * (len(get_words(osent)) +3)
+                    l_ilabel = [0] * len(osentL_words)
                     l_pred_ilabel = \
-                        l_pred_ilabel[:len(get_words(sentL))].tolist()
-                    for k, sent_loc in enumerate(
-                            sorted(lll_sent_loc[ibatch][jsam])):
-                        l_ilabel[sent_loc] = l_pred_ilabel[k]
+                        l_pred_ilabel[:len(osentL_words)].tolist()
+                    for k, loc in enumerate(
+                            sorted(lll_cc_spanned_loc[isam][jccsent])):
+                        l_ilabel[loc] = l_pred_ilabel[k]
 
-                    assert len(l_ilabel) == len(osent) + 3
+                    assert len(l_ilabel) == len(osentL_words)
                     l_ilabel = l_ilabel[:-3]
                     # 1: arg1, 2: rel
                     if 1 not in l_pred_ilabel and 2 not in l_pred_ilabel:
@@ -682,4 +694,3 @@ class MConductor:
     def run(self):
         for process in self.params.mode.split('_'):
             globals()[process]()
-

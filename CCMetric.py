@@ -12,7 +12,7 @@ class CCMetric:
     Attributes
     ----------
     store_dir: str
-    fix_d: dict[str, str]
+    sent_to_words: dict[str, list[str]]
     report_exact: CCReport
     report_inner: CCReport
     report_outer: CCReport
@@ -21,13 +21,13 @@ class CCMetric:
 
     """
 
-    def __init__(self, store_dir=None, fix_d=None):
+    def __init__(self, store_dir=None, sent_to_words=None):
         """
 
         Parameters
         ----------
         store_dir: str
-        fix_d: dict[str, str]
+        sent_to_words: dict[str, list[str]]
 
         Returns
         -------
@@ -48,7 +48,7 @@ class CCMetric:
             if os.path.exists(store_dir + '/l_true_ccnodes.pkl'):
                 os.remove(store_dir + '/l_true_ccnodes.pkl')
 
-        self.fix_d = fix_d
+        self.sent_to_words = sent_to_words
 
     def __call__(self,
                  l_osent,  # meta data
@@ -166,30 +166,6 @@ class CCMetric:
                 'invalid report_category: {}'.format(report_category))
         # print("mkcd", report, self.report_inner.overall_scorer)
         return report.overall_scorer.f1_score()
-
-    @staticmethod
-    def load_fix_d(fix_fp):
-        """
-        similar to Openie6.data_processing.load_conj_mapping()
-        Our fix_d is similar to Openie6 mapping and conj_mapping.
-        This method works equally well for ExMetric.fix_d and CCMetric.fix_d
-
-        Returns
-        -------
-        dict[str, str]
-
-        """
-        fix_d = {}
-        with open(fix_fp, "r") as f:
-            content = f.read()
-            fixed_sent = ''
-            for sample in content.split('\n\n'):
-                for i, line in enumerate(sample.strip('\n').split('\n')):
-                    if i == 0:
-                        fixed_sent = line
-                    else:
-                        fix_d[line] = fixed_sent
-        return fix_d
 
 
 if __name__ == "__main__":

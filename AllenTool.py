@@ -100,7 +100,7 @@ class AllenTool:
     def get_osent2_to_exs_from_lll_ex_ilabel(l_osent2,
                                           lll_ex_ilabel,
                                           ll_confi,
-                                          fix_d):
+                                          sent_to_sent):
         """
         similar to Openie6.metric.Carb.__call__()
 
@@ -121,7 +121,7 @@ class AllenTool:
         l_osent2: list[str]
         lll_ex_ilabel: list[list[list[int]]]
         ll_confi: list[list[float]]
-        fix_d: dict[str, str]
+        sent_to_sent: dict[str, str]
             a dictionary that makes small fixes on osent2
 
         Returns
@@ -132,9 +132,9 @@ class AllenTool:
 
         osent2_to_exs = {}
         for sam_id, osent2 in enumerate(l_osent2):
-            if fix_d:
-                if fix_d[osent2] not in osent2_to_exs:
-                    osent2_to_exs[fix_d[osent2]] = []
+            if sent_to_sent:
+                if sent_to_sent[osent2] not in osent2_to_exs:
+                    osent2_to_exs[sent_to_sent[osent2]] = []
             else:
                 if osent2 not in osent2_to_exs:
                     osent2_to_exs[osent2] = []
@@ -150,11 +150,11 @@ class AllenTool:
                     osent2,
                     ll_confi[sam_id][depth])
                 if ex0.arg1 and ex0.rel:
-                    if fix_d:
+                    if sent_to_sent:
                         if ex0.is_not_in(osent2_to_exs[
-                                             fix_d[osent2]]):
+                                             sent_to_sent[osent2]]):
                             osent2_to_exs[
-                                fix_d[osent2]].append(ex0)
+                                sent_to_sent[osent2]].append(ex0)
                     else:
                         if ex0.is_not_in(osent2_to_exs[osent2]):
                             osent2_to_exs[osent2].append(ex0)

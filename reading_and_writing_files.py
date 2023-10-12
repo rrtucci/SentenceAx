@@ -86,3 +86,28 @@ def write_cctags_file(path,
                     ll_tags,
                     with_unused_tokens=False,
                     ll_confi=ll_confi)
+
+
+def load_sent_to_sent(in_fp):
+    """
+    similar to Openie6.data_processing.load_conj_mapping() Our
+    sent_to_sent is similar to Openie6 mapping and conj_mapping. This
+    method works equally well for ExMetric.sent_to_sent and
+    CCMetric.sent_to_sent
+
+    Returns
+    -------
+    dict[str, str]
+
+    """
+    sent_to_sent = {}
+    with open(in_fp, "r") as f:
+        content = f.read()
+        fixed_sent = ''
+        for sample in content.split('\n\n'):
+            for i, line in enumerate(sample.strip('\n').split('\n')):
+                if i == 0:
+                    fixed_sent = line
+                else:
+                    sent_to_sent[line] = fixed_sent
+    return sent_to_sent

@@ -16,7 +16,7 @@ class ExMetric:
     Attributes 
     ----------
     tune_fpbenchmark: Benchmark
-    fix_d: dict[str, str]
+    sent_to_sent: dict[str, str]
     matchingFunc: Matcher.binary_linient_tuple_match
     osentL_to_exs: dict[str, listt[SaxExtraction]]
     score_d: dict[str, float]
@@ -27,14 +27,14 @@ class ExMetric:
 
     def __init__(self,
                  osentL_to_exs=None,
-                 fix_d=None,
+                 sent_to_sent=None,
                  use_carb_ex=False):
         """
         
         Parameters
         ----------
         osentL_to_exs: dict[str, list[SaxExtraction]]
-        fix_d: dict[str, str]
+        sent_to_sent: dict[str, str]
         use_carb_ex: bool
         """
         self.tune_fpbenchmark = Benchmark('carb_subset/data/gold/dev.tsv')
@@ -44,7 +44,7 @@ class ExMetric:
         # self.ll_osent_pos_bool = [] # not used
         # self.ll_osent_verb_bool = [] # not used
         self.score_d = {'carb_auc': 0.0, 'carb_f1': 0.0, 'carb_sum': 0.0}
-        self.fix_d = fix_d
+        self.sent_to_sent = sent_to_sent
         self.use_carb_ex = use_carb_ex
 
     def __call__(self,
@@ -72,7 +72,7 @@ class ExMetric:
                     l_osentL,
                     lll_ex_ilabel,
                     ll_confi,
-                    self.fix_d)
+                    self.sent_to_sent)
         else:
             assert False, "This __call__ is redundant. osentL_to_exs" \
                           " has already been entered in the " \

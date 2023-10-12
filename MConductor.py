@@ -103,8 +103,6 @@ class MConductor:
                                      self.tune_fp,
                                      self.test_fp)
 
-        self.constraint_str_d = dict()
-
         self.ll_cc_spanned_word = []
         self.ll_cc_spanned_loc = []
         self.l_cc_pred_str = []
@@ -112,8 +110,7 @@ class MConductor:
         self.ex_l_pred_str = None
 
         self.model = None
-        self.ex_fit_d = {}
-        self.cc_fit_d = {}
+
 
     def get_checkpoint_callback(self):
         """
@@ -336,12 +333,12 @@ class MConductor:
             self.update_params(checkpoint_fp)
 
         self.model = Model(self.params.d, self.auto_tokenizer)
-        if self.params.task == "ex" and self.ex_fix_d:
-            self.model.metric.fix_d = self.ex_fix_d
-        if self.params.task == "cc" and self.cc_fix_d:
-            self.model.metric.fix_d = self.cc_fix_d
+        # if self.params.task == "ex" and self.ex_sent_to_sent:
+        #     self.model.metric.sent_to_sent = self.ex_sent_to_sent
+        # if self.params.task == "cc" and self.cc_sent_to_words:
+        #     self.model.metric.sent_to_words = self.cc_sent_to_words
 
-        with open(WEIGHTS_DIR + '/logs/test.txt', 'w') as test_f:
+        with open(WEIGHTS_DIR + '/logs/test.txt', "w") as test_f:
             logger = self.get_logger("test")
             # one checkpoint at end of each epoch
             for checkpoint_fp in self.get_all_checkpoint_fp():
@@ -388,10 +385,10 @@ class MConductor:
         self.update_params(checkpoint_fp)
         self.model = Model(self.params.d, self.auto_tokenizer)
 
-        if self.params.task == "ex" and self.ex_fix_d:
-            self.model.metric.fix_d = self.ex_fix_d
-        elif self.params.task == "cc" and self.cc_fix_d:
-            self.model.metric.fix_d = self.cc_fix_d
+        # if self.params.task == "ex" and self.ex_sent_to_sent:
+        #     self.model.metric.sent_to_sent = self.ex_sent_to_sent
+        # elif self.params.task == "cc" and self.cc_sent_to_words:
+        #     self.model.metric.sent_to_words = self.cc_sent_to_words
 
         logger = None
         trainer = self.get_trainer(logger,
@@ -407,21 +404,21 @@ class MConductor:
         minutes = (end_time - start_time) / 60
         print(f'Total Time taken = {minutes : 2f} minutes')
 
-    def splitpredict_do_cc(self):
+    def splitpredict_do_cc(self, pred_in_fp):
         """
         no trainer
 
         Parameters
         ----------
-        new_pred_fp
+        pred_in_fp
 
         Returns
         -------
 
         """
-        self.ex_fix_d = {}
-        self.cc_fix_d = {}
-        if not new_pred_fp:
+        self.ex_sent_to_sent = {}
+        self.cc_sent_to_words = {}
+        if not pred_in_fp:
             self.params.d["task"] = self.params.task = 'cc'
             self.params.d["suggested_checkpoint_fp"] = CC_FIN_WEIGHTS_FP
             self.params.d["model_str"] = 'bert-base-cased'
@@ -439,11 +436,11 @@ class MConductor:
 
                 # not done when reading from split_pred_fp
                 words = ll_spanned_word[sample_id]
-                self.cc_fix_d[l_pred_sent[??]] = " ".join(words)
+                self.cc_sent_to_words[l_pred_sent[??]] = words
 
                 l_osentL.append(redoL(l_pred_sent[0]))
                 for sent in l_pred_sent:
-                    self.ex_fix_d[sent] = l_pred_sent[0]
+                    self.ex_sent_to_words[sent] = l_pred_sent[0]
                     l_pred_sentL.append(redoL(sent))
             # this not done when reading from split_pred_fp
             # l_osentL.append('\
@@ -458,7 +455,7 @@ class MConductor:
             # assert count == len(l_osentL) - 1
 
         else:
-            with open(self.pred_fp, 'r') as f:
+            with open(pred_in_fp, "r") as f:
                 content = f.read()
             content = content.replace("\\", "")
             lines = content.split('\n\n')
@@ -470,12 +467,12 @@ class MConductor:
                     l_pred_sent = line.strip().split('\n')
                     l_osentL.append(l_pred_sent[0] + UNUSED_TOKENS_STR)
                     for sent in l_pred_sent:
-                        self.ex_fix_d[sent] = l_pred_sent[0]
+                        self.ex_sent_to_words[sent] = l_pred_sent[0]
                         l_pred_sentL.append(sent + UNUSED_TOKENS_STR)
         self.l_pred_sentL = l_pred_sentL
         self.l_osentL = l_osentL
 
-    def splitpredict_do_ex(self):
+    def splitpredict_do_ex(self, pred_out_fp):
         """
         no trainer
 
@@ -493,10 +490,13 @@ class MConductor:
         with_confis = False
         # Does same thing as Openie6's run.get_labels()
         if self.params.d["write_extags_file"]:
-            self.write_extags_file_from_preds()
+            self.write_extags_file_from_preds(l_osentL,
+                                              l_ccsentL,
+                                              ll_cc_spanned_loc,
+                                              pred_out_fp)
 
 
-    def splitpredict_do_rescore(self):
+    def splitpredict_do_rescore(self, rescore_in_fp, rescore_out_fp):
         print()
         print("Starting re-scoring ...")
         print()
@@ -518,7 +518,8 @@ class MConductor:
 
         # testing rescoring
         inp_fp = model.predictions_f_allennlp
-        rescored = rescore(inp_fp, model_dir=hparams.rescore_model,
+        rescored = rescore(rescore_in_fp,
+                           model_dir=hparams.rescore_model,
                            batch_size=256)
 
         all_predictions, sentence_str = [], ''
@@ -568,8 +569,8 @@ class MConductor:
                 all_predictions.append(f'{no_extraction_sentence}\n')
 
         if hparams.out != None:
-            print('Predictions written to ', hparams.out)
-            predictions_f = open(hparams.out, 'w')
+            print('Predictions written to ', rescore_out_fp)
+            predictions_f = open(rescore_out_fp, "w")
             predictions_f.write('\n'.join(all_predictions) + '\n')
             predictions_f.close()
         return
@@ -590,15 +591,15 @@ class MConductor:
         #                  train_dataloader, val_dataloader, test_dataloader,
         #                  all_sentences):
 
-        self.splitpredict_do_cc()
-        self.splitpredict_do_ex()
+        self.splitpredict_do_cc(pred_in_fp)
+        self.splitpredict_do_ex(pred_out_fp)
         if "rescoring" in self.params.d:
-            self.rescore()
+            self.rescore(rescore_in_fp, rescore_out_fp)
 
     def write_extags_file_from_preds(self,
-                                     l_osentL,
-                                     l_sentL,
-                                     lll_sent_loc,
+                                     l_osentL, # orig_sentences
+                                     l_ccsentL, #  sentences
+                                     ll_cc_spanned_loc, # sentence_indices_list
                                      pred_out_fp):
         """
         similar to Openie6.run.get_labels()

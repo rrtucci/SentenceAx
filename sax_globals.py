@@ -48,8 +48,8 @@ EX_FIN_WEIGHTS_FP= WEIGHTS_DIR + '/ex.txt'
 PRED_IN_FP = PRED_DIR + "/in.txt"
 PRED_OUT_FP = PRED_DIR + "/out.txt"
 PRED_ALLEN_OUT_FP = PRED_DIR + "/allen_out.txt"
-RESCORE_IN_FP = PRED_ALLEN_OUT_FP
-RESCORE_OUT_FP = RESCORE_DIR + "/out.txt"
+RE_ALLEN_IN_FP = PRED_ALLEN_OUT_FP
+RE_ALLEN_OUT_FP = RESCORE_DIR + "/allen_out.txt"
 
 
 

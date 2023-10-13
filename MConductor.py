@@ -103,8 +103,8 @@ class MConductor:
 
         self.pred_in_fp = PRED_IN_FP
         self.pred_out_fp = PRED_OUT_FP
-        self.rescore_in_fp = RESCORE_IN_FP
-        self.rescore_out_fp = RESCORE_OUT_FP
+        self.re_allen_in_fp = RE_ALLEN_IN_FP
+        self.re_allen_out_fp = RE_ALLEN_OUT_FP
 
         self.model = None
 
@@ -495,50 +495,51 @@ class MConductor:
                                               l_osentL,
                                               l_ccsentL)
 
-    def splitpredict_for_rescore(self, rescore_in_fp, rescore_out_fp):
+    def splitpredict_for_rescore(self, re_allen_in_fp, re_allen_out_fp):
         print()
         print("*******Starting re-scoring")
         print()
 
         # iline = line number
-        osent_ilines = set()
+        osent_iline_set = set()
         prev_iline = 0
         iline_to_exless_sents = {}
         cur_iline = 0
         for sample_str in self.model.l_ex_pred_str:
             sample_str = sample_str.strip('\n')
-            num_ex = len(sample_str.split('\n')) - 1
+            num_ex = len(sample_str) - 1
             if num_ex == 0:
                 if cur_iline not in iline_to_exless_sents:
                     iline_to_exless_sents[cur_iline] = []
                 iline_to_exless_sents[cur_iline].append(sample_str)
-                continue
-            cur_iline = prev_iline + num_ex
-            # add() is like append, but for a set
-            osent_ilines.add(cur_iline)
-            prev_iline = cur_iline
+            else:
+                cur_iline = prev_iline + num_ex
+                # add() is like append, but for a set
+                osent_iline_set.add(cur_iline)
+                prev_iline = cur_iline
 
         # testing rescoring
-        rescored = rescore(rescore_in_fp,
-                           model_dir=RESCORE_DIR,
-                           batch_size=256)
+        rescored_allen_file = rescore(
+            re_allen_in_fp,  # f'{self.hparams.out}.allennlp'
+            model_dir=RESCORE_DIR,  #
+            batch_size=256)
 
         l_rs_sent = []
         sent_str = ""
-        for iline, line in enumerate(rescored):
+        for iline, line in enumerate(rescored_allen_file):
             fields = line.split('\t')
-            sent = fields[0]
+            osent = fields[0]
             confi = float(fields[2])
 
             if iline == 0:
-                sent_str = f'{sent}\n'
+                sent_str = f'{osent}\n'
                 l_ex = []
-            if iline in osent_ilines:
+            if iline in osent_iline_set:
                 l_ex = sorted(l_ex, reverse=True,
                               key=lambda x: float(x.split()[0][:-1]))
                 l_ex = l_ex[:MAX_EX_DEPTH]
                 l_rs_sent.append(sent_str + ''.join(l_ex))
-                sent_str = f'{sent}\n'
+                sent_str = f'{osent}\n'
                 l_ex = []
             if iline in iline_to_exless_sents:
                 for sent in iline_to_exless_sents[iline]:
@@ -550,7 +551,7 @@ class MConductor:
                 '<rel>').strip('</rel>').strip()
             arg2 = re.findall("<arg2>.*</arg2>", fields[1])[0].strip(
                 '<arg2>').strip('</arg2>').strip()
-            ex = SaxExtraction(osentL,
+            ex = SaxExtraction(osent,
                                arg1,
                                rel,
                                arg2,
@@ -586,21 +587,23 @@ class MConductor:
         #                  train_dataloader, val_dataloader, test_dataloader,
         #                  all_sentences):
 
-        self.cc_sent_to_words = {}
-        self.ex_sent_to_sent = {}
+        self.model.cc_sent_to_words = {}
+        self.model.ex_sent_to_sent = {}
         self.params.d["write_allen_file"] = True
 
         self.params.d["task"] = self.params.task = "cc"
-        l_osentL, l_ccsentL, lll_cc_spanned_loc = \
-            self.splitpredict_for_cc(self.pred_in_fp)
+        l_osentL, l_ccsentL = self.splitpredict_for_cc(self.pred_in_fp)
 
         self.params.d["task"] = self.params.task = "ex"
         self.splitpredict_for_ex(self.pred_out_fp,
                                  l_osentL,
                                  l_ccsentL)
 
-        if "rescoring" in self.params.d:
-            self.rescore(self.rescore_in_fp, self.rescore_out_fp)
+        if self.params.d["do_rescoring"]:
+            self.splitpredict_for_rescore(self.re_allen_in_fp,
+                                          self.re_allen_out_fp)
+        else:
+            print("not doing rescoring")
 
     def write_extags_file_from_preds(
             self,
@@ -636,8 +639,10 @@ class MConductor:
         # isam similar to i
         # jccsent similar to j
 
+        # lll_cc_spanned_loc is similar to
+        # sentence_indices_list, model.all_sentence_indices_conj
         lll_cc_spanned_loc = \
-            self.model.lll_cc_spanned_loc # sentence_indices_list
+            self.model.lll_cc_spanned_loc
         for isam in range(len(lll_cc_spanned_loc)):
             osent = undoL(l_osentL[isam])
             if len(lll_cc_spanned_loc[isam]) == 0:

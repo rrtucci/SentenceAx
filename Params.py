@@ -254,7 +254,7 @@ class Params:
                     WEIGHTS_DIR + "/ex_model/epoch=14_eval_acc=0.551_v0.ckpt",
                 # "out": WEIGHTS_DIR + "/results/final",
                 # "rescore_model": WEIGHTS_DIR + "/rescore_model",
-                "rescoring": True,
+                "do_rescoring": False,
                 "task": "ex"
             }
         else:
@@ -265,8 +265,8 @@ class Params:
             {
                 "batch_size": 32,
                 "build_cache": True,
-                "suggested_checkpoint_fp": "",
                 "con_weight_str": "1",  # for multiple constraints "1_1_1"
+                "do_rescoring": False,
                 "dropout_fun": 0.0,
                 "gpus": 1,
                 "gradient_clip_val": 5,
@@ -276,6 +276,7 @@ class Params:
                 "num_extractions": MAX_EX_DEPTH,
                 "optimizer": "adamW",
                 "save_k": 1,
+                "suggested_checkpoint_fp": "",
                 "val_check_interval": 1.0,
                 "wreg": 0,
                 "write_allen_file": True,

@@ -80,18 +80,21 @@ class Model(pl.LightningModule):
     ----------
     auto_tokenizer: AutoTokenizer
     base_model: AutoModel
-    ilabelling_layer: self.base_model.encoder.layer
+    cc_sent_to_words: dict[str, list[str]]
     con_to_weight: dict[str, float]
     dropout_fun: nn.Dropout
     embedding: Embedding
     eval_epoch_end_d: dict[str, Any]
+    ex_sent_to_sent: dict[str, str]
     hidden_size: int
+    ilabelling_layer: self.base_model.encoder.layer
     init_name_to_param: dict[str, variable]
     iterative_transformer: self.base_model.encoder.layer
     l_batch_m_out: list[MOutput]
     l_cc_pred_str: list[str]
-    ll_cc_spanned_loc: list[list[int]]
+    l_ex_pred_str: list[str]
     ll_cc_spanned_word: list[list[str]]
+    lll_cc_spanned_loc: list[list[list[int]]]
     loss_fun: nn.CrossEntropyLoss
     merge_layer: nn.Linear
     metric: CCMetric | ExMetric
@@ -105,8 +108,8 @@ class Model(pl.LightningModule):
 
     """
 
-    def __init__(self, 
-                 params, 
+    def __init__(self,
+                 params,
                  auto_tokenizer):
         """
         lightning/src/lightning/pytorch/core/module.py
@@ -200,14 +203,12 @@ class Model(pl.LightningModule):
                               for k in range(len(l_constraint)) if
                               l_constraint[k]}
 
-        self.l_cc_pred_str = [] # all_predictions_conj
-        self.ll_cc_spanned_word = [] # all_conjunct_words_conj
-        self.lll_cc_spanned_loc = [] # all_sentence_indices_conj
-        self.l_ex_pred_str = [] # all_predictions_oie
+        self.l_cc_pred_str = []  # all_predictions_conj
+        self.ll_cc_spanned_word = []  # all_conjunct_words_conj
+        self.lll_cc_spanned_loc = []  # all_sentence_indices_conj
+        self.l_ex_pred_str = []  # all_predictions_oie
 
         self.l_batch_m_out = []
-
-
 
     def configure_optimizers(self):
         """
@@ -662,7 +663,7 @@ class Model(pl.LightningModule):
             tune_out_d
 
         """
-        return self.validation_step(batch_m_in, batch_id, ttt="test")
+        return self.validation_step(batch_m_in, batch_id)
 
     def sax_eval_metrics_at_epoch_end(self, ttt):
         """
@@ -698,7 +699,8 @@ class Model(pl.LightningModule):
                         Li(batch_m_out.lll_pred_ex_ilabel),  # predictions
                         Li(batch_m_out.lll_ex_ilabel))  # ground truth
 
-                metrics_d = self.metric.get_score_d(do_reset=True)
+                metrics_d = self.metric.get_score_d(ttt,
+                                                    do_reset=True)
 
             val_acc = metrics_d["F1_exact"]
             # val_auc = 0
@@ -845,8 +847,8 @@ class Model(pl.LightningModule):
                         if ex.is_not_in(
                                 osent_to_l_pred_ex[orig_sent]):
                             osent_to_l_pred_ex[orig_sent].append(ex)
-        l_pred_str = [] # similar to `all_pred`
-        l_pred_allen_str = [] # similar to `all_pred_allen_nlp`
+        l_pred_str = []  # similar to `all_pred`
+        l_pred_allen_str = []  # similar to `all_pred_allen_nlp`
         for sample_id, l_pred_ex in enumerate(osent_to_l_pred_ex):
             orig_sentL = redoL(l_orig_sent[sample_id])
             str0 = ""
@@ -891,7 +893,7 @@ class Model(pl.LightningModule):
         """
         batch_m_out = self.l_batch_m_out[batch_id]
 
-        correct = True
+        # correct = True
         total_num_ccsents1 = 0
         total_num_ccsents2 = 0
         lll_ex_ilabel = batch_m_out.lll_ex_ilabel
@@ -926,11 +928,11 @@ class Model(pl.LightningModule):
             #  ccsents, l_spanned_word, ll_spanned_loc
 
             tree = CCTree(orig_sent, ll_ilabel)
-            ccsents  = tree.ccsents # split_sentences
+            ccsents = tree.ccsents  # split_sentences
             spanned_words = \
-                tree.l_spanned_word # conj_words
+                tree.l_spanned_word  # conj_words
             ll_spanned_loc = \
-                tree.ll_spanned_loc # sentence_indices_list
+                tree.ll_spanned_loc  # sentence_indices_list
             ll_spanned_word.append(spanned_words)
             lll_spanned_loc.append(ll_spanned_loc)
             total_num_ccsents1 += len(ccsents)

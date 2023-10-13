@@ -913,12 +913,25 @@ class Model(pl.LightningModule):
                 num_words = len(get_words(orig_sent))
                 l_ilabel = lll_ex_ilabel[sam][depth][:num_words].tolist()
                 ll_ilabel.append(l_ilabel)
-            tree = CCTree(orig_sent, ll_ilabel)
 
             pred_str = orig_sent + '\n'
-            ccsents,  = tree.ccsents
-            spanned_words =
-            ll_spanned_loc =
+            # split_sentences, conj_words, sentence_indices_list = \
+            #       data.coords_to_sentences(pred_coords, words)
+            # this function returns
+            # return word_sentences, conj_words, sentences
+            # openie6.data.coords_to_sentences()
+            # is similar to
+            # CCTree.set_ccsents()
+            # split_sentences, conj_words, sentence_indices_list
+            # is similar to
+            #  ccsents, l_spanned_text_chunk, ll_spanned_loc
+
+            tree = CCTree(orig_sent, ll_ilabel)
+            ccsents  = tree.ccsents # split_sentences
+            spanned_words = \
+                tree.l_spanned_text_chunk # conj_words
+            ll_spanned_loc = \
+                tree.ll_spanned_loc # sentence_indices_list
             ll_spanned_word.append(spanned_words)
             lll_spanned_loc.append(ll_spanned_loc)
             total_num_ccsents1 += len(ccsents)

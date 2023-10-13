@@ -411,7 +411,7 @@ class MConductor:
 
         """
 
-        def common():
+        def common_splitpredict_ex():
             cc_words = ll_cc_spanned_word[sample_id]
             if len(l_pred_sent) == 1:
                 l_osentL.append(redoL(l_pred_sent[0]))
@@ -450,7 +450,7 @@ class MConductor:
             for sample_id, pred_str in enumerate(l_cc_pred_str):
                 # example_sentences
                 l_pred_sent = pred_str.strip('\n').split('\n')
-                common()
+                common_splitpredict_ex()
             # l_ccsentL.append("\n")
         # count = 0
         # for l_spanned_loc in ll_cc_spanned_loc:
@@ -468,15 +468,14 @@ class MConductor:
                 if len(line) > 0:
                     # example_sentences
                     l_pred_sent = line.strip().split("\n")
-                    common()
+                    common_splitpredict_ex()
 
-        return l_osentL, l_ccsentL, lll_cc_spanned_loc
+        return l_osentL, l_ccsentL
 
     def splitpredict_for_ex(self,
                             pred_out_fp,
                             l_osentL,
-                            l_ccsentL,
-                            lll_cc_spanned_loc):
+                            l_ccsentL):
         """
         no trainer
 
@@ -492,10 +491,9 @@ class MConductor:
 
         # Does same thing as Openie6's run.get_labels()
         if self.params.d["write_extags_file"]:
-            self.write_extags_file_from_preds(l_osentL,
-                                              l_ccsentL,
-                                              lll_cc_spanned_loc,
-                                              pred_out_fp)
+            self.write_extags_file_from_preds(pred_out_fp,
+                                              l_osentL,
+                                              l_ccsentL)
 
     def splitpredict_for_rescore(self, rescore_in_fp, rescore_out_fp):
         print()
@@ -514,7 +512,7 @@ class MConductor:
                 continue
             curr_line_num = prev_line_num + num_extrs
             sentence_line_nums.add(
-                curr_line_num) 
+                curr_line_num)
             prev_line_num = curr_line_num
 
         # testing rescoring
@@ -603,18 +601,16 @@ class MConductor:
         self.params.d["task"] = self.params.task = "ex"
         self.splitpredict_for_ex(self.pred_out_fp,
                                  l_osentL,
-                                 l_ccsentL,
-                                 lll_cc_spanned_loc)
+                                 l_ccsentL)
 
         if "rescoring" in self.params.d:
             self.rescore(self.rescore_in_fp, self.rescore_out_fp)
 
     def write_extags_file_from_preds(
             self,
+            pred_out_fp,
             l_osentL,  # orig_sentences
-            l_ccsentL,  # sentences
-            lll_cc_spanned_loc,  # sentence_indices_list
-            pred_out_fp):
+            l_ccsentL):  # sentences
         """
         similar to Openie6.run.get_labels()
         ILABEL_TO_EXTAG={0: 'NONE', 1: 'ARG1', 2: 'REL', 3: 'ARG2',
@@ -628,7 +624,6 @@ class MConductor:
         
         l_osentL
         l_ccsentL
-        lll_cc_spanned_loc
         pred_out_fp
 
         Returns
@@ -645,6 +640,8 @@ class MConductor:
         # isam similar to i
         # jccsent similar to j
 
+        lll_cc_spanned_loc = \
+            self.model.lll_cc_spanned_loc # sentence_indices_list
         for isam in range(len(lll_cc_spanned_loc)):
             osent = undoL(l_osentL[isam])
             if len(lll_cc_spanned_loc[isam]) == 0:

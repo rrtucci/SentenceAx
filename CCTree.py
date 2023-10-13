@@ -64,6 +64,9 @@ class CCTree:
         self.level_to_ccnodes = None
         self.level_to_fat_ll_spanned_loc = None
 
+        self.ll_spanned_loc = None
+        self.l_spanned_text_chunk = None
+
         # this fills the previous unfilled None's
         if calc_tree_struc:
             self.set_ccsents()
@@ -467,7 +470,13 @@ class CCTree:
                 ccsents.append(' '.join(left_words))
                 ccsents.append(' '.join(right_words))
         self.ccsents = ccsents
-        # self.l_spanned_text_chunk = l_spanned_text_chunk
+        self.ll_spanned_loc = ll_spanned_loc
+        self.l_spanned_text_chunk = l_spanned_text_chunk
+
+        # ccsents, l_spanned_text_chunk, ll_spanned_loc
+        # these 3 variables similar to:
+        # word_sentences, conj_words, sentences
+        # split_sentences, conj_words, sentence_indices_list
 
 
 if __name__ == "__main__":

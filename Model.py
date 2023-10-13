@@ -924,12 +924,12 @@ class Model(pl.LightningModule):
             # CCTree.set_ccsents()
             # split_sentences, conj_words, sentence_indices_list
             # is similar to
-            #  ccsents, l_spanned_text_chunk, ll_spanned_loc
+            #  ccsents, l_spanned_word, ll_spanned_loc
 
             tree = CCTree(orig_sent, ll_ilabel)
             ccsents  = tree.ccsents # split_sentences
             spanned_words = \
-                tree.l_spanned_text_chunk # conj_words
+                tree.l_spanned_word # conj_words
             ll_spanned_loc = \
                 tree.ll_spanned_loc # sentence_indices_list
             ll_spanned_word.append(spanned_words)

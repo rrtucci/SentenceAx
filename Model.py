@@ -202,7 +202,7 @@ class Model(pl.LightningModule):
 
         self.l_cc_pred_str = [] # all_predictions_conj
         self.ll_cc_spanned_word = [] # all_conjunct_words_conj
-        self.ll_cc_spanned_loc = [] # all_sentence_indices_conj
+        self.lll_cc_spanned_loc = [] # all_sentence_indices_conj
         self.l_ex_pred_str = [] # all_predictions_oie
 
         self.l_batch_m_out = []
@@ -901,10 +901,10 @@ class Model(pl.LightningModule):
         l_orig_sent = batch_m_out.l_orig_sent
         l_cc_pred_str = []
         ll_cc_spanned_word = []
-        ll_cc_spanned_loc = []
+        lll_cc_spanned_loc = []
         l_pred_str = []
         ll_spanned_word = []
-        ll_spanned_loc = []
+        lll_spanned_loc = []
         for sam in range(len(l_orig_sent)):
             orig_sent = l_orig_sent[sam]
             ll_ilabel = []
@@ -916,9 +916,11 @@ class Model(pl.LightningModule):
             tree = CCTree(orig_sent, ll_ilabel)
 
             pred_str = orig_sent + '\n'
-            ccsents, spanned_words, l_spanned_locs = tree.ccsents
+            ccsents,  = tree.ccsents
+            spanned_words =
+            ll_spanned_loc =
             ll_spanned_word.append(spanned_words)
-            ll_spanned_loc.append(l_spanned_locs)
+            lll_spanned_loc.append(ll_spanned_loc)
             total_num_ccsents1 += len(ccsents)
             total_num_ccsents2 += 1 if len(ccsents) > 0 else 0
             pred_str += '\n'.join(ccsents) + '\n'
@@ -927,7 +929,7 @@ class Model(pl.LightningModule):
         # list1 + list2 is the same as list1.extend(list2)
         ll_cc_spanned_word += ll_spanned_word
         l_cc_pred_str += l_pred_str
-        ll_cc_spanned_loc += ll_spanned_loc
+        lll_cc_spanned_loc += lll_spanned_loc
 
         fmode = "w" if batch_id == 0 else "a"
         fpath = self.params.task + ".txt"
@@ -936,7 +938,7 @@ class Model(pl.LightningModule):
 
         self.l_cc_pred_str = l_cc_pred_str
         self.ll_cc_spanned_word = ll_cc_spanned_word
-        self.ll_cc_spanned_loc = ll_cc_spanned_loc
+        self.lll_cc_spanned_loc = lll_cc_spanned_loc
 
     def sax_write_batch_sents_out(self, batch_id):
         """

@@ -381,26 +381,24 @@ class MConductor:
         self.update_params(checkpoint_fp)
         self.model = Model(self.params.d, self.auto_tokenizer)
 
-        # if self.params.task == "ex" and self.ex_sent_to_sent:
-        #     self.model.metric.sent_to_sent = self.ex_sent_to_sent
-        # elif self.params.task == "cc" and self.cc_sent_to_words:
-        #     self.model.metric.sent_to_words = self.cc_sent_to_words
+        # No
+        # self.model.metric.sent_to_sent = self.ex_sent_to_sent
+        # self.model.metric.sent_to_words = self.cc_sent_to_words
 
         logger = None
         trainer = self.get_trainer(logger,
                                    checkpoint_fp,
                                    use_minimal=True)
         start_time = time()
-        # self.model.all_sentences = all_sentences
+        # self.model.all_sentences = all_sentences # never used
         trainer.test(
             self.model,
-            test_dataloaders=test_dloader if
-            test_dloader else self.dloader.get_ttt_dataloaders("test"))
+            test_dataloaders=self.dloader.get_ttt_dataloaders("test"))
         end_time = time()
         minutes = (end_time - start_time) / 60
         print(f'Total Time taken = {minutes : 2f} minutes')
 
-    def splitpredict_do_cc(self, pred_in_fp):
+    def splitpredict_for_cc(self, pred_in_fp):
         """
         no trainer
 
@@ -412,64 +410,73 @@ class MConductor:
         -------
 
         """
-        if not pred_in_fp:
-            self.params.d["suggested_checkpoint_fp"] = CC_FIN_WEIGHTS_FP
-            self.params.d["model_str"] = 'bert-base-cased'
-            self.params.d["mode"] = self.params.mode = 'predict'
-            self.predict()
-            l_pred_str = self.l_cc_pred_str
-            ll_spanned_loc = self.ll_cc_spanned_loc
-            assert len(l_pred_str) == len(ll_spanned_loc)
-            ll_spanned_word = self.ll_cc_spanned_word
 
-            l_pred_sentL = []
-            l_osentL = []
-            for sample_id, pred_str in enumerate(l_pred_str):
-                l_pred_sent = pred_str.strip('\n').split('\n')
-
-                # not done when reading from split_pred_fp
-                words = ll_spanned_word[sample_id]
-                self.cc_sent_to_words[l_pred_sent[??]] = words
-
+        def common():
+            cc_words = ll_cc_spanned_word[sample_id]
+            if len(l_pred_sent) == 1:
                 l_osentL.append(redoL(l_pred_sent[0]))
-                for sent in l_pred_sent:
-                    self.ex_sent_to_words[sent] = l_pred_sent[0]
-                    l_pred_sentL.append(redoL(sent))
-            # this not done when reading from split_pred_fp
-            # l_osentL.append('\
+                self.model.ex_sent_to_sent[l_pred_sent[0]] = \
+                    l_pred_sent[0]
+                # added
+                self.model.cc_sent_to_words[l_pred_sent[0]] = \
+                    cc_words
+                l_ccsentL.append(redoL(l_pred_sent[0]))
+                # added
+                l_osentL.append(redoL(l_pred_sent[0]))
+            elif len(l_pred_sent) > 1:
+                l_osentL.append(redoL(l_pred_sent[0]))
+                # added
+                self.model.cc_sent_to_words[l_pred_sent[0]] = \
+                    cc_words
+                for sent in l_pred_sent[1:]:
+                    self.model.ex_sent_to_sent[sent] = l_pred_sent[0]
+                    l_ccsentL.append(redoL(sent))
+            else:
+                assert False
 
-            # Never used:
-            # count = 0
-            # for l_spanned_loc in ll_spanned_loc:
-            #     if len(l_spanned_loc) == 0:
-            #         count += 1
-            #     else:
-            #         count += len(l_spanned_loc)
-            # assert count == len(l_osentL) - 1
+        self.params.d["suggested_checkpoint_fp"] = CC_FIN_WEIGHTS_FP
+        self.params.d["model_str"] = 'bert-base-cased'
+        self.params.d["mode"] = self.params.mode = 'predict'
+        self.predict()
+        l_cc_pred_str = self.model.l_cc_pred_str
+        lll_cc_spanned_loc = self.model.lll_cc_spanned_loc
+        assert len(l_cc_pred_str) == len(lll_cc_spanned_loc)
+        ll_cc_spanned_word = self.model.ll_cc_spanned_word
 
+        l_ccsentL = []  # sentences
+        l_osentL = []  # orig_sentences
+
+        if not pred_in_fp:
+            for sample_id, pred_str in enumerate(l_cc_pred_str):
+                # example_sentences
+                l_pred_sent = pred_str.strip('\n').split('\n')
+                common()
+            # l_ccsentL.append("\n")
+        # count = 0
+        # for l_spanned_loc in ll_cc_spanned_loc:
+        #     if len(l_spanned_loc) == 0:
+        #         count += 1
+        #     else:
+        #         count += len(l_spanned_loc)
+        # assert count == len(l_osentL) - 1
         else:
             with open(pred_in_fp, "r") as f:
                 content = f.read()
             content = content.replace("\\", "")
             lines = content.split('\n\n')
-
-            l_pred_sentL = []
-            l_osentL = []
             for line in lines:
                 if len(line) > 0:
-                    l_pred_sent = line.strip().split('\n')
-                    l_osentL.append(l_pred_sent[0] + UNUSED_TOKENS_STR)
-                    for sent in l_pred_sent:
-                        self.ex_sent_to_words[sent] = l_pred_sent[0]
-                        l_pred_sentL.append(sent + UNUSED_TOKENS_STR)
+                    # example_sentences
+                    l_pred_sent = line.strip().split("\n")
+                    common()
 
         return l_osentL, l_ccsentL, lll_cc_spanned_loc
 
-    def splitpredict_do_ex(self,
-                           pred_out_fp,
-                           l_osentL,
-                           l_ccsentL,
-                           lll_cc_spanned_loc):
+    def splitpredict_for_ex(self,
+                            pred_out_fp,
+                            l_osentL,
+                            l_ccsentL,
+                            lll_cc_spanned_loc):
         """
         no trainer
 
@@ -483,7 +490,6 @@ class MConductor:
 
         self.predict(test_dloader=pred_test_dataloader)
 
-        with_confis = False
         # Does same thing as Openie6's run.get_labels()
         if self.params.d["write_extags_file"]:
             self.write_extags_file_from_preds(l_osentL,
@@ -491,14 +497,14 @@ class MConductor:
                                               lll_cc_spanned_loc,
                                               pred_out_fp)
 
-    def splitpredict_do_rescore(self, rescore_in_fp, rescore_out_fp):
+    def splitpredict_for_rescore(self, rescore_in_fp, rescore_out_fp):
         print()
         print("Starting re-scoring ...")
         print()
 
         sentence_line_nums, prev_line_num, no_extractions = set(), 0, dict()
         curr_line_num = 0
-        for sentence_str in model.all_predictions_oie:
+        for sentence_str in self.model.l_ex_pred_str:
             sentence_str = sentence_str.strip('\n')
             num_extrs = len(sentence_str.split('\n')) - 1
             if num_extrs == 0:
@@ -592,13 +598,13 @@ class MConductor:
 
         self.params.d["task"] = self.params.task = "cc"
         l_osentL, l_ccsentL, lll_cc_spanned_loc = \
-            self.splitpredict_do_cc(self.pred_in_fp)
+            self.splitpredict_for_cc(self.pred_in_fp)
 
         self.params.d["task"] = self.params.task = "ex"
-        self.splitpredict_do_ex(self.pred_out_fp,
-                                l_osentL,
-                                l_ccsentL,
-                                lll_cc_spanned_loc)
+        self.splitpredict_for_ex(self.pred_out_fp,
+                                 l_osentL,
+                                 l_ccsentL,
+                                 lll_cc_spanned_loc)
 
         if "rescoring" in self.params.d:
             self.rescore(self.rescore_in_fp, self.rescore_out_fp)
@@ -614,7 +620,7 @@ class MConductor:
         ILABEL_TO_EXTAG={0: 'NONE', 1: 'ARG1', 2: 'REL', 3: 'ARG2',
                  4: 'ARG2', 5: 'NONE'}
 
-        called by `splitpredict_do_ex()`
+        called by `splitpredict_for_ex()`
 
 
         Parameters

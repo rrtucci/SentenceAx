@@ -497,49 +497,51 @@ class MConductor:
 
     def splitpredict_for_rescore(self, rescore_in_fp, rescore_out_fp):
         print()
-        print("Starting re-scoring ...")
+        print("*******Starting re-scoring")
         print()
 
-        sentence_line_nums, prev_line_num, no_extractions = set(), 0, dict()
-        curr_line_num = 0
-        for sentence_str in self.model.l_ex_pred_str:
-            sentence_str = sentence_str.strip('\n')
-            num_extrs = len(sentence_str.split('\n')) - 1
-            if num_extrs == 0:
-                if curr_line_num not in no_extractions:
-                    no_extractions[curr_line_num] = []
-                no_extractions[curr_line_num].append(sentence_str)
+        osent_line_nums = set()
+        prev_line_num = 0
+        line_num_to_exless_sents = {}
+        cur_line_num = 0
+        for sample_str in self.model.l_ex_pred_str:
+            sample_str = sample_str.strip('\n')
+            num_ex = len(sample_str.split('\n')) - 1
+            if num_ex == 0:
+                if cur_line_num not in line_num_to_exless_sents:
+                    line_num_to_exless_sents[cur_line_num] = []
+                line_num_to_exless_sents[cur_line_num].append(sample_str)
                 continue
-            curr_line_num = prev_line_num + num_extrs
-            sentence_line_nums.add(
-                curr_line_num)
-            prev_line_num = curr_line_num
+            cur_line_num = prev_line_num + num_ex
+            # add() is like append, but for a set
+            osent_line_nums.add(cur_line_num)
+            prev_line_num = cur_line_num
 
         # testing rescoring
         inp_fp = model.predictions_f_allennlp
         rescored = rescore(rescore_in_fp,
-                           model_dir=hparams.rescore_model,
+                           model_dir=RESCORE_DIR,
                            batch_size=256)
 
         all_predictions, sentence_str = [], ''
-        for line_i, line in enumerate(rescored):
+        for iline, line in enumerate(rescored):
             fields = line.split('\t')
-            sentence = fields[0]
-            confidence = float(fields[2])
+            sent = fields[0]
+            confi = float(fields[2])
 
-            if line_i == 0:
-                sentence_str = f'{sentence}\n'
-                exts = []
-            if line_i in sentence_line_nums:
-                exts = sorted(exts, reverse=True,
+            if iline == 0:
+                sent_str = f'{sent}\n'
+                l_ex = []
+            if iline in osent_line_nums:
+                l_ex = sorted(l_ex, reverse=True,
                               key=lambda x: float(x.split()[0][:-1]))
-                exts = exts[:hparams.num_extractions]
-                all_predictions.append(sentence_str + ''.join(exts))
-                sentence_str = f'{sentence}\n'
-                exts = []
-            if line_i in no_extractions:
-                for no_extraction_sentence in no_extractions[line_i]:
-                    all_predictions.append(f'{no_extraction_sentence}\n')
+                l_ex = l_ex[:hparams.num_extractions]
+                all_predictions.append(sent_str + ''.join(l_ex))
+                sent_str = f'{sent}\n'
+                l_ex = []
+            if iline in line_num_to_exless_sents:
+                for no_extraction_sent in line_num_to_exless_sents[iline]:
+                    all_predictions.append(f'{no_extraction_sent}\n')
 
             arg1 = re.findall("<arg1>.*</arg1>", fields[1])[0].strip(
                 '<arg1>').strip('</arg1>').strip()
@@ -547,32 +549,26 @@ class MConductor:
                 '<rel>').strip('</rel>').strip()
             arg2 = re.findall("<arg2>.*</arg2>", fields[1])[0].strip(
                 '<arg2>').strip('</arg2>').strip()
-            extraction = Extraction(pred=rel, head_pred_index=None,
-                                    sent=sentence,
-                                    confidence=math.exp(confidence), index=0)
-            extraction.addArg(arg1)
-            extraction.addArg(arg2)
-            if hparams.type == 'sentences':
-                ext_str = data.ext_to_sentence(extraction) + '\n'
-            else:
-                ext_str = data.ext_to_string(extraction) + '\n'
-            exts.append(ext_str)
+            ex = SaxExtraction(osentL,
+                               arg1,
+                               rel,
+                               arg2,
+                               confi)
+            l_ex.append(ex.get_simple_sent() + "\n")
 
-        exts = sorted(exts, reverse=True,
+        l_ex = sorted(l_ex, reverse=True,
                       key=lambda x: float(x.split()[0][:-1]))
-        exts = exts[:hparams.num_extractions]
-        all_predictions.append(sentence_str + ''.join(exts))
+        l_ex = l_ex[:hparams.num_extractions]
+        all_predictions.append(sent_str + ''.join(l_ex))
 
-        if line_i + 1 in no_extractions:
-            for no_extraction_sentence in no_extractions[line_i + 1]:
-                all_predictions.append(f'{no_extraction_sentence}\n')
+        if iline + 1 in line_num_to_exless_sents:
+            for no_extraction_sent in line_num_to_exless_sents[iline + 1]:
+                all_predictions.append(f'{no_extraction_sent}\n')
 
         if hparams.out != None:
-            print('Predictions written to ', rescore_out_fp)
-            predictions_f = open(rescore_out_fp, "w")
-            predictions_f.write('\n'.join(all_predictions) + '\n')
-            predictions_f.close()
-        return
+            print('Predictions written to ' + rescore_out_fp)
+            with open(rescore_out_fp, "w") as f:
+                f.write('\n'.join(all_predictions) + '\n')
 
     def splitpredict(self):
         """

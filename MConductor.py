@@ -514,7 +514,7 @@ class MConductor:
                 continue
             curr_line_num = prev_line_num + num_extrs
             sentence_line_nums.add(
-                curr_line_num)  # check extra empty lines, example with no extractions
+                curr_line_num) 
             prev_line_num = curr_line_num
 
         # testing rescoring

@@ -44,6 +44,25 @@ class MConductor:
     Refs:
     https://spacy.io/usage/spacy-101/
 
+    Attributes
+    ----------
+    auto_tokenizer: AutoTokenizer
+    checkpoint_callback: ModelCheckpoint
+    decode: function
+    dloader: SaxDataLoader
+    encode: function
+    has_cuda: bool
+    model: Model
+    pad_icode: int
+    params: Param
+    pred_in_fp: str
+    pred_out_fp: str
+    re_allen_in_fp: str
+    re_allen_out_fp: str
+    test_fp: str
+    train_fp: str
+    tune_fp: str
+
     """
 
     def __init__(self, params, save=True):
@@ -56,6 +75,12 @@ class MConductor:
 
         is created everytime this constructor is called
 
+        Parameters
+        ----------
+        params: Params
+        save: bool
+
+
 
         """
         self.params = params
@@ -66,12 +91,10 @@ class MConductor:
             self.train_fp = CCTAGS_TRAIN_FP
             self.tune_fp = CCTAGS_TUNE_FP
             self.test_fp = CCTAGS_TEST_FP
-            self.pred_fp = CC_PRED_FP
         elif self.params.task == 'ex':
             self.train_fp = EXTAGS_TRAIN_FP
             self.tune_fp = EXTAGS_TUNE_FP
             self.test_fp = EXTAGS_TEST_FP
-            self.pred_fp = EX_PRED_FP
 
         if save:
             self.checkpoint_callback = self.get_checkpoint_callback()
@@ -165,6 +188,7 @@ class MConductor:
 
         Parameters
         ----------
+        ttt: str
 
         Returns
         -------
@@ -271,6 +295,7 @@ class MConductor:
 
         Returns
         -------
+        None
 
         """
         # train is the only mode that doesn't require update_params()
@@ -359,11 +384,9 @@ class MConductor:
 
         trainer.test()
 
-        Parameters
-        ----------
-
         Returns
         -------
+        None
 
         """
 
@@ -404,10 +427,12 @@ class MConductor:
 
         Parameters
         ----------
-        pred_in_fp
+        pred_in_fp: str
 
         Returns
         -------
+        list[str], list[str]
+            l_osentL, l_ccsentL
 
         """
 
@@ -479,8 +504,15 @@ class MConductor:
         """
         no trainer
 
+        Parameters
+        ----------
+        pred_out_fp: str
+        l_osentL: list[str]
+        l_ccsentL: list[str]
+
         Returns
         -------
+        None
 
         """
         self.params.d["suggested_checkpoint_fp"] = EX_FIN_WEIGHTS_FP
@@ -495,7 +527,21 @@ class MConductor:
                                               l_osentL,
                                               l_ccsentL)
 
-    def splitpredict_for_rescore(self, re_allen_in_fp, re_allen_out_fp):
+    def splitpredict_for_rescore(self,
+                                 re_allen_in_fp,
+                                 re_allen_out_fp):
+        """
+
+        Parameters
+        ----------
+        re_allen_in_fp: str
+        re_allen_out_fp: str
+
+        Returns
+        -------
+        None
+
+        """
         print()
         print("*******Starting re-scoring")
         print()
@@ -563,12 +609,12 @@ class MConductor:
         l_ex = l_ex[:MAX_EX_DEPTH]
         l_rs_sent.append(sent_str + ''.join(l_ex))
 
-        if iline + 1 in iline_to_exless_sents:
-            for sent in iline_to_exless_sents[iline + 1]:
+        if iline in iline_to_exless_sents:
+            for sent in iline_to_exless_sents[iline]:
                 l_rs_sent.append(f'{sent}\n')
 
-        print('Predictions written to ' + rescore_out_fp)
-        with open(rescore_out_fp, "w") as f:
+        print('Predictions written to ' + re_allen_out_fp)
+        with open(re_allen_out_fp, "w") as f:
             f.write('\n'.join(l_rs_sent) + '\n')
 
     def splitpredict(self):
@@ -580,6 +626,7 @@ class MConductor:
 
         Returns
         -------
+        None
 
         """
 
@@ -620,10 +667,10 @@ class MConductor:
 
         Parameters
         ----------
-        
-        l_osentL
-        l_ccsentL
-        pred_out_fp
+        pred_out_fp: str
+        l_osentL: list[str]
+        l_ccsentL: list[str]
+
 
         Returns
         -------
@@ -693,5 +740,12 @@ class MConductor:
             f.writelines(lines)
 
     def run(self):
+        """
+
+        Returns
+        -------
+        None
+
+        """
         for process in self.params.mode.split('_'):
             globals()[process]()

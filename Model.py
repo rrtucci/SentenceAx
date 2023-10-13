@@ -870,8 +870,7 @@ class Model(pl.LightningModule):
         with open(fpath, fmode) as pred_f:
             pred_f.write('\n'.join(l_pred_str) + '\n')
         if self.params.d["write_allen_file"]:
-            fpath = PRED_DIR + "/allen.txt"
-            with open(fpath, fmode) as allen_f:
+            with open(PRED_ALLEN_OUT_FP, fmode) as allen_f:
                 allen_f.write('\n'.join(l_pred_allen_str) + '\n')
 
         self.l_ex_pred_str = l_pred_str

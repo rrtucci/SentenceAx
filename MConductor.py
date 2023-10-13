@@ -101,8 +101,8 @@ class MConductor:
                                      self.tune_fp,
                                      self.test_fp)
 
-        self.pred_out_fp = PRED_OUT_FP
         self.pred_in_fp = PRED_IN_FP
+        self.pred_out_fp = PRED_OUT_FP
         self.rescore_in_fp = RESCORE_IN_FP
         self.rescore_out_fp = RESCORE_OUT_FP
 
@@ -500,30 +500,31 @@ class MConductor:
         print("*******Starting re-scoring")
         print()
 
-        osent_line_nums = set()
-        prev_line_num = 0
-        line_num_to_exless_sents = {}
-        cur_line_num = 0
+        # iline = line number
+        osent_ilines = set()
+        prev_iline = 0
+        iline_to_exless_sents = {}
+        cur_iline = 0
         for sample_str in self.model.l_ex_pred_str:
             sample_str = sample_str.strip('\n')
             num_ex = len(sample_str.split('\n')) - 1
             if num_ex == 0:
-                if cur_line_num not in line_num_to_exless_sents:
-                    line_num_to_exless_sents[cur_line_num] = []
-                line_num_to_exless_sents[cur_line_num].append(sample_str)
+                if cur_iline not in iline_to_exless_sents:
+                    iline_to_exless_sents[cur_iline] = []
+                iline_to_exless_sents[cur_iline].append(sample_str)
                 continue
-            cur_line_num = prev_line_num + num_ex
+            cur_iline = prev_iline + num_ex
             # add() is like append, but for a set
-            osent_line_nums.add(cur_line_num)
-            prev_line_num = cur_line_num
+            osent_ilines.add(cur_iline)
+            prev_iline = cur_iline
 
         # testing rescoring
-        inp_fp = model.predictions_f_allennlp
         rescored = rescore(rescore_in_fp,
                            model_dir=RESCORE_DIR,
                            batch_size=256)
 
-        all_predictions, sentence_str = [], ''
+        l_rs_sent = []
+        sent_str = ""
         for iline, line in enumerate(rescored):
             fields = line.split('\t')
             sent = fields[0]
@@ -532,16 +533,16 @@ class MConductor:
             if iline == 0:
                 sent_str = f'{sent}\n'
                 l_ex = []
-            if iline in osent_line_nums:
+            if iline in osent_ilines:
                 l_ex = sorted(l_ex, reverse=True,
                               key=lambda x: float(x.split()[0][:-1]))
-                l_ex = l_ex[:hparams.num_extractions]
-                all_predictions.append(sent_str + ''.join(l_ex))
+                l_ex = l_ex[:MAX_EX_DEPTH]
+                l_rs_sent.append(sent_str + ''.join(l_ex))
                 sent_str = f'{sent}\n'
                 l_ex = []
-            if iline in line_num_to_exless_sents:
-                for no_extraction_sent in line_num_to_exless_sents[iline]:
-                    all_predictions.append(f'{no_extraction_sent}\n')
+            if iline in iline_to_exless_sents:
+                for sent in iline_to_exless_sents[iline]:
+                    l_rs_sent.append(f'{sent}\n')
 
             arg1 = re.findall("<arg1>.*</arg1>", fields[1])[0].strip(
                 '<arg1>').strip('</arg1>').strip()
@@ -558,17 +559,16 @@ class MConductor:
 
         l_ex = sorted(l_ex, reverse=True,
                       key=lambda x: float(x.split()[0][:-1]))
-        l_ex = l_ex[:hparams.num_extractions]
-        all_predictions.append(sent_str + ''.join(l_ex))
+        l_ex = l_ex[:MAX_EX_DEPTH]
+        l_rs_sent.append(sent_str + ''.join(l_ex))
 
-        if iline + 1 in line_num_to_exless_sents:
-            for no_extraction_sent in line_num_to_exless_sents[iline + 1]:
-                all_predictions.append(f'{no_extraction_sent}\n')
+        if iline + 1 in iline_to_exless_sents:
+            for sent in iline_to_exless_sents[iline + 1]:
+                l_rs_sent.append(f'{sent}\n')
 
-        if hparams.out != None:
-            print('Predictions written to ' + rescore_out_fp)
-            with open(rescore_out_fp, "w") as f:
-                f.write('\n'.join(all_predictions) + '\n')
+        print('Predictions written to ' + rescore_out_fp)
+        with open(rescore_out_fp, "w") as f:
+            f.write('\n'.join(l_rs_sent) + '\n')
 
     def splitpredict(self):
         """
@@ -588,7 +588,7 @@ class MConductor:
 
         self.cc_sent_to_words = {}
         self.ex_sent_to_sent = {}
-        self.params["write_allen_file"] = True
+        self.params.d["write_allen_file"] = True
 
         self.params.d["task"] = self.params.task = "cc"
         l_osentL, l_ccsentL, lll_cc_spanned_loc = \

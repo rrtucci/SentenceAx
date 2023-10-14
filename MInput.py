@@ -245,8 +245,10 @@ class MInput:
         self.ll_osent_verb_loc = []
         if not self.use_spacy_model:
             return
+        print("bbght", self.l_orig_sent)
         for sent_id, spacy_tokens in enumerate(
-                self.spacy_model.pipe(self.l_orig_sent, batch_size=10000)):
+                self.spacy_model.pipe(self.l_orig_sent,
+                                      batch_size=10000)):
             spacy_tokens = self.remerge_tokens(spacy_tokens)
             # assert len(self.l_orig_sent[sent_id].split()) == len(
             #     spacy_tokens)
@@ -287,7 +289,7 @@ class MInput:
 
         each original sentence and its tag sequences constitute a new example
 
-        The file may have no tag lines, only original sentences, in wich
+        The file may have no tag lines, only original sentences, in which
         case it can be used for prediction.
 
         Parameters
@@ -302,36 +304,37 @@ class MInput:
         l_orig_sent = []
         ll_osent_wstart_loc = []  # similar to word_starts
         ll_osent_icode = []  # similar to input_ids
-        lll_ex_ilabel = []  # similar to targets target=extraction
-        sentL = None  # similar to `sentence`
+        lll_ex_ilabel = []  # similar to targets, target=extraction
+        sentL = ""  # similar to `sentence`
 
         with open(in_fp, "r") as f:
             lines = f.readlines()
 
-        def is_first_line_of_sample(line0):
-            return '[unused' in line0
+        def is_beginning_of_sample(line0):
+            return line0 and not line0.isupper()
 
         def is_tag_line_of_sample(line0):
-            return 'NONE' in line0
+            return line0 and line0.isupper()
 
-        def is_end_of_sample(k, prev_line0, line0):
-            if not line0 or k == len(lines) - 1:
+        def is_pre_beginning_of_sample(k, prev_line0, line0):
+            if not line0 or k == len(lines) - 1 or k == 0:
                 return True
-            if prev_line0 and is_tag_line_of_sample(prev_line0) and \
-                    is_first_line_of_sample(line0):
+            if prev_line0 and is_beginning_of_sample(line0):
                 return True
             return False
 
         ll_ex_ilabel = []
         prev_line = None
+        osent_icodes = []
+        osent_wstart_locs = []
         for k, line in enumerate(lines):
             line = line.strip()
             if line == "":
                 # this skips blank lines
                 continue  # skip to next line
             # print("kklop", line)
-            if is_first_line_of_sample(line):
-                # print("kklop-1st", k, line)
+            if is_beginning_of_sample(line):
+                print("kklop-1st", k, line)
                 sentL = line
                 encoding_d = self.auto_tokenizer.batch_encode_plus(
                     get_words(sentL),
@@ -364,12 +367,12 @@ class MInput:
                 # print("dfgthj", ll_ex_ilabel)
             else:
                 pass
-            if is_end_of_sample(k, prev_line, line):
+            if is_pre_beginning_of_sample(k, prev_line, line):
                 # print("ddft-end", k)
                 if len(ll_osent_icode) == 0:
                     ll_osent_icode = [[0]]
 
-                if len(sentL.split()) > 100:
+                if sentL and len(sentL.split()) > 100:
                     assert False, "sentence longer than 100"
                 else:
                     ll_osent_icode.append(deepcopy(osent_icodes))
@@ -429,8 +432,7 @@ class MInput:
 
 
 if __name__ == "__main__":
-    def main1(verbose):
-        in_fp = "tests/extags_test.txt"
+    def main1(in_fp, verbose):
         model_str = "bert-base-uncased"
         auto_tokenizer = AutoTokenizer.from_pretrained(
             model_str,
@@ -444,9 +446,10 @@ if __name__ == "__main__":
                       auto_tokenizer,
                       use_spacy_model,
                       verbose=verbose)
-        for k in range(0, 5):
+        num_samples = len(m_in.l_orig_sent)
+        for k in range(min(num_samples, 6)):
             print("************** k=", k)
-            print("num_samples=", len(m_in.l_orig_sent))
+            print("num_samples=", num_samples)
             print("get_words(l_osentL[k])=",
                   get_words(redoL(m_in.l_orig_sent[k])))
             print("ll_osent_icode[k]=\n", m_in.ll_osent_icode[k])
@@ -482,5 +485,6 @@ if __name__ == "__main__":
         pprint(l_sent2)
 
 
-    main1(verbose=False)
-    main2(add=True, remove=True)
+    # main1(in_fp="tests/extags_test.txt", verbose=False)
+    # main2(add=True, remove=True)
+    main1(in_fp="predictions/small_pred.txt", verbose=True)

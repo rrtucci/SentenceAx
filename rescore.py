@@ -1,3 +1,11 @@
+
+"""
+
+this file is the same as Openie6.imojie/imojie/aggregate/score.py
+
+"""
+
+
 import ipdb
 import pdb
 import sys

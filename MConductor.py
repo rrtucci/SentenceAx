@@ -13,6 +13,8 @@ from SaxDataLoader import *
 from sax_utils import *
 from Params import *
 
+from rescore import rescore
+
 
 class MConductor:
     """
@@ -33,7 +35,9 @@ class MConductor:
          loss_fun.backward()
          optimizer.step()
     
-    Often, batch refers to the output.meta_data of loader, but not in SentenceAx
+    Often, batch refers to the output.meta_data of loader, but not in
+    SentenceAx
+
     for batch_index, batch in enumerate(loader):
         input, target = batch
     
@@ -140,13 +144,13 @@ class MConductor:
 
         """
         return ModelCheckpoint(
-            filepath=WEIGHTS_DIR + "/" +
-                     self.params.task + '_model/{epoch:02d}_{eval_acc:.3f}',
+            filepath=WEIGHTS_DIR + "/" +\
+                self.params.task + '_model/{epoch:02d}_{eval_acc:.3f}',
             verbose=True,
             monitor='eval_acc',
             mode='max',
-            save_top_k=self.params.d["save_k"] \
-                if not self.params.d["debug"] else 0,
+            save_top_k=self.params.d["save_k"]
+            if not self.params.d["debug"] else 0,
             period=0)
 
     def get_all_checkpoint_fp(self):
@@ -251,14 +255,14 @@ class MConductor:
                 resume_from_checkpoint=checkpoint_fp)
         else:
             trainer = Trainer(
-                accumulate_grad_batches= \
-                    int(self.params.d["accumulate_grad_batches"]),
+                accumulate_grad_batches=int(
+                    self.params.d["accumulate_grad_batches"]),
                 checkpoint_callback=self.checkpoint_callback,
                 logger=logger,
                 max_epochs=self.params.d["epochs"],
                 min_epochs=self.params.d["epochs"],
-                resume_from_checkpoint= \
-                    checkpoint_fp if self.params.mode == "resume" else None,
+                resume_from_checkpoint=checkpoint_fp if
+                self.params.mode == "resume" else None,
                 show_progress_bar=True,
                 **self.params.d)
         return trainer
@@ -421,13 +425,11 @@ class MConductor:
         minutes = (end_time - start_time) / 60
         print(f'Total Time taken = {minutes : 2f} minutes')
 
-    def splitpredict_for_cc(self, pred_in_fp):
+    def splitpredict_for_cc(self):
         """
         no trainer
 
-        Parameters
-        ----------
-        pred_in_fp: str
+        reads pred_in_fp
 
         Returns
         -------
@@ -471,7 +473,7 @@ class MConductor:
         l_ccsentL = []  # sentences
         l_osentL = []  # orig_sentences
 
-        if not pred_in_fp:
+        if not self.pred_in_fp:
             for sample_id, pred_str in enumerate(l_cc_pred_str):
                 # example_sentences
                 l_pred_sent = pred_str.strip('\n').split('\n')
@@ -485,7 +487,7 @@ class MConductor:
         #         count += len(l_spanned_loc)
         # assert count == len(l_osentL) - 1
         else:
-            with open(pred_in_fp, "r") as f:
+            with open(self.pred_in_fp, "r") as f:
                 content = f.read()
             content = content.replace("\\", "")
             lines = content.split('\n\n')
@@ -498,15 +500,15 @@ class MConductor:
         return l_osentL, l_ccsentL
 
     def splitpredict_for_ex(self,
-                            pred_out_fp,
                             l_osentL,
                             l_ccsentL):
         """
         no trainer
 
+        writes pred_out_fp
+
         Parameters
         ----------
-        pred_out_fp: str
         l_osentL: list[str]
         l_ccsentL: list[str]
 
@@ -517,20 +519,19 @@ class MConductor:
         """
         self.params.d["suggested_checkpoint_fp"] = EX_FIN_WEIGHTS_FP
         self.params.d["model_str"] = 'bert-base-cased'
-        pred_test_dataloader = self.dloader.get_ttt_dataloaders("test")
+        test_dataloader = self.dloader.get_ttt_dataloaders("test")
 
-        self.predict(test_dloader=pred_test_dataloader)
+        self.predict(test_dloader=test_dataloader)
 
         # Does same thing as Openie6's run.get_labels()
         if self.params.d["write_extags_file"]:
-            self.write_extags_file_from_preds(pred_out_fp,
-                                              l_osentL,
+            self.write_extags_file_from_preds(l_osentL,
                                               l_ccsentL)
 
-    def splitpredict_for_rescore(self,
-                                 re_allen_in_fp,
-                                 re_allen_out_fp):
+    def splitpredict_for_rescore(self):
         """
+        reads re_allen_in_fp
+        writes re_allen_out_fp
 
         Parameters
         ----------
@@ -566,7 +567,7 @@ class MConductor:
 
         # testing rescoring
         rescored_allen_file = rescore(
-            re_allen_in_fp,  # f'{self.hparams.out}.allennlp'
+            self.re_allen_in_fp,  # f'{self.hparams.out}.allennlp'
             model_dir=RESCORE_DIR,  #
             batch_size=256)
 
@@ -583,7 +584,7 @@ class MConductor:
             if iline in osent_iline_set:
                 l_ex = sorted(l_ex, reverse=True,
                               key=lambda x: float(x.split()[0][:-1]))
-                l_ex = l_ex[:MAX_EX_DEPTH]
+                l_ex = l_ex[:EX_NUM_DEPTHS]
                 l_rs_sent.append(sent_str + ''.join(l_ex))
                 sent_str = f'{osent}\n'
                 l_ex = []
@@ -606,15 +607,15 @@ class MConductor:
 
         l_ex = sorted(l_ex, reverse=True,
                       key=lambda x: float(x.split()[0][:-1]))
-        l_ex = l_ex[:MAX_EX_DEPTH]
+        l_ex = l_ex[:EX_NUM_DEPTHS]
         l_rs_sent.append(sent_str + ''.join(l_ex))
 
         if iline in iline_to_exless_sents:
             for sent in iline_to_exless_sents[iline]:
                 l_rs_sent.append(f'{sent}\n')
 
-        print('Predictions written to ' + re_allen_out_fp)
-        with open(re_allen_out_fp, "w") as f:
+        print('Predictions written to ' + self.re_allen_out_fp)
+        with open(self.re_allen_out_fp, "w") as f:
             f.write('\n'.join(l_rs_sent) + '\n')
 
     def splitpredict(self):
@@ -639,22 +640,19 @@ class MConductor:
         self.params.d["write_allen_file"] = True
 
         self.params.d["task"] = self.params.task = "cc"
-        l_osentL, l_ccsentL = self.splitpredict_for_cc(self.pred_in_fp)
+        l_osentL, l_ccsentL = self.splitpredict_for_cc()
 
         self.params.d["task"] = self.params.task = "ex"
-        self.splitpredict_for_ex(self.pred_out_fp,
-                                 l_osentL,
+        self.splitpredict_for_ex(l_osentL,
                                  l_ccsentL)
 
         if self.params.d["do_rescoring"]:
-            self.splitpredict_for_rescore(self.re_allen_in_fp,
-                                          self.re_allen_out_fp)
+            self.splitpredict_for_rescore()
         else:
             print("not doing rescoring")
 
     def write_extags_file_from_preds(
             self,
-            pred_out_fp,
             l_osentL,  # orig_sentences
             l_ccsentL):  # sentences
         """
@@ -736,7 +734,7 @@ class MConductor:
                     batch_id0 += 1
 
         lines.append('\n')
-        with open(pred_out_fp, "w") as f:
+        with open(self.pred_out_fp, "w") as f:
             f.writelines(lines)
 
     def run(self):

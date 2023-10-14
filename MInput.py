@@ -32,6 +32,10 @@ class MInput:
                  use_spacy_model,
                  verbose=False):
         """
+        in_fp is an extags file.
+
+        if the extags file has no extags, only original sentences, then
+        we can use in_fp as for prediction.
 
         Parameters
         ----------
@@ -280,8 +284,11 @@ class MInput:
         NONE NONE NONE ARG1 ARG1 ARG1 ARG1 NONE REL ARG2 ARG2 ARG2 NONE NONE NONE NONE
 
         the tags may be extags or cctags
+
         each original sentence and its tag sequences constitute a new example
 
+        The file may have no tag lines, only original sentences, in wich
+        case it can be used for prediction.
 
         Parameters
         ----------
@@ -404,7 +411,7 @@ class MInput:
 
         # example_d = {
         #     'l_ilabel': l_ilabel,
-        #     'll_label': labels_for_each_ex[:MAX_EX_DEPTH],
+        #     'll_label': labels_for_each_ex[:EX_NUM_DEPTHS],
         #     'l_word_start_loc': l_word_start_loc,
         #     'orig_sent': orig_sent,
         #     # if spacy_model:

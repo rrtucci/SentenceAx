@@ -113,12 +113,12 @@ class ExMetric:
             elif hasattr(x, "confidence"):
                 return x.confidence
 
-        if MAX_EX_DEPTH:
+        if EX_NUM_DEPTHS:
             for osentL in self.osentL_to_exs:
                 self.osentL_to_exs[osentL] = \
                     sorted(self.osentL_to_exs[osentL],
                            key=fun,
-                           reverse=True)[:MAX_EX_DEPTH]
+                           reverse=True)[:EX_NUM_DEPTHS]
         if not self.use_carb_ex:
             osent_to_exs = \
                 SaxExtraction.shorten_osentL_to_exs(self.osentL_to_exs)

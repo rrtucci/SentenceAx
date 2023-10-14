@@ -88,8 +88,8 @@ class SaxDataLoader:
 
         """
         m_in = MInput(in_fp,
-                         self.auto_tokenizer,
-                         self.use_spacy_model)
+                      self.auto_tokenizer,
+                      self.use_spacy_model)
 
         return m_in
 

@@ -30,7 +30,6 @@ INPUT_DIR = "input_data"
 CACHE_DIR = INPUT_DIR + '/pretrained_cache'
 WEIGHTS_DIR = "weights"
 PRED_DIR = "predictions"
-RESCORE_DIR = "rescore"
 CC_METRIC_STORE_DIR = "cc_metric_saved"
 
 CCTAGS_TRAIN_FP = 'input_data/openie-data/ptb-train.labels'
@@ -43,11 +42,11 @@ EXTAGS_TUNE_FP = INPUT_DIR + '/carb-data/dev.txt'
 EXTAGS_TEST_FP = INPUT_DIR + '/carb-data/test.txt'
 EX_FIN_WEIGHTS_FP= WEIGHTS_DIR + '/ex.txt'
 
-PRED_IN_FP = PRED_DIR + "/in.txt"
+PRED_IN_FP = PRED_DIR + "/carb_sentences"
 PRED_OUT_FP = PRED_DIR + "/out.txt"
 PRED_ALLEN_OUT_FP = PRED_DIR + "/allen_out.txt"
 RE_ALLEN_IN_FP = PRED_ALLEN_OUT_FP
-RE_ALLEN_OUT_FP = RESCORE_DIR + "/allen_out.txt"
+RE_ALLEN_OUT_FP = PRED_DIR + "/re_allen_out.txt"
 
 
 
@@ -62,8 +61,8 @@ UNUSED_TOKENS = ["[unused1]", "[unused2]", "[unused3]"]
 UNUSED_TOKENS_STR = " " + " ".join(UNUSED_TOKENS)
 
 DROPOUT = 0.0
-MAX_EX_DEPTH = 5
-MAX_CC_DEPTH = 3
+EX_NUM_DEPTHS = 5
+CC_NUM_DEPTHS = 3
 
 PAD_ICODE = 0  # ipad
 NUM_ICODES = 100

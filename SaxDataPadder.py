@@ -93,7 +93,7 @@ class SaxDataPadder:
         lll_ex_ilabel = deepcopy(unpadded_lll_ex_ilabel)
 
         for sam in range(len(lll_ex_ilabel)):
-            pad_depth = MAX_EX_DEPTH - len(lll_ex_ilabel[sam])
+            pad_depth = EX_NUM_DEPTHS - len(lll_ex_ilabel[sam])
             if pad_depth > 0:
                 num_words = len(lll_ex_ilabel[sam][0])
                 # ilabel = 0 for extag=NONE
@@ -102,7 +102,7 @@ class SaxDataPadder:
             elif pad_depth == 0:
                 pass
             else:
-                rg = range(MAX_EX_DEPTH, len(lll_ex_ilabel[sam]))
+                rg = range(EX_NUM_DEPTHS, len(lll_ex_ilabel[sam]))
                 # must delete last extraction first
                 for depth in reversed(rg):
                     print("deleting this extraction because over max: " +
@@ -158,7 +158,7 @@ class SaxDataPadder:
         # data_in = self.m_in
         # example_d = {
         #     'sentL_ids': sentL_ids,
-        #     'll_label': labels_for_each_ex[:MAX_EX_DEPTH],
+        #     'll_label': labels_for_each_ex[:EX_NUM_DEPTHS],
         #     'word_starts': word_starts,
         #     'orig_sent': orig_sent,
         #     # if use_spacy_model:

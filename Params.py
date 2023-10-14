@@ -249,7 +249,7 @@ class Params:
                 "gpus": 1,
                 # "inp": "carb_subset/data/carb_sentences.txt",
                 "mode": "splitpredict",
-                "num_extractions": MAX_EX_DEPTH,
+                "num_extractions": EX_NUM_DEPTHS,
                 "ex_weights_fp":
                     WEIGHTS_DIR + "/ex_model/epoch=14_eval_acc=0.551_v0.ckpt",
                 # "out": WEIGHTS_DIR + "/results/final",
@@ -273,7 +273,7 @@ class Params:
                 "iterative_layers": 2,
                 "lr": 2E-5,
                 "model_str": "bert-base-cased",
-                "num_extractions": MAX_EX_DEPTH,
+                "num_extractions": EX_NUM_DEPTHS,
                 "optimizer": "adamW",
                 "save_k": 1,
                 "suggested_checkpoint_fp": "",
@@ -297,9 +297,9 @@ class Params:
 
         """
         if self.task == "ex":
-            return MAX_EX_DEPTH
+            return EX_NUM_DEPTHS
         elif self.task == "cc":
-            return MAX_CC_DEPTH
+            return CC_NUM_DEPTHS
 
     def tag_to_ilabel(self):
         """

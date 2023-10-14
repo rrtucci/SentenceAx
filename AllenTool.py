@@ -399,11 +399,11 @@ class AllenTool:
 
 if __name__ == "__main__":
     def main1(ftype):
-        allen_fp = "testing_files/small_allen.tsv"
+        allen_fp = "tests/small_allen.tsv"
         if ftype == "ex":
-            out_fp = "testing_files/small_extags.txt"
+            out_fp = "tests/small_extags.txt"
         elif ftype == "ss":
-            out_fp = "testing_files/small_simple_sents.txt"
+            out_fp = "tests/small_simple_sents.txt"
         else:
             assert False
         at = AllenTool(allen_fp)
@@ -414,8 +414,8 @@ if __name__ == "__main__":
 
 
     def main2():
-        allen_fp = "testing_files/small_allen.tsv"
-        out_dir = "testing_files"
+        allen_fp = "tests/small_allen.tsv"
+        out_dir = "tests"
         at = AllenTool(allen_fp)
         at.write_extags_ttt_files(out_dir)
 

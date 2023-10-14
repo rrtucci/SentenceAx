@@ -249,9 +249,9 @@ if __name__ == "__main__":
             add_special_tokens=False,
             additional_special_tokens=UNUSED_TOKENS)
         use_spacy_model = True
-        train_fp = "testing_files/extags_train.txt"
-        tune_fp = "testing_files/extags_tune.txt"
-        test_fp = "testing_files/extags_test.txt"
+        train_fp = "tests/extags_train.txt"
+        tune_fp = "tests/extags_tune.txt"
+        test_fp = "tests/extags_test.txt"
         predict_fp = test_fp
 
         dloader = SaxDataLoader(params,

@@ -209,7 +209,7 @@ class SaxDataPadder:
 
 if __name__ == "__main__":
     def main():
-        in_fp = "testing_files/extags_test.txt"
+        in_fp = "tests/extags_test.txt"
         model_str = "bert-base-uncased"
         auto = AutoTokenizer.from_pretrained(
             model_str,

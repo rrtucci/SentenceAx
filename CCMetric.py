@@ -11,7 +11,7 @@ class CCMetric:
 
     Attributes
     ----------
-    store_dir: str
+    storage_dir: str
     sent_to_words: dict[str, list[str]]
     report_exact: CCReport
     report_inner: CCReport
@@ -21,12 +21,12 @@ class CCMetric:
 
     """
 
-    def __init__(self, store_dir=None, sent_to_words=None):
+    def __init__(self, storage_dir=None, sent_to_words=None):
         """
 
         Parameters
         ----------
-        store_dir: str
+        storage_dir: str
         sent_to_words: dict[str, list[str]]
 
         Returns
@@ -39,14 +39,14 @@ class CCMetric:
         self.report_exact = CCReport("exact")
         # self.n_complete = 0 # not used
         # self.n_sentence = 0 # not used
-        self.store_dir = store_dir
-        if self.store_dir:
-            if os.path.exists(store_dir + '/l_osent.pkl'):
-                os.remove(store_dir + '/l_osent.pkl')
-            if os.path.exists(store_dir + '/l_pred_ccnodes.pkl'):
-                os.remove(store_dir + '/l_pred_ccnodes.pkl')
-            if os.path.exists(store_dir + '/l_true_ccnodes.pkl'):
-                os.remove(store_dir + '/l_true_ccnodes.pkl')
+        self.storage_dir = storage_dir
+        if self.storage_dir:
+            if os.path.exists(storage_dir + '/l_osent.pkl'):
+                os.remove(storage_dir + '/l_osent.pkl')
+            if os.path.exists(storage_dir + '/l_pred_ccnodes.pkl'):
+                os.remove(storage_dir + '/l_pred_ccnodes.pkl')
+            if os.path.exists(storage_dir + '/l_true_ccnodes.pkl'):
+                os.remove(storage_dir + '/l_true_ccnodes.pkl')
 
         self.sent_to_words = sent_to_words
 
@@ -89,13 +89,13 @@ class CCMetric:
             self.report_inner.absorb_new_sample(pred_ccnodes, true_ccnodes)
             self.report_exact.absorb_new_sample(pred_ccnodes, true_ccnodes)
 
-            if self.store_dir:
+            if self.storage_dir:
                 pickle.dump(l_osent[k],
-                            open(self.store_dir + '/l_osent.pkl', 'ab'))
+                            open(self.storage_dir + '/l_osent.pkl', 'ab'))
                 pickle.dump(pred_ccnodes, open(
-                    self.store_dir + '/l_pred_ccnodes.pkl', 'ab'))
+                    self.storage_dir + '/l_pred_ccnodes.pkl', 'ab'))
                 pickle.dump(true_ccnodes, open(
-                    self.store_dir + '/l_true_ccnodes.pkl', 'ab'))
+                    self.storage_dir + '/l_true_ccnodes.pkl', 'ab'))
 
     def reset(self):
         """
@@ -172,7 +172,7 @@ if __name__ == "__main__":
     def main():
         # dump file just saves all pred_ccnodes and true_ccnodes
         cc_met = CCMetric()
-        in_fp = "testing_files/cc_ilabels.txt"
+        in_fp = "tests/cc_ilabels.txt"
         with open(in_fp, "r", encoding="utf-8") as f:
             in_lines = f.readlines()
 

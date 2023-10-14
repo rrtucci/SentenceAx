@@ -325,7 +325,7 @@ if __name__ == "__main__":
 
 
     def main1():
-        at = AllenTool("testing_files/one_sample_allen.tsv")
+        at = AllenTool("tests/one_sample_allen.tsv")
         # print("llkm", at.osentL_to_exs)
         orig_sentL = list(at.osentL_to_exs.keys())[0]
         exs = at.osentL_to_exs[orig_sentL]

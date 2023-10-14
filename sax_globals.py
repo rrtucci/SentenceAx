@@ -30,7 +30,7 @@ INPUT_DIR = "input_data"
 CACHE_DIR = INPUT_DIR + '/pretrained_cache'
 WEIGHTS_DIR = "weights"
 PRED_DIR = "predictions"
-CC_METRIC_STORE_DIR = "cc_metric_saved"
+CC_METRIC_STORAGE_DIR = "cc_metric_storage"
 
 CCTAGS_TRAIN_FP = 'input_data/openie-data/ptb-train.labels'
 CCTAGS_TUNE_FP = 'input_data/openie-data/ptb-dev.labels'
@@ -40,15 +40,13 @@ CC_FIN_WEIGHTS_FP = WEIGHTS_DIR + '/cc.txt'
 EXTAGS_TRAIN_FP = INPUT_DIR + '/openie-data/openie4_labels'
 EXTAGS_TUNE_FP = INPUT_DIR + '/carb-data/dev.txt'
 EXTAGS_TEST_FP = INPUT_DIR + '/carb-data/test.txt'
-EX_FIN_WEIGHTS_FP= WEIGHTS_DIR + '/ex.txt'
+EX_FIN_WEIGHTS_FP = WEIGHTS_DIR + '/ex.txt'
 
 PRED_IN_FP = PRED_DIR + "/carb_sentences"
 PRED_OUT_FP = PRED_DIR + "/out.txt"
 PRED_ALLEN_OUT_FP = PRED_DIR + "/allen_out.txt"
 RE_ALLEN_IN_FP = PRED_ALLEN_OUT_FP
 RE_ALLEN_OUT_FP = PRED_DIR + "/re_allen_out.txt"
-
-
 
 QUOTES = "\"\'"  # 2
 BRACKETS = "(){}[]<>"  # 8

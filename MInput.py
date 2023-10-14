@@ -430,7 +430,7 @@ class MInput:
 
 if __name__ == "__main__":
     def main1(verbose):
-        in_fp = "testing_files/extags_test.txt"
+        in_fp = "tests/extags_test.txt"
         model_str = "bert-base-uncased"
         auto_tokenizer = AutoTokenizer.from_pretrained(
             model_str,

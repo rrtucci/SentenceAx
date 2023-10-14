@@ -481,14 +481,14 @@ class CCTree:
 
 if __name__ == "__main__":
     def main1():
-        in_fp = "testing_files/small_cctags.txt"
-        out_fp = "testing_files/cc_ilabels.txt"
+        in_fp = "tests/small_cctags.txt"
+        out_fp = "tests/cc_ilabels.txt"
         file_translate_tags_to_ilabels("cc", in_fp, out_fp)
 
 
     def main2(forced_tree=True):
-        in_fp = "testing_files/one_sample_cc_ilabels.txt"
-        # out_fp = "testing_files/cc_trees.txt"
+        in_fp = "tests/one_sample_cc_ilabels.txt"
+        # out_fp = "tests/cc_trees.txt"
         with open(in_fp, "r", encoding="utf-8") as f:
             in_lines = f.readlines()
 

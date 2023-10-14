@@ -962,7 +962,7 @@ if __name__ == "__main__":
 
     def main():
         from AllenTool import AllenTool
-        in_fp = "testing_files/small_allen.tsv"
+        in_fp = "tests/small_allen.tsv"
         at = AllenTool(in_fp)
         for osentL, sax_exs in at.osentL_to_exs.items():
             carb_exs = [SaxExtraction.convert_to_carb_ex(sax_ex) for sax_ex in

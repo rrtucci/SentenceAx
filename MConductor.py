@@ -382,7 +382,8 @@ class MConductor:
         shutil.move(WEIGHTS_DIR + f'/logs/test.part',
                     WEIGHTS_DIR + f'/logs/test')
 
-    def predict(self, dloader_type="pred"):
+    def predict(self,
+                dloader_type="pred"):
         """
         similar to Openie6.run.predict()
 
@@ -445,20 +446,17 @@ class MConductor:
                 l_osentL.append(redoL(l_pred_sent[0]))
                 self.model.ex_sent_to_sent[l_pred_sent[0]] = \
                     l_pred_sent[0]
-                # added
-                self.model.cc_sent_to_words[l_pred_sent[0]] = \
-                    cc_words
+
                 l_ccsentL.append(redoL(l_pred_sent[0]))
                 # added
-                l_osentL.append(redoL(l_pred_sent[0]))
+                self.model.cc_sent_to_words[l_pred_sent[0]] = cc_words
             elif len(l_pred_sent) > 1:
                 l_osentL.append(redoL(l_pred_sent[0]))
-                # added
-                self.model.cc_sent_to_words[l_pred_sent[0]] = \
-                    cc_words
                 for sent in l_pred_sent[1:]:
                     self.model.ex_sent_to_sent[sent] = l_pred_sent[0]
                     l_ccsentL.append(redoL(sent))
+               # added
+                self.model.cc_sent_to_words[l_pred_sent[0]] = cc_words
             else:
                 assert False
 
@@ -619,7 +617,7 @@ class MConductor:
         with open(self.re_allen_out_fp, "w") as f:
             f.write('\n'.join(l_rs_sent) + '\n')
 
-    def splitpredict(self):
+    def splitpredict(self, **kwargs):
         """
         similar to Openie6.run.splitpredict()
 

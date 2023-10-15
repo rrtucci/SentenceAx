@@ -74,7 +74,7 @@ class MInput:
         self.ll_osent_verb_bool = []  # shape=(num_samples, num_words)
         self.ll_osent_verb_loc = []  # shape=(num_samples, num_words)
 
-        self.read_input_extags_file(in_fp)
+        self.read_input_tags_file(in_fp)
 
     @staticmethod
     def encode_l_sent(l_sent,
@@ -266,7 +266,7 @@ class MInput:
             else:
                 self.ll_osent_verb_loc.append([0])
 
-    def read_input_extags_file(self, in_fp):
+    def read_input_tags_file(self, in_fp):
         """
         similar to Openie6.data._process_data()
 

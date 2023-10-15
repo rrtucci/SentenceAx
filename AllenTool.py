@@ -132,12 +132,7 @@ class AllenTool:
 
         osent2_to_exs = {}
         for sam_id, osent2 in enumerate(l_osent2):
-            if sent_to_sent:
-                if sent_to_sent[osent2] not in osent2_to_exs:
-                    osent2_to_exs[sent_to_sent[osent2]] = []
-            else:
-                if osent2 not in osent2_to_exs:
-                    osent2_to_exs[osent2] = []
+            grow_target_d(osent2, sent_to_sent, osent2_to_exs)
 
             num_exs = len(ll_confi[sam_id])
             for depth in range(num_exs):

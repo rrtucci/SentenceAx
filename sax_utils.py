@@ -313,6 +313,28 @@ def Li(tensor):
     return tensor.tolist()
 
 
+def grow_target_d(x, fix_d, target_d):
+    """
+
+    Parameters
+    ----------
+    x: Any
+    fix_d: dict[Any, Any]
+    target_d: dict[Any, Any]
+
+    Returns
+    -------
+    dict[Any, Any]
+
+    """
+    if fix_d:
+        if fix_d[x] not in target_d:
+            target_d[fix_d[x]] = []
+    else:
+        if x not in target_d:
+            target_d[x] = []
+
+
 if __name__ == "__main__":
     def main1():
         h = {"x": 5, "y": 3}
@@ -344,3 +366,4 @@ if __name__ == "__main__":
     main1()
     main2()
     main3()
+

@@ -91,10 +91,13 @@ class SaxDataPadder:
         torch.Tensor
         """
         lll_ex_ilabel = deepcopy(unpadded_lll_ex_ilabel)
+        if not lll_ex_ilabel[0]:
+            return torch.tensor(lll_ex_ilabel)
 
         for sam in range(len(lll_ex_ilabel)):
             pad_depth = EX_NUM_DEPTHS - len(lll_ex_ilabel[sam])
             if pad_depth > 0:
+                # print("lmjki", lll_ex_ilabel[sam])
                 num_words = len(lll_ex_ilabel[sam][0])
                 # ilabel = 0 for extag=NONE
                 lll_ex_ilabel[sam] = lll_ex_ilabel[sam] + [
@@ -208,20 +211,19 @@ class SaxDataPadder:
 
 
 if __name__ == "__main__":
-    def main():
-        in_fp = "tests/extags_test.txt"
+    def main(in_fp):
         model_str = "bert-base-uncased"
         auto = AutoTokenizer.from_pretrained(
             model_str,
             do_lower_case=True,
             use_fast=True,
-            data_dir=CACHE_DIR,
+            data_dir=TTT_CACHE_DIR,
             add_special_tokens=False,
             additional_special_tokens=UNUSED_TOKENS)
         use_spacy_model = True
         m_in = MInput(in_fp,
-                         auto,
-                         use_spacy_model)
+                      auto,
+                      use_spacy_model)
         # full encoding is [101, 0, 102], 101=BOS_ICODE, 102=EOS_ICODE
         pad_icode = auto.encode(auto.pad_token)[1]
         # print("pad_token, pad_icode=", auto.pad_token, pad_icode)
@@ -229,4 +231,5 @@ if __name__ == "__main__":
         padder.print_padded_data_d_shapes()
 
 
-    main()
+    main(in_fp="tests/extags_test.txt")
+    main(in_fp="predictions/small_pred.txt")

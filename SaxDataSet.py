@@ -84,7 +84,7 @@ if __name__ == "__main__":
             model_str,
             do_lower_case=True,
             use_fast=True,
-            data_dir=CACHE_DIR,
+            data_dir=TTT_CACHE_DIR,
             add_special_tokens=False,
             additional_special_tokens=UNUSED_TOKENS)
         use_spacy_model = True

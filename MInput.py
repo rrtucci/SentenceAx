@@ -245,7 +245,7 @@ class MInput:
         self.ll_osent_verb_loc = []
         if not self.use_spacy_model:
             return
-        print("bbght", self.l_orig_sent)
+        # print("bbght", self.l_orig_sent)
         for sent_id, spacy_tokens in enumerate(
                 self.spacy_model.pipe(self.l_orig_sent,
                                       batch_size=10000)):
@@ -334,7 +334,7 @@ class MInput:
                 continue  # skip to next line
             # print("kklop", line)
             if is_beginning_of_sample(line):
-                print("kklop-1st", k, line)
+                # print("kklop-1st", k, line)
                 sentL = line
                 encoding_d = self.auto_tokenizer.batch_encode_plus(
                     get_words(sentL),
@@ -383,7 +383,9 @@ class MInput:
 
                     # note that if li=[2,3]
                     # then li[:100] = [2,3]
-                    # print("sdftty", l_ex_ilabels)
+                    # print("sdftty", ll_ex_ilabel)
+                    if not ll_ex_ilabel:
+                        ll_ex_ilabel = [[0]]
                     lll_ex_ilabel.append(deepcopy(ll_ex_ilabel))
                     ll_ex_ilabel = []
                     ll_osent_wstart_loc.append(deepcopy(osent_wstart_locs))
@@ -438,7 +440,7 @@ if __name__ == "__main__":
             model_str,
             do_lower_case=True,
             use_fast=True,
-            data_dir=CACHE_DIR,
+            data_dir=TTT_CACHE_DIR,
             add_special_tokens=False,
             additional_special_tokens=UNUSED_TOKENS)
         use_spacy_model = True
@@ -471,7 +473,7 @@ if __name__ == "__main__":
             model_str,
             do_lower_case=True,
             use_fast=True,
-            data_dir=CACHE_DIR,
+            data_dir=TTT_CACHE_DIR,
             add_special_tokens=False,
             additional_special_tokens=UNUSED_TOKENS)
         ll_icode = MInput.encode_l_sent(l_sent,
@@ -485,6 +487,6 @@ if __name__ == "__main__":
         pprint(l_sent2)
 
 
-    # main1(in_fp="tests/extags_test.txt", verbose=False)
-    # main2(add=True, remove=True)
+    main1(in_fp="tests/extags_test.txt", verbose=False)
+    main2(add=True, remove=True)
     main1(in_fp="predictions/small_pred.txt", verbose=True)

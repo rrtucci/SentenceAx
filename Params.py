@@ -264,7 +264,6 @@ class Params:
         default_d = \
             {
                 "batch_size": 32,
-                "build_cache": True,
                 "con_weight_str": "1",  # for multiple constraints "1_1_1"
                 "do_rescoring": False,
                 "dropout_fun": 0.0,
@@ -275,6 +274,7 @@ class Params:
                 "model_str": "bert-base-cased",
                 "num_extractions": EX_NUM_DEPTHS,
                 "optimizer": "adamW",
+                "refresh_cache": True,
                 "save_k": 1,
                 "suggested_checkpoint_fp": "",
                 "val_check_interval": 1.0,

@@ -110,7 +110,7 @@ class MConductor:
             self.params.d["model_str"],
             do_lower_case=do_lower_case,
             use_fast=True,
-            data_dir=CACHE_DIR,
+            data_dir=TTT_CACHE_DIR,
             add_special_tokens=False,
             additional_special_tokens=UNUSED_TOKENS)
 
@@ -309,8 +309,8 @@ class MConductor:
                                    use_minimal=False)
         trainer.fit(
             self.model,
-            train_dataloader=self.dloader.get_ttt_dataloaders("train"),
-            val_dataloaders=self.dloader.get_ttt_dataloaders("tune"))
+            train_dataloader=self.dloader.get_one_ttt_dataloader("train"),
+            val_dataloaders=self.dloader.get_one_ttt_dataloader("tune"))
         shutil.move(WEIGHTS_DIR + f'/logs/train.part',
                     WEIGHTS_DIR + f'/logs/train')
 
@@ -336,8 +336,8 @@ class MConductor:
                                    use_minimal=False)
         trainer.fit(
             self.model,
-            train_dataloader=self.dloader.get_ttt_dataloaders("train"),
-            val_dataloaders=self.dloader.get_ttt_dataloaders("tune"))
+            train_dataloader=self.dloader.get_one_ttt_dataloader("train"),
+            val_dataloaders=self.dloader.get_one_ttt_dataloader("tune"))
         shutil.move(WEIGHTS_DIR + '/logs/resume.part',
                     WEIGHTS_DIR + '/logs/resume')
 
@@ -373,7 +373,7 @@ class MConductor:
                 # trainer.fit() and trainer.test() are different
                 trainer.test(
                     self.model,
-                    test_dataloaders=self.dloader.get_ttt_dataloaders("test"))
+                    test_dataloaders=self.dloader.get_one_ttt_dataloader("test"))
                 eval_epoch_end_d = self.model.eval_epoch_end_d
                 test_f.write(f'{checkpoint_fp}\t{eval_epoch_end_d}\n')
                 # note test_f created outside loop.
@@ -382,7 +382,7 @@ class MConductor:
         shutil.move(WEIGHTS_DIR + f'/logs/test.part',
                     WEIGHTS_DIR + f'/logs/test')
 
-    def predict(self):
+    def predict(self, dloader_type="pred"):
         """
         similar to Openie6.run.predict()
 
@@ -418,9 +418,10 @@ class MConductor:
                                    use_minimal=True)
         start_time = time()
         # self.model.all_sentences = all_sentences # never used
+        dataloader = self.dloader.get_predict_dataloader("test")
         trainer.test(
             self.model,
-            test_dataloaders=self.dloader.get_ttt_dataloaders("test"))
+            test_dataloaders=dataloader)
         end_time = time()
         minutes = (end_time - start_time) / 60
         print(f'Total Time taken = {minutes : 2f} minutes')
@@ -464,7 +465,7 @@ class MConductor:
         self.params.d["suggested_checkpoint_fp"] = CC_FIN_WEIGHTS_FP
         self.params.d["model_str"] = 'bert-base-cased'
         self.params.d["mode"] = self.params.mode = 'predict'
-        self.predict()
+        self.predict("test")
         l_cc_pred_str = self.model.l_cc_pred_str
         lll_cc_spanned_loc = self.model.lll_cc_spanned_loc
         assert len(l_cc_pred_str) == len(lll_cc_spanned_loc)
@@ -519,9 +520,9 @@ class MConductor:
         """
         self.params.d["suggested_checkpoint_fp"] = EX_FIN_WEIGHTS_FP
         self.params.d["model_str"] = 'bert-base-cased'
-        test_dataloader = self.dloader.get_ttt_dataloaders("test")
+        test_dataloader = self.dloader.get_one_ttt_dataloader("test")
 
-        self.predict(test_dloader=test_dataloader)
+        self.predict("pred")
 
         # Does same thing as Openie6's run.get_labels()
         if self.params.d["write_extags_file"]:

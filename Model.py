@@ -124,7 +124,7 @@ class Model(pl.LightningModule):
         self.auto_tokenizer = auto_tokenizer
 
         self.base_model = AutoModel.from_pretrained(
-            self.params.d["model_str"], cache_dir=CACHE_DIR)
+            self.params.d["model_str"], cache_dir=TTT_CACHE_DIR)
         self.hidden_size = self.base_model.config.hidden_size
 
         if self.params.d["iterative_layers"] > 0:

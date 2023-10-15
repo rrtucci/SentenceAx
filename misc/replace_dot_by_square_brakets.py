@@ -42,7 +42,7 @@ word_d =\
 }
 
 additional_dict = {
-    "build_cache": None,
+    "refresh_cache": None,
     "dev_fp": None,
     "predict_fp": None,
     "split_fp": None,

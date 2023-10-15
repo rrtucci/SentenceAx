@@ -313,12 +313,12 @@ def Li(tensor):
     return tensor.tolist()
 
 
-def grow_target_d(x, fix_d, target_d):
+def add_key_to_target_d(key, fix_d, target_d):
     """
 
     Parameters
     ----------
-    x: Any
+    key: Any
     fix_d: dict[Any, Any]
     target_d: dict[Any, Any]
 
@@ -328,11 +328,33 @@ def grow_target_d(x, fix_d, target_d):
 
     """
     if fix_d:
-        if fix_d[x] not in target_d:
-            target_d[fix_d[x]] = []
+        if fix_d[key] not in target_d:
+            target_d[fix_d[key]] = []
     else:
-        if x not in target_d:
-            target_d[x] = []
+        if key not in target_d:
+            target_d[key] = []
+
+def add_key_value_pair_to_target_d(key, value, fix_d, target_d):
+    """
+
+    Parameters
+    ----------
+    key: Any
+    value: Any
+    fix_d: dict[Any, Any]
+    target_d: dict[Any, Any]
+
+    Returns
+    -------
+    dict[Any, Any]
+
+    """
+    if fix_d:
+        if value not in target_d[fix_d[key]]:
+            target_d[fix_d[key]].append(value)
+    else:
+        if value not in target_d[key]:
+            target_d[key].append(value)
 
 
 if __name__ == "__main__":

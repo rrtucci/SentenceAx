@@ -92,15 +92,15 @@ class AllenTool:
             return ilabels
 
         lll_ex_ilabel = [[get_ilabels(ex) for ex in exs] for
-                      exs in l_exs]
+                         exs in l_exs]
         ll_confi = [[ex.confi for ex in exs] for exs in l_exs]
         return l_osent2, lll_ex_ilabel, ll_confi
 
     @staticmethod
     def get_osent2_to_exs_from_lll_ex_ilabel(l_osent2,
-                                          lll_ex_ilabel,
-                                          ll_confi,
-                                          sent_to_sent):
+                                             lll_ex_ilabel,
+                                             ll_confi,
+                                             sent_to_sent):
         """
         similar to Openie6.metric.Carb.__call__()
 
@@ -132,7 +132,7 @@ class AllenTool:
 
         osent2_to_exs = {}
         for sam_id, osent2 in enumerate(l_osent2):
-            grow_target_d(osent2, sent_to_sent, osent2_to_exs)
+            add_key_to_target_d(osent2, sent_to_sent, osent2_to_exs)
 
             num_exs = len(ll_confi[sam_id])
             for depth in range(num_exs):
@@ -145,14 +145,11 @@ class AllenTool:
                     osent2,
                     ll_confi[sam_id][depth])
                 if ex0.arg1 and ex0.rel:
-                    if sent_to_sent:
-                        if ex0.is_not_in(osent2_to_exs[
-                                             sent_to_sent[osent2]]):
-                            osent2_to_exs[
-                                sent_to_sent[osent2]].append(ex0)
-                    else:
-                        if ex0.is_not_in(osent2_to_exs[osent2]):
-                            osent2_to_exs[osent2].append(ex0)
+                    add_key_value_pair_to_target_d(
+                        key=osent2,
+                        value=ex0,
+                        fix_d=sent_to_sent,
+                        target_d=osent2_to_exs)
         return osent2_to_exs
 
     @staticmethod

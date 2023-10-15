@@ -277,36 +277,36 @@ class SaxExtraction:
         """
         return self.get_simple_sent() == other_ex.get_simple_sent()
 
-    def is_in(self, l_ex):
-        """
-
-        Parameters
-        ----------
-        l_ex: list[SaxExtraction]
-
-        Returns
-        -------
-        bool
-
-        """
-        for ex in l_ex:
-            if ex == self:
-                return True
-        return False
-
-    def is_not_in(self, l_ex):
-        """
-
-        Parameters
-        ----------
-        l_ex: list[SaxExtraction]
-
-        Returns
-        -------
-        bool
-
-        """
-        return not self.is_in(l_ex)
+    # def is_in(self, l_ex):
+    #     """
+    #
+    #     Parameters
+    #     ----------
+    #     l_ex: list[SaxExtraction]
+    #
+    #     Returns
+    #     -------
+    #     bool
+    #
+    #     """
+    #     for ex in l_ex:
+    #         if ex == self:
+    #             return True
+    #     return False
+    #
+    # def is_not_in(self, l_ex):
+    #     """
+    #
+    #     Parameters
+    #     ----------
+    #     l_ex: list[SaxExtraction]
+    #
+    #     Returns
+    #     -------
+    #     bool
+    #
+    #     """
+    #     return not self.is_in(l_ex)
 
     def get_simple_sent(self):
         """

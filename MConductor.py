@@ -741,8 +741,12 @@ class MConductor:
         with open(self.pred_out_fp, "w") as f:
             f.writelines(lines)
 
-    def run(self):
+    def run(self, pred_in_fp=None):
         """
+
+        Parameters
+        ----------
+        pred_in_fp: str
 
         Returns
         -------
@@ -750,4 +754,8 @@ class MConductor:
 
         """
         for process in self.params.mode.split('_'):
-            globals()[process]()
+            if process != "predict":
+                globals()[process]()
+            else:
+                assert pred_in_fp
+                globals()[process](pred_in_fp)

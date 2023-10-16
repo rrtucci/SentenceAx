@@ -92,11 +92,11 @@ class MInput:
         list[list[int]]
 
         """
-        encoder = auto_tokenizer.encode
+        encode = auto_tokenizer.encode
         ll_icode = []
         for sent in l_sent:
-            l_icode = encoder(sent,
-                              add_special_tokens=add)
+            l_icode = encode(sent,
+                             add_special_tokens=add)
             ll_icode.append(l_icode)
         return ll_icode
 
@@ -117,11 +117,11 @@ class MInput:
         list[str]
 
         """
-        decoder = auto_tokenizer.decode
+        decode = auto_tokenizer.decode
         l_sent = []
         for l_icode in ll_icode:
-            sent = decoder(l_icode,
-                           skip_special_tokens=remove)
+            sent = decode(l_icode,
+                          skip_special_tokens=remove)
             l_sent.append(sent)
         return l_sent
 

@@ -12,9 +12,11 @@ from Model import *
 from SaxDataLoader import *
 from sax_utils import *
 from Params import *
+from transformers import AutoTokenizer
 import io
 
-from rescore import rescore
+
+# from rescore import rescore
 
 
 class MConductor:
@@ -108,22 +110,22 @@ class MConductor:
 
         do_lower_case = ('uncased' in self.params.d["model_str"])
         self.auto_tokenizer = AutoTokenizer.from_pretrained(
-            self.params.d["model_str"],
-            do_lower_case=do_lower_case,
+            params.d["model_str"],
+            do_lower_case=True,
             use_fast=True,
             data_dir=TTT_CACHE_DIR,
             add_special_tokens=False,
             additional_special_tokens=UNUSED_TOKENS)
-
         # encode() (a.k.a. convert_tokens_to_ids())
         # replaces vocab.stoi() (stoi=string to integer)
         self.encode = self.auto_tokenizer.encode
         # decode()
         # replaces vocab.itos() (itos=integer to string)
         self.decode = self.auto_tokenizer.decode
-        self.pad_icode = self.encode(self.auto_tokenizer.pad_token)
+        self.pad_icode = self.encode(self.auto_tokenizer.pad_token)[1]
 
-        self.dloader = SaxDataLoader(self.auto_tokenizer,
+        self.dloader = SaxDataLoader(params,
+                                     self.auto_tokenizer,
                                      self.pad_icode,
                                      self.train_fp,
                                      self.tune_fp,
@@ -145,8 +147,7 @@ class MConductor:
             verbose=True,
             monitor='eval_acc',
             mode='max',
-            save_top_k=self.params.d["save_k"]
-            if not self.params.d["debug"] else 0,
+            save_top_k=self.params.d["save_k"],
             period=0)
 
     def get_all_checkpoint_fp(self):
@@ -299,7 +300,7 @@ class MConductor:
 
         """
         # train is the only mode that doesn't require update_params()
-        self.model = Model(self.params.d, self.auto_tokenizer)
+        self.model = Model(self.params, self.auto_tokenizer)
         trainer = self.get_trainer(self.get_logger("train"),
                                    checkpoint_fp=None,
                                    use_minimal=False)
@@ -505,7 +506,8 @@ class MConductor:
     def splitpredict_for_ex(self,
                             l_osentL,
                             l_ccsentL,
-                            pred_out_fp):
+                            pred_out_fp,
+                            delete_ccsents_file=False):
         """
         no trainer
 
@@ -530,6 +532,9 @@ class MConductor:
             f.write("\n".join(l_ccsentL))
 
         self.predict(in_fp)
+
+        if delete_ccsents_file:
+            os.remove(in_fp)
 
         # Does same thing as Openie6's run.get_labels()
         if self.params.d["write_extags_file"]:
@@ -639,80 +644,80 @@ class MConductor:
         None
 
         """
-        print()
-        print("*******Starting re-scoring")
-        print()
-
-        # iline = line number
-        osent_iline_set = set()
-        prev_iline = 0
-        iline_to_exless_sents = {}
-        cur_iline = 0
-        for sample_str in self.model.l_ex_pred_str:
-            sample_str = sample_str.strip('\n')
-            num_ex = len(sample_str) - 1
-            if num_ex == 0:
-                if cur_iline not in iline_to_exless_sents:
-                    iline_to_exless_sents[cur_iline] = []
-                iline_to_exless_sents[cur_iline].append(sample_str)
-            else:
-                cur_iline = prev_iline + num_ex
-                # add() is like append, but for a set
-                osent_iline_set.add(cur_iline)
-                prev_iline = cur_iline
-
-        # testing rescoring
-        rescored_allen_file = rescore(
-            self.re_allen_in_fp,  # f'{self.hparams.out}.allennlp'
-            model_dir=PRED_DIR,  #
-            batch_size=256)
-
-        l_rs_sent = []
-        sent_str = ""
-        for iline, line in enumerate(rescored_allen_file):
-            fields = line.split('\t')
-            osent = fields[0]
-            confi = float(fields[2])
-
-            if iline == 0:
-                sent_str = f'{osent}\n'
-                l_ex = []
-            if iline in osent_iline_set:
-                l_ex = sorted(l_ex, reverse=True,
-                              key=lambda x: float(x.split()[0][:-1]))
-                l_ex = l_ex[:EX_NUM_DEPTHS]
-                l_rs_sent.append(sent_str + ''.join(l_ex))
-                sent_str = f'{osent}\n'
-                l_ex = []
-            if iline in iline_to_exless_sents:
-                for sent in iline_to_exless_sents[iline]:
-                    l_rs_sent.append(f'{sent}\n')
-
-            arg1 = re.findall("<arg1>.*</arg1>", fields[1])[0].strip(
-                '<arg1>').strip('</arg1>').strip()
-            rel = re.findall("<rel>.*</rel>", fields[1])[0].strip(
-                '<rel>').strip('</rel>').strip()
-            arg2 = re.findall("<arg2>.*</arg2>", fields[1])[0].strip(
-                '<arg2>').strip('</arg2>').strip()
-            ex = SaxExtraction(osent,
-                               arg1,
-                               rel,
-                               arg2,
-                               confi)
-            l_ex.append(ex.get_simple_sent() + "\n")
-
-        l_ex = sorted(l_ex, reverse=True,
-                      key=lambda x: float(x.split()[0][:-1]))
-        l_ex = l_ex[:EX_NUM_DEPTHS]
-        l_rs_sent.append(sent_str + ''.join(l_ex))
-
-        if iline in iline_to_exless_sents:
-            for sent in iline_to_exless_sents[iline]:
-                l_rs_sent.append(f'{sent}\n')
-
-        print('Predictions written to ' + self.re_allen_out_fp)
-        with open(self.re_allen_out_fp, "w") as f:
-            f.write('\n'.join(l_rs_sent) + '\n')
+        # print()
+        # print("*******Starting re-scoring")
+        # print()
+        #
+        # # iline = line number
+        # osent_iline_set = set()
+        # prev_iline = 0
+        # iline_to_exless_sents = {}
+        # cur_iline = 0
+        # for sample_str in self.model.l_ex_pred_str:
+        #     sample_str = sample_str.strip('\n')
+        #     num_ex = len(sample_str) - 1
+        #     if num_ex == 0:
+        #         if cur_iline not in iline_to_exless_sents:
+        #             iline_to_exless_sents[cur_iline] = []
+        #         iline_to_exless_sents[cur_iline].append(sample_str)
+        #     else:
+        #         cur_iline = prev_iline + num_ex
+        #         # add() is like append, but for a set
+        #         osent_iline_set.add(cur_iline)
+        #         prev_iline = cur_iline
+        #
+        # # testing rescoring
+        # rescored_allen_file = rescore(
+        #     self.re_allen_in_fp,  # f'{self.hparams.out}.allennlp'
+        #     model_dir=PRED_DIR,  #
+        #     batch_size=256)
+        #
+        # l_rs_sent = []
+        # sent_str = ""
+        # for iline, line in enumerate(rescored_allen_file):
+        #     fields = line.split('\t')
+        #     osent = fields[0]
+        #     confi = float(fields[2])
+        #
+        #     if iline == 0:
+        #         sent_str = f'{osent}\n'
+        #         l_ex = []
+        #     if iline in osent_iline_set:
+        #         l_ex = sorted(l_ex, reverse=True,
+        #                       key=lambda x: float(x.split()[0][:-1]))
+        #         l_ex = l_ex[:EX_NUM_DEPTHS]
+        #         l_rs_sent.append(sent_str + ''.join(l_ex))
+        #         sent_str = f'{osent}\n'
+        #         l_ex = []
+        #     if iline in iline_to_exless_sents:
+        #         for sent in iline_to_exless_sents[iline]:
+        #             l_rs_sent.append(f'{sent}\n')
+        #
+        #     arg1 = re.findall("<arg1>.*</arg1>", fields[1])[0].strip(
+        #         '<arg1>').strip('</arg1>').strip()
+        #     rel = re.findall("<rel>.*</rel>", fields[1])[0].strip(
+        #         '<rel>').strip('</rel>').strip()
+        #     arg2 = re.findall("<arg2>.*</arg2>", fields[1])[0].strip(
+        #         '<arg2>').strip('</arg2>').strip()
+        #     ex = SaxExtraction(osent,
+        #                        arg1,
+        #                        rel,
+        #                        arg2,
+        #                        confi)
+        #     l_ex.append(ex.get_simple_sent() + "\n")
+        #
+        # l_ex = sorted(l_ex, reverse=True,
+        #               key=lambda x: float(x.split()[0][:-1]))
+        # l_ex = l_ex[:EX_NUM_DEPTHS]
+        # l_rs_sent.append(sent_str + ''.join(l_ex))
+        #
+        # if iline in iline_to_exless_sents:
+        #     for sent in iline_to_exless_sents[iline]:
+        #         l_rs_sent.append(f'{sent}\n')
+        #
+        # print('Predictions written to ' + self.re_allen_out_fp)
+        # with open(self.re_allen_out_fp, "w") as f:
+        #     f.write('\n'.join(l_rs_sent) + '\n')
 
     def splitpredict(self, pred_in_fp):
         """
@@ -765,8 +770,32 @@ class MConductor:
 
         """
         for process in self.params.mode.split('_'):
-            if process != "predict":
-                globals()[process]()
-            else:
+            if process in ["predict", "splitpredict"]:
                 assert pred_in_fp
-                globals()[process](pred_in_fp)
+                getattr(self, process)(pred_in_fp)
+            else:
+                getattr(self, process)()
+
+
+if __name__ == "__main__":
+    """
+        pid, task, mode   
+        0. "", ""
+        1. ex, train_test
+        2. ex, test  (appears twice)
+        3. ex, predict (appears twice)
+        4. ex, resume
+        5. cc, train_test
+        6. ex, splitpredict (appears twice)
+
+    """
+
+
+    def main1():
+        params = Params(pid=1)
+        params.d["gpus"] = 0
+        conductor = MConductor(params)
+        conductor.run()
+
+
+    main1()

@@ -138,7 +138,6 @@ class Params:
                 "iterative_layers": 2,
                 "lr": 2E-5,
                 "mode": "train_test",
-                "self.model_str": "bert-base-cased",
                 "optimizer": "adamW",
                 # "save": WEIGHTS_DIR + "/warmup_ex_model",
                 "task": "ex"

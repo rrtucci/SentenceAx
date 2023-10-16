@@ -109,8 +109,8 @@ class Model(pl.LightningModule):
     """
 
     def __init__(self,
-                 params,
-                 auto_tokenizer):
+                 params=None,
+                 auto_tokenizer=None):
         """
         lightning/src/lightning/pytorch/core/module.py
         Parameters
@@ -118,11 +118,12 @@ class Model(pl.LightningModule):
         params: Params
         auto_tokenizer: AutoTokenizer
         """
-        super().__init__(self)
+        super().__init__()
         self.params = params
-        self.init_name_to_param = None
         self.auto_tokenizer = auto_tokenizer
+        self.init_name_to_param = None
 
+        print("dfgrt", type(self.params))
         self.base_model = AutoModel.from_pretrained(
             self.params.d["model_str"], cache_dir=TTT_CACHE_DIR)
         self.hidden_size = self.base_model.config.hidden_size
@@ -296,7 +297,10 @@ class Model(pl.LightningModule):
         tqdm_d['best'] = best
         return tqdm_d
 
-    def forward(self, batch_m_in, batch_id=-1, ttt='train'):
+    def forward(self,
+                batch_m_in=None,
+                batch_id=-1,
+                ttt='train'):
         """
         inherited method
         signature of parent method:  def forward(self, *args, **kwargs)
@@ -309,14 +313,14 @@ class Model(pl.LightningModule):
         
         Parameters
         ----------
-        batch_m_in: MInput
+        batch_m_in_: MInput
         batch_id: int
         ttt: str
 
         Returns
         -------
-        MOutput
-            batch_m_out
+        dict[str, MOutput]
+            {"batch_m_out": batch_m_out}
 
         """
         if "wreg" in self.params.d:
@@ -329,7 +333,7 @@ class Model(pl.LightningModule):
         # third (inner) list over number of labels in a line
         # after padding and adding the 3 unused tokens
         batch_size, num_depths, num_words = \
-            self.batch_m_in.lll_ex_ilabel.shape
+            batch_m_in.lll_ex_ilabel.shape
 
         # `loss_fun` is not used in this function anymore
         # loss_fun, lstm_loss = 0, 0
@@ -415,14 +419,14 @@ class Model(pl.LightningModule):
         lll_pred_ex_confi = []  # all_depth_confidences
         ll_pred_ex_confi0 = []  # all_depth_confidences after cat dim=1
         batch_size, num_words, _ = lll_word_score.shape
-        self.batch_m_in.lll_ex_ilabel = \
-            self.batch_m_in.lll_ex_ilabel.long()
+        batch_m_in.lll_ex_ilabel = \
+            batch_m_in.lll_ex_ilabel.long()
         for depth, lll_word_score0 in enumerate(llll_word_score):
             if ttt == 'train':
                 l_loss_input = \
                     lll_word_score0.reshape(batch_size * num_words, -1)
                 l_loss_target = \
-                    self.batch_m_in.lll_ex_ilabel[:, depth, :].reshape(-1)
+                    batch_m_in.lll_ex_ilabel[:, depth, :].reshape(-1)
                 batch_loss += self.loss_fun(l_loss_input, l_loss_target)
             else:
                 lll_soft_word_score = \
@@ -434,7 +438,7 @@ class Model(pl.LightningModule):
                 # second list over extractions
                 # third (inner) list over number of labels in a line
                 ll_pred_bool = \
-                    (self.batch_m_in.lll_ex_ilabel[:, 0, :] != -100).float()
+                    (batch_m_in.lll_ex_ilabel[:, 0, :] != -100).float()
 
                 # * is element-wise multiplication of tensors
                 ll_pred_bool = \
@@ -514,7 +518,7 @@ class Model(pl.LightningModule):
                               ll_pred_ex_confi0,
                               batch_loss)
 
-        return batch_m_out
+        return {"batch_m_out": batch_m_out}
 
     @staticmethod
     def sax_constrained_loss(batch_m_in,
@@ -587,7 +591,9 @@ class Model(pl.LightningModule):
 
         return hinge_loss
 
-    def training_step(self, batch_m_in, batch_id):
+    def training_step(self,
+                      batch_m_in=None,
+                      batch_id=None):
         """
         inherited method
 
@@ -598,18 +604,21 @@ class Model(pl.LightningModule):
 
         Returns
         -------
-        MOutput
+        dict[str, MOutput]
+            {"batch_m_out": batch_m_out}
 
         """
 
         batch_m_out = self.forward(
             batch_m_in,
             batch_id,
-            ttt='train')
+            ttt='train').values()[0]
 
-        return batch_m_out
+        return {"batch_m_out": batch_m_out}
 
-    def validation_step(self, batch_m_in, batch_id):
+    def validation_step(self,
+                        batch_m_in=None,
+                        batch_id=None):
         """
         inherited method
 
@@ -629,7 +638,7 @@ class Model(pl.LightningModule):
         batch_m_out = self.forward(
             batch_m_in,
             batch_id,
-            "tune")
+            "tune").values()[0]
 
         # tune_out_d = {"lll_ex_ilabel": lll_ex_ilabel,
         #               "lll_pred_ex_confi": lll_pred_ex_confi,
@@ -643,9 +652,11 @@ class Model(pl.LightningModule):
             self.sax_write_batch_sents_out(batch_id)
 
         self.l_batch_m_out.append(batch_m_out)
-        return batch_m_out
+        return {"batch_m_out": batch_m_out}
 
-    def test_step(self, batch_m_in, batch_id):
+    def test_step(self,
+                  batch_m_in=None,
+                  batch_id=None):
         """
         inherited method
         test_step() and validation_step() are identical. They invoke
@@ -665,7 +676,8 @@ class Model(pl.LightningModule):
         """
         return self.validation_step(batch_m_in, batch_id)
 
-    def sax_eval_metrics_at_epoch_end(self, ttt):
+    def sax_eval_metrics_at_epoch_end(self,
+                                      ttt):
         """
         similar to Openie6.model.evaluation_end()
         not inherited method, used in *_epoch_end methods

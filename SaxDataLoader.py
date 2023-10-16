@@ -46,7 +46,6 @@ class SaxDataLoader:
                  params,
                  auto_tokenizer,
                  train_fp, tune_fp, test_fp,
-                 predict_fp=None,
                  use_spacy_model=True):
         """
 
@@ -57,13 +56,14 @@ class SaxDataLoader:
         train_fp: str
         tune_fp: str
         test_fp: str
-        predict_fp: str
         use_spacy_model: bool
         """
 
         self.params = params
         self.auto_tokenizer = auto_tokenizer
-        # full encoding is [101, 0, 102], 101=BOS_ICODE, 102=EOS_ICODE
+        # full encoding is [101, 0, 102],
+        # where 101=BOS_ICODE, 102=EOS_ICODE
+        # print("nkjg", type(auto_tokenizer))
         self.pad_icode = \
             auto_tokenizer.encode(auto_tokenizer.pad_token)[1]
 
@@ -285,14 +285,12 @@ if __name__ == "__main__":
         train_fp = "tests/extags_train.txt"
         tune_fp = "tests/extags_tune.txt"
         test_fp = "tests/extags_test.txt"
-        predict_fp = test_fp
 
         dloader = SaxDataLoader(params,
                                 auto,
                                 train_fp,
                                 tune_fp,
                                 test_fp,
-                                predict_fp,
                                 use_spacy_model)
         train_dataset, tune_dataset, test_dataset = \
             dloader.get_all_ttt_datasets()

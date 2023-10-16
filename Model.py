@@ -822,8 +822,9 @@ class Model(pl.LightningModule):
         osent_to_l_pred_ex = {}
         for sample_id, orig_sent in enumerate(l_orig_sent):
             orig_sentL = redoL(orig_sent)
-            add_key_to_target_d(orig_sent, self.sent_to_sent,
-                                osent_to_l_pred_ex)
+            add_key_to_target_d(key=orig_sent,
+                                fix_d=self.sent_to_sent,
+                                target_d=osent_to_l_pred_ex)
             for depth in range(num_depths):
                 num_words = len(get_words(orig_sentL))
                 ex_ilabels = lll_ilabel[sample_id][depth][:num_words]

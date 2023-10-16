@@ -93,7 +93,7 @@ def load_sent_to_sent(in_fp):
     similar to Openie6.data_processing.load_conj_mapping() Our
     sent_to_sent is similar to Openie6 mapping and conj_mapping. This
     method works equally well for ExMetric.sent_to_sent and
-    CCMetric.sent_to_sent
+    CCMetric.sent_to_words
 
     Returns
     -------

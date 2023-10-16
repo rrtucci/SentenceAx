@@ -12,6 +12,7 @@ from Model import *
 from SaxDataLoader import *
 from sax_utils import *
 from Params import *
+import io
 
 from rescore import rescore
 
@@ -128,11 +129,6 @@ class MConductor:
                                      self.tune_fp,
                                      self.test_fp)
 
-        self.pred_in_fp = PRED_IN_FP
-        self.pred_out_fp = PRED_OUT_FP
-        self.re_allen_in_fp = RE_ALLEN_IN_FP
-        self.re_allen_out_fp = RE_ALLEN_OUT_FP
-
         self.model = None
 
     def get_checkpoint_callback(self):
@@ -144,8 +140,8 @@ class MConductor:
 
         """
         return ModelCheckpoint(
-            filepath=WEIGHTS_DIR + "/" +\
-                self.params.task + '_model/{epoch:02d}_{eval_acc:.3f}',
+            filepath=WEIGHTS_DIR + "/" + \
+                     self.params.task + '_model/{epoch:02d}_{eval_acc:.3f}',
             verbose=True,
             monitor='eval_acc',
             mode='max',
@@ -373,7 +369,8 @@ class MConductor:
                 # trainer.fit() and trainer.test() are different
                 trainer.test(
                     self.model,
-                    test_dataloaders=self.dloader.get_one_ttt_dataloader("test"))
+                    test_dataloaders=self.dloader.get_one_ttt_dataloader(
+                        "test"))
                 eval_epoch_end_d = self.model.eval_epoch_end_d
                 test_f.write(f'{checkpoint_fp}\t{eval_epoch_end_d}\n')
                 # note test_f created outside loop.
@@ -382,12 +379,15 @@ class MConductor:
         shutil.move(WEIGHTS_DIR + f'/logs/test.part',
                     WEIGHTS_DIR + f'/logs/test')
 
-    def predict(self,
-                dloader_type="pred"):
+    def predict(self, predict_in_fp):
         """
         similar to Openie6.run.predict()
 
         trainer.test()
+
+        Parameters
+        ----------
+        predict_in_fp: str
 
         Returns
         -------
@@ -419,7 +419,7 @@ class MConductor:
                                    use_minimal=True)
         start_time = time()
         # self.model.all_sentences = all_sentences # never used
-        dataloader = self.dloader.get_predict_dataloader("test")
+        dataloader = self.dloader.get_predict_dataloader(predict_in_fp)
         trainer.test(
             self.model,
             test_dataloaders=dataloader)
@@ -427,11 +427,15 @@ class MConductor:
         minutes = (end_time - start_time) / 60
         print(f'Total Time taken = {minutes : 2f} minutes')
 
-    def splitpredict_for_cc(self):
+    def splitpredict_for_cc(self, pred_in_fp):
         """
         no trainer
 
         reads pred_in_fp
+
+        Parameters
+        ----------
+        pred_in_fp: str
 
         Returns
         -------
@@ -455,7 +459,7 @@ class MConductor:
                 for sent in l_pred_sent[1:]:
                     self.model.ex_sent_to_sent[sent] = l_pred_sent[0]
                     l_ccsentL.append(redoL(sent))
-               # added
+                # added
                 self.model.cc_sent_to_words[l_pred_sent[0]] = cc_words
             else:
                 assert False
@@ -472,7 +476,7 @@ class MConductor:
         l_ccsentL = []  # sentences
         l_osentL = []  # orig_sentences
 
-        if not self.pred_in_fp:
+        if not pred_in_fp:
             for sample_id, pred_str in enumerate(l_cc_pred_str):
                 # example_sentences
                 l_pred_sent = pred_str.strip('\n').split('\n')
@@ -486,7 +490,7 @@ class MConductor:
         #         count += len(l_spanned_loc)
         # assert count == len(l_osentL) - 1
         else:
-            with open(self.pred_in_fp, "r") as f:
+            with open(pred_in_fp, "r") as f:
                 content = f.read()
             content = content.replace("\\", "")
             lines = content.split('\n\n')
@@ -518,9 +522,10 @@ class MConductor:
         """
         self.params.d["suggested_checkpoint_fp"] = EX_FIN_WEIGHTS_FP
         self.params.d["model_str"] = 'bert-base-cased'
-        test_dataloader = self.dloader.get_one_ttt_dataloader("test")
 
-        self.predict("pred")
+        virtual_pred_in_fp = io.StringIO("\n".join(l_ccsentL))
+
+        self.predict(virtual_pred_in_fp)
 
         # Does same thing as Openie6's run.get_labels()
         if self.params.d["write_extags_file"]:
@@ -567,7 +572,7 @@ class MConductor:
         # testing rescoring
         rescored_allen_file = rescore(
             self.re_allen_in_fp,  # f'{self.hparams.out}.allennlp'
-            model_dir=RESCORE_DIR,  #
+            model_dir=PRED_DIR,  #
             batch_size=256)
 
         l_rs_sent = []
@@ -617,7 +622,7 @@ class MConductor:
         with open(self.re_allen_out_fp, "w") as f:
             f.write('\n'.join(l_rs_sent) + '\n')
 
-    def splitpredict(self, **kwargs):
+    def splitpredict(self):
         """
         similar to Openie6.run.splitpredict()
 

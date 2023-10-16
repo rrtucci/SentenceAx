@@ -70,7 +70,6 @@ class SaxDataLoader:
         self.train_fp = train_fp
         self.tune_fp = tune_fp
         self.test_fp = test_fp
-        self.predict_fp = predict_fp
         self.use_spacy_model = use_spacy_model
 
     def get_m_in(self, in_fp):
@@ -164,9 +163,13 @@ class SaxDataLoader:
 
         return train_dataset, tune_dataset, test_dataset  # , vocab, orig_sents
 
-    def get_predict_dataset(self):
+    def get_predict_dataset(self, predict_in_fp):
         """
         similar to Openie6.data.process_data()
+
+        Parameters
+        ----------
+        predict_in_fp: str
 
         Returns
         -------
@@ -201,14 +204,10 @@ class SaxDataLoader:
         # which is get_all_ttt_datasets() for us.
         # get_samples()
         # returns: examples, orig_sents
-        if not self.predict_fp:
-            print("'predict' string in mode string but no predict_fp.")
-            print("Will use test_fp in place of predict_fp")
-            in_fp = self.test_fp
-        else:
-            in_fp = self.predict_fp
 
-        predict_m_in = self.get_m_in(in_fp)
+        assert predict_in_fp
+
+        predict_m_in = self.get_m_in(predict_in_fp)
         # vocab = build_vocab(predict_m_in)
 
         predict_dataset = SaxDataSet(predict_m_in,
@@ -253,22 +252,19 @@ class SaxDataLoader:
         else:
             assert False
 
-    def get_predict_dataloader(self, dataset_type="pred"):
+    def get_predict_dataloader(self, predict_in_fp):
         """
+
+        Parameters
+        ----------
+        predict_in_fp: str
 
         Returns
         -------
         DataLoader
 
         """
-        if dataset_type == "pred":
-            dataset = self.get_predict_dataset()
-        elif dataset_type == "test":
-            _, _, dataset = self.get_all_ttt_datasets()
-        else:
-            assert False
-
-        return DataLoader(dataset,
+        return DataLoader(self.get_predict_dataset(predict_in_fp),
                           batch_size=self.params.d["batch_size"],
                           # collate_fn=None,
                           shuffle=True,

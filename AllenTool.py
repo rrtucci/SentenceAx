@@ -132,7 +132,9 @@ class AllenTool:
 
         osent2_to_exs = {}
         for sam_id, osent2 in enumerate(l_osent2):
-            add_key_to_target_d(osent2, sent_to_sent, osent2_to_exs)
+            add_key_to_target_d(key=osent2,
+                                fix_d=sent_to_sent,
+                                target_d=osent2_to_exs)
 
             num_exs = len(ll_confi[sam_id])
             for depth in range(num_exs):

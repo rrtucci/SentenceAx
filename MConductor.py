@@ -379,7 +379,7 @@ class MConductor:
         shutil.move(WEIGHTS_DIR + f'/logs/test.part',
                     WEIGHTS_DIR + f'/logs/test')
 
-    def predict(self, predict_in_fp):
+    def predict(self, pred_in_fp):
         """
         similar to Openie6.run.predict()
 
@@ -419,7 +419,7 @@ class MConductor:
                                    use_minimal=True)
         start_time = time()
         # self.model.all_sentences = all_sentences # never used
-        dataloader = self.dloader.get_predict_dataloader(predict_in_fp)
+        dataloader = self.dloader.get_predict_dataloader(pred_in_fp)
         trainer.test(
             self.model,
             test_dataloaders=dataloader)
@@ -504,7 +504,8 @@ class MConductor:
 
     def splitpredict_for_ex(self,
                             l_osentL,
-                            l_ccsentL):
+                            l_ccsentL,
+                            pred_out_fp):
         """
         no trainer
 
@@ -514,6 +515,7 @@ class MConductor:
         ----------
         l_osentL: list[str]
         l_ccsentL: list[str]
+        pred_out_fp: str
 
         Returns
         -------
@@ -523,14 +525,104 @@ class MConductor:
         self.params.d["suggested_checkpoint_fp"] = EX_FIN_WEIGHTS_FP
         self.params.d["model_str"] = 'bert-base-cased'
 
-        virtual_pred_in_fp = io.StringIO("\n".join(l_ccsentL))
+        in_fp = pred_out_fp.strip(".txt") + "_ccsents.txt"
+        with open(in_fp, "r", encoding="utf-8") as f:
+            f.write("\n".join(l_ccsentL))
 
-        self.predict(virtual_pred_in_fp)
+        self.predict(in_fp)
 
         # Does same thing as Openie6's run.get_labels()
         if self.params.d["write_extags_file"]:
             self.write_extags_file_from_preds(l_osentL,
-                                              l_ccsentL)
+                                              l_ccsentL,
+                                              pred_out_fp)
+
+    def write_extags_file_from_preds(
+            self,
+            l_osentL,  # orig_sentences
+            l_ccsentL,  # sentences
+            pred_out_fp):
+        """
+        similar to Openie6.run.get_labels()
+        ILABEL_TO_EXTAG={0: 'NONE', 1: 'ARG1', 2: 'REL', 3: 'ARG2',
+                 4: 'ARG2', 5: 'NONE'}
+
+        called by `splitpredict_for_ex()`
+
+
+        Parameters
+        ----------
+        l_osentL: list[str]
+        l_ccsentL: list[str]
+        pred_out_fp: str
+
+
+        Returns
+        -------
+        None
+
+        """
+        l_m_out = self.model.l_batch_m_out
+
+        lines = []
+        batch_id0 = 0  # similar to idx1
+        sam_id0 = 0  # similar to idx2
+        cum_sam_id0 = 0  # similar to idx3
+        # isam similar to i
+        # jccsent similar to j
+
+        # lll_cc_spanned_loc is similar to
+        # sentence_indices_list, model.all_sentence_indices_conj
+        lll_cc_spanned_loc = \
+            self.model.lll_cc_spanned_loc
+        for isam in range(len(lll_cc_spanned_loc)):
+            osent = undoL(l_osentL[isam])
+            if len(lll_cc_spanned_loc[isam]) == 0:
+                lll_cc_spanned_loc[isam].append(list(range(len(osent))))
+            lines.append('\n' + osent)
+            num_ccsent = len(lll_cc_spanned_loc[isam])
+            for jccsent in range(num_ccsent):
+                osent = l_m_out[batch_id0].l_osent[sam_id0]
+                osentL = redoL(osent)
+                osentL_words = get_words(osentL)
+                assert len(lll_cc_spanned_loc[isam][jccsent]) == \
+                       len(osentL_words)
+                assert osentL == l_ccsentL[cum_sam_id0]
+                # similar to predictions
+                ll_pred_ilabel = \
+                    l_m_out[batch_id0].lll_pred_ilabel[sam_id0]
+                for l_pred_ilabel in ll_pred_ilabel:
+                    # You can use x.item() to get a Python number
+                    # from a torch tensor that has one element
+                    if l_pred_ilabel.sum().item() == 0:
+                        break
+
+                    l_ilabel = [0] * len(osentL_words)
+                    l_pred_ilabel = \
+                        l_pred_ilabel[:len(osentL_words)].tolist()
+                    for k, loc in enumerate(
+                            sorted(lll_cc_spanned_loc[isam][jccsent])):
+                        l_ilabel[loc] = l_pred_ilabel[k]
+
+                    assert len(l_ilabel) == len(osentL_words)
+                    l_ilabel = l_ilabel[:-3]
+                    # 1: arg1, 2: rel
+                    if 1 not in l_pred_ilabel and 2 not in l_pred_ilabel:
+                        continue  # not a pass
+
+                    str_extags = \
+                        ' '.join([ILABEL_TO_EXTAG[i] for i in l_ilabel])
+                    lines.append(str_extags)
+
+                cum_sam_id0 += 1
+                sam_id0 += 1
+                if sam_id0 == len(l_m_out[batch_id0].l_osent):
+                    sam_id0 = 0
+                    batch_id0 += 1
+
+        lines.append('\n')
+        with open(pred_out_fp, "w") as f:
+            f.writelines(lines)
 
     def splitpredict_for_rescore(self):
         """
@@ -622,12 +714,15 @@ class MConductor:
         with open(self.re_allen_out_fp, "w") as f:
             f.write('\n'.join(l_rs_sent) + '\n')
 
-    def splitpredict(self):
+    def splitpredict(self, pred_in_fp):
         """
         similar to Openie6.run.splitpredict()
 
         calls self.predict() and self.rescore()
 
+        Parameters
+        ----------
+        pred_in_fp: str
 
         Returns
         -------
@@ -644,102 +739,18 @@ class MConductor:
         self.params.d["write_allen_file"] = True
 
         self.params.d["task"] = self.params.task = "cc"
-        l_osentL, l_ccsentL = self.splitpredict_for_cc()
+        l_osentL, l_ccsentL = self.splitpredict_for_cc(pred_in_fp)
 
         self.params.d["task"] = self.params.task = "ex"
+        pred_out_fp = pred_in_fp.strip(".txt") + "_extags_out.txt"
         self.splitpredict_for_ex(l_osentL,
-                                 l_ccsentL)
+                                 l_ccsentL,
+                                 pred_out_fp)
 
         if self.params.d["do_rescoring"]:
             self.splitpredict_for_rescore()
         else:
             print("not doing rescoring")
-
-    def write_extags_file_from_preds(
-            self,
-            l_osentL,  # orig_sentences
-            l_ccsentL):  # sentences
-        """
-        similar to Openie6.run.get_labels()
-        ILABEL_TO_EXTAG={0: 'NONE', 1: 'ARG1', 2: 'REL', 3: 'ARG2',
-                 4: 'ARG2', 5: 'NONE'}
-
-        called by `splitpredict_for_ex()`
-
-
-        Parameters
-        ----------
-        pred_out_fp: str
-        l_osentL: list[str]
-        l_ccsentL: list[str]
-
-
-        Returns
-        -------
-        None
-
-        """
-        l_m_out = self.model.l_batch_m_out
-
-        lines = []
-        batch_id0 = 0  # similar to idx1
-        sam_id0 = 0  # similar to idx2
-        cum_sam_id0 = 0  # similar to idx3
-        # isam similar to i
-        # jccsent similar to j
-
-        # lll_cc_spanned_loc is similar to
-        # sentence_indices_list, model.all_sentence_indices_conj
-        lll_cc_spanned_loc = \
-            self.model.lll_cc_spanned_loc
-        for isam in range(len(lll_cc_spanned_loc)):
-            osent = undoL(l_osentL[isam])
-            if len(lll_cc_spanned_loc[isam]) == 0:
-                lll_cc_spanned_loc[isam].append(list(range(len(osent))))
-            lines.append('\n' + osent)
-            num_ccsent = len(lll_cc_spanned_loc[isam])
-            for jccsent in range(num_ccsent):
-                osent = l_m_out[batch_id0].l_osent[sam_id0]
-                osentL = redoL(osent)
-                osentL_words = get_words(osentL)
-                assert len(lll_cc_spanned_loc[isam][jccsent]) == \
-                       len(osentL_words)
-                assert osentL == l_ccsentL[cum_sam_id0]
-                # similar to predictions
-                ll_pred_ilabel = \
-                    l_m_out[batch_id0].lll_pred_ilabel[sam_id0]
-                for l_pred_ilabel in ll_pred_ilabel:
-                    # You can use x.item() to get a Python number
-                    # from a torch tensor that has one element
-                    if l_pred_ilabel.sum().item() == 0:
-                        break
-
-                    l_ilabel = [0] * len(osentL_words)
-                    l_pred_ilabel = \
-                        l_pred_ilabel[:len(osentL_words)].tolist()
-                    for k, loc in enumerate(
-                            sorted(lll_cc_spanned_loc[isam][jccsent])):
-                        l_ilabel[loc] = l_pred_ilabel[k]
-
-                    assert len(l_ilabel) == len(osentL_words)
-                    l_ilabel = l_ilabel[:-3]
-                    # 1: arg1, 2: rel
-                    if 1 not in l_pred_ilabel and 2 not in l_pred_ilabel:
-                        continue  # not a pass
-
-                    str_extags = \
-                        ' '.join([ILABEL_TO_EXTAG[i] for i in l_ilabel])
-                    lines.append(str_extags)
-
-                cum_sam_id0 += 1
-                sam_id0 += 1
-                if sam_id0 == len(l_m_out[batch_id0].l_osent):
-                    sam_id0 = 0
-                    batch_id0 += 1
-
-        lines.append('\n')
-        with open(self.pred_out_fp, "w") as f:
-            f.writelines(lines)
 
     def run(self, pred_in_fp=None):
         """

@@ -79,6 +79,7 @@ class SaxDataSet(Dataset):
 
 if __name__ == "__main__":
     def main():
+        task = "ex"
         in_fp = "tests/extags_test.txt"
         model_str = "bert-base-uncased"
         auto = AutoTokenizer.from_pretrained(
@@ -89,7 +90,8 @@ if __name__ == "__main__":
             add_special_tokens=False,
             additional_special_tokens=UNUSED_TOKENS)
         use_spacy_model = True
-        m_in = MInput(in_fp,
+        m_in = MInput(task,
+                      in_fp,
                       auto,
                       use_spacy_model)
         # full encoding is [101, 0, 102], 101=BOS_ICODE, 102=EOS_ICODE

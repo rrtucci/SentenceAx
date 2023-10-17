@@ -211,7 +211,7 @@ class SaxDataPadder:
 
 
 if __name__ == "__main__":
-    def main(in_fp):
+    def main(task, in_fp):
         model_str = "bert-base-uncased"
         auto = AutoTokenizer.from_pretrained(
             model_str,
@@ -221,7 +221,8 @@ if __name__ == "__main__":
             add_special_tokens=False,
             additional_special_tokens=UNUSED_TOKENS)
         use_spacy_model = True
-        m_in = MInput(in_fp,
+        m_in = MInput(task,
+                      in_fp,
                       auto,
                       use_spacy_model)
         # full encoding is [101, 0, 102], 101=BOS_ICODE, 102=EOS_ICODE
@@ -231,5 +232,7 @@ if __name__ == "__main__":
         padder.print_padded_data_d_shapes()
 
 
-    main(in_fp="tests/extags_test.txt")
-    main(in_fp="predictions/small_pred.txt")
+    main(task="ex",
+         in_fp="tests/extags_test.txt")
+    main(task="ex",
+         in_fp="predictions/small_pred.txt")

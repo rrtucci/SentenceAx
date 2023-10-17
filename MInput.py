@@ -269,7 +269,7 @@ class MInput:
             else:
                 self.ll_osent_verb_loc.append([0])
 
-    def read_input_tags_file(self, task, in_fp):
+    def read_input_tags_file(self, in_fp):
         """
         similar to Openie6.data._process_data()
 
@@ -315,10 +315,12 @@ class MInput:
             lines = f.readlines()
 
         def is_beginning_of_sample(line0):
-            return line0 and not line0.isupper()
+            return line0 and (not line0.isupper()
+                or has_puntuation(line0))
 
         def is_tag_line_of_sample(line0):
-            return line0 and line0.isupper()
+            return line0 and line0.isupper() \
+                and not has_puntuation(line0)
 
         def is_pre_beginning_of_sample(k, prev_line0, line0):
             if not line0 or k == len(lines) - 1 or k == 0:
@@ -367,7 +369,7 @@ class MInput:
             elif is_tag_line_of_sample(line):
                 # print("sdfrg-tag", k)
 
-                ex_ilabels = [TAG_TO_ILABEL(task)[tag] for tag in
+                ex_ilabels = [TAG_TO_ILABEL(self.task)[tag] for tag in
                               get_words(line)]
                 # print("nnmk-line number= " + str(k))
                 # assert len(ex_ilabels) == len(osent_wstart_locs)
@@ -383,7 +385,7 @@ class MInput:
                 l_w = get_words(sentL)
                 if sentL and len(l_w) > 100:
                     num_omitted_sents += 1
-                    print("dfgtyh", in_fp) #openie4_labels
+                    print("started reading '" + in_fp + "'")
                     print(str(num_omitted_sents) +
                           f". The {k}'th line longer than 100."
                           f" length={len(l_w)}\n" + str(l_w[0:10]))
@@ -408,7 +410,7 @@ class MInput:
 
         num_samples = len(l_orig_sent)
         print()
-        print("just finished reading '" + in_fp + "'")
+        print("finished reading '" + in_fp + "'")
         print("number of lines= " + str(k))
         print("number of used samples= ", num_samples)
         print("number of omitted samples= ", num_omitted_sents)
@@ -454,7 +456,7 @@ class MInput:
 
 
 if __name__ == "__main__":
-    def main1(in_fp, verbose):
+    def main1(task, in_fp, verbose):
         model_str = "bert-base-uncased"
         auto_tokenizer = AutoTokenizer.from_pretrained(
             model_str,
@@ -464,7 +466,8 @@ if __name__ == "__main__":
             add_special_tokens=False,
             additional_special_tokens=UNUSED_TOKENS)
         use_spacy_model = True
-        m_in = MInput(in_fp,
+        m_in = MInput(task,
+                      in_fp,
                       auto_tokenizer,
                       use_spacy_model,
                       verbose=verbose)
@@ -507,6 +510,10 @@ if __name__ == "__main__":
         pprint(l_sent2)
 
 
-    main1(in_fp="tests/extags_test.txt", verbose=False)
+    main1(task="ex",
+          in_fp="tests/extags_test.txt",
+          verbose=False)
     main2(add=True, remove=True)
-    main1(in_fp="predictions/small_pred.txt", verbose=True)
+    main1(task="ex",
+          in_fp="predictions/small_pred.txt",
+          verbose=True)

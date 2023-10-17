@@ -100,6 +100,22 @@ def num_depths(task):
     return x
 
 
+def has_puntuation(str0):
+    """
+
+    Parameters
+    ----------
+    str0: str
+
+    Returns
+    -------
+    bool
+
+    """
+    from string import punctuation
+    return any(ch in str0 for ch in punctuation)
+
+
 def get_words(sent, algo="nltk"):
     """
     note: get_words("") = []

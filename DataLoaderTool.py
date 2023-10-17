@@ -86,7 +86,8 @@ class DataLoaderTool:
         MInput
 
         """
-        m_in = MInput(in_fp,
+        m_in = MInput(self.params.task,
+                      in_fp,
                       self.auto_tokenizer,
                       self.use_spacy_model)
 
@@ -117,11 +118,11 @@ class DataLoaderTool:
         # model_str = self.params.d["model_str"].replace("/", "_")
         task = self.params.task
         cached_train_fp = TTT_CACHE_DIR + "/" + task + "_" + \
-            self.train_fp.split(".")[0] + ".pkl"
+                          self.train_fp.split(".")[0] + ".pkl"
         cached_tune_fp = TTT_CACHE_DIR + "/" + task + "_" + \
-            self.tune_fp.split(".")[0] + ".pkl"
+                         self.tune_fp.split(".")[0] + ".pkl"
         cached_test_fp = TTT_CACHE_DIR + "/" + task + "_" + \
-            self.test_fp.split(".")[0] + ".pkl"
+                         self.test_fp.split(".")[0] + ".pkl"
 
         if not os.path.exists(cached_train_fp) or \
                 self.params.d["refresh_cache"]:

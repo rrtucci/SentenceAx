@@ -113,13 +113,13 @@ class Params:
         # elif self.task == "ex" and self.mode == "splitpredict":
         #     self.d = {
         #         "cc_weights_fp": WEIGHTS_DIR +
-        #                     "/cc_model/epoch=28_eval_acc=0.854.ckpt",
+        #                     "/cc_epoch=28_eval_acc=0.854.ckpt",
         #         "gpus": 1,
         #         # "inp": "sentences.txt",
         #         "mode": "splitpredict",
         #         "num_extractions": 5,
         #         "ex_weights_fp": WEIGHTS_DIR +
-        #                     "/ex_model/epoch=14_eval_acc=0.551_v0.ckpt",
+        #                     "/ex_epoch=14_eval_acc=0.551_v0.ckpt",
         #         #"out": "predictions.txt",
         #         # "rescore_model": WEIGHTS_DIR + "/rescore_model",
         #         "rescoring": True,
@@ -232,7 +232,7 @@ class Params:
                 "mode": "train_test",
                 "model_str": "bert-large-cased",
                 "optimizer": "adamW",
-                # "save": WEIGHTS_DIR + "/cc_model",
+                # "save": WEIGHTS_DIR + "/cc",
                 "task": "cc"
             }
 
@@ -244,13 +244,13 @@ class Params:
         elif self.task == "ex" and self.mode == "splitpredict":
             self.d = {
                 "cc_weights_fp":
-                    WEIGHTS_DIR + "/cc_model-epoch=28_eval_acc=0.854.ckpt",
+                    WEIGHTS_DIR + "/cc_epoch=28_eval_acc=0.854.ckpt",
                 "gpus": 1,
                 # "inp": "carb_subset/data/carb_sentences.txt",
                 "mode": "splitpredict",
                 "num_extractions": EX_NUM_DEPTHS,
                 "ex_weights_fp":
-                    WEIGHTS_DIR + "/ex_model/epoch=14_eval_acc=0.551_v0.ckpt",
+                    WEIGHTS_DIR + "/ex_epoch=14_eval_acc=0.551_v0.ckpt",
                 # "out": WEIGHTS_DIR + "/results/final",
                 # "rescore_model": WEIGHTS_DIR + "/rescore_model",
                 "do_rescoring": False,
@@ -314,7 +314,7 @@ class Params:
         elif self.task == "cc":
             return CCTAG_TO_ILABEL
 
-    def log_dir(self):
+    def task_logs_dir(self):
         """
 
         Returns
@@ -323,6 +323,6 @@ class Params:
 
         """
         if self.task == "ex":
-            return WEIGHTS_DIR + '/ex_logs'
+            return LOGS_DIR + '/ex'
         elif self.task == "cc":
-            return WEIGHTS_DIR + '/cc_logs'
+            return LOGS_DIR + '/cc'

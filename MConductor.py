@@ -198,17 +198,17 @@ class MConductor:
 
         # the current log file will have no number prefix,
         # stored ones will.
-        if os.path.exists(self.params.log_dir() + "/" + ttt):
+        if os.path.exists(self.params.task_logs_dir() + "/" + ttt):
             num_numbered_logs = len(
-                list(glob(self.params.log_dir() + f'/{ttt}_*')))
+                list(glob(self.params.task_logs_dir() + f'/{ttt}_*')))
             new_id = num_numbered_logs + 1
             print('Retiring current log file by changing its name')
             print(shutil.move(
-                self.params.log_dir() + f'/{ttt}',
-                self.params.log_dir() + f'/{ttt}_{new_id}'))
+                self.params.task_logs_dir() + f'/{ttt}',
+                self.params.task_logs_dir() + f'/{ttt}_{new_id}'))
         logger = TensorBoardLogger(
-            save_dir=WEIGHTS_DIR,
-            name='logs',
+            save_dir=LOGS_DIR,
+            name=self.params.task,
             version=ttt + '.part')
         return logger
 
@@ -306,8 +306,9 @@ class MConductor:
             self.model,
             train_dataloader=self.dloader_tool.get_one_ttt_dataloader("train"),
             val_dataloaders=self.dloader_tool.get_one_ttt_dataloader("tune"))
-        shutil.move(WEIGHTS_DIR + f'/logs/train.part',
-                    WEIGHTS_DIR + f'/logs/train')
+        tdir = self.params.task_logs_dir()
+        shutil.move(tdir + '/train.part',
+                    tdir + '/train')
 
     def resume(self):
         """
@@ -333,8 +334,9 @@ class MConductor:
             self.model,
             train_dataloader=self.dloader_tool.get_one_ttt_dataloader("train"),
             val_dataloaders=self.dloader_tool.get_one_ttt_dataloader("tune"))
-        shutil.move(WEIGHTS_DIR + '/logs/resume.part',
-                    WEIGHTS_DIR + '/logs/resume')
+        tdir = self.params.task_logs_dir()
+        shutil.move(tdir + '/resume.part',
+                    tdir + '/resume')
 
     def test(self):
         """
@@ -358,7 +360,8 @@ class MConductor:
         # if self.params.task == "cc" and self.cc_sent_to_words:
         #     self.model.metric.sent_to_words = self.cc_sent_to_words
 
-        with open(WEIGHTS_DIR + '/logs/test.txt', "w") as test_f:
+        tdir = self.params.task_logs_dir()
+        with open(tdir + '/test.txt', "w") as test_f:
             logger = self.get_logger("test")
             # one checkpoint at end of each epoch
             for checkpoint_fp in self.get_all_checkpoint_fp():
@@ -366,17 +369,15 @@ class MConductor:
                                            checkpoint_fp,
                                            use_minimal=True)
                 # trainer.fit() and trainer.test() are different
-                trainer.test(
-                    self.model,
-                    test_dataloaders=self.dloader_tool.get_one_ttt_dataloader(
-                        "test"))
+                dloader = self.dloader_tool.get_one_ttt_dataloader("test")
+                trainer.test(self.model, test_dataloaders=dloader)
                 eval_epoch_end_d = self.model.eval_epoch_end_d
                 test_f.write(f'{checkpoint_fp}\t{eval_epoch_end_d}\n')
                 # note test_f created outside loop.
                 # refresh/clear/flush test_f after each write
                 test_f.flush()
-        shutil.move(WEIGHTS_DIR + f'/logs/test.part',
-                    WEIGHTS_DIR + f'/logs/test')
+        shutil.move(tdir + '/test.part',
+                    tdir + '/test')
 
     def predict(self, pred_in_fp):
         """
@@ -789,11 +790,12 @@ if __name__ == "__main__":
     """
 
 
-    def main1():
-        params = Params(pid=1)
+    def main(pid):
+        params = Params(pid)
         params.d["gpus"] = 0
         conductor = MConductor(params)
         conductor.run()
 
 
-    main1()
+    # main(1)
+    main(5)

@@ -405,7 +405,8 @@ class MInput:
         print()
         print("just finished reading '" + in_fp + "'")
         print("number of lines= " + str(k))
-        print("number of samples= ", num_samples)
+        print("number of used samples= ", num_samples)
+        print("number of omitted samples= ", num_omitted_sents)
 
         self.l_orig_sent = l_orig_sent
         # ll_osent_icode add extra term [0] at beginnig

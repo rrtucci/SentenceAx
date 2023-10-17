@@ -114,13 +114,14 @@ class DataLoaderTool:
         assert self.train_fp, self.train_fp
         assert self.tune_fp, self.tune_fp
         assert self.test_fp, self.test_fp
-        model_str = self.params.d["model_str"].replace("/", "_")
-        cached_train_fp = \
-            f'{self.train_fp.split(".")[0]}.{model_str}.pkl'
-        cached_tune_fp = \
-            f'{self.tune_fp.split(".")[0]}.{model_str}.pkl'
-        cached_test_fp = \
-            f'{self.test_fp.split(".")[0]}.{model_str}.pkl'
+        # model_str = self.params.d["model_str"].replace("/", "_")
+        task = self.params.task
+        cached_train_fp = TTT_CACHE_DIR + "/" + task + "_" + \
+            self.train_fp.split(".")[0] + ".pkl"
+        cached_tune_fp = TTT_CACHE_DIR + "/" + task + "_" + \
+            self.tune_fp.split(".")[0] + ".pkl"
+        cached_test_fp = TTT_CACHE_DIR + "/" + task + "_" + \
+            self.test_fp.split(".")[0] + ".pkl"
 
         if not os.path.exists(cached_train_fp) or \
                 self.params.d["refresh_cache"]:

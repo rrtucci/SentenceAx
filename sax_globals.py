@@ -27,9 +27,10 @@ params_d = parameters dictionary
 # EXTAGS_TEST_FP = "input_data/extags_test.txt"
 
 INPUT_DIR = "input_data"
-TTT_CACHE_DIR = INPUT_DIR + '/pretrained_cache'
+TTT_CACHE_DIR = 'ttt_cache'
 WEIGHTS_DIR = "weights"
 PRED_DIR = "predictions"
+LOGS_DIR = "logs"
 CC_METRIC_STORAGE_DIR = "cc_metric_storage"
 
 CCTAGS_TRAIN_FP = 'input_data/openie-data/ptb-train.labels'

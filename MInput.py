@@ -311,27 +311,30 @@ class MInput:
         lll_ilabel = []  # similar to targets, target=extraction
         sentL = ""  # similar to `sentence`
 
+        print("\nMInput started reading '" + in_fp + "'")
         with open(in_fp, "r", encoding="utf-8") as f:
             lines = f.readlines()
 
         def is_beginning_of_sample(line0):
             return line0 and (not line0.isupper()
-                or has_puntuation(line0))
+                or has_puntuation(line0, ignored_chs="_"))
 
         def is_tag_line_of_sample(line0):
+            # ignoring "_" because of CP_START
             return line0 and line0.isupper() \
-                and not has_puntuation(line0)
+                and not has_puntuation(line0, ignored_chs="_")
 
-        def is_pre_beginning_of_sample(k, prev_line0, line0):
-            if not line0 or k == len(lines) - 1 or k == 0:
+        def is_ending_of_sample(k, prev_line0, line0):
+            if not line0:
                 return True
             if prev_line0 and is_beginning_of_sample(line0):
                 return True
             return False
 
-        ll_ilabel = []
+
         prev_line = None
         osent_icodes = []
+        ll_ilabel = []
         osent_wstart_locs = []
         num_omitted_sents = 0
         k = 0
@@ -377,22 +380,27 @@ class MInput:
                 # print("dfgthj", ll_ilabel)
             else:
                 pass
-            if is_pre_beginning_of_sample(k, prev_line, line):
+            if is_ending_of_sample(k, prev_line, line):
                 # print("ddft-end", k)
                 if len(ll_osent_icode) == 0:
                     ll_osent_icode = [[0]]
 
-                l_w = get_words(sentL)
-                if sentL and len(l_w) > 100:
+                sentL_words = get_words(sentL)
+                if sentL and len(sentL_words) > 100:
                     num_omitted_sents += 1
-                    print("started reading '" + in_fp + "'")
                     print(str(num_omitted_sents) +
-                          f". The {k}'th line longer than 100."
-                          f" length={len(l_w)}\n" + str(l_w[0:10]))
+                          f". The {k}'th line has more than 100 words."
+                          f" length={len(sentL_words)}\n" +
+                          str(sentL_words[0:10]))
+                    # print("prev_line_rrt", prev_line)
+                    # print("line_rrt", line)
+                    # print(is_beginning_of_sample(line))
+                    # print(has_puntuation(line,
+                    #                      ignored_chs="_",
+                    #                      verbose=True))
                 else:
                     ll_osent_icode.append(deepcopy(osent_icodes))
                     # print("dfeg", ll_osent_icode)
-                    osent_icodes = []
                     orig_sent = undoL(sentL)
                     l_orig_sent.append(orig_sent)
 
@@ -402,15 +410,16 @@ class MInput:
                     if not ll_ilabel:
                         ll_ilabel = [[0]]
                     lll_ilabel.append(deepcopy(ll_ilabel))
-                    ll_ilabel = []
                     ll_osent_wstart_loc.append(deepcopy(osent_wstart_locs))
-                    osent_wstart_locs = []
+                osent_icodes = []
+                ll_ilabel = []
+                osent_wstart_locs = []
 
             prev_line = line
 
         num_samples = len(l_orig_sent)
         print()
-        print("finished reading '" + in_fp + "'")
+        print("MInput finished reading '" + in_fp + "'")
         print("number of lines= " + str(k))
         print("number of used samples= ", num_samples)
         print("number of omitted samples= ", num_omitted_sents)

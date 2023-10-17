@@ -250,6 +250,7 @@ class MConductor:
                 resume_from_checkpoint=checkpoint_fp)
         else:
             trainer = Trainer(
+                # bug (?) in Trainer software allow this to be set
                 # accumulate_grad_batches=
                 # self.params.d["accumulate_grad_batches"],
                 checkpoint_callback=self.checkpoint_callback,

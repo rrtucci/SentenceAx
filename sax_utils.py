@@ -103,20 +103,28 @@ def num_depths(task):
     return x
 
 
-def has_puntuation(str0):
+def has_puntuation(str0,
+                   ignored_chs= "",
+                   verbose=False):
     """
 
     Parameters
     ----------
     str0: str
+    ignored_chs: str
+    verbose: bool
 
     Returns
     -------
     bool
 
     """
-    from string import punctuation
-    return any(ch in str0 for ch in punctuation)
+    for ch in str0:
+        if ch in PUNCT_MARKS and ch not in ignored_chs:
+            if verbose:
+                print(ch)
+            return True
+    return False
 
 
 def get_words(sent, algo="nltk"):
@@ -463,6 +471,11 @@ if __name__ == "__main__":
         print(get_words(sent2))
 
 
+    def main4():
+        print(has_puntuation("NONE NONE\n"))
+
+
     main1()
     main2()
     main3()
+    main4()

@@ -27,6 +27,7 @@ class MInput:
     """
 
     def __init__(self,
+                 task,
                  in_fp,
                  auto_tokenizer,
                  use_spacy_model,
@@ -39,11 +40,13 @@ class MInput:
 
         Parameters
         ----------
+        task: str
         in_fp: str
         auto_tokenizer: AutoTokenizer
         use_spacy_model: bool
         verbose: bool
         """
+        self.task = task
         self.auto_tokenizer = auto_tokenizer
         self.use_spacy_model = use_spacy_model
         self.verbose = verbose
@@ -266,7 +269,7 @@ class MInput:
             else:
                 self.ll_osent_verb_loc.append([0])
 
-    def read_input_tags_file(self, in_fp):
+    def read_input_tags_file(self, task, in_fp):
         """
         similar to Openie6.data._process_data()
 
@@ -294,6 +297,7 @@ class MInput:
 
         Parameters
         ----------
+        task: str
         in_fp: str
 
         Returns
@@ -362,7 +366,8 @@ class MInput:
 
             elif is_tag_line_of_sample(line):
                 # print("sdfrg-tag", k)
-                ex_ilabels = [EXTAG_TO_ILABEL[tag] for tag in
+
+                ex_ilabels = [TAG_TO_ILABEL(task)[tag] for tag in
                               get_words(line)]
                 # print("nnmk-line number= " + str(k))
                 # assert len(ex_ilabels) == len(osent_wstart_locs)

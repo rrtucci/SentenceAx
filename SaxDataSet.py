@@ -46,7 +46,8 @@ class SaxDataSet(Dataset):
         self.num_samples, self.num_depths, self.num_words = \
             data_d["lll_ex_ilabel"].shape
 
-        self.xtypes = [name for name in data_d.keys() if name != "lll_ex_ilabel"]
+        self.xtypes = [name for name in data_d.keys() if
+                       name != "lll_ex_ilabel"]
         self.x = torch.cat([data_d[xtype] for xtype in self.xtypes], dim=1)
 
         self.y = data_d["lll_ex_ilabel"]
@@ -89,8 +90,8 @@ if __name__ == "__main__":
             additional_special_tokens=UNUSED_TOKENS)
         use_spacy_model = True
         m_in = MInput(in_fp,
-                         auto,
-                         use_spacy_model)
+                      auto,
+                      use_spacy_model)
         # full encoding is [101, 0, 102], 101=BOS_ICODE, 102=EOS_ICODE
         pad_icode = auto.encode(auto.pad_token)[1]
         print("pad_token, pad_icode=", auto.pad_token, pad_icode)

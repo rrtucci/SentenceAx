@@ -198,14 +198,14 @@ class MConductor:
 
         # the current log file will have no number prefix,
         # stored ones will.
-        if os.path.exists(self.params.task_logs_dir() + "/" + ttt):
+        if os.path.exists(task_logs_dir(self.params.task) + "/" + ttt):
             num_numbered_logs = len(
-                list(glob(self.params.task_logs_dir() + f'/{ttt}_*')))
+                list(glob(task_logs_dir(self.params.task) + f'/{ttt}_*')))
             new_id = num_numbered_logs + 1
             print('Retiring current log file by changing its name')
             print(shutil.move(
-                self.params.task_logs_dir() + f'/{ttt}',
-                self.params.task_logs_dir() + f'/{ttt}_{new_id}'))
+                task_logs_dir(self.params.task) + f'/{ttt}',
+                task_logs_dir(self.params.task) + f'/{ttt}_{new_id}'))
         logger = TensorBoardLogger(
             save_dir=LOGS_DIR,
             name=self.params.task,
@@ -306,7 +306,7 @@ class MConductor:
             self.model,
             train_dataloader=self.dloader_tool.get_one_ttt_dataloader("train"),
             val_dataloaders=self.dloader_tool.get_one_ttt_dataloader("tune"))
-        tdir = self.params.task_logs_dir()
+        tdir = task_logs_dir(self.params.task)
         shutil.move(tdir + '/train.part',
                     tdir + '/train')
 
@@ -334,7 +334,7 @@ class MConductor:
             self.model,
             train_dataloader=self.dloader_tool.get_one_ttt_dataloader("train"),
             val_dataloaders=self.dloader_tool.get_one_ttt_dataloader("tune"))
-        tdir = self.params.task_logs_dir()
+        tdir = task_logs_dir(self.params.task)
         shutil.move(tdir + '/resume.part',
                     tdir + '/resume')
 
@@ -360,7 +360,7 @@ class MConductor:
         # if self.params.task == "cc" and self.cc_sent_to_words:
         #     self.model.metric.sent_to_words = self.cc_sent_to_words
 
-        tdir = self.params.task_logs_dir()
+        tdir = task_logs_dir(self.params.task)
         with open(tdir + '/test.txt', "w") as test_f:
             logger = self.get_logger("test")
             # one checkpoint at end of each epoch

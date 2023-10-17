@@ -42,6 +42,64 @@ def merge_dicts(dominant_d, default_d):
     return new_dict
 
 
+def TAG_TO_ILABEL(task):
+    """
+
+    Parameters
+    ----------
+    task: str
+
+    Returns
+    -------
+    dict[str, int]
+
+    """
+    if task == "ex":
+        tag_to_ilabel = EXTAG_TO_ILABEL
+    elif task == "cc":
+        tag_to_ilabel = CCTAG_TO_ILABEL
+    else:
+        assert False
+    return tag_to_ilabel
+
+
+def task_logs_dir(task):
+    """
+    Parameters
+    ----------
+    task: str
+
+    Returns
+    -------
+    str
+
+    """
+    if task == "ex":
+        return LOGS_DIR + '/ex'
+    elif task == "cc":
+        return LOGS_DIR + '/cc'
+
+
+def num_depths(task):
+    """
+    Parameters
+    ----------
+    task: str
+
+    Returns
+    -------
+    int
+
+    """
+    if task == "ex":
+        x = EX_NUM_DEPTHS
+    elif task == "cc":
+        x = CC_NUM_DEPTHS
+    else:
+        assert False
+    return x
+
+
 def get_words(sent, algo="nltk"):
     """
     note: get_words("") = []
@@ -334,6 +392,7 @@ def add_key_to_target_d(key, fix_d, target_d):
         if key not in target_d:
             target_d[key] = []
 
+
 def add_key_value_pair_to_target_d(key, value, fix_d, target_d):
     """
 
@@ -388,4 +447,3 @@ if __name__ == "__main__":
     main1()
     main2()
     main3()
-

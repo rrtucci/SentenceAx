@@ -123,7 +123,6 @@ class Model(pl.LightningModule):
         self.auto_tokenizer = auto_tokenizer
         self.init_name_to_param = None
 
-        print("dfgrt", type(self.params))
         self.base_model = AutoModel.from_pretrained(
             self.params.d["model_str"], cache_dir=TTT_CACHE_DIR)
         self.hidden_size = self.base_model.config.hidden_size

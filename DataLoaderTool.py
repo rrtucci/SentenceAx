@@ -21,7 +21,7 @@ from MInput import *
 from Params import *
 
 
-class SaxDataLoader:
+class DataLoaderTool:
     """
     Classes Example and Field from tt were used in the Openie6 code,
     but they are now deprecated, so they are not used Mappa Mundi. Here is
@@ -111,9 +111,9 @@ class SaxDataLoader:
         # test_fp = self.params.d["test_fp"]
 
         # if 'predict' not in params.mode, use caching
-        assert self.train_fp
-        assert self.tune_fp
-        assert self.test_fp
+        assert self.train_fp, self.train_fp
+        assert self.tune_fp, self.tune_fp
+        assert self.test_fp, self.test_fp
         model_str = self.params.d["model_str"].replace("/", "_")
         cached_train_fp = \
             f'{self.train_fp.split(".")[0]}.{model_str}.pkl'
@@ -229,7 +229,6 @@ class SaxDataLoader:
         DataLoader
 
         """
-
         train_dataset, tune_dataset, test_dataset = \
             self.get_all_ttt_datasets()
 
@@ -286,14 +285,14 @@ if __name__ == "__main__":
         tune_fp = "tests/extags_tune.txt"
         test_fp = "tests/extags_test.txt"
 
-        dloader = SaxDataLoader(params,
-                                auto,
-                                train_fp,
-                                tune_fp,
-                                test_fp,
-                                use_spacy_model)
+        dl_tool = DataLoaderTool(params,
+                                 auto,
+                                 train_fp,
+                                 tune_fp,
+                                 test_fp,
+                                 use_spacy_model)
         train_dataset, tune_dataset, test_dataset = \
-            dloader.get_all_ttt_datasets()
+            dl_tool.get_all_ttt_datasets()
 
         print("len(train_dataset)=", len(train_dataset))
         print("len(tune_dataset)=", len(tune_dataset))

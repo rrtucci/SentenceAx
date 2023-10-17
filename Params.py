@@ -262,6 +262,7 @@ class Params:
 
         default_d = \
             {
+                "accumulate_grad_batches": 1, # torch default is 1
                 "batch_size": 32,
                 "con_weight_str": "1",  # for multiple constraints "1_1_1"
                 "do_rescoring": False,

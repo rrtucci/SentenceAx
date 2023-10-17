@@ -307,7 +307,7 @@ class MInput:
         lll_ex_ilabel = []  # similar to targets, target=extraction
         sentL = ""  # similar to `sentence`
 
-        with open(in_fp, "r") as f:
+        with open(in_fp, "r", encoding="utf-8") as f:
             lines = f.readlines()
 
         def is_beginning_of_sample(line0):
@@ -327,7 +327,10 @@ class MInput:
         prev_line = None
         osent_icodes = []
         osent_wstart_locs = []
-        for k, line in enumerate(lines):
+        num_omitted_sents = 0
+        k = 0
+        for line in lines:
+            k += 1
             line = line.strip()
             if line == "":
                 # this skips blank lines
@@ -372,8 +375,13 @@ class MInput:
                 if len(ll_osent_icode) == 0:
                     ll_osent_icode = [[0]]
 
-                if sentL and len(sentL.split()) > 100:
-                    assert False, "sentence longer than 100"
+                l_w = get_words(sentL)
+                if sentL and len(l_w) > 100:
+                    num_omitted_sents += 1
+                    print("dfgtyh", in_fp) #openie4_labels
+                    print(str(num_omitted_sents) +
+                          f". The {k}'th line longer than 100."
+                          f" length={len(l_w)}\n" + str(l_w[0:10]))
                 else:
                     ll_osent_icode.append(deepcopy(osent_icodes))
                     # print("dfeg", ll_osent_icode)
@@ -393,13 +401,19 @@ class MInput:
 
             prev_line = line
 
+        num_samples = len(l_orig_sent)
+        print()
+        print("just finished reading '" + in_fp + "'")
+        print("number of lines= " + str(k))
+        print("number of samples= ", num_samples)
+
         self.l_orig_sent = l_orig_sent
         # ll_osent_icode add extra term [0] at beginnig
         self.ll_osent_icode = ll_osent_icode[1:]
         self.lll_ex_ilabel = lll_ex_ilabel
         self.ll_osent_wstart_loc = ll_osent_wstart_loc
 
-        num_samples = len(l_orig_sent)
+
 
         def check_len(li):
             for x in li:

@@ -9,7 +9,7 @@ import shutil
 from glob import glob
 from time import time
 from Model import *
-from SaxDataLoader import *
+from DataLoaderTool import *
 from sax_utils import *
 from Params import *
 from transformers import AutoTokenizer
@@ -56,7 +56,7 @@ class MConductor:
     auto_tokenizer: AutoTokenizer
     checkpoint_callback: ModelCheckpoint
     decode: function
-    dloader: SaxDataLoader
+    dloader_tool: DataLoaderTool
     encode: function
     has_cuda: bool
     model: Model
@@ -77,7 +77,7 @@ class MConductor:
         A new
         ModelCheckpoint
         AutoTokenizer,
-        SaxDataLoader,
+        DataLoaderTool,
         TensorBoardLogger
 
         is created everytime this constructor is called
@@ -124,12 +124,11 @@ class MConductor:
         self.decode = self.auto_tokenizer.decode
         self.pad_icode = self.encode(self.auto_tokenizer.pad_token)[1]
 
-        self.dloader = SaxDataLoader(params,
-                                     self.auto_tokenizer,
-                                     self.pad_icode,
-                                     self.train_fp,
-                                     self.tune_fp,
-                                     self.test_fp)
+        self.dloader_tool = DataLoaderTool(params,
+                                           self.auto_tokenizer,
+                                           self.train_fp,
+                                           self.tune_fp,
+                                           self.test_fp)
 
         self.model = None
 
@@ -199,15 +198,14 @@ class MConductor:
 
         # the current log file will have no number prefix,
         # stored ones will.
-        assert os.path.exists(
-            self.params.log_dir() + "/" + ttt)
-        num_numbered_logs = len(
-            list(glob(self.params.log_dir() + f'/{ttt}_*')))
-        new_id = num_numbered_logs + 1
-        print('Retiring current log file by changing its name')
-        print(shutil.move(
-            self.params.log_dir() + f'/{ttt}',
-            self.params.log_dir() + f'/{ttt}_{new_id}'))
+        if os.path.exists(self.params.log_dir() + "/" + ttt):
+            num_numbered_logs = len(
+                list(glob(self.params.log_dir() + f'/{ttt}_*')))
+            new_id = num_numbered_logs + 1
+            print('Retiring current log file by changing its name')
+            print(shutil.move(
+                self.params.log_dir() + f'/{ttt}',
+                self.params.log_dir() + f'/{ttt}_{new_id}'))
         logger = TensorBoardLogger(
             save_dir=WEIGHTS_DIR,
             name='logs',
@@ -252,8 +250,8 @@ class MConductor:
                 resume_from_checkpoint=checkpoint_fp)
         else:
             trainer = Trainer(
-                accumulate_grad_batches=int(
-                    self.params.d["accumulate_grad_batches"]),
+                # accumulate_grad_batches=
+                # self.params.d["accumulate_grad_batches"],
                 checkpoint_callback=self.checkpoint_callback,
                 logger=logger,
                 max_epochs=self.params.d["epochs"],
@@ -306,8 +304,8 @@ class MConductor:
                                    use_minimal=False)
         trainer.fit(
             self.model,
-            train_dataloader=self.dloader.get_one_ttt_dataloader("train"),
-            val_dataloaders=self.dloader.get_one_ttt_dataloader("tune"))
+            train_dataloader=self.dloader_tool.get_one_ttt_dataloader("train"),
+            val_dataloaders=self.dloader_tool.get_one_ttt_dataloader("tune"))
         shutil.move(WEIGHTS_DIR + f'/logs/train.part',
                     WEIGHTS_DIR + f'/logs/train')
 
@@ -333,8 +331,8 @@ class MConductor:
                                    use_minimal=False)
         trainer.fit(
             self.model,
-            train_dataloader=self.dloader.get_one_ttt_dataloader("train"),
-            val_dataloaders=self.dloader.get_one_ttt_dataloader("tune"))
+            train_dataloader=self.dloader_tool.get_one_ttt_dataloader("train"),
+            val_dataloaders=self.dloader_tool.get_one_ttt_dataloader("tune"))
         shutil.move(WEIGHTS_DIR + '/logs/resume.part',
                     WEIGHTS_DIR + '/logs/resume')
 
@@ -370,7 +368,7 @@ class MConductor:
                 # trainer.fit() and trainer.test() are different
                 trainer.test(
                     self.model,
-                    test_dataloaders=self.dloader.get_one_ttt_dataloader(
+                    test_dataloaders=self.dloader_tool.get_one_ttt_dataloader(
                         "test"))
                 eval_epoch_end_d = self.model.eval_epoch_end_d
                 test_f.write(f'{checkpoint_fp}\t{eval_epoch_end_d}\n')
@@ -420,10 +418,10 @@ class MConductor:
                                    use_minimal=True)
         start_time = time()
         # self.model.all_sentences = all_sentences # never used
-        dataloader = self.dloader.get_predict_dataloader(pred_in_fp)
+        dloader = self.dloader_tool.get_predict_dataloader(pred_in_fp)
         trainer.test(
             self.model,
-            test_dataloaders=dataloader)
+            test_dataloaders=dloader)
         end_time = time()
         minutes = (end_time - start_time) / 60
         print(f'Total Time taken = {minutes : 2f} minutes')

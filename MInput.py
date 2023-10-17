@@ -19,7 +19,7 @@ class MInput:
     ll_osent_verb_bool: list[list[int]]
     ll_osent_verb_loc: list[list[int]]
     ll_osent_wstart_loc: list[list[int]]
-    lll_ex_ilabel: list[list[list[int]]]
+    lll_ilabel: list[list[list[int]]]
     spacy_model: spacy.Language
     use_spacy_model: bool
     verbose: bool
@@ -54,7 +54,7 @@ class MInput:
         # shape=(num_samples,)
         self.l_orig_sent = []
         # shape=(num_samples, num_depths=num_ex, num_ilabels)
-        self.lll_ex_ilabel = []
+        self.lll_ilabel = []
 
         # following lists have
         # shape is (num_samples, encoding length =100)
@@ -308,7 +308,7 @@ class MInput:
         l_orig_sent = []
         ll_osent_wstart_loc = []  # similar to word_starts
         ll_osent_icode = []  # similar to input_ids
-        lll_ex_ilabel = []  # similar to targets, target=extraction
+        lll_ilabel = []  # similar to targets, target=extraction
         sentL = ""  # similar to `sentence`
 
         with open(in_fp, "r", encoding="utf-8") as f:
@@ -329,7 +329,7 @@ class MInput:
                 return True
             return False
 
-        ll_ex_ilabel = []
+        ll_ilabel = []
         prev_line = None
         osent_icodes = []
         osent_wstart_locs = []
@@ -369,12 +369,12 @@ class MInput:
             elif is_tag_line_of_sample(line):
                 # print("sdfrg-tag", k)
 
-                ex_ilabels = [TAG_TO_ILABEL(self.task)[tag] for tag in
+                ilabels = [tag_to_ilabel(self.task)[tag] for tag in
                               get_words(line)]
                 # print("nnmk-line number= " + str(k))
-                # assert len(ex_ilabels) == len(osent_wstart_locs)
-                ll_ex_ilabel.append(ex_ilabels)
-                # print("dfgthj", ll_ex_ilabel)
+                # assert len(ilabels) == len(osent_wstart_locs)
+                ll_ilabel.append(ilabels)
+                # print("dfgthj", ll_ilabel)
             else:
                 pass
             if is_pre_beginning_of_sample(k, prev_line, line):
@@ -398,11 +398,11 @@ class MInput:
 
                     # note that if li=[2,3]
                     # then li[:100] = [2,3]
-                    # print("sdftty", ll_ex_ilabel)
-                    if not ll_ex_ilabel:
-                        ll_ex_ilabel = [[0]]
-                    lll_ex_ilabel.append(deepcopy(ll_ex_ilabel))
-                    ll_ex_ilabel = []
+                    # print("sdftty", ll_ilabel)
+                    if not ll_ilabel:
+                        ll_ilabel = [[0]]
+                    lll_ilabel.append(deepcopy(ll_ilabel))
+                    ll_ilabel = []
                     ll_osent_wstart_loc.append(deepcopy(osent_wstart_locs))
                     osent_wstart_locs = []
 
@@ -418,7 +418,7 @@ class MInput:
         self.l_orig_sent = l_orig_sent
         # ll_osent_icode add extra term [0] at beginnig
         self.ll_osent_icode = ll_osent_icode[1:]
-        self.lll_ex_ilabel = lll_ex_ilabel
+        self.lll_ilabel = lll_ilabel
         self.ll_osent_wstart_loc = ll_osent_wstart_loc
 
 
@@ -428,7 +428,7 @@ class MInput:
                 assert len(x) == num_samples
 
         check_len([self.ll_osent_icode,
-                   self.lll_ex_ilabel,
+                   self.lll_ilabel,
                    self.ll_osent_wstart_loc])
 
         # so far, we haven't assumed any spacy derived data nanalysis
@@ -484,7 +484,7 @@ if __name__ == "__main__":
             print("ll_osent_verb_bool[k]=\n", m_in.ll_osent_verb_bool[k])
             print("ll_osent_wstart_loc[k]=\n", m_in.ll_osent_wstart_loc[k])
             if verbose:
-                print("lll_ex_ilabel=\n", m_in.lll_ex_ilabel)
+                print("lll_ilabel=\n", m_in.lll_ilabel)
 
 
     def main2(add, remove):

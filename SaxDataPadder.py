@@ -76,54 +76,54 @@ class SaxDataPadder:
         return torch.Tensor(padded_ll_x)
 
     @staticmethod
-    def get_padded_lll_ex_ilabel(unpadded_lll_ex_ilabel, ipad1=0, ipad2=0):
+    def get_padded_lll_ilabel(unpadded_lll_ilabel, ipad1=0, ipad2=0):
         """
         The number at the end of `ipad` refers to the dimension. The
         dimensions here are called 0, 1, 2 (2 is the innermost).
 
         Parameters
         ----------
-        unpadded_lll_ex_ilabel: list[list[list[int]]]
+        unpadded_lll_ilabel: list[list[list[int]]]
         ipad: int
 
         Returns
         -------
         torch.Tensor
         """
-        lll_ex_ilabel = deepcopy(unpadded_lll_ex_ilabel)
-        if not lll_ex_ilabel[0]:
-            return torch.tensor(lll_ex_ilabel)
+        lll_ilabel = deepcopy(unpadded_lll_ilabel)
+        if not lll_ilabel[0]:
+            return torch.tensor(lll_ilabel)
 
-        for sam in range(len(lll_ex_ilabel)):
-            pad_depth = EX_NUM_DEPTHS - len(lll_ex_ilabel[sam])
+        for sam in range(len(lll_ilabel)):
+            pad_depth = EX_NUM_DEPTHS - len(lll_ilabel[sam])
             if pad_depth > 0:
-                # print("lmjki", lll_ex_ilabel[sam])
-                num_words = len(lll_ex_ilabel[sam][0])
+                # print("lmjki", lll_ilabel[sam])
+                num_words = len(lll_ilabel[sam][0])
                 # ilabel = 0 for extag=NONE
-                lll_ex_ilabel[sam] = lll_ex_ilabel[sam] + [
+                lll_ilabel[sam] = lll_ilabel[sam] + [
                     [ipad1] * num_words] * pad_depth
             elif pad_depth == 0:
                 pass
             else:
-                rg = range(EX_NUM_DEPTHS, len(lll_ex_ilabel[sam]))
+                rg = range(EX_NUM_DEPTHS, len(lll_ilabel[sam]))
                 # must delete last extraction first
                 for depth in reversed(rg):
                     print("deleting this extraction because over max: " +
                           f"(sample, depth)={sam}, {depth}")
-                    del lll_ex_ilabel[sam][depth]
+                    del lll_ilabel[sam][depth]
 
         max_num_words = -1
-        for ll_ilabel in lll_ex_ilabel:
+        for ll_ilabel in lll_ilabel:
             if len(ll_ilabel[0]) > max_num_words:
                 max_num_words = len(ll_ilabel[0])
-        for ll_ilabel in lll_ex_ilabel:
+        for ll_ilabel in lll_ilabel:
             for l_ilabel in ll_ilabel:
                 padding_len = max_num_words - len(l_ilabel)
                 l_ilabel += [ipad2] * padding_len
 
-        # for sam in range(len(lll_ex_ilabel)):
-        #     print(sam, len(lll_ex_ilabel[sam]), len(lll_ex_ilabel[sam][0]))
-        return torch.Tensor(lll_ex_ilabel)
+        # for sam in range(len(lll_ilabel)):
+        #     print(sam, len(lll_ilabel[sam]), len(lll_ilabel[sam][0]))
+        return torch.Tensor(lll_ilabel)
 
     # def build_vocab(self, self.m_in):
     #     """
@@ -174,15 +174,15 @@ class SaxDataPadder:
         padded_ll_osent_icode = SaxDataPadder. \
             get_padded_ll_x(self.m_in.ll_osent_icode)
 
-        padded_lll_ex_ilabel = SaxDataPadder. \
-            get_padded_lll_ex_ilabel(self.m_in.lll_ex_ilabel)
+        padded_lll_ilabel = SaxDataPadder. \
+            get_padded_lll_ilabel(self.m_in.lll_ilabel)
 
         padded_ll_osent_wstart_loc = SaxDataPadder. \
             get_padded_ll_x(self.m_in.ll_osent_wstart_loc)
 
         padded_data_d = OrderedDict(
             {'ll_osent_icode': padded_ll_osent_icode,
-             'lll_ex_ilabel': padded_lll_ex_ilabel,
+             'lll_ilabel': padded_lll_ilabel,
              'll_osent_wstart_loc': padded_ll_osent_wstart_loc})
 
         if self.use_spacy_model:

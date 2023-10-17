@@ -840,7 +840,7 @@ class SaxExtraction:
     @staticmethod
     def shorten_osentL_to_exs(osentL_to_exs):
         """
-        In the output of this method, the inner dimension of lll_ex_ilabel
+        In the output of this method, the inner dimension of lll_ilabel
         might not agree with the number of words in osent2
 
         Parameters
@@ -858,7 +858,7 @@ class SaxExtraction:
             osent_to_exs[osent] = exs
         return osent_to_exs
         # Don't use this, even if in the output of this method, the inner
-        # dimension of lll_ex_ilabel does not agree with the number of words
+        # dimension of lll_ilabel does not agree with the number of words
         # in osent2
 
         # osent_to_exs = {}

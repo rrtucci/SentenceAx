@@ -53,7 +53,7 @@ class CCMetric:
     def __call__(self,
                  l_osent,  # meta data
                  lll_pred_ex_ilabel,  # predicted
-                 lll_ex_ilabel):  # ground truth
+                 lll_ilabel):  # ground truth
         """
 
         ccnodes  when we give it the complete ccnodes
@@ -64,7 +64,7 @@ class CCMetric:
         ----------
         l_osent: list[str]
         lll_pred_ex_ilabel: list[list[list[[int]]]
-        lll_ex_ilabel: list[list[list[[int]]]
+        lll_ilabel: list[list[list[[int]]]
 
         Returns
         -------
@@ -72,7 +72,7 @@ class CCMetric:
 
         """
 
-        num_samples = len(lll_ex_ilabel)
+        num_samples = len(lll_ilabel)
         print("Entering samples into CCMetric instance via its __call__() "
               "method.")
         print("number of samples=", num_samples)
@@ -81,7 +81,7 @@ class CCMetric:
                                   lll_pred_ex_ilabel[k],
                                   calc_tree_struc=True).ccnodes
             true_ccnodes = CCTree(l_osent[k],
-                                  lll_ex_ilabel[k],
+                                  lll_ilabel[k],
                                   calc_tree_struc=True).ccnodes
 
             self.report_whole.absorb_new_sample(pred_ccnodes, true_ccnodes)
@@ -177,14 +177,14 @@ if __name__ == "__main__":
             in_lines = f.readlines()
 
         l_osent = []
-        lll_ex_ilabel = []
+        lll_ilabel = []
         ll_ilabel = []
         for in_line in in_lines:
             if in_line:
                 if in_line[0].isalpha():
                     l_osent.append(in_line.strip())
                     if ll_ilabel:
-                        lll_ex_ilabel.append(ll_ilabel)
+                        lll_ilabel.append(ll_ilabel)
                     ll_ilabel = []
                 elif in_line[0].isdigit():
                     words = get_words(in_line)
@@ -192,8 +192,8 @@ if __name__ == "__main__":
                     ll_ilabel.append([int(x) for x in words])
         # last one
         if ll_ilabel:
-            lll_ex_ilabel.append(ll_ilabel)
-        cc_met(l_osent, lll_ex_ilabel, lll_ex_ilabel)
+            lll_ilabel.append(ll_ilabel)
+        cc_met(l_osent, lll_ilabel, lll_ilabel)
         score_d = cc_met.get_score_d(do_reset=False)
         print(score_d)
         # this gives nan if do_reset = True

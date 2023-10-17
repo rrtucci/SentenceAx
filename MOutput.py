@@ -19,7 +19,7 @@ class MOutput:
 
     def __init__(self,
                  l_orig_sent,
-                 lll_ex_ilabel,
+                 lll_ilabel,
                  lll_pred_ex_ilabel,
                  ll_pred_ex_confi,
                  batch_loss):
@@ -33,7 +33,7 @@ class MOutput:
         Parameters
         ----------
         l_orig_sent: list[str]
-        lll_ex_ilabel: torch.Tensor
+        lll_ilabel: torch.Tensor
         lll_pred_ex_ilabel: torch.Tensor
         ll_pred_ex_confi: torch.Tensor
         batch_loss: torch.Tensor
@@ -42,7 +42,7 @@ class MOutput:
         
         """
         self.l_orig_sent = l_orig_sent
-        self.lll_ex_ilabel = lll_ex_ilabel
+        self.lll_ilabel = lll_ilabel
         self.lll_pred_ex_ilabel = lll_pred_ex_ilabel
         self.ll_pred_ex_confi = ll_pred_ex_confi
         self.batch_loss = batch_loss
@@ -60,7 +60,7 @@ class MOutput:
         assert not self.in_cpu
         self.in_cpu = True
 
-        self.lll_ex_ilabel = self.lll_ex_ilabel.cpu()
+        self.lll_ilabel = self.lll_ilabel.cpu()
         self.lll_pred_ex_ilabel = self.lll_pred_ex_ilabel.cpu()
         self.ll_pred_ex_confi = self.ll_pred_ex_confi.cpu()
         self.batch_loss = self.batch_loss.cpu()
@@ -93,7 +93,7 @@ class MOutput:
     #     l_orig_sentL = redoL(self.get_l_orig_sent())
     #     num_samples = len(self.llll_pred_ex_ilabel)
     #     num_depths = len(self.llll_pred_ex_ilabel[0])
-    #     # sent_len = len(self.lll_ex_ilabel[0][0])
+    #     # sent_len = len(self.lll_ilabel[0][0])
     #     lll_word = []
     #     for sam in range(num_samples):
     #         ll_word = []

@@ -60,18 +60,18 @@ class AllenTool:
         # print("lkop", self.num_sents)
 
     @staticmethod
-    def get_lll_ex_ilabel_from_osent2_to_exs(osent2_to_exs):
+    def get_lll_ilabel_from_osent2_to_exs(osent2_to_exs):
         """
         This static method takes as input `osent2_to_exs` (one of the
         attributes of class AllenTool). It returns as output
 
-        `l_osent2, lll_ex_ilabel, ll_confi`
+        `l_osent2, lll_ilabel, ll_confi`
 
         osent = original sentence
         osentL = osent + UNUSED_TOKEN_STR
         
         This method does not care internally whether we are using `osentL, 
-        lll_ex_ilabels` or `osent, lll_ex_ilabels`. that is why we are introducing 
+        lll_ilabels` or `osent, lll_ilabels`. that is why we are introducing 
         the symbol `osent2`, which can stand for `osent` or `osentL`
 
         Parameters
@@ -91,20 +91,20 @@ class AllenTool:
             # ilabels = ilabels[0: len(l_osent2[sam_id])]
             return ilabels
 
-        lll_ex_ilabel = [[get_ilabels(ex) for ex in exs] for
+        lll_ilabel = [[get_ilabels(ex) for ex in exs] for
                          exs in l_exs]
         ll_confi = [[ex.confi for ex in exs] for exs in l_exs]
-        return l_osent2, lll_ex_ilabel, ll_confi
+        return l_osent2, lll_ilabel, ll_confi
 
     @staticmethod
-    def get_osent2_to_exs_from_lll_ex_ilabel(l_osent2,
-                                             lll_ex_ilabel,
+    def get_osent2_to_exs_from_lll_ilabel(l_osent2,
+                                             lll_ilabel,
                                              ll_confi,
                                              sent_to_sent):
         """
         similar to Openie6.metric.Carb.__call__()
 
-        This method takes as `lll_ex_ilabel` and other variables and returns
+        This method takes as `lll_ilabel` and other variables and returns
 
         `osent2_to_exs`
 
@@ -112,14 +112,14 @@ class AllenTool:
         osentL = osent + UNUSED_TOKEN_STR
 
         This method does not care internally whether we are using `osentL,
-        lll_ex_ilabels` or `osent, lll_ex_ilabels`. that is why we are introducing
+        lll_ilabels` or `osent, lll_ilabels`. that is why we are introducing
         the symbol `osent2`, which can stand for `osent` or `osentL`
 
 
         Parameters
         ----------
         l_osent2: list[str]
-        lll_ex_ilabel: list[list[list[int]]]
+        lll_ilabel: list[list[list[int]]]
         ll_confi: list[list[float]]
         sent_to_sent: dict[str, str]
             a dictionary that makes small fixes on osent2
@@ -138,7 +138,7 @@ class AllenTool:
 
             num_exs = len(ll_confi[sam_id])
             for depth in range(num_exs):
-                ilabels = lll_ex_ilabel[sam_id][depth]
+                ilabels = lll_ilabel[sam_id][depth]
                 # all ilabels=0 once no more extractions
                 if sum(ilabels) == 0:
                     break

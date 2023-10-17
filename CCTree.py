@@ -493,14 +493,14 @@ if __name__ == "__main__":
             in_lines = f.readlines()
 
         l_osent = []
-        lll_ex_ilabel = []
+        lll_ilabel = []
         ll_ilabel = []
         for in_line in in_lines:
             if in_line:
                 if in_line[0].isalpha():
                     l_osent.append(in_line.strip())
                     if ll_ilabel:
-                        lll_ex_ilabel.append(ll_ilabel)
+                        lll_ilabel.append(ll_ilabel)
                     ll_ilabel = []
                 elif in_line[0].isdigit():
                     words = get_words(in_line)
@@ -508,15 +508,15 @@ if __name__ == "__main__":
                     ll_ilabel.append([int(x) for x in words])
         # last one
         if ll_ilabel:
-            lll_ex_ilabel.append(ll_ilabel)
+            lll_ilabel.append(ll_ilabel)
         #
         # print("lklo", l_osent)
-        # print("lklo", lll_ex_ilabel)
+        # print("lklo", lll_ilabel)
         for k in range(len(l_osent)):
             osent = l_osent[k]
             print(osent)
             tree = CCTree(osent,
-                          lll_ex_ilabel[k],
+                          lll_ilabel[k],
                           forced_tree,
                           verbose=True)
             tree.draw_tree()

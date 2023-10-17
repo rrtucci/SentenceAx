@@ -42,7 +42,7 @@ def merge_dicts(dominant_d, default_d):
     return new_dict
 
 
-def TAG_TO_ILABEL(task):
+def tag_to_ilabel(task):
     """
 
     Parameters
@@ -75,9 +75,12 @@ def task_logs_dir(task):
 
     """
     if task == "ex":
-        return LOGS_DIR + '/ex'
+        tdir = LOGS_DIR + '/ex'
     elif task == "cc":
-        return LOGS_DIR + '/cc'
+        tdir = LOGS_DIR + '/cc'
+    else:
+        assert False
+    return tdir
 
 
 def num_depths(task):
@@ -273,11 +276,11 @@ def redoL(x):
         return [a + UNUSED_TOKENS_STR for a in x]
 
 
-# Don't use, even if the inner dimmension of lll_ex_ilabel
+# Don't use, even if the inner dimmension of lll_ilabel
 # does not agree with the number of words in osent2
-# def unL_lll(lll_ex_ilabel):
+# def unL_lll(lll_ilabel):
 #     return [[l_ilabel[:-3] for l_ilabel in ll_ilabel]
-#             for ll_ilabel in lll_ex_ilabel]
+#             for ll_ilabel in lll_ilabel]
 
 def use_ascii_quotes(line):
     """
@@ -313,14 +316,14 @@ def replace_in_list(l_x, x, new_x):
     l_x[k] = new_x
 
 
-def sax_sniffer(name, osent2_to_exs, lll_ex_ilabel):
+def sax_sniffer(name, osent2_to_exs, lll_ilabel):
     """
 
     Parameters
     ----------
     name: str
     osent2_to_exs: dict[str, list[SaxExtraction]]
-    lll_ex_ilabel: list[list[list[int]]]
+    lll_ilabel: list[list[list[int]]]
 
     Returns
     -------
@@ -330,7 +333,7 @@ def sax_sniffer(name, osent2_to_exs, lll_ex_ilabel):
     print(name + " sniffer")
     for sam, (osent2, exs) in enumerate(osent2_to_exs.items()):
         if "Philip Russell" in osent2:
-            print(lll_ex_ilabel[sam])
+            print(lll_ilabel[sam])
             for ex in exs:
                 print(ex.arg1, ex.rel, ex.arg2)
 

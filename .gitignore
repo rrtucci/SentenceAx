@@ -2,3 +2,4 @@
 /input_data/imojie-data/
 /input_data/openie-data/
 *.zip
+.ipynb_checkpoints

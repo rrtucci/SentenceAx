@@ -1,0 +1,12 @@
+ipdb
+regex
+typing
+transformers
+torch
+numpy
+treelib
+spacy
+scikit-learn
+nltk
+Unidecode
+torchtext

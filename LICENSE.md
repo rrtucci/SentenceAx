@@ -1,10 +1,4 @@
-	
- Disclose source
- License and copyright notice
- Same license
- State changes
- Liability
- Warranty
+
                     GNU GENERAL PUBLIC LICENSE
                        Version 3, 29 June 2007
 

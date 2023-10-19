@@ -115,7 +115,10 @@ class MConductor:
                                            self.tags_train_fp,
                                            self.tags_tune_fp,
                                            self.tags_test_fp)
-        self.dloader_tool.set_all_ttt_dataloaders()
+        if 'predict' not in params.mode:
+            # ttt dloaders not used for mode="predict", "splitpredict"
+            # for those modes, only a predict dloader is used.
+            self.dloader_tool.set_all_ttt_dataloaders()
 
         self.model = None
 

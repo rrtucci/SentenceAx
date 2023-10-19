@@ -8,37 +8,46 @@ from MInput import *
 # from torchtext.data.utils import get_tokenizer
 # from torchtext.vocab import build_vocab_from_iterator
 
-class SaxDataPadder:
+class PaddedMInput(MInput):
     """
     data processing chain
-    tags_in_fp->MInput->SaxDataPadder->SaxDataSet->DataLoader
+    tags_in_fp->MInput->PaddedMInput->SaxDataSet->DataLoader
 
     Attributes
     ----------
-    m_in: MInput
-    num_samples: int
-    pad_icode: int
-    padded_data_d: dict[str, torch.Tensor]
-    use_spacy_model: bool
+            ll_osent_icode: torch.Tensor
+        ll_osent_pos_bool: torch.Tensor
+        ll_osent_pos_loc: torch.Tensor
+        ll_osent_verb_bool: torch.Tensor
+        ll_osent_verb_loc:  torch.Tensor
+        ll_osent_wstart_loc: torch.Tensor
+        lll_ilabel: torch.Tensor
+        m_in: MInput
+        num_samples: int
+        pad_icode: int
     """
 
-    def __init__(self, m_in, pad_icode, use_spacy_model):
+    def __init__(self, m_in):
         """
 
         Parameters
         ----------
         m_in: MInput
-        pad_icode: int
-        use_spacy_model: bool
         """
+        MInput.__init__(self,
+                        m_in.task,
+                        m_in.tags_in_fp,
+                        m_in.auto_tokenizer,
+                        m_in.use_spacy_model,
+                        read=False,
+                        verbose=m_in.verbose)
 
         self.m_in = m_in
-        self.pad_icode = pad_icode
-        assert pad_icode == 0
-        self.use_spacy_model = use_spacy_model
-        self.padded_data_d = None
-        self.set_padded_data_d()
+        self.pad_icode = self.m_in.auto_tokenizer.encode(
+            self.auto_tokenizer.pad_token)[1]
+        assert self.pad_icode == 0
         self.num_samples = len(self.m_in.l_orig_sent)
+        self.set_padded_data()
 
     @staticmethod
     def get_padded_ll_x(unpadded_ll_x, ipad1=0):
@@ -112,7 +121,7 @@ class SaxDataPadder:
                 # must delete last extraction first
                 for depth in reversed(rg):
                     del lll_ilabel[sam][depth]
-                print("SaxDataPadder omitting extractions: sample= " + str(
+                print("PaddedMInput omitting extractions: sample= " + str(
                     sam) + ", depths=" + str(list(rg)))
 
         max_num_words = -1
@@ -151,7 +160,7 @@ class SaxDataPadder:
     #
     #     return vocab
 
-    def set_padded_data_d(self):
+    def set_padded_data(self):
         """
         similar to Openie6.data.pad_data()
 
@@ -174,33 +183,26 @@ class SaxDataPadder:
         #     'verb_locs': verb_locs
         # }
 
-        padded_ll_osent_icode = SaxDataPadder. \
+        self.ll_osent_icode = PaddedMInput. \
             get_padded_ll_x(self.m_in.ll_osent_icode)
 
-        padded_lll_ilabel = SaxDataPadder. \
+        self.lll_ilabel = PaddedMInput. \
             get_padded_lll_ilabel(self.m_in.lll_ilabel)
 
-        padded_ll_osent_wstart_loc = SaxDataPadder. \
+        self.ll_osent_wstart_loc = PaddedMInput. \
             get_padded_ll_x(self.m_in.ll_osent_wstart_loc)
 
-        padded_data_d = OrderedDict(
-            {'ll_osent_icode': padded_ll_osent_icode,
-             'lll_ilabel': padded_lll_ilabel,
-             'll_osent_wstart_loc': padded_ll_osent_wstart_loc})
-
         if self.use_spacy_model:
-            padded_data_d["ll_osent_pos_bool"] = SaxDataPadder. \
+            self.ll_osent_pos_bool = PaddedMInput. \
                 get_padded_ll_x(self.m_in.ll_osent_pos_bool)
-            padded_data_d["ll_osent_pos_loc"] = SaxDataPadder. \
+            self.ll_osent_pos_loc = PaddedMInput. \
                 get_padded_ll_x(self.m_in.ll_osent_pos_loc)
-            padded_data_d["ll_osent_verb_bool"] = SaxDataPadder. \
+            self.ll_osent_verb_bool = PaddedMInput. \
                 get_padded_ll_x(self.m_in.ll_osent_verb_bool)
-            padded_data_d["ll_osent_verb_loc"] = SaxDataPadder. \
+            self.ll_osent_verb_loc = PaddedMInput. \
                 get_padded_ll_x(self.m_in.ll_osent_verb_loc)
 
-        self.padded_data_d = padded_data_d
-
-    def print_padded_data_d_shapes(self):
+    def print_padded_data_shapes(self):
         """
 
         Returns
@@ -208,8 +210,18 @@ class SaxDataPadder:
         None
 
         """
+        padded_data_d = {
+            "ll_osent_icode": self.ll_osent_icode,
+            "ll_osent_pos_bool": self.ll_osent_pos_bool,
+            "ll_osent_pos_loc": self.ll_osent_pos_loc,
+            "ll_osent_verb_bool": self.ll_osent_verb_bool,
+            "ll_osent_verb_loc": self.ll_osent_verb_loc,
+            "ll_osent_wstart_loc": self.ll_osent_wstart_loc,
+            "lll_ilabel": self.lll_ilabel
+        }
         print("num_samples=", self.num_samples)
-        for key, value in self.padded_data_d.items():
+        for key, value in padded_data_d.items():
+            # print("lmhb", key, type(value))
             print(f"{key}.shape: ", value.shape)
 
 
@@ -232,8 +244,8 @@ if __name__ == "__main__":
         # full encoding is [101, 0, 102], 101=BOS_ICODE, 102=EOS_ICODE
         pad_icode = auto.encode(auto.pad_token)[1]
         # print("pad_token, pad_icode=", auto.pad_token, pad_icode)
-        padder = SaxDataPadder(m_in, pad_icode, use_spacy_model)
-        padder.print_padded_data_d_shapes()
+        padded_m_in = PaddedMInput(m_in)
+        padded_m_in.print_padded_data_shapes()
 
 
     main(task="ex",

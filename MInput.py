@@ -9,7 +9,7 @@ from pprint import pprint
 class MInput:
     """
     data processing chain
-    tags_in_fp->MInput->SaxDataPadder->SaxDataSet->DataLoader
+    tags_in_fp->MInput->PaddedMInput->SaxDataSet->DataLoader
 
     Attributes
     ----------
@@ -33,6 +33,7 @@ class MInput:
                  tags_in_fp,
                  auto_tokenizer,
                  use_spacy_model,
+                 read=True,
                  verbose=False):
         """
         tags_in_fp is an extags or a cctags file.
@@ -46,9 +47,11 @@ class MInput:
         tags_in_fp: str
         auto_tokenizer: AutoTokenizer
         use_spacy_model: bool
+        read: bool
         verbose: bool
         """
         self.task = task
+        self.tags_in_fp = tags_in_fp
         self.auto_tokenizer = auto_tokenizer
         self.use_spacy_model = use_spacy_model
         self.verbose = verbose
@@ -79,7 +82,8 @@ class MInput:
         self.ll_osent_verb_bool = []  # shape=(num_samples, num_words)
         self.ll_osent_verb_loc = []  # shape=(num_samples, num_words)
 
-        self.read_input_tags_file(tags_in_fp)
+        if read:
+            self.read_input_tags_file(tags_in_fp)
 
     @staticmethod
     def encode_l_sent(l_sent,
@@ -392,7 +396,7 @@ class MInput:
                     num_omitted_sents += 1
                     print(str(num_omitted_sents) +
                           f". The {k}'th line has more than 100 words."
-                          f" length={len(sentL_words)}\n" + sentL[0:60])
+                          f" length={len(sentL_words)}\n[" + sentL[0:60] + "]")
                     # print("prev_line_rrt", prev_line)
                     # print("line_rrt", line)
                     # print(is_beginning_of_sample(line))

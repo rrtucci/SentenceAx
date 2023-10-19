@@ -1,13 +1,14 @@
 import torch
 import numpy as np
 from torch.utils.data import Dataset
-from SaxDataPadder import *
+from PaddedMInput import *
 
 
 class SaxDataSet(Dataset):
     """
     data processing chain
-    tags_in_fp->MInput->SaxDataPadder->SaxDataSet->DataLoader
+    tags_in_fp->MInput->PaddedMInput->SaxDataSet->DataLoader
+                                     ->Model->MOutput
 
     Attributes
     ----------

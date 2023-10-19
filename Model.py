@@ -312,7 +312,7 @@ class Model(pl.LightningModule):
         
         Parameters
         ----------
-        batch_m_in_: MInput
+        batch_m_in: MInput
         batch_id: int
         ttt: str
 
@@ -332,7 +332,7 @@ class Model(pl.LightningModule):
         # third (inner) list over number of labels in a line
         # after padding and adding the 3 unused tokens
         batch_size, num_depths, num_words = \
-            batch_m_in.lll_ilabel.shape
+            Ten(batch_m_in.lll_ilabel).shape
 
         # `loss_fun` is not used in this function anymore
         # loss_fun, lstm_loss = 0, 0

@@ -6,6 +6,8 @@ from SaxDataPadder import *
 
 class SaxDataSet(Dataset):
     """
+    data processing chain
+    tags_in_fp->MInput->SaxDataPadder->SaxDataSet->DataLoader
 
     Attributes
     ----------

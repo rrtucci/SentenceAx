@@ -23,6 +23,9 @@ from Params import *
 
 class DataLoaderTool:
     """
+    data processing chain
+    tags_in_fp->MInput->SaxDataPadder->SaxDataSet->DataLoader
+    
     Classes Example and Field from tt were used in the Openie6 code,
     but they are now deprecated, so they are not used Mappa Mundi. Here is
     link explaining a migration route ot of them.

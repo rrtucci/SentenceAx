@@ -8,6 +8,8 @@ from pprint import pprint
 
 class MInput:
     """
+    data processing chain
+    tags_in_fp->MInput->SaxDataPadder->SaxDataSet->DataLoader
 
     Attributes
     ----------

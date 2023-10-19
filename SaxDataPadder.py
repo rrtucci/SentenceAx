@@ -10,6 +10,8 @@ from MInput import *
 
 class SaxDataPadder:
     """
+    data processing chain
+    tags_in_fp->MInput->SaxDataPadder->SaxDataSet->DataLoader
 
     Attributes
     ----------

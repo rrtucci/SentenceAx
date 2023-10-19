@@ -15,16 +15,16 @@ class PaddedMInput(MInput):
 
     Attributes
     ----------
-            ll_osent_icode: torch.Tensor
-        ll_osent_pos_bool: torch.Tensor
-        ll_osent_pos_loc: torch.Tensor
-        ll_osent_verb_bool: torch.Tensor
-        ll_osent_verb_loc:  torch.Tensor
-        ll_osent_wstart_loc: torch.Tensor
-        lll_ilabel: torch.Tensor
-        m_in: MInput
-        num_samples: int
-        pad_icode: int
+    ll_osent_icode: torch.Tensor
+    ll_osent_pos_bool: torch.Tensor
+    ll_osent_pos_loc: torch.Tensor
+    ll_osent_verb_bool: torch.Tensor
+    ll_osent_verb_loc:  torch.Tensor
+    ll_osent_wstart_loc: torch.Tensor
+    lll_ilabel: torch.Tensor
+    m_in: MInput
+    num_samples: int
+    pad_icode: int
     """
 
     def __init__(self, m_in):

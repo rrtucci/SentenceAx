@@ -1,3 +1,11 @@
+"""
+
+The extagging algo in SaxExtraction could be improved. Here is an example where
+ it gives an atrocious answer.
+
+"""
+
+
 Allen file:
 Simon is quoted as saying `` if you 'd ever seen Widnes , then you 'd know why I was keen to get back to London as quickly as possible '' .	<arg1> Simon </arg1> <rel>  is quoted </rel> <arg2>  as saying `` if you 'd ever seen Widnes , then you 'd know why I was keen to get back to London as quickly as possible </arg2>	0.92
 Simon is quoted as saying `` if you 'd ever seen Widnes , then you 'd know why I was keen to get back to London as quickly as possible '' .	<arg1> I </arg1> <rel>  to get back as quickly </rel> <arg2>   </arg2>	0.12

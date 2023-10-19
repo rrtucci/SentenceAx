@@ -27,7 +27,7 @@ params_d = parameters dictionary
 # EXTAGS_TEST_FP = "input_data/extags_test.txt"
 
 INPUT_DIR = "input_data"
-TTT_CACHE_DIR = 'ttt_cache'
+CACHE_DIR = 'cache'
 WEIGHTS_DIR = "weights"
 PRED_DIR = "predictions"
 LOGS_DIR = "logs"

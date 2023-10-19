@@ -35,9 +35,9 @@ class DataLoaderTool:
     pad_icode: int
     params: Params
     predict_fp: str
-    test_fp: str
-    train_fp: str
-    tune_fp: str
+    tags_test_fp: str
+    tags_train_fp: str
+    tags_tune_fp: str
     use_spacy_model: bool
     
     """
@@ -45,7 +45,7 @@ class DataLoaderTool:
     def __init__(self,
                  params,
                  auto_tokenizer,
-                 train_fp, tune_fp, test_fp,
+                 tags_train_fp, tags_tune_fp, tags_test_fp,
                  use_spacy_model=True):
         """
 
@@ -53,9 +53,9 @@ class DataLoaderTool:
         ----------
         params: Params
         auto_tokenizer: AutoTokenizer
-        train_fp: str
-        tune_fp: str
-        test_fp: str
+        tags_train_fp: str
+        tags_tune_fp: str
+        tags_test_fp: str
         use_spacy_model: bool
         """
 
@@ -67,19 +67,19 @@ class DataLoaderTool:
         self.pad_icode = \
             auto_tokenizer.encode(auto_tokenizer.pad_token)[1]
 
-        self.train_fp = train_fp
-        self.tune_fp = tune_fp
-        self.test_fp = test_fp
+        self.tags_train_fp = tags_train_fp
+        self.tags_tune_fp = tags_tune_fp
+        self.tags_test_fp = tags_test_fp
         self.use_spacy_model = use_spacy_model
 
-    def get_m_in(self, in_fp):
+    def get_m_in(self, tags_in_fp):
         """
 
-        This is used to create an m_imput for in_fp=train_fp, tune_fp, test_fp.
+        This is used to create an m_imput for in_fp=tags_train_fp, tags_tune_fp, tags_test_fp.
 
         Parameters
         ----------
-        in_fp: str
+        tags_in_fp: str
 
         Returns
         -------
@@ -87,7 +87,7 @@ class DataLoaderTool:
 
         """
         m_in = MInput(self.params.task,
-                      in_fp,
+                      tags_in_fp,
                       self.auto_tokenizer,
                       self.use_spacy_model)
 
@@ -107,43 +107,43 @@ class DataLoaderTool:
         """
         self.get_dataset_common()
 
-        # train_fp = self.params.d["train_fp"]
-        # tune_fp = self.params.d["tune_fp"]
-        # test_fp = self.params.d["test_fp"]
+        # tags_train_fp = self.params.d["tags_train_fp"]
+        # tags_tune_fp = self.params.d["tags_tune_fp"]
+        # tags_test_fp = self.params.d["tags_test_fp"]
 
         # if 'predict' not in params.mode, use caching
-        assert self.train_fp, self.train_fp
-        assert self.tune_fp, self.tune_fp
-        assert self.test_fp, self.test_fp
+        assert self.tags_train_fp, self.tags_train_fp
+        assert self.tags_tune_fp, self.tags_tune_fp
+        assert self.tags_test_fp, self.tags_test_fp
         # model_str = self.params.d["model_str"].replace("/", "_")
         task = self.params.task
-        cached_train_fp = TTT_CACHE_DIR + "/" + task + "_train_" + \
-            self.train_fp.replace("/", "_").split(".")[0] + ".pkl"
-        cached_tune_fp = TTT_CACHE_DIR + "/" + task + "_tune_" + \
-            self.tune_fp.replace("/", "_").split(".")[0] + ".pkl"
-        cached_test_fp = TTT_CACHE_DIR + "/" + task + "_test_" + \
-            self.test_fp.replace("/", "_").split(".")[0] + ".pkl"
+        cached_tags_train_fp = CACHE_DIR + "/" + task + "_train_" + \
+                          self.tags_train_fp.replace("/", "_").split(".")[0] + ".pkl"
+        cached_tags_tune_fp = CACHE_DIR + "/" + task + "_tune_" + \
+                         self.tags_tune_fp.replace("/", "_").split(".")[0] + ".pkl"
+        cached_tags_test_fp = CACHE_DIR + "/" + task + "_test_" + \
+                         self.tags_test_fp.replace("/", "_").split(".")[0] + ".pkl"
 
-        if not os.path.exists(cached_train_fp) or \
+        if not os.path.exists(cached_tags_train_fp) or \
                 self.params.d["refresh_cache"]:
-            train_m_in = self.get_m_in(self.train_fp)
-            pickle.dump(train_m_in, open(cached_train_fp, 'wb'))
+            train_m_in = self.get_m_in(self.tags_train_fp)
+            pickle.dump(train_m_in, open(cached_tags_train_fp, 'wb'))
         else:
-            train_m_in = pickle.load(open(cached_train_fp, 'rb'))
+            train_m_in = pickle.load(open(cached_tags_train_fp, 'rb'))
 
-        if not os.path.exists(cached_tune_fp) or \
+        if not os.path.exists(cached_tags_tune_fp) or \
                 self.params.d["refresh_cache"]:
-            tune_m_in = self.get_m_in(self.tune_fp)
-            pickle.dump(tune_m_in, open(cached_tune_fp, 'wb'))
+            tune_m_in = self.get_m_in(self.tags_tune_fp)
+            pickle.dump(tune_m_in, open(cached_tags_tune_fp, 'wb'))
         else:
-            tune_m_in = pickle.load(open(cached_tune_fp, 'rb'))
+            tune_m_in = pickle.load(open(cached_tags_tune_fp, 'rb'))
 
-        if not os.path.exists(cached_test_fp) or \
+        if not os.path.exists(cached_tags_test_fp) or \
                 self.params.d["refresh_cache"]:
-            test_m_in = self.get_m_in(self.test_fp)
-            pickle.dump(test_m_in, open(cached_test_fp, 'wb'))
+            test_m_in = self.get_m_in(self.tags_test_fp)
+            pickle.dump(test_m_in, open(cached_tags_test_fp, 'wb'))
         else:
-            test_m_in = pickle.load(open(cached_test_fp, 'rb'))
+            test_m_in = pickle.load(open(cached_tags_test_fp, 'rb'))
 
         # vocab = self.build_vocab(
         #     train_m_in + tune_m_in + test_m_in)
@@ -279,19 +279,19 @@ if __name__ == "__main__":
             params.d["model_str"],
             do_lower_case=True,
             use_fast=True,
-            data_dir=TTT_CACHE_DIR,
+            data_dir=CACHE_DIR,
             add_special_tokens=False,
             additional_special_tokens=UNUSED_TOKENS)
         use_spacy_model = True
-        train_fp = "tests/extags_train.txt"
-        tune_fp = "tests/extags_tune.txt"
-        test_fp = "tests/extags_test.txt"
+        tags_train_fp = "tests/extags_train.txt"
+        tags_tune_fp = "tests/extags_tune.txt"
+        tags_test_fp = "tests/extags_test.txt"
 
         dl_tool = DataLoaderTool(params,
                                  auto,
-                                 train_fp,
-                                 tune_fp,
-                                 test_fp,
+                                 tags_train_fp,
+                                 tags_tune_fp,
+                                 tags_test_fp,
                                  use_spacy_model)
         train_dataset, tune_dataset, test_dataset = \
             dl_tool.get_all_ttt_datasets()

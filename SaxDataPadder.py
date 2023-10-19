@@ -5,7 +5,7 @@ from collections import OrderedDict
 from MInput import *
 
 
-# from torchtext.data.utils import get_tokenizer
+# from torchtext.data.utils import tags_in_fp_tokenizer
 # from torchtext.vocab import build_vocab_from_iterator
 
 class SaxDataPadder:
@@ -39,7 +39,7 @@ class SaxDataPadder:
         self.num_samples = len(self.m_in.l_orig_sent)
 
     @staticmethod
-    def get_padded_ll_x(unpadded_ll_x, ipad1=0):
+    def tags_in_fp_padded_ll_x(unpadded_ll_x, ipad1=0):
         """
         The number at the end of `ipad` refers to the dimension. The
         dimensions here are called 0, 1 (1 is the innermost). -100 is a good
@@ -76,7 +76,7 @@ class SaxDataPadder:
         return torch.Tensor(padded_ll_x)
 
     @staticmethod
-    def get_padded_lll_ilabel(unpadded_lll_ilabel, ipad1=0, ipad2=0):
+    def tags_in_fp_padded_lll_ilabel(unpadded_lll_ilabel, ipad1=0, ipad2=0):
         """
         The number at the end of `ipad` refers to the dimension. The
         dimensions here are called 0, 1, 2 (2 is the innermost).
@@ -135,7 +135,7 @@ class SaxDataPadder:
     #     >>> [475, 21, 30, 5297]
     #     """
     #
-    #     # tokenizer = get_tokenizer("basic_english")
+    #     # tokenizer = tags_in_fp_tokenizer("basic_english")
     #     tokenizer = self.auto_tokenizer
     #     def yield_tokens(self.m_in):
     #         for example_d in self.m_in:
@@ -172,10 +172,10 @@ class SaxDataPadder:
         # }
 
         padded_ll_osent_icode = SaxDataPadder. \
-            get_padded_ll_x(self.m_in.ll_osent_icode)
+            tags_in_fp_padded_ll_x(self.m_in.ll_osent_icode)
 
         padded_lll_ilabel = SaxDataPadder. \
-            get_padded_lll_ilabel(self.m_in.lll_ilabel)
+            tags_in_fp_padded_lll_ilabel(self.m_in.lll_ilabel)
 
         padded_ll_osent_wstart_loc = SaxDataPadder. \
             get_padded_ll_x(self.m_in.ll_osent_wstart_loc)
@@ -217,7 +217,7 @@ if __name__ == "__main__":
             model_str,
             do_lower_case=True,
             use_fast=True,
-            data_dir=TTT_CACHE_DIR,
+            data_dir=CACHE_DIR,
             add_special_tokens=False,
             additional_special_tokens=UNUSED_TOKENS)
         use_spacy_model = True

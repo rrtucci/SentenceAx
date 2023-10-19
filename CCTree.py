@@ -1,6 +1,6 @@
 from CCNode import *
 import numpy as np
-from sax_utils import get_words
+from sax_utils import tags_in_fp_words
 from copy import deepcopy
 import treelib as tr
 from words_tags_ilabels_translation import *
@@ -41,7 +41,7 @@ class CCTree:
         calc_tree_struc: bool
         """
         self.orig_sent = orig_sent
-        self.osent_words = get_words(orig_sent)
+        self.osent_words = tags_in_fp_words(orig_sent)
         self.ll_ilabel = ll_ilabel
         self.forced_tree = forced_tree
         self.calc_tree_struc = calc_tree_struc
@@ -72,7 +72,7 @@ class CCTree:
             self.set_ccsents()
 
     @staticmethod
-    def get_ccnode_from_ccloc(ccloc, ccnodes):
+    def tags_in_fp_ccnode_from_ccloc(ccloc, ccnodes):
         """
 
         Parameters

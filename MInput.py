@@ -28,20 +28,20 @@ class MInput:
 
     def __init__(self,
                  task,
-                 in_fp,
+                 tags_in_fp,
                  auto_tokenizer,
                  use_spacy_model,
                  verbose=False):
         """
-        in_fp is an extags file.
+        tags_in_fp is an extags or a cctags file.
 
         if the extags file has no extags, only original sentences, then
-        we can use in_fp as for prediction.
+        we can use tags_in_fp as for prediction.
 
         Parameters
         ----------
         task: str
-        in_fp: str
+        tags_in_fp: str
         auto_tokenizer: AutoTokenizer
         use_spacy_model: bool
         verbose: bool
@@ -77,7 +77,7 @@ class MInput:
         self.ll_osent_verb_bool = []  # shape=(num_samples, num_words)
         self.ll_osent_verb_loc = []  # shape=(num_samples, num_words)
 
-        self.read_input_tags_file(in_fp)
+        self.read_input_tags_file(tags_in_fp)
 
     @staticmethod
     def encode_l_sent(l_sent,
@@ -269,7 +269,7 @@ class MInput:
             else:
                 self.ll_osent_verb_loc.append([0])
 
-    def read_input_tags_file(self, in_fp):
+    def read_input_tags_file(self, tags_in_fp):
         """
         similar to Openie6.data._process_data()
 
@@ -298,7 +298,7 @@ class MInput:
         Parameters
         ----------
         task: str
-        in_fp: str
+        tags_in_fp: str
 
         Returns
         -------
@@ -311,8 +311,8 @@ class MInput:
         lll_ilabel = []  # similar to targets, target=extraction
         sentL = ""  # similar to `sentence`
 
-        print("\nMInput started reading '" + in_fp + "'")
-        with open(in_fp, "r", encoding="utf-8") as f:
+        print("\nMInput started reading '" + tags_in_fp + "'")
+        with open(tags_in_fp, "r", encoding="utf-8") as f:
             lines = f.readlines()
 
         def is_beginning_of_sample(line0):
@@ -419,7 +419,7 @@ class MInput:
 
         num_samples = len(l_orig_sent)
         print()
-        print("MInput finished reading '" + in_fp + "'")
+        print("MInput finished reading '" + tags_in_fp + "'")
         print("number of lines= " + str(k))
         print("number of used samples= ", num_samples)
         print("number of omitted samples= ", num_omitted_sents)
@@ -465,18 +465,18 @@ class MInput:
 
 
 if __name__ == "__main__":
-    def main1(task, in_fp, verbose):
+    def main1(task, tags_in_fp, verbose):
         model_str = "bert-base-uncased"
         auto_tokenizer = AutoTokenizer.from_pretrained(
             model_str,
             do_lower_case=True,
             use_fast=True,
-            data_dir=TTT_CACHE_DIR,
+            data_dir=CACHE_DIR,
             add_special_tokens=False,
             additional_special_tokens=UNUSED_TOKENS)
         use_spacy_model = True
         m_in = MInput(task,
-                      in_fp,
+                      tags_in_fp,
                       auto_tokenizer,
                       use_spacy_model,
                       verbose=verbose)
@@ -505,7 +505,7 @@ if __name__ == "__main__":
             model_str,
             do_lower_case=True,
             use_fast=True,
-            data_dir=TTT_CACHE_DIR,
+            data_dir=CACHE_DIR,
             add_special_tokens=False,
             additional_special_tokens=UNUSED_TOKENS)
         ll_icode = MInput.encode_l_sent(l_sent,
@@ -520,9 +520,9 @@ if __name__ == "__main__":
 
 
     main1(task="ex",
-          in_fp="tests/extags_test.txt",
+          tags_in_fp="tests/extags_test.txt",
           verbose=False)
     main2(add=True, remove=True)
     main1(task="ex",
-          in_fp="predictions/small_pred.txt",
+          tags_in_fp="predictions/small_pred.txt",
           verbose=True)

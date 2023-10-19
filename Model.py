@@ -124,7 +124,7 @@ class Model(pl.LightningModule):
         self.init_name_to_param = None
 
         self.base_model = AutoModel.from_pretrained(
-            self.params.d["model_str"], cache_dir=TTT_CACHE_DIR)
+            self.params.d["model_str"], cache_dir=CACHE_DIR)
         self.hidden_size = self.base_model.config.hidden_size
 
         if self.params.d["iterative_layers"] > 0:
@@ -608,10 +608,10 @@ class Model(pl.LightningModule):
 
         """
 
-        batch_m_out = self.forward(
+        batch_m_out = list(self.forward(
             batch_m_in,
             batch_id,
-            ttt='train').values()[0]
+            ttt='train').values())[0]
 
         return {"batch_m_out": batch_m_out}
 
@@ -634,10 +634,10 @@ class Model(pl.LightningModule):
             tune_out_d
 
         """
-        batch_m_out = self.forward(
+        batch_m_out = list(self.forward(
             batch_m_in,
             batch_id,
-            "tune").values()[0]
+            "tune").values())[0]
 
         # tune_out_d = {"lll_ilabel": lll_ilabel,
         #               "lll_pred_ex_confi": lll_pred_ex_confi,

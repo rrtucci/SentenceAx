@@ -15,7 +15,7 @@ class ExMetric:
     
     Attributes 
     ----------
-    tune_fpbenchmark: Benchmark
+    tune_benchmark: Benchmark
     sent_to_sent: dict[str, str]
     matchingFunc: Matcher.binary_linient_tuple_match
     osentL_to_exs: dict[str, listt[SaxExtraction]]
@@ -37,7 +37,7 @@ class ExMetric:
         sent_to_sent: dict[str, str]
         use_carb_ex: bool
         """
-        self.tune_fpbenchmark = Benchmark('carb_subset/data/gold/dev.tsv')
+        self.tune_benchmark = Benchmark('carb_subset/data/gold/dev.tsv')
         self.test_benchmark = Benchmark('carb_subset/data/gold/test.tsv')
         self.matchingFunc = Matcher.binary_linient_tuple_match
         self.osentL_to_exs = osentL_to_exs
@@ -131,7 +131,7 @@ class ExMetric:
         # out_fp = "/dev/null"
         out_fp = "dev_null.txt"
         if ttt == "tune":
-            bmark = self.tune_fpbenchmark
+            bmark = self.tune_benchmark
         elif ttt == 'test':
             bmark = self.test_benchmark
         else:

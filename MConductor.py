@@ -32,9 +32,9 @@ class MConductor:
     DataLoader is located in torch.utils.data
     
     loader = torch.utils.dataloader(dset)
-    for input, target in loader:
+    for input, tartags_in_fp in loader:
          output.meta_data = model(input)
-         loss_fun = loss_fn(output.meta_data, target)
+         loss_fun = loss_fn(output.meta_data, tartags_in_fp)
          loss_fun.backward()
          optimizer.step()
     
@@ -42,7 +42,7 @@ class MConductor:
     SentenceAx
 
     for batch_index, batch in enumerate(loader):
-        input, target = batch
+        input, tartags_in_fp = batch
     
     
     # NOTE
@@ -66,9 +66,9 @@ class MConductor:
     pred_out_fp: str
     re_allen_in_fp: str
     re_allen_out_fp: str
-    test_fp: str
-    train_fp: str
-    tune_fp: str
+    tags_test_fp: str
+    tags_train_fp: str
+    tags_tune_fp: str
 
     """
 
@@ -95,16 +95,16 @@ class MConductor:
         warnings.filterwarnings('ignore')
 
         if self.params.task == 'cc':
-            self.train_fp = CCTAGS_TRAIN_FP
-            self.tune_fp = CCTAGS_TUNE_FP
-            self.test_fp = CCTAGS_TEST_FP
+            self.tags_train_fp = CCTAGS_TRAIN_FP
+            self.tags_tune_fp = CCTAGS_TUNE_FP
+            self.tags_test_fp = CCTAGS_TEST_FP
         elif self.params.task == 'ex':
-            self.train_fp = EXTAGS_TRAIN_FP
-            self.tune_fp = EXTAGS_TUNE_FP
-            self.test_fp = EXTAGS_TEST_FP
+            self.tags_train_fp = EXTAGS_TRAIN_FP
+            self.tags_tune_fp = EXTAGS_TUNE_FP
+            self.tags_test_fp = EXTAGS_TEST_FP
 
         if save:
-            self.checkpoint_callback = self.get_checkpoint_callback()
+            self.checkpoint_callback = self.tags_in_fp_checkpoint_callback()
         else:
             self.checkpoint_callback = None
 
@@ -113,7 +113,7 @@ class MConductor:
             params.d["model_str"],
             do_lower_case=True,
             use_fast=True,
-            data_dir=TTT_CACHE_DIR,
+            data_dir=CACHE_DIR,
             add_special_tokens=False,
             additional_special_tokens=UNUSED_TOKENS)
         # encode() (a.k.a. convert_tokens_to_ids())
@@ -126,9 +126,9 @@ class MConductor:
 
         self.dloader_tool = DataLoaderTool(params,
                                            self.auto_tokenizer,
-                                           self.train_fp,
-                                           self.tune_fp,
-                                           self.test_fp)
+                                           self.tags_train_fp,
+                                           self.tags_tune_fp,
+                                           self.tags_test_fp)
 
         self.model = None
 

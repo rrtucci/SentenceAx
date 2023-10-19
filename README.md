@@ -14,5 +14,8 @@ Neural Nets.
 
 Sentence Ax is a stand-alone app, but 
 it's also 
-a key component of the Mappa Mundi Project by 
+a key component of the 
+Mappa Mundi Project.
+Both Sentence Ax and Mappa Mundi were
+written by
 www.ar-tiste.xyz

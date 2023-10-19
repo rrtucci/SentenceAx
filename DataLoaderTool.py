@@ -117,12 +117,12 @@ class DataLoaderTool:
         assert self.tags_test_fp, self.tags_test_fp
         # model_str = self.params.d["model_str"].replace("/", "_")
         task = self.params.task
-        cached_tags_train_fp = CACHE_DIR + "/" + task + "_train_" + \
-                          self.tags_train_fp.replace("/", "_").split(".")[0] + ".pkl"
-        cached_tags_tune_fp = CACHE_DIR + "/" + task + "_tune_" + \
-                         self.tags_tune_fp.replace("/", "_").split(".")[0] + ".pkl"
-        cached_tags_test_fp = CACHE_DIR + "/" + task + "_test_" + \
-                         self.tags_test_fp.replace("/", "_").split(".")[0] + ".pkl"
+        cached_tags_train_fp = CACHE_DIR + "/" + task + "tags_train_" + \
+                self.tags_train_fp.replace("/", "_").split(".")[0] + ".pkl"
+        cached_tags_tune_fp = CACHE_DIR + "/" + task + "tags_tune_" + \
+                self.tags_tune_fp.replace("/", "_").split(".")[0] + ".pkl"
+        cached_tags_test_fp = CACHE_DIR + "/" + task + "tags_test_" + \
+                self.tags_test_fp.replace("/", "_").split(".")[0] + ".pkl"
 
         if not os.path.exists(cached_tags_train_fp) or \
                 self.params.d["refresh_cache"]:

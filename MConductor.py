@@ -30,21 +30,7 @@ class MConductor:
     wraps an iterable around the Dataset to enable easy access to the samples.
     
     DataLoader is located in torch.utils.data
-    
-    loader = torch.utils.dataloader(dset)
-    for input, tartags_in_fp in loader:
-         output.meta_data = model(input)
-         loss_fun = loss_fn(output.meta_data, tartags_in_fp)
-         loss_fun.backward()
-         optimizer.step()
-    
-    Often, batch refers to the output.meta_data of loader, but not in
-    SentenceAx
 
-    for batch_index, batch in enumerate(loader):
-        input, tartags_in_fp = batch
-    
-    
     # NOTE
     # run.prepare_test_dataset() never used
 

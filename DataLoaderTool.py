@@ -36,7 +36,8 @@ class DataLoaderTool:
     ----------
     auto_tokenizer: AutoTokenizer
     pad_icode: int
-    params: Params
+    params:
+    predict_dloader = []
     predict_fp: str
     tags_test_fp: str
     tags_train_fp: str
@@ -78,8 +79,10 @@ class DataLoaderTool:
         self.tags_test_fp = tags_test_fp
         self.use_spacy_model = use_spacy_model
 
-        self.train_dloader, self.tune_dloader, self.test_dloader=\
-            self.get_all_ttt_dataloaders()
+        self.train_dloader = []
+        self.tune_dloader = []
+        self.testdloader = []
+        self.predict_dloader = []
 
     def get_m_in(self, tags_in_fp):
         """
@@ -167,7 +170,8 @@ class DataLoaderTool:
         # to simulate bucket sort (along with pad_data)
         # train_dataset.sort()
 
-        return train_dataset, tune_dataset, test_dataset  # , vocab, orig_sents
+        return train_dataset, tune_dataset, test_dataset
+        # , vocab, orig_sents
 
     def get_predict_dataset(self, predict_in_fp):
         """
@@ -222,37 +226,36 @@ class DataLoaderTool:
 
         return predict_dataset
 
-    def get_all_ttt_dataloaders(self):
+    def set_all_ttt_dataloaders(self):
         """
         # this method calls DataLoader
 
         Returns
         -------
-        DataLoader
+        None
 
         """
         train_dataset, tune_dataset, test_dataset = \
             self.get_all_ttt_datasets()
 
-        train_dloader = \
+        self.train_dloader = \
             DataLoader(train_dataset,
                        batch_size=self.params.d["batch_size"],
                        # collate_fn=None,
                        shuffle=True,
                        num_workers=1)
-        tune_dloader = \
+        self.tune_dloader = \
             DataLoader(tune_dataset,
                        batch_size=self.params.d["batch_size"],
                        # collate_fn=None,
                        num_workers=1)
-        test_dloader = \
+        self.test_dloader = \
             DataLoader(test_dataset,
                        batch_size=self.params.d["batch_size"],
                        # collate_fn=None,
                        num_workers=1)
-        return train_dloader, tune_dloader, test_dloader
 
-    def get_predict_dataloader(self, predict_in_fp):
+    def set_predict_dataloader(self, predict_in_fp):
         """
 
         Parameters
@@ -261,22 +264,24 @@ class DataLoaderTool:
 
         Returns
         -------
-        DataLoader
+        None
 
         """
-        return DataLoader(self.get_predict_dataset(predict_in_fp),
-                          batch_size=self.params.d["batch_size"],
-                          # collate_fn=None,
-                          shuffle=True,
-                          num_workers=1)
+        self.predict_dloader = \
+            DataLoader(self.get_predict_dataset(predict_in_fp),
+                       batch_size=self.params.d["batch_size"],
+                       # collate_fn=None,
+                       shuffle=True,
+                       num_workers=1)
 
 
 if __name__ == "__main__":
     def main(params_id):
         params = Params(params_id)
+        do_lower_case = ('uncased' in params.d["model_str"])
         auto = AutoTokenizer.from_pretrained(
             params.d["model_str"],
-            do_lower_case=True,
+            do_lower_case=do_lower_case,
             use_fast=True,
             data_dir=CACHE_DIR,
             add_special_tokens=False,

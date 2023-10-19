@@ -216,9 +216,10 @@ class SaxDataPadder:
 if __name__ == "__main__":
     def main(task, in_fp):
         model_str = "bert-base-uncased"
+        do_lower_case = ('uncased' in model_str)
         auto = AutoTokenizer.from_pretrained(
             model_str,
-            do_lower_case=True,
+            do_lower_case=do_lower_case,
             use_fast=True,
             data_dir=CACHE_DIR,
             add_special_tokens=False,

@@ -97,7 +97,7 @@ class MConductor:
         do_lower_case = ('uncased' in self.params.d["model_str"])
         self.auto_tokenizer = AutoTokenizer.from_pretrained(
             params.d["model_str"],
-            do_lower_case=True,
+            do_lower_case=do_lower_case,
             use_fast=True,
             data_dir=CACHE_DIR,
             add_special_tokens=False,
@@ -115,6 +115,7 @@ class MConductor:
                                            self.tags_train_fp,
                                            self.tags_tune_fp,
                                            self.tags_test_fp)
+        self.dloader_tool.set_all_ttt_dataloaders()
 
         self.model = None
 
@@ -356,8 +357,8 @@ class MConductor:
                                            checkpoint_fp,
                                            use_minimal=True)
                 # trainer.fit() and trainer.test() are different
-                dloader = self.dloader_tool.test_dloader
-                trainer.test(self.model, test_dataloaders=dloader)
+                test_dloader = self.dloader_tool.test_dloader
+                trainer.test(self.model, test_dataloaders=test_dloader)
                 eval_epoch_end_d = self.model.eval_epoch_end_d
                 test_f.write(f'{checkpoint_fp}\t{eval_epoch_end_d}\n')
                 # note test_f created outside loop.
@@ -406,10 +407,10 @@ class MConductor:
                                    use_minimal=True)
         start_time = time()
         # self.model.all_sentences = all_sentences # never used
-        dloader = self.dloader_tool.get_predict_dataloader(pred_in_fp)
+        self.dloader_tool.set_predict_dataloader(pred_in_fp)
         trainer.test(
             self.model,
-            test_dataloaders=dloader)
+            test_dataloaders=self.dloader_tool.predict_dloader)
         end_time = time()
         minutes = (end_time - start_time) / 60
         print(f'Total Time taken = {minutes : 2f} minutes')
@@ -454,7 +455,7 @@ class MConductor:
         self.params.d["suggested_checkpoint_fp"] = CC_FIN_WEIGHTS_FP
         self.params.d["model_str"] = 'bert-base-cased'
         self.params.d["mode"] = self.params.mode = 'predict'
-        self.predict("test")
+        self.predict(pred_in_fp)
         l_cc_pred_str = self.model.l_cc_pred_str
         lll_cc_spanned_loc = self.model.lll_cc_spanned_loc
         assert len(l_cc_pred_str) == len(lll_cc_spanned_loc)

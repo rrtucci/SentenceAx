@@ -503,9 +503,10 @@ if __name__ == "__main__":
             "We went to the park on Sunday, and then went to the movies.",
             "I wish i new how to make this program work."]
         model_str = "bert-base-uncased"
+        do_lower_case = ('uncased' in model_str)
         auto_tokenizer = AutoTokenizer.from_pretrained(
             model_str,
-            do_lower_case=True,
+            do_lower_case=do_lower_case,
             use_fast=True,
             data_dir=CACHE_DIR,
             add_special_tokens=False,

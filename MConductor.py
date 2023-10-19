@@ -90,7 +90,7 @@ class MConductor:
             self.tags_test_fp = EXTAGS_TEST_FP
 
         if save:
-            self.checkpoint_callback = self.tags_in_fp_checkpoint_callback()
+            self.checkpoint_callback = self.get_checkpoint_callback()
         else:
             self.checkpoint_callback = None
 

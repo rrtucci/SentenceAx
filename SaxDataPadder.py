@@ -112,9 +112,8 @@ class SaxDataPadder:
                 # must delete last extraction first
                 for depth in reversed(rg):
                     del lll_ilabel[sam][depth]
-                print("SaxDataPadder deleting these extraction because "
-                      "over max depth: sample= " + str(sam) +
-                      ", depth=" + str(rg))
+                print("SaxDataPadder omitting extractions: sample= " + str(
+                    sam) + ", depths=" + str(list(rg)))
 
         max_num_words = -1
         for ll_ilabel in lll_ilabel:

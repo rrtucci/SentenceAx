@@ -392,8 +392,7 @@ class MInput:
                     num_omitted_sents += 1
                     print(str(num_omitted_sents) +
                           f". The {k}'th line has more than 100 words."
-                          f" length={len(sentL_words)}\n" +
-                          str(sentL_words[0:10]))
+                          f" length={len(sentL_words)}\n" + sentL[0:60])
                     # print("prev_line_rrt", prev_line)
                     # print("line_rrt", line)
                     # print(is_beginning_of_sample(line))

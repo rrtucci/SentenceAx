@@ -5,7 +5,7 @@ from collections import OrderedDict
 from MInput import *
 
 
-# from torchtext.data.utils import tags_in_fp_tokenizer
+# from torchtext.data.utils import get_tokenizer
 # from torchtext.vocab import build_vocab_from_iterator
 
 class SaxDataPadder:
@@ -41,7 +41,7 @@ class SaxDataPadder:
         self.num_samples = len(self.m_in.l_orig_sent)
 
     @staticmethod
-    def tags_in_fp_padded_ll_x(unpadded_ll_x, ipad1=0):
+    def get_padded_ll_x(unpadded_ll_x, ipad1=0):
         """
         The number at the end of `ipad` refers to the dimension. The
         dimensions here are called 0, 1 (1 is the innermost). -100 is a good
@@ -53,7 +53,7 @@ class SaxDataPadder:
         Parameters
         ----------
         unpadded_ll_x: list[list[torch.Tensor]]
-        ipad: int
+        ipad1: int
 
         Returns
         -------
@@ -78,7 +78,7 @@ class SaxDataPadder:
         return torch.Tensor(padded_ll_x)
 
     @staticmethod
-    def tags_in_fp_padded_lll_ilabel(unpadded_lll_ilabel, ipad1=0, ipad2=0):
+    def get_padded_lll_ilabel(unpadded_lll_ilabel, ipad1=0, ipad2=0):
         """
         The number at the end of `ipad` refers to the dimension. The
         dimensions here are called 0, 1, 2 (2 is the innermost).
@@ -86,7 +86,8 @@ class SaxDataPadder:
         Parameters
         ----------
         unpadded_lll_ilabel: list[list[list[int]]]
-        ipad: int
+        ipad1: int
+        ipad2: int
 
         Returns
         -------
@@ -112,7 +113,7 @@ class SaxDataPadder:
                 for depth in reversed(rg):
                     del lll_ilabel[sam][depth]
                 print("SaxDataPadder deleting these extraction because "
-                        "over max depth: sample= " + str(sam) +
+                      "over max depth: sample= " + str(sam) +
                       ", depth=" + str(rg))
 
         max_num_words = -1
@@ -138,7 +139,7 @@ class SaxDataPadder:
     #     >>> [475, 21, 30, 5297]
     #     """
     #
-    #     # tokenizer = tags_in_fp_tokenizer("basic_english")
+    #     # tokenizer = get_tokenizer("basic_english")
     #     tokenizer = self.auto_tokenizer
     #     def yield_tokens(self.m_in):
     #         for example_d in self.m_in:
@@ -175,10 +176,10 @@ class SaxDataPadder:
         # }
 
         padded_ll_osent_icode = SaxDataPadder. \
-            tags_in_fp_padded_ll_x(self.m_in.ll_osent_icode)
+            get_padded_ll_x(self.m_in.ll_osent_icode)
 
         padded_lll_ilabel = SaxDataPadder. \
-            tags_in_fp_padded_lll_ilabel(self.m_in.lll_ilabel)
+            get_padded_lll_ilabel(self.m_in.lll_ilabel)
 
         padded_ll_osent_wstart_loc = SaxDataPadder. \
             get_padded_ll_x(self.m_in.ll_osent_wstart_loc)

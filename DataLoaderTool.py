@@ -117,33 +117,25 @@ class DataLoaderTool:
         assert self.tags_test_fp, self.tags_test_fp
         # model_str = self.params.d["model_str"].replace("/", "_")
         task = self.params.task
-        cached_tags_train_fp = CACHE_DIR + "/" + task + "tags_train_" + \
+        cached_train_m_in_fp = CACHE_DIR + "/" + task + "_train_m_in_" + \
                 self.tags_train_fp.replace("/", "_").split(".")[0] + ".pkl"
-        cached_tags_tune_fp = CACHE_DIR + "/" + task + "tags_tune_" + \
+        cached_tune_m_in_fp = CACHE_DIR + "/" + task + "_tune_m_in_" + \
                 self.tags_tune_fp.replace("/", "_").split(".")[0] + ".pkl"
-        cached_tags_test_fp = CACHE_DIR + "/" + task + "tags_test_" + \
+        cached_test_m_in_fp = CACHE_DIR + "/" + task + "_test_m_in_" + \
                 self.tags_test_fp.replace("/", "_").split(".")[0] + ".pkl"
 
-        if not os.path.exists(cached_tags_train_fp) or \
-                self.params.d["refresh_cache"]:
-            train_m_in = self.get_m_in(self.tags_train_fp)
-            pickle.dump(train_m_in, open(cached_tags_train_fp, 'wb'))
-        else:
-            train_m_in = pickle.load(open(cached_tags_train_fp, 'rb'))
+        def find_m_in(cached_fp, tags_fp):
+            if not os.path.exists(cached_fp) or \
+                    self.params.d["refresh_cache"]:
+                m_in = self.get_m_in(tags_fp)
+                pickle.dump(m_in, open(cached_fp, 'wb'))
+            else:
+                m_in = pickle.load(open(cached_fp, 'rb'))
+            return m_in
 
-        if not os.path.exists(cached_tags_tune_fp) or \
-                self.params.d["refresh_cache"]:
-            tune_m_in = self.get_m_in(self.tags_tune_fp)
-            pickle.dump(tune_m_in, open(cached_tags_tune_fp, 'wb'))
-        else:
-            tune_m_in = pickle.load(open(cached_tags_tune_fp, 'rb'))
-
-        if not os.path.exists(cached_tags_test_fp) or \
-                self.params.d["refresh_cache"]:
-            test_m_in = self.get_m_in(self.tags_test_fp)
-            pickle.dump(test_m_in, open(cached_tags_test_fp, 'wb'))
-        else:
-            test_m_in = pickle.load(open(cached_tags_test_fp, 'rb'))
+        train_m_in = find_m_in(cached_train_m_in_fp, self.tags_train_fp)
+        tune_m_in = find_m_in(cached_tune_m_in_fp, self.tags_tune_fp)
+        test_m_in = find_m_in(cached_test_m_in_fp, self.tags_test_fp)
 
         # vocab = self.build_vocab(
         #     train_m_in + tune_m_in + test_m_in)

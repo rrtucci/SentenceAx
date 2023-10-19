@@ -38,6 +38,9 @@ class DataLoaderTool:
     tags_test_fp: str
     tags_train_fp: str
     tags_tune_fp: str
+    test_dloader: DataLoader
+    train_dloader: DataLoader
+    tune_dloader: DataLoader
     use_spacy_model: bool
     
     """
@@ -71,6 +74,9 @@ class DataLoaderTool:
         self.tags_tune_fp = tags_tune_fp
         self.tags_test_fp = tags_test_fp
         self.use_spacy_model = use_spacy_model
+
+        self.train_dloader, self.tune_dloader, self.test_dloader=\
+            self.get_all_ttt_dataloaders()
 
     def get_m_in(self, tags_in_fp):
         """
@@ -118,11 +124,14 @@ class DataLoaderTool:
         # model_str = self.params.d["model_str"].replace("/", "_")
         task = self.params.task
         cached_train_m_in_fp = CACHE_DIR + "/" + task + "_train_m_in_" + \
-                self.tags_train_fp.replace("/", "_").split(".")[0] + ".pkl"
+                               self.tags_train_fp.replace("/", "_").split(".")[
+                                   0] + ".pkl"
         cached_tune_m_in_fp = CACHE_DIR + "/" + task + "_tune_m_in_" + \
-                self.tags_tune_fp.replace("/", "_").split(".")[0] + ".pkl"
+                              self.tags_tune_fp.replace("/", "_").split(".")[
+                                  0] + ".pkl"
         cached_test_m_in_fp = CACHE_DIR + "/" + task + "_test_m_in_" + \
-                self.tags_test_fp.replace("/", "_").split(".")[0] + ".pkl"
+                              self.tags_test_fp.replace("/", "_").split(".")[
+                                  0] + ".pkl"
 
         def find_m_in(cached_fp, tags_fp):
             if not os.path.exists(cached_fp) or \
@@ -210,13 +219,9 @@ class DataLoaderTool:
 
         return predict_dataset
 
-    def get_one_ttt_dataloader(self, ttt):
+    def get_all_ttt_dataloaders(self):
         """
         # this method calls DataLoader
-
-        Parameters
-        ----------
-        ttt: str
 
         Returns
         -------
@@ -226,24 +231,23 @@ class DataLoaderTool:
         train_dataset, tune_dataset, test_dataset = \
             self.get_all_ttt_datasets()
 
-        if ttt == "train":
-            return DataLoader(train_dataset,
-                              batch_size=self.params.d["batch_size"],
-                              # collate_fn=None,
-                              shuffle=True,
-                              num_workers=1)
-        elif ttt == "tune":
-            return DataLoader(tune_dataset,
-                              batch_size=self.params.d["batch_size"],
-                              # collate_fn=None,
-                              num_workers=1)
-        elif ttt == "test":
-            return DataLoader(test_dataset,
-                              batch_size=self.params.d["batch_size"],
-                              # collate_fn=None,
-                              num_workers=1)
-        else:
-            assert False
+        train_dloader = \
+            DataLoader(train_dataset,
+                       batch_size=self.params.d["batch_size"],
+                       # collate_fn=None,
+                       shuffle=True,
+                       num_workers=1)
+        tune_dloader = \
+            DataLoader(tune_dataset,
+                       batch_size=self.params.d["batch_size"],
+                       # collate_fn=None,
+                       num_workers=1)
+        test_dloader = \
+            DataLoader(test_dataset,
+                       batch_size=self.params.d["batch_size"],
+                       # collate_fn=None,
+                       num_workers=1)
+        return train_dloader, tune_dloader, test_dloader
 
     def get_predict_dataloader(self, predict_in_fp):
         """

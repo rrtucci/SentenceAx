@@ -291,8 +291,8 @@ class MConductor:
                                    use_minimal=False)
         trainer.fit(
             self.model,
-            train_dataloader=self.dloader_tool.get_one_ttt_dataloader("train"),
-            val_dataloaders=self.dloader_tool.get_one_ttt_dataloader("tune"))
+            train_dataloader=self.dloader_tool.train_dloader,
+            val_dataloaders=self.dloader_tool.tune_dloader)
         tdir = task_logs_dir(self.params.task)
         shutil.move(tdir + '/train.part',
                     tdir + '/train')
@@ -319,8 +319,8 @@ class MConductor:
                                    use_minimal=False)
         trainer.fit(
             self.model,
-            train_dataloader=self.dloader_tool.get_one_ttt_dataloader("train"),
-            val_dataloaders=self.dloader_tool.get_one_ttt_dataloader("tune"))
+            train_dataloader=self.dloader_tool.train_dloader,
+            val_dataloaders=self.dloader_tool.tune_dloader)
         tdir = task_logs_dir(self.params.task)
         shutil.move(tdir + '/resume.part',
                     tdir + '/resume')
@@ -356,7 +356,7 @@ class MConductor:
                                            checkpoint_fp,
                                            use_minimal=True)
                 # trainer.fit() and trainer.test() are different
-                dloader = self.dloader_tool.get_one_ttt_dataloader("test")
+                dloader = self.dloader_tool.test_dloader
                 trainer.test(self.model, test_dataloaders=dloader)
                 eval_epoch_end_d = self.model.eval_epoch_end_d
                 test_f.write(f'{checkpoint_fp}\t{eval_epoch_end_d}\n')

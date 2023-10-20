@@ -15,6 +15,7 @@ class PaddedMInput(MInput):
 
     Attributes
     ----------
+    d: OrderedDict[str, torch.Tensor]
     ll_osent_icode: torch.Tensor
     ll_osent_pos_bool: torch.Tensor
     ll_osent_pos_loc: torch.Tensor
@@ -48,6 +49,19 @@ class PaddedMInput(MInput):
         assert self.pad_icode == 0
         self.num_samples = len(self.m_in.l_orig_sent)
         self.set_padded_data()
+
+        # call this after self.set_padded_data() does its type changes
+        self.d = OrderedDict({
+            "ll_osent_icode": self.ll_osent_icode,
+            "ll_osent_wstart_loc": self.ll_osent_wstart_loc,
+            "lll_ilabel": self.lll_ilabel
+        })
+        if self.use_spacy_model:
+            self.d["ll_osent_pos_bool"]= self.ll_osent_pos_bool
+            self.d["ll_osent_pos_loc"]= self.ll_osent_pos_loc
+            self.d["ll_osent_verb_bool"]= self.ll_osent_verb_bool
+            self.d["ll_osent_verb_loc"]= self.ll_osent_verb_loc
+
 
     @staticmethod
     def get_padded_ll_x(unpadded_ll_x, ipad1=0):
@@ -84,7 +98,7 @@ class PaddedMInput(MInput):
         # for i in range(len(padded_ll_x)):
         #     print(i,len(padded_ll_x[i]), padded_ll_x)
 
-        return torch.Tensor(padded_ll_x)
+        return torch.Tensor(padded_ll_x).int()
 
     @staticmethod
     def get_padded_lll_ilabel(unpadded_lll_ilabel, ipad1=0, ipad2=0):
@@ -135,7 +149,7 @@ class PaddedMInput(MInput):
 
         # for sam in range(len(lll_ilabel)):
         #     print(sam, len(lll_ilabel[sam]), len(lll_ilabel[sam][0]))
-        return torch.Tensor(lll_ilabel)
+        return torch.Tensor(lll_ilabel).int()
 
     # def build_vocab(self, self.m_in):
     #     """
@@ -163,6 +177,10 @@ class PaddedMInput(MInput):
     def set_padded_data(self):
         """
         similar to Openie6.data.pad_data()
+
+        This method changes the type of some m_in attributes but not their
+        names. For example, lll_ilabel goes from type list[list[list[int]]] to
+        type torch.tensor.
 
         Returns
         -------
@@ -210,20 +228,10 @@ class PaddedMInput(MInput):
         None
 
         """
-        padded_data_d = {
-            "ll_osent_icode": self.ll_osent_icode,
-            "ll_osent_pos_bool": self.ll_osent_pos_bool,
-            "ll_osent_pos_loc": self.ll_osent_pos_loc,
-            "ll_osent_verb_bool": self.ll_osent_verb_bool,
-            "ll_osent_verb_loc": self.ll_osent_verb_loc,
-            "ll_osent_wstart_loc": self.ll_osent_wstart_loc,
-            "lll_ilabel": self.lll_ilabel
-        }
         print("num_samples=", self.num_samples)
-        for key, value in padded_data_d.items():
+        for key, value in self.d.items():
             # print("lmhb", key, type(value))
             print(f"{key}.shape: ", value.shape)
-
 
 if __name__ == "__main__":
     def main(task, in_fp):

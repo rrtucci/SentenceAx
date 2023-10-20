@@ -30,12 +30,13 @@ class SaxDataSet(Dataset):
         Ref:
         https://machinelearningmastery.com/using-dataset-classes-in-pytorch/
 
-        abstract super class so don't need to call super().__init__(self)
-
+        abstract super class so don't need to call super().__init__()
         padded_data_d = {'ll_sentL_ilabel': padded_ll_sentL_ilabel,
                        'lll_label': padded_ll_label,
                        'l_wstart_locs': padded_l_wstart_locs,
                        'l_orig_sent': l_orig_sent}
+
+
 
         Parameters
         ----------
@@ -43,11 +44,10 @@ class SaxDataSet(Dataset):
         pad_icode: int
         use_spacy_model: bool
         """
-        self.padder = SaxDataPadder(m_in, pad_icode, use_spacy_model)
-        data_d = self.padder.padded_data_d
+        self.padded_m_in = PaddedMInput(m_in)
 
         self.num_samples, self.num_depths, self.num_words = \
-            data_d["lll_ilabel"].shape
+            self.padded_m_in.lll_ilabel.shape
 
         self.xtypes = [name for name in data_d.keys() if
                        name != "lll_ilabel"]

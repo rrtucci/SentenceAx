@@ -312,7 +312,7 @@ class Model(pl.LightningModule):
         
         Parameters
         ----------
-        batch_m_in: MInput
+        batch_m_in: PaddedMInput
         batch_id: int
         ttt: str
 
@@ -400,7 +400,7 @@ class Model(pl.LightningModule):
 
         Parameters
         ----------
-        batch_m_in: MInput
+        batch_m_in: PaddedMInput
         ttt: str
         lll_word_score: torch.Tensor
         llll_word_score: list[torch.Tensor]
@@ -530,7 +530,7 @@ class Model(pl.LightningModule):
 
         Parameters
         ----------
-        batch_m_in: MInput
+        batch_m_in: PaddedMInput
         llll_word_score: torch.Tensor
         con_to_weight: dict[str, float]
 
@@ -598,7 +598,7 @@ class Model(pl.LightningModule):
 
         Parameters
         ----------
-        batch_m_in: MInput
+        batch_m_in: PaddedMInput
         batch_id: int
 
         Returns
@@ -625,7 +625,7 @@ class Model(pl.LightningModule):
 
         Parameters
         ----------
-        batch_m_in: MInput
+        batch_m_in: PaddedMInput
         batch_id: int
 
         Returns
@@ -664,7 +664,7 @@ class Model(pl.LightningModule):
 
         Parameters
         ----------
-        batch_m_in: MInput
+        batch_m_in: PaddedMInput
         batch_id: int
 
         Returns

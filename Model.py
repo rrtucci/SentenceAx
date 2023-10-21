@@ -302,7 +302,7 @@ class Model(pl.LightningModule):
         tqdm_d['best'] = best
         return tqdm_d
 
-    def sax_get_batch_dicts(self, batch_xym):
+    def sax_get_batch_in_dicts(self, batch_xym):
         """
         
         Parameters
@@ -346,7 +346,7 @@ class Model(pl.LightningModule):
             batch_m_out
 
         """
-        x_d, y_d, meta_d = self.sax_get_batch_dicts(batch_xym)
+        x_d, y_d, meta_d = self.sax_get_batch_in_dicts(batch_xym)
         if "wreg" in self.params.d:
             self.init_name_to_param = deepcopy(
                 dict(self.named_parameters()))

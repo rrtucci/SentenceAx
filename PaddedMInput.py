@@ -26,7 +26,7 @@ class PaddedMInput(MInput):
     m_in: MInput
     num_samples: int
     pad_icode: int
-    x_d: OrderedDict[str, torch.Tensor]
+    x_d: OrderedDict
     x_name_to_dim1: OrderedDict[str, int]
     y_d: dict[str, torch.Tensor]
     """

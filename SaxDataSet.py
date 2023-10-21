@@ -18,7 +18,7 @@ class SaxDataSet(Dataset):
     num_words: int
     padded_m_in: PaddedMInput
     x: torch.Tensor
-    xname_to_dim1: OrderedDict[str, int]
+    xname_to_dim1: OrderedDict
     y: torch.Tensor
 
     """
@@ -58,11 +58,11 @@ class SaxDataSet(Dataset):
         Parameters
         ----------
         x: torch.Tensor
-        xname_to_dim1: OrderedDict[str, int]
+        xname_to_dim1: OrderedDict
 
         Returns
         -------
-        OrderedDict[str, torch.Tensor]
+        OrderedDict
 
         """
         dim1s = xname_to_dim1.values()

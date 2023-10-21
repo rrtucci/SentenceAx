@@ -101,7 +101,7 @@ class Model(pl.LightningModule):
     merge_layer: nn.Linear
     metric: CCMetric | ExMetric
     params: Params
-    xname_to_dim1: OrderedDict[str, int]
+    xname_to_dim1: OrderedDict
     # some inherited attributes that won't be used
     # hparams (dictionary, Used by Openie6, not by us.
     #    We use the class Params instead.)
@@ -122,7 +122,7 @@ class Model(pl.LightningModule):
         ----------
         params: Params
         auto_tokenizer: AutoTokenizer
-        xname_to_dim1: OrderedDict[str, int]
+        xname_to_dim1: OrderedDict
         use_spacy_model: bool
         """
         super().__init__()
@@ -313,8 +313,7 @@ class Model(pl.LightningModule):
 
         Returns
         -------
-        OrderedDict[str, torch.Tensor], OrderedDict[str, torch.Tensor],
-        dict[str, list[str]]
+        OrderedDict, OrderedDict, dict[str, list[str]]
 
         """
         x, y, l_orig_sent= batch_xym
@@ -428,7 +427,7 @@ class Model(pl.LightningModule):
 
         Parameters
         ----------
-        x_d: OrderedDict[str, torch.Tensor]
+        x_d: OrderedDict
         y_d: dict[str, torch.Tensor]
         meta_d: dict[str, list[str]]
         ttt: str
@@ -560,7 +559,7 @@ class Model(pl.LightningModule):
 
         Parameters
         ----------
-        x_d: OrderedDict[str, torch.Tensor]
+        x_d: OrderedDict
         llll_word_score: torch.Tensor
         con_to_weight: dict[str, float]
 

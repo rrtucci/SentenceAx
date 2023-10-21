@@ -104,7 +104,7 @@ def get_num_depths(task):
 
 
 def has_puntuation(str0,
-                   ignored_chs= "",
+                   ignored_chs="",
                    verbose=False):
     """
 
@@ -443,6 +443,28 @@ def add_key_value_pair_to_target_d(key, value, fix_d, target_d):
             target_d[key].append(value)
 
 
+def to_dict(instance):
+    """
+
+    Parameters
+    ----------
+    instance: Any
+
+    Returns
+    -------
+    dict[str, variable]
+
+    """
+    class_vars = vars(type(instance))  # get any "default" attrs defined at
+    # the class level
+    inst_vars = vars(instance)  # get any attrs defined on the instance (self)
+    all_vars = dict(class_vars)
+    all_vars.update(inst_vars)
+    # filter out private attributes
+    public_vars = {k: v for k, v in all_vars.items() if not k.startswith('_')}
+    return public_vars
+
+
 if __name__ == "__main__":
     def main1():
         h = {"x": 5, "y": 3}
@@ -475,7 +497,18 @@ if __name__ == "__main__":
         print(has_puntuation("NONE NONE\n"))
 
 
+    def main5():
+        class Simple:
+            def __init__(self):
+                self.a = 3
+                self.b = [6, 9]
+
+        simp = Simple()
+        print(to_dict(simp))
+
+
     main1()
     main2()
     main3()
     main4()
+    main5()

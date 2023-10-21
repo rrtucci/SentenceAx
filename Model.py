@@ -322,7 +322,7 @@ class Model(pl.LightningModule):
 
     def forward(self,
                 batch_xym,
-                batch_id=0,
+                batch_id,
                 ttt='train'):
         """
         inherited method
@@ -342,8 +342,8 @@ class Model(pl.LightningModule):
 
         Returns
         -------
-        dict[str, MOutput]
-            {"batch_m_out": batch_m_out}
+        MOutput
+            batch_m_out
 
         """
         x_d, y_d, meta_d = self.sax_get_batch_dicts(batch_xym)
@@ -434,8 +434,8 @@ class Model(pl.LightningModule):
 
         Returns
         -------
-        torch.Tensor, torch.Tensor, torch.Tensor
-            llll_pred_ex_ilabel, lll_pred_ex_confi, batch_loss
+        MOutput
+            batch_m_out
 
 
         """
@@ -544,7 +544,7 @@ class Model(pl.LightningModule):
                               ll_pred_ex_confi0,
                               batch_loss)
 
-        return {"batch_m_out": batch_m_out}
+        return batch_m_out
 
     @staticmethod
     def sax_constrained_loss(x_d,
@@ -617,9 +617,7 @@ class Model(pl.LightningModule):
 
         return hinge_loss
 
-    def training_step(self,
-                      batch_xym,
-                      batch_id=0):
+    def training_step(self, batch_xym, batch_id):
         """
         inherited method
 
@@ -630,20 +628,14 @@ class Model(pl.LightningModule):
 
         Returns
         -------
-        dict[str, MOutput]
-            {"batch_m_out": batch_m_out}
+        dict[str, float]
 
         """
-        batch_m_out = list(self.forward(
-            batch_xym,
-            batch_id,
-            ttt='train').values())[0]
+        batch_m_out = self.forward(batch_xym, batch_id, ttt='train')
 
-        return {"batch_m_out": batch_m_out}
+        return {"batch_loss": batch_m_out.batch_loss}
 
-    def validation_step(self,
-                        batch_xym,
-                        batch_id=0):
+    def validation_step(self, batch_xym, batch_id):
         """
         inherited method
 
@@ -657,13 +649,10 @@ class Model(pl.LightningModule):
         Returns
         -------
         dict[str, Any]
-            tune_out_d
+            to_dict(batch_m_out)
 
         """
-        batch_m_out = list(self.forward(
-            batch_xym,
-            batch_id,
-            "tune").values())[0]
+        batch_m_out = self.forward(batch_xym, batch_id, "tune")
 
         # tune_out_d = {"lll_ilabel": lll_ilabel,
         #               "lll_pred_ex_confi": lll_pred_ex_confi,
@@ -677,11 +666,9 @@ class Model(pl.LightningModule):
             self.sax_write_batch_sents_out(batch_id)
 
         self.l_batch_m_out.append(batch_m_out)
-        return {"batch_m_out": batch_m_out}
+        return to_dict(batch_m_out)
 
-    def test_step(self,
-                  batch_xym,
-                  batch_id=0):
+    def test_step(self, batch_xym, batch_id):
         """
         inherited method
         test_step() and validation_step() are identical. They invoke
@@ -696,13 +683,12 @@ class Model(pl.LightningModule):
         Returns
         -------
         dict[str, Any]
-            tune_out_d
+            to_dict(batch_m_out)
 
         """
         return self.validation_step(batch_xym, batch_id)
 
-    def sax_eval_metrics_at_epoch_end(self,
-                                      ttt):
+    def sax_eval_metrics_at_epoch_end(self, ttt):
         """
         similar to Openie6.model.evaluation_end()
         not inherited method, used in *_epoch_end methods
@@ -835,8 +821,7 @@ class Model(pl.LightningModule):
         """
         return
 
-    def sax_write_if_task_ex(self,
-                             batch_id):
+    def sax_write_if_task_ex(self, batch_id):
         """
 
         called by `sax_write_batch_sents_out()`
@@ -906,8 +891,7 @@ class Model(pl.LightningModule):
 
         self.l_ex_pred_str = l_pred_str
 
-    def sax_write_if_task_cc(self,
-                             batch_id):
+    def sax_write_if_task_cc(self, batch_id):
         """
 
         called by `sax_write_batch_sents_out()`
@@ -982,8 +966,7 @@ class Model(pl.LightningModule):
         self.ll_cc_spanned_word = ll_cc_spanned_word
         self.lll_cc_spanned_loc = lll_cc_spanned_loc
 
-    def sax_write_batch_sents_out(self,
-                                  batch_id):
+    def sax_write_batch_sents_out(self, batch_id):
         """
         similar to Openie6.model.write_to_file()
 

@@ -84,6 +84,9 @@ class DataLoaderTool:
         self.testdloader = []
         self.predict_dloader = []
 
+        self.l_orig_sent = []
+        self.xname_to_dim1 = OrderedDict()
+
     def get_m_in(self, tags_in_fp):
         """
 
@@ -155,20 +158,17 @@ class DataLoaderTool:
         # vocab = self.build_vocab(
         #     train_m_in + tune_m_in + test_m_in)
 
-        train_dataset = SaxDataSet(train_m_in,
-                                   self.pad_icode,
-                                   self.use_spacy_model)
+        train_dataset = SaxDataSet(train_m_in)
 
-        tune_dataset = SaxDataSet(tune_m_in,
-                                  self.pad_icode,
-                                  self.use_spacy_model)
+        tune_dataset = SaxDataSet(tune_m_in)
 
-        test_dataset = SaxDataSet(test_m_in,
-                                  self.pad_icode,
-                                  self.use_spacy_model)
+        test_dataset = SaxDataSet(test_m_in)
 
         # to simulate bucket sort (along with pad_data)
         # train_dataset.sort()
+
+        self.l_orig_sent = train_dataset.l_orig_sent
+        self.xname_to_dim1 = train_dataset.xname_to_dim1
 
         return train_dataset, tune_dataset, test_dataset
         # , vocab, orig_sents
@@ -220,9 +220,9 @@ class DataLoaderTool:
         predict_m_in = self.get_m_in(predict_in_fp)
         # vocab = build_vocab(predict_m_in)
 
-        predict_dataset = SaxDataSet(predict_m_in,
-                                     self.pad_icode,
-                                     self.use_spacy_model)
+        predict_dataset = SaxDataSet(predict_m_in)
+        self.l_orig_sent = predict_dataset.l_orig_sent
+        self.xname_to_dim1 = predict_dataset.xname_to_dim1
 
         return predict_dataset
 

@@ -15,6 +15,7 @@ class PaddedMInput(MInput):
 
     Attributes
     ----------
+    l_orig_sent: list[str]
     ll_osent_icode: torch.Tensor
     ll_osent_pos_bool: torch.Tensor
     ll_osent_pos_loc: torch.Tensor
@@ -51,6 +52,7 @@ class PaddedMInput(MInput):
         assert self.pad_icode == 0
         self.num_samples = len(self.m_in.l_orig_sent)
         self.set_padded_data()
+        self.l_orig_sent = m_in.l_orig_sent
 
         # call this after self.set_padded_data() does its type changes
         self.y_d = {"lll_ilabel": self.lll_ilabel}

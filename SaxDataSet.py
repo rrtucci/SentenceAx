@@ -12,6 +12,7 @@ class SaxDataSet(Dataset):
 
     Attributes
     ----------
+    l_orig_sent: list[str]
     num_depths: int
     num_samples: int
     num_words: int
@@ -37,6 +38,7 @@ class SaxDataSet(Dataset):
         """
         super().__init__()
         self.padded_m_in = PaddedMInput(m_in)
+        self.l_orig_sent = self.padded_m_in.l_orig_sent
         self.xname_to_dim1 = self.padded_m_in.xname_to_dim1
 
         self.num_samples, self.num_depths, self.num_words = \

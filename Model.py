@@ -4,6 +4,7 @@ from CCMetric import *
 from CCTree import *
 from MOutput import *
 from PaddedMInput import *
+from SaxDataSet import *
 
 import os
 from copy import copy, deepcopy
@@ -94,12 +95,14 @@ class Model(pl.LightningModule):
     l_batch_m_out: list[MOutput]
     l_cc_pred_str: list[str]
     l_ex_pred_str: list[str]
+    l_orig_sent: list[str]
     ll_cc_spanned_word: list[list[str]]
     lll_cc_spanned_loc: list[list[list[int]]]
     loss_fun: nn.CrossEntropyLoss
     merge_layer: nn.Linear
     metric: CCMetric | ExMetric
     params: Params
+    xname_to_dim1: OrderedDict[str, int]
     # some inherited attributes that won't be used
     # hparams (dictionary, Used by Openie6, not by us.
     #    We use the class Params instead.)
@@ -112,6 +115,8 @@ class Model(pl.LightningModule):
     def __init__(self,
                  params,
                  auto_tokenizer,
+                 l_orig_sent,
+                 xname_to_dim1,
                  use_spacy_model):
         """
         lightning/src/lightning/pytorch/core/module.py
@@ -119,10 +124,14 @@ class Model(pl.LightningModule):
         ----------
         params: Params
         auto_tokenizer: AutoTokenizer
+        l_orig_sent: list[str]
+        xname_to_dim1: OrderedDict[str, int]
+        use_spacy_model: bool
         """
         super().__init__()
         self.params = params
         self.auto_tokenizer = auto_tokenizer
+        self.l_orig_sent = l_orig_sent
         self.init_name_to_param = None
 
         self.base_model = AutoModel.from_pretrained(
@@ -209,14 +218,8 @@ class Model(pl.LightningModule):
         self.ll_cc_spanned_word = []  # all_conjunct_words_conj
         self.lll_cc_spanned_loc = []  # all_sentence_indices_conj
         self.l_ex_pred_str = []  # all_predictions_oie
-        
-        m_in = MInput(params.task,
-                      "",
-                      auto_tokenizer,
-                      use_spacy_model,
-                      read=False
-                      )
-        self.batch_m_in = PaddedMInput(m_in)
+
+        self.xname_to_dim1 = xname_to_dim1
         self.l_batch_m_out = []
 
     def configure_optimizers(self):
@@ -305,7 +308,25 @@ class Model(pl.LightningModule):
         tqdm_d['best'] = best
         return tqdm_d
 
+    def get_x_d_y_d(self, batch_xy):
+        """
+        
+        Parameters
+        ----------
+        batch_xy: tuple[torch.Tensor, torch.Tensor]
+
+        Returns
+        -------
+        OrderedDict[str, torch.Tensor], OrderedDict[str, torch.Tensor]
+
+        """
+        x, y = batch_xy
+        y_d = {"lll_ilabel": y}
+        x_d = SaxDataSet.invert_cat(x, self.xname_to_dim1)
+        return x_d, y_d
+
     def forward(self,
+                batch_xy,
                 batch_id=0,
                 ttt='train'):
         """
@@ -320,6 +341,7 @@ class Model(pl.LightningModule):
         
         Parameters
         ----------
+        batch_xy: tuple[torch.Tensor, torch.Tensor]
         batch_id: int
         ttt: str
 
@@ -329,6 +351,7 @@ class Model(pl.LightningModule):
             {"batch_m_out": batch_m_out}
 
         """
+        x_d, y_d = self.get_x_d_y_d(batch_xy)
         if "wreg" in self.params.d:
             self.init_name_to_param = deepcopy(
                 dict(self.named_parameters()))
@@ -339,7 +362,7 @@ class Model(pl.LightningModule):
         # third (inner) list over number of labels in a line
         # after padding and adding the 3 unused tokens
         batch_size, num_depths, num_words = \
-            self.batch_m_in.lll_ilabel.shape
+            y_d["lll_ilabel"].shape
 
         # `loss_fun` is not used in this function anymore
         # loss_fun, lstm_loss = 0, 0
@@ -392,12 +415,15 @@ class Model(pl.LightningModule):
                     break
         # outsource everything after do loop to a new function
         return self.sax_calc_forward_output(
-            self.batch_m_in,
+            x_d,
+            y_d,
             ttt,
             lll_word_score,
             llll_word_score)
 
     def sax_calc_forward_output(self,
+                                x_d,
+                                y_d,
                                 ttt,
                                 lll_word_score,
                                 llll_word_score):
@@ -406,6 +432,8 @@ class Model(pl.LightningModule):
 
         Parameters
         ----------
+        x_d: OrderedDict[str, torch.Tensor]
+        y_d: dict[str, torch.Tensor]
         ttt: str
         lll_word_score: torch.Tensor
         llll_word_score: list[torch.Tensor]
@@ -423,14 +451,14 @@ class Model(pl.LightningModule):
         lll_pred_ex_confi = []  # all_depth_confidences
         ll_pred_ex_confi0 = []  # all_depth_confidences after cat dim=1
         batch_size, num_words, _ = lll_word_score.shape
-        # self.batch_m_in.lll_ilabel = \
-        #     self.batch_m_in.lll_ilabel.long()
+        # y_d["lll_ilabel"] = \
+        #     y_d["lll_ilabel"].long()
         for depth, lll_word_score0 in enumerate(llll_word_score):
             if ttt == 'train':
                 l_loss_input = \
                     lll_word_score0.reshape(batch_size * num_words, -1)
                 l_loss_target = \
-                    self.batch_m_in.lll_ilabel[:, depth, :].reshape(-1)
+                    y_d["lll_ilabel"][:, depth, :].reshape(-1)
                 batch_loss += self.loss_fun(l_loss_input, l_loss_target)
             else:
                 lll_soft_word_score = \
@@ -442,7 +470,7 @@ class Model(pl.LightningModule):
                 # second list over extractions
                 # third (inner) list over number of labels in a line
                 ll_pred_bool = \
-                    (self.batch_m_in.lll_ilabel[:, 0, :] != -100).float()
+                    (y_d["lll_ilabel"][:, 0, :] != -100).float()
 
                 # * is element-wise multiplication of tensors
                 ll_pred_bool = \
@@ -465,7 +493,8 @@ class Model(pl.LightningModule):
                 llll_word_score = torch.softmax(llll_word_score, dim=-1)
 
                 con_loss = Model.sax_constrained_loss(
-                    self.batch_m_in,
+                    x_d,
+                    y_d,
                     llll_word_score,
                     self.con_to_weight) / batch_size
                 batch_loss = con_loss
@@ -516,8 +545,8 @@ class Model(pl.LightningModule):
             #         self.con_to_l_loss[constraint] = []
             #     self.con_to_l_loss[constraint].append(con_loss)
 
-        batch_m_out = MOutput(self.batch_m_in.l_orig_sent,
-                              self.batch_m_in.lll_ilabel,
+        batch_m_out = MOutput(self.l_orig_sent,
+                              y_d["lll_ilabel"],
                               lll_pred_ex_ilabel0,
                               ll_pred_ex_confi0,
                               batch_loss)
@@ -525,7 +554,9 @@ class Model(pl.LightningModule):
         return {"batch_m_out": batch_m_out}
 
     @staticmethod
-    def sax_constrained_loss(llll_word_score,
+    def sax_constrained_loss(x_d,
+                             y_d,
+                             llll_word_score,
                              con_to_weight):
         """
         similar to Openie6.model.constrained_loss()
@@ -534,6 +565,8 @@ class Model(pl.LightningModule):
 
         Parameters
         ----------
+        x_d: OrderedDict[str, torch.Tensor]
+        y_d: dict[str, torch.Tensor]
         llll_word_score: torch.Tensor
         con_to_weight: dict[str, float]
 
@@ -545,7 +578,7 @@ class Model(pl.LightningModule):
         """
         batch_size, num_depths, num_words, icode_dim = llll_word_score.shape
         hinge_loss = 0
-        llll_index = self.batch_m_in.ll_osent_verb_loc.unsqueeze(1).unsqueeze(3). \
+        llll_index = x_d["ll_osent_verb_loc"].unsqueeze(1).unsqueeze(3). \
             repeat(1, num_depths, 1, icode_dim)
         llll_verb_confi = torch.gather(
             input=llll_word_score,
@@ -553,7 +586,7 @@ class Model(pl.LightningModule):
             index=llll_index)
         lll_verb_rel_confi = llll_verb_confi[:, :, :, 2]
         # (batch_size, depth, num_words)
-        lll_bool = (self.batch_m_in.ll_osent_verb_loc != 0).unsqueeze(1).float()
+        lll_bool = (x_d["ll_osent_verb_loc"] != 0).unsqueeze(1).float()
 
         lll_verb_rel_confi = lll_verb_rel_confi * lll_bool
         # every head-verb must be included in a relation
@@ -561,13 +594,13 @@ class Model(pl.LightningModule):
             ll_column_loss = \
                 torch.abs(1 - torch.sum(lll_verb_rel_confi, dim=1))
             ll_column_loss = \
-                ll_column_loss[self.batch_m_in.ll_osent_verb_loc != 0]
+                ll_column_loss[x_d["ll_osent_verb_loc"] != 0]
             hinge_loss += con_to_weight['hvc'] * ll_column_loss.sum()
 
         # extractions must have at least k-relations with
         # a head verb in them
         if 'hvr' in con_to_weight:
-            l_a = self.batch_m_in.ll_osent_verb_bool.sum(dim=1).float()
+            l_a = x_d["ll_osent_verb_bool"].sum(dim=1).float()
             l_b = torch.max(lll_verb_rel_confi, dim=2)[0].sum(dim=1)
             row_rel_loss = F.relu(l_a - l_b)
             hinge_loss += con_to_weight['hvr'] * row_rel_loss.sum()
@@ -578,7 +611,7 @@ class Model(pl.LightningModule):
             hinge_loss += con_to_weight['hve'] * ll_ex_loss.sum()
 
         if 'posm' in con_to_weight:
-            llll_index = self.batch_m_in.ll_osent_pos_loc. \
+            llll_index = x_d["ll_osent_pos_loc"]. \
                 unsqueeze(1).unsqueeze(3).repeat(1, num_depths, 1, icode_dim)
             llll_pred_ex_confi = torch.gather(
                 input=llll_word_score,
@@ -588,18 +621,20 @@ class Model(pl.LightningModule):
                 torch.max(llll_pred_ex_confi[:, :, :, 1:], dim=-1)[0]
             ll_column_loss = \
                 (1 - torch.max(lll_pos_not_none_confi, dim=1)[0]) * \
-                (self.batch_m_in.ll_osent_pos_loc != 0).float()
+                (x_d["ll_osent_pos_loc"] != 0).float()
             hinge_loss += con_to_weight['posm'] * ll_column_loss.sum()
 
         return hinge_loss
 
     def training_step(self,
+                      batch_xy,
                       batch_id=0):
         """
         inherited method
 
         Parameters
         ----------
+        batch_xy: tuple[torch.Tensor, torch.Tensor]
         batch_id: int
 
         Returns
@@ -608,15 +643,15 @@ class Model(pl.LightningModule):
             {"batch_m_out": batch_m_out}
 
         """
-
         batch_m_out = list(self.forward(
-            self.batch_m_in,
+            batch_xy,
             batch_id,
             ttt='train').values())[0]
 
         return {"batch_m_out": batch_m_out}
 
     def validation_step(self,
+                        batch_xy,
                         batch_id=0):
         """
         inherited method
@@ -625,6 +660,7 @@ class Model(pl.LightningModule):
 
         Parameters
         ----------
+        batch_xy: tuple[torch.Tensor, torch.Tensor]
         batch_id: int
 
         Returns
@@ -634,14 +670,14 @@ class Model(pl.LightningModule):
 
         """
         batch_m_out = list(self.forward(
-            self.batch_m_in,
+            batch_xy,
             batch_id,
             "tune").values())[0]
 
         # tune_out_d = {"lll_ilabel": lll_ilabel,
         #               "lll_pred_ex_confi": lll_pred_ex_confi,
-        #               "ground_truth": self.batch_m_in.lll_ilabel,
-        #               "l_orig_sent": self.batch_m_in.l_orig_sent}
+        #               "ground_truth": y_d["lll_ilabel"],
+        #               "l_orig_sent": self.l_orig_sent}
         # tune_out_d = OrderedDict(tune_out_d)
 
         # when this method is called by `test_step()`,
@@ -653,6 +689,7 @@ class Model(pl.LightningModule):
         return {"batch_m_out": batch_m_out}
 
     def test_step(self,
+                  batch_xy,
                   batch_id=0):
         """
         inherited method
@@ -662,6 +699,7 @@ class Model(pl.LightningModule):
 
         Parameters
         ----------
+        batch_xy: tuple[torch.Tensor, torch.Tensor]
         batch_id: int
 
         Returns
@@ -670,7 +708,7 @@ class Model(pl.LightningModule):
             tune_out_d
 
         """
-        return self.validation_step(self.batch_m_in, batch_id)
+        return self.validation_step(batch_xy, batch_id)
 
     def sax_eval_metrics_at_epoch_end(self,
                                       ttt):
@@ -806,7 +844,8 @@ class Model(pl.LightningModule):
         """
         return
 
-    def sax_write_if_task_ex(self, batch_id):
+    def sax_write_if_task_ex(self,
+                             batch_id):
         """
 
         called by `sax_write_batch_sents_out()`
@@ -876,7 +915,8 @@ class Model(pl.LightningModule):
 
         self.l_ex_pred_str = l_pred_str
 
-    def sax_write_if_task_cc(self, batch_id):
+    def sax_write_if_task_cc(self,
+                             batch_id):
         """
 
         called by `sax_write_batch_sents_out()`
@@ -953,7 +993,8 @@ class Model(pl.LightningModule):
         self.ll_cc_spanned_word = ll_cc_spanned_word
         self.lll_cc_spanned_loc = lll_cc_spanned_loc
 
-    def sax_write_batch_sents_out(self, batch_id):
+    def sax_write_batch_sents_out(self,
+                                  batch_id):
         """
         similar to Openie6.model.write_to_file()
 

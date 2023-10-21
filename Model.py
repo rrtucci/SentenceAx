@@ -114,8 +114,7 @@ class Model(pl.LightningModule):
     def __init__(self,
                  params,
                  auto_tokenizer,
-                 xname_to_dim1,
-                 use_spacy_model):
+                 xname_to_dim1):
         """
         lightning/src/lightning/pytorch/core/module.py
         Parameters
@@ -123,7 +122,6 @@ class Model(pl.LightningModule):
         params: Params
         auto_tokenizer: AutoTokenizer
         xname_to_dim1: OrderedDict
-        use_spacy_model: bool
         """
         super().__init__()
         self.params = params
@@ -304,7 +302,7 @@ class Model(pl.LightningModule):
         tqdm_d['best'] = best
         return tqdm_d
 
-    def get_x_d_y_d_meta_d(self, batch_xym):
+    def sax_get_batch_dicts(self, batch_xym):
         """
         
         Parameters
@@ -313,10 +311,10 @@ class Model(pl.LightningModule):
 
         Returns
         -------
-        OrderedDict, OrderedDict, dict[str, list[str]]
+        OrderedDict, dict[str, torch.Tensor], dict[str, list[str]]
 
         """
-        x, y, l_orig_sent= batch_xym
+        x, y, l_orig_sent = batch_xym
         y_d = {"lll_ilabel": y}
         meta_d = {"l_orig_sent": l_orig_sent}
         x_d = SaxDataSet.invert_cat(x, self.xname_to_dim1)
@@ -348,7 +346,7 @@ class Model(pl.LightningModule):
             {"batch_m_out": batch_m_out}
 
         """
-        x_d, y_d, meta_d = self.get_x_d_y_d_meta_d(batch_xym)
+        x_d, y_d, meta_d = self.sax_get_batch_dicts(batch_xym)
         if "wreg" in self.params.d:
             self.init_name_to_param = deepcopy(
                 dict(self.named_parameters()))

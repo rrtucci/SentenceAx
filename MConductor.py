@@ -48,10 +48,6 @@ class MConductor:
     model: Model
     pad_icode: int
     params: Param
-    pred_in_fp: str
-    pred_out_fp: str
-    re_allen_in_fp: str
-    re_allen_out_fp: str
     tags_test_fp: str
     tags_train_fp: str
     tags_tune_fp: str
@@ -134,8 +130,8 @@ class MConductor:
 
         """
         return ModelCheckpoint(
-            filepath=WEIGHTS_DIR + "/" + \
-                     self.params.task + '_model/{epoch:02d}_{eval_acc:.3f}',
+            filepath=WEIGHTS_DIR + "/" + self.params.task +
+                     '_model/{epoch:02d}_{eval_acc:.3f}',
             verbose=True,
             monitor='eval_acc',
             mode='max',
@@ -191,14 +187,14 @@ class MConductor:
 
         # the current log file will have no number prefix,
         # stored ones will.
-        if os.path.exists(task_logs_dir(self.params.task) + "/" + ttt):
+        if os.path.exists(get_task_logs_dir(self.params.task) + "/" + ttt):
             num_numbered_logs = len(
-                list(glob(task_logs_dir(self.params.task) + f'/{ttt}_*')))
+                list(glob(get_task_logs_dir(self.params.task) + f'/{ttt}_*')))
             new_id = num_numbered_logs + 1
             print('Retiring current log file by changing its name')
             print(shutil.move(
-                task_logs_dir(self.params.task) + f'/{ttt}',
-                task_logs_dir(self.params.task) + f'/{ttt}_{new_id}'))
+                get_task_logs_dir(self.params.task) + f'/{ttt}',
+                get_task_logs_dir(self.params.task) + f'/{ttt}_{new_id}'))
         logger = TensorBoardLogger(
             save_dir=LOGS_DIR,
             name=self.params.task,
@@ -294,8 +290,7 @@ class MConductor:
         # train is the only mode that doesn't require update_params()
         self.model = Model(self.params,
                            self.auto_tokenizer,
-                           self.xname_to_dim1,
-                           self.use_spacy_model)
+                           self.xname_to_dim1)
         trainer = self.get_trainer(self.get_logger("train"),
                                    checkpoint_fp=None,
                                    use_minimal=False)
@@ -303,7 +298,7 @@ class MConductor:
             self.model,
             train_dataloader=self.dloader_tool.train_dloader,
             val_dataloaders=self.dloader_tool.tune_dloader)
-        tdir = task_logs_dir(self.params.task)
+        tdir = get_task_logs_dir(self.params.task)
         shutil.move(tdir + '/train.part',
                     tdir + '/train')
 
@@ -325,8 +320,7 @@ class MConductor:
         self.update_params(checkpoint_fp)
         self.model = Model(self.params.d,
                            self.auto_tokenizer,
-                           self.xname_to_dim1,
-                           self.use_spacy_model)
+                           self.xname_to_dim1)
         trainer = self.get_trainer(self.get_logger("tune"),
                                    checkpoint_fp,
                                    use_minimal=False)
@@ -334,7 +328,7 @@ class MConductor:
             self.model,
             train_dataloader=self.dloader_tool.train_dloader,
             val_dataloaders=self.dloader_tool.tune_dloader)
-        tdir = task_logs_dir(self.params.task)
+        tdir = get_task_logs_dir(self.params.task)
         shutil.move(tdir + '/resume.part',
                     tdir + '/resume')
 
@@ -356,14 +350,13 @@ class MConductor:
 
         self.model = Model(self.params.d,
                            self.auto_tokenizer,
-                           self.xname_to_dim1,
-                           self.use_spacy_model)
+                           self.xname_to_dim1)
         # if self.params.task == "ex" and self.ex_sent_to_sent:
         #     self.model.metric.sent_to_sent = self.ex_sent_to_sent
         # if self.params.task == "cc" and self.cc_sent_to_words:
         #     self.model.metric.sent_to_words = self.cc_sent_to_words
 
-        tdir = task_logs_dir(self.params.task)
+        tdir = get_task_logs_dir(self.params.task)
         with open(tdir + '/test.txt', "w") as test_f:
             logger = self.get_logger("test")
             # one checkpoint at end of each epoch
@@ -390,7 +383,7 @@ class MConductor:
 
         Parameters
         ----------
-        predict_in_fp: str
+        pred_in_fp: str
 
         Returns
         -------
@@ -412,8 +405,7 @@ class MConductor:
         self.update_params(checkpoint_fp)
         self.model = Model(self.params.d,
                            self.auto_tokenizer,
-                           self.xname_to_dim1,
-                           self.use_spacy_model)
+                           self.xname_to_dim1)
 
         # No
         # self.model.metric.sent_to_sent = self.ex_sent_to_sent
@@ -523,6 +515,7 @@ class MConductor:
         l_osentL: list[str]
         l_ccsentL: list[str]
         pred_out_fp: str
+        delete_ccsents_file: bool
 
         Returns
         -------
@@ -641,8 +634,6 @@ class MConductor:
 
         Parameters
         ----------
-        re_allen_in_fp: str
-        re_allen_out_fp: str
 
         Returns
         -------

@@ -27,7 +27,7 @@ class PaddedMInput(MInput):
     num_samples: int
     pad_icode: int
     x_d: OrderedDict
-    x_name_to_dim1: OrderedDict[str, int]
+    x_name_to_dim1: OrderedDict
     y_d: dict[str, torch.Tensor]
     """
 
@@ -61,14 +61,13 @@ class PaddedMInput(MInput):
             "ll_osent_wstart_loc": self.ll_osent_wstart_loc,
         })
         if self.use_spacy_model:
-            self.x_d["ll_osent_pos_bool"]= self.ll_osent_pos_bool
-            self.x_d["ll_osent_pos_loc"]= self.ll_osent_pos_loc
-            self.x_d["ll_osent_verb_bool"]= self.ll_osent_verb_bool
-            self.x_d["ll_osent_verb_loc"]= self.ll_osent_verb_loc
+            self.x_d["ll_osent_pos_bool"] = self.ll_osent_pos_bool
+            self.x_d["ll_osent_pos_loc"] = self.ll_osent_pos_loc
+            self.x_d["ll_osent_verb_bool"] = self.ll_osent_verb_bool
+            self.x_d["ll_osent_verb_loc"] = self.ll_osent_verb_loc
 
         self.xname_to_dim1 = OrderedDict(
             {xname: self.x_d[xname].shape[1] for xname in self.x_d})
-
 
     @staticmethod
     def get_padded_ll_x(unpadded_ll_x, ipad1=0):
@@ -245,6 +244,7 @@ class PaddedMInput(MInput):
             # print("lmhb", key, type(value))
             print(f"{key}.shape: ", value.shape)
 
+
 if __name__ == "__main__":
     def main(task, in_fp):
         model_str = "bert-base-uncased"
@@ -263,7 +263,7 @@ if __name__ == "__main__":
                       use_spacy_model)
         # full encoding is [101, 0, 102], 101=BOS_ICODE, 102=EOS_ICODE
         pad_icode = auto.encode(auto.pad_token)[1]
-        # print("pad_token, pad_icode=", auto.pad_token, pad_icode)
+        print("pad_token, pad_icode=", auto.pad_token, pad_icode)
         padded_m_in = PaddedMInput(m_in)
         padded_m_in.print_padded_data_shapes()
 

@@ -42,7 +42,7 @@ def merge_dicts(dominant_d, default_d):
     return new_dict
 
 
-def tag_to_ilabel(task):
+def get_tag_to_ilabel(task):
     """
 
     Parameters
@@ -63,7 +63,7 @@ def tag_to_ilabel(task):
     return tag_to_ilabel
 
 
-def task_logs_dir(task):
+def get_task_logs_dir(task):
     """
     Parameters
     ----------
@@ -83,7 +83,7 @@ def task_logs_dir(task):
     return tdir
 
 
-def num_depths(task):
+def get_num_depths(task):
     """
     Parameters
     ----------

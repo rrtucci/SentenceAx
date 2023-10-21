@@ -36,9 +36,8 @@ class DataLoaderTool:
     ----------
     auto_tokenizer: AutoTokenizer
     pad_icode: int
-    params:
+    params: Params
     predict_dloader = []
-    predict_fp: str
     tags_test_fp: str
     tags_train_fp: str
     tags_tune_fp: str
@@ -46,6 +45,7 @@ class DataLoaderTool:
     train_dloader: DataLoader
     tune_dloader: DataLoader
     use_spacy_model: bool
+    xname_to_dim1: OrderedDict
     
     """
 
@@ -81,16 +81,16 @@ class DataLoaderTool:
 
         self.train_dloader = []
         self.tune_dloader = []
-        self.testdloader = []
+        self.test_dloader = []
         self.predict_dloader = []
 
-        self.l_orig_sent = []
         self.xname_to_dim1 = OrderedDict()
 
     def get_m_in(self, tags_in_fp):
         """
 
-        This is used to create an m_imput for in_fp=tags_train_fp, tags_tune_fp, tags_test_fp.
+        This is used to create an m_imput for in_fp=tags_train_fp,
+        tags_tune_fp, tags_test_fp.
 
         Parameters
         ----------
@@ -132,15 +132,15 @@ class DataLoaderTool:
         assert self.tags_test_fp, self.tags_test_fp
         # model_str = self.params.d["model_str"].replace("/", "_")
         task = self.params.task
-        cached_train_m_in_fp = CACHE_DIR + "/" + task + "_train_m_in_" + \
-                               self.tags_train_fp.replace("/", "_").split(".")[
-                                   0] + ".pkl"
-        cached_tune_m_in_fp = CACHE_DIR + "/" + task + "_tune_m_in_" + \
-                              self.tags_tune_fp.replace("/", "_").split(".")[
-                                  0] + ".pkl"
-        cached_test_m_in_fp = CACHE_DIR + "/" + task + "_test_m_in_" + \
-                              self.tags_test_fp.replace("/", "_").split(".")[
-                                  0] + ".pkl"
+        cached_train_m_in_fp = \
+            CACHE_DIR + "/" + task + "_train_m_in_" + \
+            self.tags_train_fp.replace("/", "_").split(".")[0] + ".pkl"
+        cached_tune_m_in_fp = \
+            CACHE_DIR + "/" + task + "_tune_m_in_" + \
+            self.tags_tune_fp.replace("/", "_").split(".")[0] + ".pkl"
+        cached_test_m_in_fp = \
+            CACHE_DIR + "/" + task + "_test_m_in_" + \
+            self.tags_test_fp.replace("/", "_").split(".")[0] + ".pkl"
 
         def find_m_in(cached_fp, tags_fp):
             if not os.path.exists(cached_fp) or \
@@ -167,7 +167,6 @@ class DataLoaderTool:
         # to simulate bucket sort (along with pad_data)
         # train_dataset.sort()
 
-        self.l_orig_sent = train_dataset.l_orig_sent
         self.xname_to_dim1 = train_dataset.xname_to_dim1
 
         return train_dataset, tune_dataset, test_dataset
@@ -221,7 +220,6 @@ class DataLoaderTool:
         # vocab = build_vocab(predict_m_in)
 
         predict_dataset = SaxDataSet(predict_m_in)
-        self.l_orig_sent = predict_dataset.l_orig_sent
         self.xname_to_dim1 = predict_dataset.xname_to_dim1
 
         return predict_dataset

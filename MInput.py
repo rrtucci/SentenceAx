@@ -378,8 +378,8 @@ class MInput:
             elif is_tag_line_of_sample(line):
                 # print("sdfrg-tag", k)
 
-                ilabels = [tag_to_ilabel(self.task)[tag] for tag in
-                              get_words(line)]
+                ilabels = [get_tag_to_ilabel(self.task)[tag] for tag in
+                           get_words(line)]
                 # print("nnmk-line number= " + str(k))
                 # assert len(ilabels) == len(osent_wstart_locs)
                 ll_ilabel.append(ilabels)

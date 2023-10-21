@@ -117,7 +117,6 @@ class MConductor:
                                            self.tags_train_fp,
                                            self.tags_tune_fp,
                                            self.tags_test_fp)
-        self.l_orig_sent = self.dloader_tool.l_orig_sent
         self.xname_to_dim1 = self.dloader_tool.xname_to_dim1
         if 'predict' not in params.mode:
             # ttt dloaders not used for mode="predict", "splitpredict"
@@ -295,7 +294,6 @@ class MConductor:
         # train is the only mode that doesn't require update_params()
         self.model = Model(self.params,
                            self.auto_tokenizer,
-                           self.l_orig_sent,
                            self.xname_to_dim1,
                            self.use_spacy_model)
         trainer = self.get_trainer(self.get_logger("train"),
@@ -327,7 +325,6 @@ class MConductor:
         self.update_params(checkpoint_fp)
         self.model = Model(self.params.d,
                            self.auto_tokenizer,
-                           self.l_orig_sent,
                            self.xname_to_dim1,
                            self.use_spacy_model)
         trainer = self.get_trainer(self.get_logger("tune"),
@@ -359,7 +356,6 @@ class MConductor:
 
         self.model = Model(self.params.d,
                            self.auto_tokenizer,
-                           self.l_orig_sent,
                            self.xname_to_dim1,
                            self.use_spacy_model)
         # if self.params.task == "ex" and self.ex_sent_to_sent:
@@ -416,7 +412,6 @@ class MConductor:
         self.update_params(checkpoint_fp)
         self.model = Model(self.params.d,
                            self.auto_tokenizer,
-                           self.l_orig_sent,
                            self.xname_to_dim1,
                            self.use_spacy_model)
 

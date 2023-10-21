@@ -77,19 +77,21 @@ class SaxDataSet(Dataset):
             xname_to_xtensor[xname] = x[:, endings[i]: endings[i + 1]]
         return xname_to_xtensor
 
-    def __getitem__(self, sample_id):
+    def __getitem__(self, isample):
         """
 
         Parameters
         ----------
-        sample_id: int
+        isample: int
 
         Returns
         -------
         torch.Tensor, torch.Tensor
 
+        self.l_orig_sent[isample]   is what is called metadata.
+        It is broken into batches along dim=0, just like self.x and self.y are
         """
-        return self.x[sample_id], self.y[sample_id]
+        return self.x[isample], self.y[isample], self.l_orig_sent[isample]
 
     def __len__(self):
         """

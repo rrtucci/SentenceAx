@@ -15,7 +15,6 @@ class PaddedMInput(MInput):
 
     Attributes
     ----------
-    d: OrderedDict[str, torch.Tensor]
     ll_osent_icode: torch.Tensor
     ll_osent_pos_bool: torch.Tensor
     ll_osent_pos_loc: torch.Tensor
@@ -26,6 +25,9 @@ class PaddedMInput(MInput):
     m_in: MInput
     num_samples: int
     pad_icode: int
+    x_d: OrderedDict[str, torch.Tensor]
+    x_name_to_dim1: OrderedDict[str, int]
+    y_d: dict[str, torch.Tensor]
     """
 
     def __init__(self, m_in):
@@ -51,16 +53,19 @@ class PaddedMInput(MInput):
         self.set_padded_data()
 
         # call this after self.set_padded_data() does its type changes
-        self.d = OrderedDict({
+        self.y_d = {"lll_ilabel": self.lll_ilabel}
+        self.x_d = OrderedDict({
             "ll_osent_icode": self.ll_osent_icode,
             "ll_osent_wstart_loc": self.ll_osent_wstart_loc,
-            "lll_ilabel": self.lll_ilabel
         })
         if self.use_spacy_model:
-            self.d["ll_osent_pos_bool"]= self.ll_osent_pos_bool
-            self.d["ll_osent_pos_loc"]= self.ll_osent_pos_loc
-            self.d["ll_osent_verb_bool"]= self.ll_osent_verb_bool
-            self.d["ll_osent_verb_loc"]= self.ll_osent_verb_loc
+            self.x_d["ll_osent_pos_bool"]= self.ll_osent_pos_bool
+            self.x_d["ll_osent_pos_loc"]= self.ll_osent_pos_loc
+            self.x_d["ll_osent_verb_bool"]= self.ll_osent_verb_bool
+            self.x_d["ll_osent_verb_loc"]= self.ll_osent_verb_loc
+
+        self.xname_to_dim1 = OrderedDict(
+            {xname: self.x_d[xname].shape[1] for xname in self.x_d})
 
 
     @staticmethod
@@ -229,7 +234,12 @@ class PaddedMInput(MInput):
 
         """
         print("num_samples=", self.num_samples)
-        for key, value in self.d.items():
+        print("x_d:")
+        for key, value in self.x_d.items():
+            # print("lmhb", key, type(value))
+            print(f"{key}.shape: ", value.shape)
+        print("y_d:")
+        for key, value in self.y_d.items():
             # print("lmhb", key, type(value))
             print(f"{key}.shape: ", value.shape)
 

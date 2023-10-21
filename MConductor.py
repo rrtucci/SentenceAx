@@ -58,7 +58,7 @@ class MConductor:
 
     """
 
-    def __init__(self, params, save=True):
+    def __init__(self, params, use_spacy_model=True, save=True):
         """
         A new
         ModelCheckpoint
@@ -71,12 +71,14 @@ class MConductor:
         Parameters
         ----------
         params: Params
+        use_spacy_model: bool
         save: bool
 
 
 
         """
         self.params = params
+        self.use_spacy_model = use_spacy_model
         self.has_cuda = torch.cuda.is_available()
         warnings.filterwarnings('ignore')
 
@@ -289,7 +291,9 @@ class MConductor:
 
         """
         # train is the only mode that doesn't require update_params()
-        self.model = Model(self.params, self.auto_tokenizer)
+        self.model = Model(self.params,
+                           self.auto_tokenizer,
+                           self.use_spacy_model)
         trainer = self.get_trainer(self.get_logger("train"),
                                    checkpoint_fp=None,
                                    use_minimal=False)
@@ -317,7 +321,9 @@ class MConductor:
         # train is the only mode that doesn't require
         # update_params() because it is called first
         self.update_params(checkpoint_fp)
-        self.model = Model(self.params.d, self.auto_tokenizer)
+        self.model = Model(self.params.d,
+                           self.auto_tokenizer,
+                           self.use_spacy_model)
         trainer = self.get_trainer(self.get_logger("tune"),
                                    checkpoint_fp,
                                    use_minimal=False)
@@ -345,7 +351,9 @@ class MConductor:
             # update_params() because it is called first
             self.update_params(checkpoint_fp)
 
-        self.model = Model(self.params.d, self.auto_tokenizer)
+        self.model = Model(self.params.d,
+                           self.auto_tokenizer,
+                           self.use_spacy_model)
         # if self.params.task == "ex" and self.ex_sent_to_sent:
         #     self.model.metric.sent_to_sent = self.ex_sent_to_sent
         # if self.params.task == "cc" and self.cc_sent_to_words:
@@ -398,7 +406,9 @@ class MConductor:
 
         checkpoint_fp = self.get_checkpoint_fp()
         self.update_params(checkpoint_fp)
-        self.model = Model(self.params.d, self.auto_tokenizer)
+        self.model = Model(self.params.d,
+                           self.auto_tokenizer,
+                           self.use_spacy_model)
 
         # No
         # self.model.metric.sent_to_sent = self.ex_sent_to_sent

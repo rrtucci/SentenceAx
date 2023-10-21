@@ -15,14 +15,14 @@ class SaxDataSet(Dataset):
     num_depths: int
     num_samples: int
     num_words: int
-    padder: SaxDataPadder
+    padded_m_in: PaddedMInput
     x: torch.Tensor
-    xtypes: list[str]
+    xname_to_dim1: OrderedDict[str, int]
     y: torch.Tensor
 
     """
 
-    def __init__(self, m_in, pad_icode, use_spacy_model):
+    def __init__(self, m_in):
         """
         In Openie6, the `torchtext.data.Dataset` class is a normal class
         `Dataset(examples, fields)` is abstract class but in newer versions
@@ -30,30 +30,50 @@ class SaxDataSet(Dataset):
         Ref:
         https://machinelearningmastery.com/using-dataset-classes-in-pytorch/
 
-        abstract super class so don't need to call super().__init__()
-        padded_data_d = {'ll_sentL_ilabel': padded_ll_sentL_ilabel,
-                       'lll_label': padded_ll_label,
-                       'l_wstart_locs': padded_l_wstart_locs,
-                       'l_orig_sent': l_orig_sent}
-
-
 
         Parameters
         ----------
         m_in: MInput
-        pad_icode: int
-        use_spacy_model: bool
         """
+        super().__init__()
         self.padded_m_in = PaddedMInput(m_in)
+        self.xname_to_dim1 = self.padded_m_in.xname_to_dim1
 
         self.num_samples, self.num_depths, self.num_words = \
             self.padded_m_in.lll_ilabel.shape
 
-        self.xtypes = [name for name in data_d.keys() if
-                       name != "lll_ilabel"]
-        self.x = torch.cat([data_d[xtype] for xtype in self.xtypes], dim=1)
+        x_d = self.padded_m_in.x_d
+        xnames = x_d.keys()
+        self.x = torch.cat([x_d[xname] for xname in xnames], dim=1)
 
-        self.y = data_d["lll_ilabel"]
+        y_d = self.padded_m_in.y_d
+        self.y = y_d["lll_ilabel"]
+
+    @staticmethod
+    def invert_cat(x, xname_to_dim1):
+        """
+
+        Parameters
+        ----------
+        x: torch.Tensor
+        xname_to_dim1: OrderedDict[str, int]
+
+        Returns
+        -------
+        OrderedDict[str, torch.Tensor]
+
+        """
+        dim1s = xname_to_dim1.values()
+        endings = [0]
+        dim1_sum = 0
+        for dim1 in dim1s:
+            dim1_sum += dim1
+            endings.append(dim1_sum)
+        xnames = xname_to_dim1.keys()
+        xname_to_xtensor = OrderedDict()
+        for i, xname in enumerate(xnames):
+            xname_to_xtensor[xname] = x[:, endings[i]: endings[i + 1]]
+        return xname_to_xtensor
 
     def __getitem__(self, sample_id):
         """
@@ -101,13 +121,16 @@ if __name__ == "__main__":
         # full encoding is [101, 0, 102], 101=BOS_ICODE, 102=EOS_ICODE
         pad_icode = auto.encode(auto.pad_token)[1]
         print("pad_token, pad_icode=", auto.pad_token, pad_icode)
-        dset = SaxDataSet(m_in, pad_icode, use_spacy_model)
-        dset.padder.print_padded_data_d_shapes()
-        print("xtypes=", dset.xtypes)
+        dset = SaxDataSet(m_in)
+        print("xname_to_dim1=", dset.xname_to_dim1)
         print("x.shape, x.shape_product=",
               dset.x.shape, np.product(dset.x.shape))
         print("y.shape, y.shape_product=",
               dset.y.shape, np.product(dset.y.shape))
+        xname_to_xtensor = SaxDataSet.invert_cat(dset.x, dset.xname_to_dim1)
+        for xname in xname_to_xtensor.keys():
+            assert xname_to_xtensor[xname].shape == \
+                   dset.padded_m_in.x_d[xname].shape
 
 
     main()

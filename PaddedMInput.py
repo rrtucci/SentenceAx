@@ -245,7 +245,7 @@ class PaddedMInput(MInput):
 
 
 if __name__ == "__main__":
-    def main(task, in_fp):
+    def main(in_fp):
         params = Params(1) # 1, task="ex", mode="train_test"
         model_str = "bert-base-uncased"
         do_lower_case = ('uncased' in model_str)
@@ -266,7 +266,5 @@ if __name__ == "__main__":
         padded_m_in.print_padded_data_shapes()
 
 
-    main(task="ex",
-         in_fp="tests/extags_test.txt")
-    main(task="ex",
-         in_fp="predictions/small_pred.txt")
+    main(in_fp="tests/extags_test.txt")
+    main(in_fp="predictions/small_pred.txt")

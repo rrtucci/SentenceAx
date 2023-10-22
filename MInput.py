@@ -251,10 +251,10 @@ class MInput:
         self.ll_osent_verb_bool = []
         self.ll_osent_verb_loc = []
         if not USE_SPACY_MODEL or "predict" in self.params.mode:
-            self.ll_osent_pos_bool = [[0]]
-            self.ll_osent_pos_loc = [[0]]
-            self.ll_osent_verb_bool = [[0]]
-            self.ll_osent_verb_loc = [[0]]
+            self.ll_osent_pos_bool = [[]]
+            self.ll_osent_pos_loc = [[]]
+            self.ll_osent_verb_bool = [[]]
+            self.ll_osent_verb_loc = [[]]
             return
         # print("bbght", self.l_orig_sent)
         for sent_id, spacy_tokens in enumerate(
@@ -325,7 +325,7 @@ class MInput:
 
         def is_beginning_of_sample(line0):
             return line0 and (not line0.isupper()
-                or has_puntuation(line0, ignored_chs="_"))
+                              or has_puntuation(line0, ignored_chs="_"))
 
         def is_tag_line_of_sample(line0):
             # ignoring "_" because of CP_START
@@ -338,7 +338,6 @@ class MInput:
             if prev_line0 and is_beginning_of_sample(line0):
                 return True
             return False
-
 
         prev_line = None
         osent_icodes = []
@@ -380,7 +379,7 @@ class MInput:
             elif is_tag_line_of_sample(line):
                 # print("sdfrg-tag", k)
 
-                ilabels = [get_tag_to_ilabel(self.params["task"])[tag]
+                ilabels = [get_tag_to_ilabel(self.params.task)[tag]
                            for tag in get_words(line)]
                 # print("nnmk-line number= " + str(k))
                 # assert len(ilabels) == len(osent_wstart_locs)
@@ -437,8 +436,6 @@ class MInput:
         self.lll_ilabel = lll_ilabel
         self.ll_osent_wstart_loc = ll_osent_wstart_loc
 
-
-
         def check_len(li):
             for x in li:
                 assert len(x) == num_samples
@@ -472,8 +469,8 @@ class MInput:
 
 
 if __name__ == "__main__":
-    def main1(task, tags_in_fp, verbose):
-        params = Params(1) # 1, task="ex", mode="train_test"
+    def main1(tags_in_fp, verbose):
+        params = Params(1)  # 1, task="ex", mode="train_test"
         model_str = "bert-base-uncased"
         auto_tokenizer = AutoTokenizer.from_pretrained(
             model_str,
@@ -524,10 +521,8 @@ if __name__ == "__main__":
         pprint(l_sent2)
 
 
-    main1(task="ex",
-          tags_in_fp="tests/extags_test.txt",
+    main1(tags_in_fp="tests/extags_test.txt",
           verbose=False)
     main2()
-    main1(task="ex",
-          tags_in_fp="predictions/small_pred.txt",
+    main1(tags_in_fp="predictions/small_pred.txt",
           verbose=True)

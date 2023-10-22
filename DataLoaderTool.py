@@ -81,27 +81,6 @@ class DataLoaderTool:
 
         self.xname_to_dim1 = OrderedDict()
 
-    def get_m_in(self, tags_in_fp):
-        """
-
-        This is used to create an m_imput for in_fp=tags_train_fp,
-        tags_tune_fp, tags_test_fp.
-
-        Parameters
-        ----------
-        tags_in_fp: str
-
-        Returns
-        -------
-        MInput
-
-        """
-        m_in = MInput(self.params,
-                      tags_in_fp,
-                      self.auto_tokenizer)
-
-        return m_in
-
     def get_dataset_common(self):
         return
 
@@ -139,7 +118,7 @@ class DataLoaderTool:
         def find_m_in(cached_fp, tags_fp):
             if not os.path.exists(cached_fp) or \
                     self.params.d["refresh_cache"]:
-                m_in = self.get_m_in(tags_fp)
+                m_in = MInput(self.params, tags_fp, self.auto_tokenizer)
                 pickle.dump(m_in, open(cached_fp, 'wb'))
             else:
                 m_in = pickle.load(open(cached_fp, 'rb'))
@@ -210,7 +189,9 @@ class DataLoaderTool:
 
         assert predict_in_fp
 
-        predict_m_in = self.get_m_in(predict_in_fp)
+        predict_m_in = MInput(self.params,
+                              predict_in_fp,
+                              self.auto_tokenizer)
         # vocab = build_vocab(predict_m_in)
 
         predict_dataset = SaxDataSet(predict_m_in)

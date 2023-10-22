@@ -362,7 +362,7 @@ class Model(pl.LightningModule):
         # `loss_fun` is not used in this function anymore
         # loss_fun, lstm_loss = 0, 0
 
-        lll_hidden_state, _ = self.base_model()
+        lll_hidden_state, _ = self.base_model(y_d["ll_osent_verb_bool"])
 
         llll_word_score = []  # similar to all_depth_scores
         depth = 0

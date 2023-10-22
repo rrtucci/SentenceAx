@@ -274,7 +274,7 @@ class Params:
                 "model_str": "bert-base-cased",
                 "num_extractions": EX_NUM_DEPTHS,
                 "optimizer": "adamW",
-                "refresh_cache": True,
+                "refresh_cache": False,
                 "save_k": 1,
                 "suggested_checkpoint_fp": "",
                 "val_check_interval": 1.0,

@@ -40,7 +40,7 @@ class Model(pl.LightningModule):
         def forward(self, x):
             return torch.relu(self.l1(x.view(x.size(0), -1)))
 
-        def training_step(self, batch, batch_id):
+        def training_step(self, batch, batch_idx):
             x, y = batch
             y_hat = self(x)
             loss_fun = F.cross_entropy(y_hat, y)
@@ -302,27 +302,27 @@ class Model(pl.LightningModule):
         tqdm_d['best'] = best
         return tqdm_d
 
-    def sax_get_batch_in_dicts(self, batch_xym):
+    def sax_get_batch_in_dicts(self, batch):
         """
         
         Parameters
         ----------
-        batch_xym: tuple[torch.Tensor, torch.Tensor, list[str]]
+        batch: tuple[torch.Tensor, torch.Tensor, list[str]]
 
         Returns
         -------
         OrderedDict, dict[str, torch.Tensor], dict[str, list[str]]
 
         """
-        x, y, l_orig_sent = batch_xym
+        x, y, l_orig_sent = batch
         y_d = {"lll_ilabel": y}
         meta_d = {"l_orig_sent": l_orig_sent}
         x_d = SaxDataSet.invert_cat(x, self.xname_to_dim1)
         return x_d, y_d, meta_d
 
     def forward(self,
-                batch_xym,
-                batch_id,
+                batch,
+                batch_idx,
                 ttt='train'):
         """
         inherited method
@@ -336,8 +336,8 @@ class Model(pl.LightningModule):
         
         Parameters
         ----------
-        batch_xym: tuple[torch.Tensor, torch.Tensor, list[str]]
-        batch_id: int
+        batch: tuple[torch.Tensor, torch.Tensor, list[str]]
+        batch_idx: int
         ttt: str
 
         Returns
@@ -346,7 +346,7 @@ class Model(pl.LightningModule):
             batch_m_out
 
         """
-        x_d, y_d, meta_d = self.sax_get_batch_in_dicts(batch_xym)
+        x_d, y_d, meta_d = self.sax_get_batch_in_dicts(batch)
         if "wreg" in self.params.d:
             self.init_name_to_param = deepcopy(
                 dict(self.named_parameters()))
@@ -439,7 +439,7 @@ class Model(pl.LightningModule):
 
 
         """
-        batch_loss = 0
+        loss = 0
         llll_pred_ex_ilabel = []  # all_depth_predictions
         lll_pred_ex_ilabel0 = []  # all_depth_predictions after cat dim=1
         lll_pred_ex_confi = []  # all_depth_confidences
@@ -453,7 +453,7 @@ class Model(pl.LightningModule):
                     lll_word_score0.reshape(batch_size * num_words, -1)
                 l_loss_target = \
                     y_d["lll_ilabel"][:, depth, :].reshape(-1)
-                batch_loss += self.loss_fun(l_loss_input, l_loss_target)
+                loss += self.loss_fun(l_loss_input, l_loss_target)
             else:
                 lll_soft_word_score = \
                     torch.log_softmax(lll_word_score0, dim=2)
@@ -490,7 +490,7 @@ class Model(pl.LightningModule):
                     x_d,
                     llll_word_score,
                     self.con_to_weight) / batch_size
-                batch_loss = con_loss
+                loss = con_loss
 
             if "wreg" in self.params.d["wreg"]:
                 weight_diff = 0
@@ -498,7 +498,7 @@ class Model(pl.LightningModule):
                 for name in self.init_name_to_param:
                     weight_diff += torch.norm(name_to_param[name]
                                               - self.init_name_to_param[name])
-                batch_loss += self.params.d["wreg"] * weight_diff
+                loss += self.params.d["wreg"] * weight_diff
         else:  # not training
             # if A and B are of shape (3, 4):
             # torch.cat([A, B], dim=0) will be of shape (6, 4)
@@ -542,7 +542,7 @@ class Model(pl.LightningModule):
                               y_d["lll_ilabel"],
                               lll_pred_ex_ilabel0,
                               ll_pred_ex_confi0,
-                              batch_loss)
+                              loss)
 
         return batch_m_out
 
@@ -617,25 +617,25 @@ class Model(pl.LightningModule):
 
         return hinge_loss
 
-    def training_step(self, batch_xym, batch_id):
+    def training_step(self, batch, batch_idx):
         """
         inherited method
 
         Parameters
         ----------
-        batch_xym: tuple[torch.Tensor, torch.Tensor, list[str]]
-        batch_id: int
+        batch: tuple[torch.Tensor, torch.Tensor, list[str]]
+        batch_idx: int
 
         Returns
         -------
-        dict[str, float]
+        dict[str, Any]
 
         """
-        batch_m_out = self.forward(batch_xym, batch_id, ttt='train')
+        batch_m_out = self.forward(batch, batch_idx, ttt='train')
 
-        return {"batch_loss": batch_m_out.batch_loss}
+        return to_dict(batch_m_out) # contains loss as variable
 
-    def validation_step(self, batch_xym, batch_id):
+    def validation_step(self, batch, batch_idx):
         """
         inherited method
 
@@ -643,8 +643,8 @@ class Model(pl.LightningModule):
 
         Parameters
         ----------
-        batch_xym: tuple[torch.Tensor, torch.Tensor, list[str]]
-        batch_id: int
+        batch: tuple[torch.Tensor, torch.Tensor, list[str]]
+        batch_idx: int
 
         Returns
         -------
@@ -652,7 +652,7 @@ class Model(pl.LightningModule):
             to_dict(batch_m_out)
 
         """
-        batch_m_out = self.forward(batch_xym, batch_id, "tune")
+        batch_m_out = self.forward(batch, batch_idx, "tune")
 
         # tune_out_d = {"lll_ilabel": lll_ilabel,
         #               "lll_pred_ex_confi": lll_pred_ex_confi,
@@ -663,12 +663,12 @@ class Model(pl.LightningModule):
         # when this method is called by `test_step()`,
         # skip the writing part
         if self.params.mode != 'test':
-            self.sax_write_batch_sents_out(batch_id)
+            self.sax_write_batch_sents_out(batch_idx)
 
         self.l_batch_m_out.append(batch_m_out)
         return to_dict(batch_m_out)
 
-    def test_step(self, batch_xym, batch_id):
+    def test_step(self, batch, batch_idx):
         """
         inherited method
         test_step() and validation_step() are identical. They invoke
@@ -677,8 +677,8 @@ class Model(pl.LightningModule):
 
         Parameters
         ----------
-        batch_xym: tuple[torch.Tensor, torch.Tensor, list[str]]
-        batch_id: int
+        batch: tuple[torch.Tensor, torch.Tensor, list[str]]
+        batch_idx: int
 
         Returns
         -------
@@ -686,7 +686,7 @@ class Model(pl.LightningModule):
             to_dict(batch_m_out)
 
         """
-        return self.validation_step(batch_xym, batch_id)
+        return self.validation_step(batch, batch_idx)
 
     def sax_eval_metrics_at_epoch_end(self, ttt):
         """
@@ -821,14 +821,14 @@ class Model(pl.LightningModule):
         """
         return
 
-    def sax_write_if_task_ex(self, batch_id):
+    def sax_write_if_task_ex(self, batch_idx):
         """
 
         called by `sax_write_batch_sents_out()`
 
         Parameters
         ----------
-        batch_id: int
+        batch_idx: int
 
         Returns
         -------
@@ -836,7 +836,7 @@ class Model(pl.LightningModule):
 
         """
 
-        batch_m_out = self.l_batch_m_out[batch_id]
+        batch_m_out = self.l_batch_m_out[batch_idx]
         lll_ilabel = batch_m_out.lll_pred_ex_ilabel
         ll_confi = batch_m_out.ll_pred_ex_confi
         num_samples, num_depths, _ = lll_ilabel.shape
@@ -881,7 +881,7 @@ class Model(pl.LightningModule):
                 allen_str += f"{pred_ex.confi}\n"
             l_pred_allen_str.append(allen_str.strip("/n"))
 
-        fmode = "w" if batch_id == 0 else "a"
+        fmode = "w" if batch_idx == 0 else "a"
         fpath = self.params.task + ".txt"
         with open(fpath, fmode) as pred_f:
             pred_f.write('\n'.join(l_pred_str) + '\n')
@@ -891,21 +891,21 @@ class Model(pl.LightningModule):
 
         self.l_ex_pred_str = l_pred_str
 
-    def sax_write_if_task_cc(self, batch_id):
+    def sax_write_if_task_cc(self, batch_idx):
         """
 
         called by `sax_write_batch_sents_out()`
 
         Parameters
         ----------
-        batch_id: int
+        batch_idx: int
 
         Returns
         -------
         None
 
         """
-        batch_m_out = self.l_batch_m_out[batch_id]
+        batch_m_out = self.l_batch_m_out[batch_idx]
 
         # correct = True
         total_num_ccsents1 = 0
@@ -957,7 +957,7 @@ class Model(pl.LightningModule):
         l_cc_pred_str += l_pred_str
         lll_cc_spanned_loc += lll_spanned_loc
 
-        fmode = "w" if batch_id == 0 else "a"
+        fmode = "w" if batch_idx == 0 else "a"
         fpath = self.params.task + ".txt"
         with open(fpath, fmode) as pred_f:
             pred_f.write('\n'.join(l_pred_str) + '\n')
@@ -966,7 +966,7 @@ class Model(pl.LightningModule):
         self.ll_cc_spanned_word = ll_cc_spanned_word
         self.lll_cc_spanned_loc = lll_cc_spanned_loc
 
-    def sax_write_batch_sents_out(self, batch_id):
+    def sax_write_batch_sents_out(self, batch_idx):
         """
         similar to Openie6.model.write_to_file()
 
@@ -974,18 +974,18 @@ class Model(pl.LightningModule):
 
         Parameters
         ----------
-        batch_id: int
+        batch_idx: int
 
         Returns
         -------
         None
 
         """
-        batch_m_out = self.l_batch_m_out[batch_id]
+        batch_m_out = self.l_batch_m_out[batch_idx]
         batch_m_out.move_to_cpu()
         if self.params.task == "ex":
-            self.sax_write_if_task_ex(batch_id)
+            self.sax_write_if_task_ex(batch_idx)
         elif self.params.task == "cc":
-            self.sax_write_if_task_cc(batch_id)
+            self.sax_write_if_task_cc(batch_idx)
         else:
             assert False

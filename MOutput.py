@@ -13,7 +13,7 @@ class MOutput:
     lll_pred_ex_confi: torch.Tensor
     lll_osent_icode: torch.Tensor
     llll_pred_ex_ilabel: torch.Tensor]
-    batch_loss: torch.Tensor
+    loss: torch.Tensor
     task: str
     """
 
@@ -22,7 +22,7 @@ class MOutput:
                  lll_ilabel,
                  lll_pred_ex_ilabel,
                  ll_pred_ex_confi,
-                 batch_loss):
+                 loss):
         """
         The inputs to the constractor are torch.Tensor and in gpu. They get
         converted to lists and cpu before being stored as attributes of the
@@ -36,7 +36,7 @@ class MOutput:
         lll_ilabel: torch.Tensor
         lll_pred_ex_ilabel: torch.Tensor
         ll_pred_ex_confi: torch.Tensor
-        batch_loss: torch.Tensor
+        loss: torch.Tensor
         task: str
         auto_tokenizer: AutoTokenizer
         
@@ -45,7 +45,7 @@ class MOutput:
         self.lll_ilabel = lll_ilabel
         self.lll_pred_ex_ilabel = lll_pred_ex_ilabel
         self.ll_pred_ex_confi = ll_pred_ex_confi
-        self.batch_loss = batch_loss
+        self.loss = loss
 
         self.in_cpu = False
 
@@ -63,7 +63,7 @@ class MOutput:
         self.lll_ilabel = self.lll_ilabel.cpu()
         self.lll_pred_ex_ilabel = self.lll_pred_ex_ilabel.cpu()
         self.ll_pred_ex_confi = self.ll_pred_ex_confi.cpu()
-        self.batch_loss = self.batch_loss.cpu()
+        self.loss = self.loss.cpu()
 
         self.ll_pred_ex_confi = (self.ll_pred_ex_confi * 100).round() / 100
 

@@ -104,22 +104,19 @@ class MInput:
         encode = auto_tokenizer.encode
         ll_icode = []
         for sent in l_sent:
-            l_icode = encode(sent,
-                             add_special_tokens=add)
+            l_icode = encode(sent)
             ll_icode.append(l_icode)
         return ll_icode
 
     @staticmethod
     def decode_ll_icode(ll_icode,
-                        auto_tokenizer,
-                        remove=True):
+                        auto_tokenizer):
         """
 
         Parameters
         ----------
         ll_icode: list[list[int]]
         auto_tokenizer: AutoTokenizer
-        remove: bool
 
         Returns
         -------
@@ -129,8 +126,7 @@ class MInput:
         decode = auto_tokenizer.decode
         l_sent = []
         for l_icode in ll_icode:
-            sent = decode(l_icode,
-                          skip_special_tokens=remove)
+            sent = decode(l_icode)
             l_sent.append(sent)
         return l_sent
 
@@ -430,7 +426,7 @@ class MInput:
         print("number of omitted samples= ", num_omitted_sents)
 
         self.l_orig_sent = l_orig_sent
-        # ll_osent_icode add extra term [0] at beginnig
+        # ll_osent_icode add extra term [0] at beginning
         self.ll_osent_icode = ll_osent_icode[1:]
         self.lll_ilabel = lll_ilabel
         self.ll_osent_wstart_loc = ll_osent_wstart_loc
@@ -501,7 +497,7 @@ if __name__ == "__main__":
                 print("lll_ilabel=\n", m_in.lll_ilabel)
 
 
-    def main2(add, remove):
+    def main2():
         l_sent = [
             "We went to the park on Sunday, and then went to the movies.",
             "I wish i new how to make this program work."]
@@ -515,20 +511,18 @@ if __name__ == "__main__":
             add_special_tokens=False,
             additional_special_tokens=UNUSED_TOKENS)
         ll_icode = MInput.encode_l_sent(l_sent,
-                                        auto_tokenizer,
-                                        add)
+                                        auto_tokenizer)
         l_sent2 = MInput.decode_ll_icode(ll_icode,
-                                         auto_tokenizer,
-                                         remove)
-        pprint(l_sent)  # add
-        print(ll_icode)  # remove
+                                         auto_tokenizer)
+        pprint(l_sent)
+        print(ll_icode)
         pprint(l_sent2)
 
 
     main1(task="ex",
           tags_in_fp="tests/extags_test.txt",
           verbose=False)
-    main2(add=True, remove=True)
+    main2()
     main1(task="ex",
           tags_in_fp="predictions/small_pred.txt",
           verbose=True)

@@ -362,7 +362,11 @@ class Model(pl.LightningModule):
         # `loss_fun` is not used in this function anymore
         # loss_fun, lstm_loss = 0, 0
 
-        lll_hidden_state, _ = self.base_model(y_d["ll_osent_verb_bool"])
+        batch_text = " ".join(redoL(meta_d["l_orig_sent"]))
+        base_model_input = \
+            torch.Tensor(self.auto_tokenizer.encode(batch_text))
+
+        lll_hidden_state, _ = self.base_model(base_model_input)
 
         llll_word_score = []  # similar to all_depth_scores
         depth = 0

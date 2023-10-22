@@ -38,7 +38,7 @@ class PaddedMInput(MInput):
         ----------
         m_in: MInput
         """
-        MInput.__init__(self,
+        super().__init__(self,
                         m_in.task,
                         m_in.tags_in_fp,
                         m_in.auto_tokenizer,
@@ -104,7 +104,7 @@ class PaddedMInput(MInput):
         # for i in range(len(padded_ll_x)):
         #     print(i,len(padded_ll_x[i]), padded_ll_x)
 
-        return torch.Tensor(padded_ll_x).int()
+        return torch.Tensor(padded_ll_x).long()
 
     @staticmethod
     def get_padded_lll_ilabel(unpadded_lll_ilabel, ipad1=0, ipad2=0):
@@ -155,7 +155,7 @@ class PaddedMInput(MInput):
 
         # for sam in range(len(lll_ilabel)):
         #     print(sam, len(lll_ilabel[sam]), len(lll_ilabel[sam][0]))
-        return torch.Tensor(lll_ilabel).int()
+        return torch.Tensor(lll_ilabel).long()
 
     # def build_vocab(self, self.m_in):
     #     """

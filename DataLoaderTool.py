@@ -7,11 +7,10 @@ from torch.utils.data import DataLoader
 
 import pickle
 import os
-# use of
-# tt.data.Field, Field.build_vocab
-# tt.data.Example
-# are deprecated
+
+# use of tt.data.Field, Field.build_vocab, tt.data.Example are deprecated
 # and tt.data.Dataset signature has changed
+
 import torchtext as tt
 
 import nltk
@@ -44,7 +43,6 @@ class DataLoaderTool:
     test_dloader: DataLoader
     train_dloader: DataLoader
     tune_dloader: DataLoader
-    use_spacy_model: bool
     xname_to_dim1: OrderedDict
     
     """
@@ -52,8 +50,7 @@ class DataLoaderTool:
     def __init__(self,
                  params,
                  auto_tokenizer,
-                 tags_train_fp, tags_tune_fp, tags_test_fp,
-                 use_spacy_model=True):
+                 tags_train_fp, tags_tune_fp, tags_test_fp):
         """
 
         Parameters
@@ -63,7 +60,6 @@ class DataLoaderTool:
         tags_train_fp: str
         tags_tune_fp: str
         tags_test_fp: str
-        use_spacy_model: bool
         """
 
         self.params = params
@@ -77,7 +73,6 @@ class DataLoaderTool:
         self.tags_train_fp = tags_train_fp
         self.tags_tune_fp = tags_tune_fp
         self.tags_test_fp = tags_test_fp
-        self.use_spacy_model = use_spacy_model
 
         self.train_dloader = []
         self.tune_dloader = []
@@ -101,10 +96,9 @@ class DataLoaderTool:
         MInput
 
         """
-        m_in = MInput(self.params.task,
+        m_in = MInput(self.params,
                       tags_in_fp,
-                      self.auto_tokenizer,
-                      self.use_spacy_model)
+                      self.auto_tokenizer)
 
         return m_in
 
@@ -284,7 +278,6 @@ if __name__ == "__main__":
             data_dir=CACHE_DIR,
             add_special_tokens=False,
             additional_special_tokens=UNUSED_TOKENS)
-        use_spacy_model = True
         tags_train_fp = "tests/extags_train.txt"
         tags_tune_fp = "tests/extags_tune.txt"
         tags_test_fp = "tests/extags_test.txt"
@@ -293,8 +286,7 @@ if __name__ == "__main__":
                                  auto,
                                  tags_train_fp,
                                  tags_tune_fp,
-                                 tags_test_fp,
-                                 use_spacy_model)
+                                 tags_test_fp)
         train_dataset, tune_dataset, test_dataset = \
             dl_tool.get_all_ttt_datasets()
 

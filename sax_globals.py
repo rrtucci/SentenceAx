@@ -26,6 +26,7 @@ params_d = parameters dictionary
 # EXTAGS_TUNE_FP = "input_data/extags_tune.txt"
 # EXTAGS_TEST_FP = "input_data/extags_test.txt"
 
+USE_SPACY_MODEL = True
 
 INPUT_DIR = "input_data"
 CACHE_DIR = 'cache'

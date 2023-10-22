@@ -10,6 +10,16 @@ class SaxDataSet(Dataset):
     tags_in_fp->MInput->PaddedMInput->SaxDataSet->DataLoader
                                      ->Model->MOutput
 
+    Openie6 uses torchtext classes data.Example and data.Field to create its
+    Dataset  instances. Those classes are now deprecated.
+    https://stackoverflow.com/questions/63539809/torchtext-0-7-shows-field
+    -is-being-deprecated-what-is-the-alternative
+
+    In Openie6, the `torchtext.data.Dataset` class is a normal class
+    `Dataset(examples, fields)` is abstract class but in newer versions it
+    is an abstract class. Ref:
+    https://machinelearningmastery.com/using-dataset-classes-in-pytorch/
+
     Attributes
     ----------
     l_orig_sent: list[str]
@@ -25,11 +35,7 @@ class SaxDataSet(Dataset):
 
     def __init__(self, m_in):
         """
-        In Openie6, the `torchtext.data.Dataset` class is a normal class
-        `Dataset(examples, fields)` is abstract class but in newer versions
-        it is an abstract class.
-        Ref:
-        https://machinelearningmastery.com/using-dataset-classes-in-pytorch/
+
 
 
         Parameters
@@ -106,7 +112,7 @@ class SaxDataSet(Dataset):
 
 if __name__ == "__main__":
     def main():
-        task = "ex"
+        params = Params(1) # 1, task="ex", mode="train_test"
         in_fp = "tests/extags_test.txt"
         model_str = "bert-base-uncased"
         do_lower_case = ('uncased' in model_str)
@@ -117,11 +123,9 @@ if __name__ == "__main__":
             data_dir=CACHE_DIR,
             add_special_tokens=False,
             additional_special_tokens=UNUSED_TOKENS)
-        use_spacy_model = True
-        m_in = MInput(task,
+        m_in = MInput(params,
                       in_fp,
-                      auto,
-                      use_spacy_model)
+                      auto)
         # full encoding is [101, 0, 102], 101=BOS_ICODE, 102=EOS_ICODE
         pad_icode = auto.encode(auto.pad_token)[1]
         print("pad_token, pad_icode=", auto.pad_token, pad_icode)

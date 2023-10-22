@@ -34,15 +34,14 @@ class PaddedMInput(MInput):
     def __init__(self, m_in):
         """
 
+
         Parameters
         ----------
         m_in: MInput
         """
-        super().__init__(self,
-                        m_in.task,
+        super().__init__(m_in.params,
                         m_in.tags_in_fp,
                         m_in.auto_tokenizer,
-                        m_in.use_spacy_model,
                         read=False,
                         verbose=m_in.verbose)
 
@@ -60,7 +59,7 @@ class PaddedMInput(MInput):
             "ll_osent_icode": self.ll_osent_icode,
             "ll_osent_wstart_loc": self.ll_osent_wstart_loc,
         })
-        if self.use_spacy_model:
+        if USE_SPACY_MODEL:
             self.x_d["ll_osent_pos_bool"] = self.ll_osent_pos_bool
             self.x_d["ll_osent_pos_loc"] = self.ll_osent_pos_loc
             self.x_d["ll_osent_verb_bool"] = self.ll_osent_verb_bool
@@ -200,7 +199,7 @@ class PaddedMInput(MInput):
         #     'll_label': labels_for_each_ex[:EX_NUM_DEPTHS],
         #     'word_starts': word_starts,
         #     'orig_sent': orig_sent,
-        #     # if use_spacy_model:
+        #     # if USE_SPACY_MODEL:
         #     'pos_bools': pos_bools,
         #     'pos_locs': pos_locs,
         #     'verb_bools': verb_bools,
@@ -216,7 +215,7 @@ class PaddedMInput(MInput):
         self.ll_osent_wstart_loc = PaddedMInput. \
             get_padded_ll_x(self.m_in.ll_osent_wstart_loc)
 
-        if self.use_spacy_model:
+        if USE_SPACY_MODEL:
             self.ll_osent_pos_bool = PaddedMInput. \
                 get_padded_ll_x(self.m_in.ll_osent_pos_bool)
             self.ll_osent_pos_loc = PaddedMInput. \
@@ -247,6 +246,7 @@ class PaddedMInput(MInput):
 
 if __name__ == "__main__":
     def main(task, in_fp):
+        params = Params(1) # 1, task="ex", mode="train_test"
         model_str = "bert-base-uncased"
         do_lower_case = ('uncased' in model_str)
         auto = AutoTokenizer.from_pretrained(
@@ -256,11 +256,9 @@ if __name__ == "__main__":
             data_dir=CACHE_DIR,
             add_special_tokens=False,
             additional_special_tokens=UNUSED_TOKENS)
-        use_spacy_model = True
-        m_in = MInput(task,
+        m_in = MInput(params,
                       in_fp,
-                      auto,
-                      use_spacy_model)
+                      auto)
         # full encoding is [101, 0, 102], 101=BOS_ICODE, 102=EOS_ICODE
         pad_icode = auto.encode(auto.pad_token)[1]
         print("pad_token, pad_icode=", auto.pad_token, pad_icode)

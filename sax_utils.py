@@ -9,10 +9,13 @@ from math import floor
 from copy import copy
 
 
-class ClassFromDict(dict):
+class DotDict(dict):
     """
     dot instead of [] notation access to dictionary attributes.
-    Nice to know but won't use.
+    Openie6 uses this but we won't.
+
+    This is sort of the inverse of to_dict(). DotDict() creates a class from
+    a dictionary and to_dict() creates a dictionary from a class.
 
     Attributes
     ----------
@@ -468,7 +471,7 @@ def to_dict(instance):
 if __name__ == "__main__":
     def main1():
         h = {"x": 5, "y": 3}
-        H = ClassFromDict(h)
+        H = DotDict(h)
         print(H.x)  # Output: 5
         print(H.y)  # Output: 3
         H.y = 5

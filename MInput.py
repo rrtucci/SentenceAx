@@ -11,6 +11,11 @@ class MInput:
     data processing chain
     tags_in_fp->MInput->PaddedMInput->SaxDataSet->DataLoader
 
+    In Openie6, Openie6.data.process_data() calls
+    Openie6.data._process_data() internally. In SentenceAx, class MInput
+    does the job of Openie6.data._process_data() and classes PaddedMInput,
+    SaxDataSet and DataLoaderTools do the job of Openie6.data.process_data().
+
     Attributes
     ----------
     auto_tokenizer: AutoTokenizer
@@ -22,17 +27,17 @@ class MInput:
     ll_osent_verb_loc: list[list[int]]
     ll_osent_wstart_loc: list[list[int]]
     lll_ilabel: list[list[list[int]]]
+    params: Params
     spacy_model: spacy.Language
-    use_spacy_model: bool
+    tags_in_fp: str
     verbose: bool
 
     """
 
     def __init__(self,
-                 task,
+                 params,
                  tags_in_fp,
                  auto_tokenizer,
-                 use_spacy_model,
                  read=True,
                  verbose=False):
         """
@@ -46,14 +51,12 @@ class MInput:
         task: str
         tags_in_fp: str
         auto_tokenizer: AutoTokenizer
-        use_spacy_model: bool
         read: bool
         verbose: bool
         """
-        self.task = task
+        self.params = params
         self.tags_in_fp = tags_in_fp
         self.auto_tokenizer = auto_tokenizer
-        self.use_spacy_model = use_spacy_model
         self.verbose = verbose
 
         # shape=(num_samples,)
@@ -69,8 +72,7 @@ class MInput:
         self.ll_osent_wstart_loc = []  # shape=(num_samples, encoding len)
         self.ll_osent_icode = []  # shape=(num_samples, encoding len
 
-        self.use_spacy_model = use_spacy_model
-        if self.use_spacy_model:
+        if USE_SPACY_MODEL:
             self.spacy_model = spacy.load("en_core_web_sm")
         # spacy usage:
         # doc = spacy_model("This is a text")
@@ -248,7 +250,11 @@ class MInput:
         self.ll_osent_pos_loc = []
         self.ll_osent_verb_bool = []
         self.ll_osent_verb_loc = []
-        if not self.use_spacy_model:
+        if not USE_SPACY_MODEL or "predict" in self.params.mode:
+            self.ll_osent_pos_bool = [[0]]
+            self.ll_osent_pos_loc = [[0]]
+            self.ll_osent_verb_bool = [[0]]
+            self.ll_osent_verb_loc = [[0]]
             return
         # print("bbght", self.l_orig_sent)
         for sent_id, spacy_tokens in enumerate(
@@ -276,6 +282,7 @@ class MInput:
         similar to Openie6.data._process_data()
 
 
+
         this reads a file of the form
 
         Hercule Poirot is a fictional Belgian detective , created by Agatha Christie . [unused1] [unused2] [unused3]
@@ -299,7 +306,6 @@ class MInput:
 
         Parameters
         ----------
-        task: str
         tags_in_fp: str
 
         Returns
@@ -374,8 +380,8 @@ class MInput:
             elif is_tag_line_of_sample(line):
                 # print("sdfrg-tag", k)
 
-                ilabels = [get_tag_to_ilabel(self.task)[tag] for tag in
-                           get_words(line)]
+                ilabels = [get_tag_to_ilabel(self.params["task"])[tag]
+                           for tag in get_words(line)]
                 # print("nnmk-line number= " + str(k))
                 # assert len(ilabels) == len(osent_wstart_locs)
                 ll_ilabel.append(ilabels)
@@ -467,6 +473,7 @@ class MInput:
 
 if __name__ == "__main__":
     def main1(task, tags_in_fp, verbose):
+        params = Params(1) # 1, task="ex", mode="train_test"
         model_str = "bert-base-uncased"
         auto_tokenizer = AutoTokenizer.from_pretrained(
             model_str,
@@ -475,11 +482,9 @@ if __name__ == "__main__":
             data_dir=CACHE_DIR,
             add_special_tokens=False,
             additional_special_tokens=UNUSED_TOKENS)
-        use_spacy_model = True
-        m_in = MInput(task,
+        m_in = MInput(params,
                       tags_in_fp,
                       auto_tokenizer,
-                      use_spacy_model,
                       verbose=verbose)
         num_samples = len(m_in.l_orig_sent)
         for k in range(min(num_samples, 6)):

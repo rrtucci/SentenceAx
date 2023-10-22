@@ -54,7 +54,7 @@ class MConductor:
 
     """
 
-    def __init__(self, params, use_spacy_model=True, save=True):
+    def __init__(self, params, save=True):
         """
         A new
         ModelCheckpoint
@@ -67,14 +67,12 @@ class MConductor:
         Parameters
         ----------
         params: Params
-        use_spacy_model: bool
         save: bool
 
 
 
         """
         self.params = params
-        self.use_spacy_model = use_spacy_model
         self.has_cuda = torch.cuda.is_available()
         warnings.filterwarnings('ignore')
 

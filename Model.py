@@ -128,8 +128,11 @@ class Model(pl.LightningModule):
         self.auto_tokenizer = auto_tokenizer
         self.init_name_to_param = None
 
+        # return_dict=False avoids error message from Dropout
         self.base_model = AutoModel.from_pretrained(
-            self.params.d["model_str"], cache_dir=CACHE_DIR)
+            self.params.d["model_str"],
+            cache_dir=CACHE_DIR,
+            return_dict=False)
         self.hidden_size = self.base_model.config.hidden_size
 
         if self.params.d["iterative_layers"] > 0:
@@ -382,7 +385,7 @@ class Model(pl.LightningModule):
             # a chaptgpt generated explanation of this transformation
             # is given in misc/hidden_states_transformation2.txt
             #
-            lll_loc = self.ll_wstart_loc.unsqueeze(2). \
+            lll_loc = x_d["ll_wstart_loc"].unsqueeze(2). \
                 repeat(1, 1, lll_hidden_state.shape[2])
             lll_word_hidden_state = torch.gather(
                 input=lll_hidden_state,
@@ -401,10 +404,10 @@ class Model(pl.LightningModule):
             depth += 1
             if depth >= num_depths:
                 break
-            if self.params.d["mode"] != 'train':
+            if self.params.mode != 'train':
                 ll_prob_ilabel = torch.max(lll_word_score, dim=2)[1]
                 valid_extraction = False
-                assert self.params.d["task"] == "ex"
+                assert self.params.task == "ex"
                 for l_prob_ilabel in ll_prob_ilabel:
                     # 'ARG1': 1, 'REL': 2
                     if 1 in l_prob_ilabel and 2 in l_prob_ilabel:
@@ -712,7 +715,7 @@ class Model(pl.LightningModule):
 
         """
         eval_epoch_end_d = None
-        if self.params.d["mode"] == 'test':
+        if self.params.mode == 'test':
             for batch_m_out in self.l_batch_m_out:
                 batch_m_out.move_to_cpu()
 
@@ -736,7 +739,7 @@ class Model(pl.LightningModule):
                                 "eval_r": metrics_d["R_exact"]}
 
         elif self.params.task == "ex":
-            if 'predict' in self.params.d["mode"]:
+            if 'predict' in self.params.mode:
                 metrics_d = {'ex_f1': 0,
                              'ex_auc': 0,
                              'ex_last_f1': 0}

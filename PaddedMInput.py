@@ -27,7 +27,6 @@ class PaddedMInput(MInput):
     num_samples: int
     pad_icode: int
     x_d: OrderedDict
-    x_name_to_dim1: OrderedDict
     y_d: dict[str, torch.Tensor]
     """
 
@@ -39,7 +38,8 @@ class PaddedMInput(MInput):
         ----------
         m_in: MInput
         """
-        MInput.__init__(m_in.params,
+        MInput.__init__(self,
+                        m_in.params,
                         m_in.tags_in_fp,
                         m_in.auto_tokenizer,
                         read=False,
@@ -64,9 +64,6 @@ class PaddedMInput(MInput):
             self.x_d["ll_osent_pos_loc"] = self.ll_osent_pos_loc
             self.x_d["ll_osent_verb_bool"] = self.ll_osent_verb_bool
             self.x_d["ll_osent_verb_loc"] = self.ll_osent_verb_loc
-
-        self.xname_to_dim1 = OrderedDict(
-            {xname: self.x_d[xname].shape[1] for xname in self.x_d})
 
     @staticmethod
     def get_padded_ll_x(unpadded_ll_x, ipad1=0):
@@ -103,7 +100,7 @@ class PaddedMInput(MInput):
         # for i in range(len(padded_ll_x)):
         #     print(i,len(padded_ll_x[i]), padded_ll_x)
 
-        return torch.Tensor(padded_ll_x).long()
+        return torch.Tensor(padded_ll_x, dtype=torch.int64)  # long
 
     @staticmethod
     def get_padded_lll_ilabel(unpadded_lll_ilabel, ipad1=0, ipad2=0):
@@ -154,7 +151,7 @@ class PaddedMInput(MInput):
 
         # for sam in range(len(lll_ilabel)):
         #     print(sam, len(lll_ilabel[sam]), len(lll_ilabel[sam][0]))
-        return torch.Tensor(lll_ilabel).long()
+        return torch.Tensor(lll_ilabel, dtype=torch.int64)  # long
 
     # def build_vocab(self, self.m_in):
     #     """
@@ -246,7 +243,7 @@ class PaddedMInput(MInput):
 
 if __name__ == "__main__":
     def main(in_fp):
-        params = Params(1) # 1, task="ex", mode="train_test"
+        params = Params(1)  # 1, task="ex", mode="train_test"
         model_str = "bert-base-uncased"
         do_lower_case = ('uncased' in model_str)
         auto = AutoTokenizer.from_pretrained(

@@ -45,7 +45,6 @@ class SaxDataSet(Dataset):
         super().__init__()
         self.padded_m_in = PaddedMInput(m_in)
         self.l_orig_sent = self.padded_m_in.l_orig_sent
-        self.xname_to_dim1 = self.padded_m_in.xname_to_dim1
 
         self.num_samples, self.num_depths, self.num_words = \
             self.padded_m_in.lll_ilabel.shape
@@ -53,9 +52,12 @@ class SaxDataSet(Dataset):
         x_d = self.padded_m_in.x_d
         xnames = x_d.keys()
         self.x = torch.cat([x_d[xname] for xname in xnames], dim=1)
-
+ 
         y_d = self.padded_m_in.y_d
         self.y = y_d["lll_ilabel"]
+
+        self.xname_to_dim1 = OrderedDict(
+            {xname: x_d[xname].shape[1] for xname in xnames})
 
     @staticmethod
     def invert_cat(x, xname_to_dim1):

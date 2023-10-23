@@ -57,7 +57,7 @@ class MConductor:
     def __init__(self, params, save=True):
         """
         A new
-        ModelCheckpoint
+        ModelCheckpoint,
         AutoTokenizer,
         DataLoaderTool,
         TensorBoardLogger
@@ -316,7 +316,7 @@ class MConductor:
         # train is the only mode that doesn't require
         # update_params() because it is called first
         self.update_params(checkpoint_fp)
-        self.model = Model(self.params.d,
+        self.model = Model(self.params,
                            self.auto_tokenizer,
                            self.xname_to_dim1)
         trainer = self.get_trainer(self.get_logger("tune"),
@@ -346,7 +346,7 @@ class MConductor:
             # update_params() because it is called first
             self.update_params(checkpoint_fp)
 
-        self.model = Model(self.params.d,
+        self.model = Model(self.params,
                            self.auto_tokenizer,
                            self.xname_to_dim1)
         # if self.params.task == "ex" and self.ex_sent_to_sent:
@@ -401,7 +401,7 @@ class MConductor:
 
         checkpoint_fp = self.get_checkpoint_fp()
         self.update_params(checkpoint_fp)
-        self.model = Model(self.params.d,
+        self.model = Model(self.params,
                            self.auto_tokenizer,
                            self.xname_to_dim1)
 

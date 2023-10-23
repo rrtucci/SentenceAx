@@ -39,7 +39,7 @@ class PaddedMInput(MInput):
         ----------
         m_in: MInput
         """
-        super().__init__(m_in.params,
+        MInput.__init__(m_in.params,
                         m_in.tags_in_fp,
                         m_in.auto_tokenizer,
                         read=False,

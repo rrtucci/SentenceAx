@@ -48,7 +48,7 @@ class MInput:
 
         Parameters
         ----------
-        task: str
+        params: Params
         tags_in_fp: str
         auto_tokenizer: AutoTokenizer
         read: bool
@@ -484,6 +484,7 @@ if __name__ == "__main__":
                       auto_tokenizer,
                       verbose=verbose)
         num_samples = len(m_in.l_orig_sent)
+        print(to_dict(m_in).keys())
         for k in range(min(num_samples, 6)):
             print("************** k=", k)
             print("num_samples=", num_samples)
@@ -519,6 +520,8 @@ if __name__ == "__main__":
         pprint(l_sent)
         print(ll_icode)
         pprint(l_sent2)
+
+
 
 
     main1(tags_in_fp="tests/extags_test.txt",

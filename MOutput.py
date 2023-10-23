@@ -14,7 +14,6 @@ class MOutput:
     lll_osent_icode: torch.Tensor
     llll_pred_ex_ilabel: torch.Tensor]
     loss: torch.Tensor
-    task: str
     """
 
     def __init__(self,
@@ -37,7 +36,6 @@ class MOutput:
         lll_pred_ex_ilabel: torch.Tensor
         ll_pred_ex_confi: torch.Tensor
         loss: torch.Tensor
-        task: str
         auto_tokenizer: AutoTokenizer
         
         """

@@ -446,26 +446,24 @@ def add_key_value_pair_to_target_d(key, value, fix_d, target_d):
             target_d[key].append(value)
 
 
-def to_dict(instance):
+def to_dict(class_obj):
     """
 
     Parameters
     ----------
-    instance: Any
+    class_obj: Any
 
     Returns
     -------
-    dict[str, variable]
+    dict[str, Any]
 
     """
-    class_vars = vars(type(instance))  # get any "default" attrs defined at
-    # the class level
-    inst_vars = vars(instance)  # get any attrs defined on the instance (self)
-    all_vars = dict(class_vars)
-    all_vars.update(inst_vars)
-    # filter out private attributes
-    public_vars = {k: v for k, v in all_vars.items() if not k.startswith('_')}
-    return public_vars
+    attributes_dict = {}
+    for attr_name in dir(class_obj):
+        attr = getattr(class_obj, attr_name)
+        if not callable(attr) and not attr_name.startswith('__'):
+            attributes_dict[attr_name] = attr
+    return attributes_dict
 
 
 if __name__ == "__main__":

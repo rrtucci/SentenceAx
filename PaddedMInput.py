@@ -100,7 +100,7 @@ class PaddedMInput(MInput):
         # for i in range(len(padded_ll_x)):
         #     print(i,len(padded_ll_x[i]), padded_ll_x)
 
-        return torch.Tensor(padded_ll_x, dtype=torch.int64)  # long
+        return torch.Tensor(padded_ll_x).long()
 
     @staticmethod
     def get_padded_lll_ilabel(unpadded_lll_ilabel, ipad1=0, ipad2=0):
@@ -151,7 +151,7 @@ class PaddedMInput(MInput):
 
         # for sam in range(len(lll_ilabel)):
         #     print(sam, len(lll_ilabel[sam]), len(lll_ilabel[sam][0]))
-        return torch.Tensor(lll_ilabel, dtype=torch.int64)  # long
+        return torch.Tensor(lll_ilabel).long()
 
     # def build_vocab(self, self.m_in):
     #     """

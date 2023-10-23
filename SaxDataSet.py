@@ -52,7 +52,7 @@ class SaxDataSet(Dataset):
         x_d = self.padded_m_in.x_d
         xnames = x_d.keys()
         self.x = torch.cat([x_d[xname] for xname in xnames], dim=1)
- 
+
         y_d = self.padded_m_in.y_d
         self.y = y_d["lll_ilabel"]
 

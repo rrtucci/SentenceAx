@@ -111,11 +111,14 @@ class MConductor:
                                            self.tags_train_fp,
                                            self.tags_tune_fp,
                                            self.tags_test_fp)
-        self.xname_to_dim1 = self.dloader_tool.xname_to_dim1
+
         if 'predict' not in params.mode:
             # ttt dloaders not used for mode="predict", "splitpredict"
             # for those modes, only a predict dloader is used.
             self.dloader_tool.set_all_ttt_dataloaders()
+            # always fill xname_to_dim1 after setting dataloader. Also,
+            # always set dataloader before constructing a Model instance
+            self.xname_to_dim1 = self.dloader_tool.xname_to_dim1
 
         self.model = None
 
@@ -401,6 +404,10 @@ class MConductor:
 
         checkpoint_fp = self.get_checkpoint_fp()
         self.update_params(checkpoint_fp)
+        self.dloader_tool.set_predict_dataloader(pred_in_fp)
+        # always fill xname_to_dim1 after setting dataloader. Also,
+        # always set dataloader before constructing a Model instance
+        self.xname_to_dim1 = self.dloader_tool.xname_to_dim1
         self.model = Model(self.params,
                            self.auto_tokenizer,
                            self.xname_to_dim1)
@@ -415,7 +422,6 @@ class MConductor:
                                    use_minimal=True)
         start_time = time()
         # self.model.all_sentences = all_sentences # never used
-        self.dloader_tool.set_predict_dataloader(pred_in_fp)
         trainer.test(
             self.model,
             test_dataloaders=self.dloader_tool.predict_dloader)

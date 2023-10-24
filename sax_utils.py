@@ -465,6 +465,20 @@ def to_dict(class_obj):
             attributes_dict[attr_name] = attr
     return attributes_dict
 
+def desc_li(li):
+    """
+    describe list
+
+    Parameters
+    ----------
+    li: list[Any, Any]
+
+    Returns
+    -------
+
+    """
+    return str(li) + ' ' + str(len(li))
+
 
 if __name__ == "__main__":
     def main1():

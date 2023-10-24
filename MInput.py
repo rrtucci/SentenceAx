@@ -262,7 +262,8 @@ class MInput:
         for sent_id, spacy_tokens in enumerate(
                 self.spacy_model.pipe(self.l_orig_sent,
                                       batch_size=10000)):
-            spacy_tokens = self.remerge_tokens(spacy_tokens)
+            if DO_REMERGE:
+                spacy_tokens = self.remerge_tokens(spacy_tokens)
             assert len(self.l_orig_sent[sent_id].split()) == len(
                  spacy_tokens)
 
@@ -386,8 +387,8 @@ class MInput:
                     # same as osent_icodes.extend(icodes)
                     osent_icodes += icodes
                 osent_icodes.append(EOS_ICODE)
-                # print("lmki", sentL)
-                # print("lmklo", k, osent_wstart_locs)
+                print("lmki", k, sentL)
+                print("lmklo", k, osent_wstart_locs)
                 # end of if osent line
 
             elif is_tag_line_of_sample(line):
@@ -400,10 +401,10 @@ class MInput:
 
                 ilabels = [get_tag_to_ilabel(self.params.task)[tag]
                            for tag in line_words]
-                # print("nnmk-line number= " + str(k))
+                print("nnmk-line number= " + str(k))
 
-                # print("xxcv", get_words(sentL), len(get_words(sentL)))
-                # print("vvbn-line-words", get_words(line), len(get_words(line)))
+                # print("xxcv", desc_list(get_words(sentL)))
+                # print("vvbn-line-words", desc_list(get_words(line)))
                 assert len(ilabels) == len(osent_wstart_locs), \
                     "\n" + str(ilabels) + \
                     str(len(ilabels)) + \
@@ -549,8 +550,10 @@ if __name__ == "__main__":
         pprint(l_sent2)
 
 
-    main1(tags_in_fp="tests/extags_test.txt",
-          verbose=False)
-    main2()
-    main1(tags_in_fp="predictions/small_pred.txt",
-        verbose=True)
+    # main1(tags_in_fp="tests/extags_test.txt",
+    #       verbose=False)
+    # main2()
+    # main1(tags_in_fp="predictions/small_pred.txt",
+    #     verbose=True)
+
+    main1(tags_in_fp='input_data/carb-data/test.txt')

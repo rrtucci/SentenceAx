@@ -9,12 +9,14 @@ from pprint import pprint
 class MInput:
     """
     data processing chain
-    tags_in_fp->MInput->PaddedMInput->SaxDataSet->DataLoader
+    (optional allen_fp->)tags_in_fp->MInput->PaddedMInput->SaxDataSet
+    ->SaxDataLoaderTool
 
     In Openie6, Openie6.data.process_data() calls
     Openie6.data._process_data() internally. In SentenceAx, class MInput
     does the job of Openie6.data._process_data() and classes PaddedMInput,
-    SaxDataSet and DataLoaderTools do the job of Openie6.data.process_data().
+    SaxDataSet and SaxDataLoaderTools do the job of
+    Openie6.data.process_data().
 
     Attributes
     ----------
@@ -85,7 +87,7 @@ class MInput:
         self.ll_osent_verb_loc = []  # shape=(num_samples, num_words)
 
         if read:
-            self.read_input_tags_file(tags_in_fp)
+            self.read_input_tags_file()
 
     @staticmethod
     def encode_l_sent(l_sent,
@@ -261,8 +263,8 @@ class MInput:
                 self.spacy_model.pipe(self.l_orig_sent,
                                       batch_size=10000)):
             spacy_tokens = self.remerge_tokens(spacy_tokens)
-            # assert len(self.l_orig_sent[sent_id].split()) == len(
-            #     spacy_tokens)
+            assert len(self.l_orig_sent[sent_id].split()) == len(
+                 spacy_tokens)
 
             pos_locs, pos_bools, pos_words = \
                 MInput.pos_info(spacy_tokens)
@@ -277,7 +279,7 @@ class MInput:
             else:
                 self.ll_osent_verb_loc.append([0])
 
-    def read_input_tags_file(self, tags_in_fp):
+    def read_input_tags_file(self):
         """
         similar to Openie6.data._process_data()
 
@@ -319,11 +321,11 @@ class MInput:
         lll_ilabel = []  # similar to targets, target=extraction
         sentL = ""  # similar to `sentence`
 
-        print("\nMInput started reading '" + tags_in_fp + "'")
-        with open(tags_in_fp, "r", encoding="utf-8") as f:
+        print("\nMInput started reading '" + self.tags_in_fp + "'")
+        with open(self.tags_in_fp, "r", encoding="utf-8") as f:
             lines = f.readlines()
 
-        def is_beginning_of_sample(line0):
+        def is_osent_line_of_sample(line0):
             return line0 and (not line0.isupper()
                               or has_puntuation(line0, ignored_chs="_"))
 
@@ -332,11 +334,12 @@ class MInput:
             return line0 and line0.isupper() \
                 and not has_puntuation(line0, ignored_chs="_")
 
-        def is_ending_of_sample(k, prev_line0, line0):
+        def is_finalization_of_sample(prev_line0, line0):
             if not line0:
                 return True
-            if prev_line0 and is_beginning_of_sample(line0):
+            if prev_line0 and is_osent_line_of_sample(line0):
                 return True
+
             return False
 
         prev_line = None
@@ -345,19 +348,29 @@ class MInput:
         osent_wstart_locs = []
         num_omitted_sents = 0
         k = 0
-        for line in lines:
+        # add empty last sentence so last sentence of file is considered
+        for line in lines + [""]:
             k += 1
             line = line.strip()
-            if line == "":
-                # this skips blank lines
-                continue  # skip to next line
+            # if line == "":
+            #     # this skips blank lines
+            #     continue  # skip to next line
             # print("kklop", line)
-            if is_beginning_of_sample(line):
+            if is_osent_line_of_sample(line):
                 # print("kklop-1st", k, line)
                 sentL = line
+                if "[unused" not in sentL:
+                    # this is useful for predict files, which contain no
+                    # extag lines or unused tokens
+                    sentL = redoL(sentL)
+                sentL_words = get_words(sentL)
                 encoding_d = self.auto_tokenizer.batch_encode_plus(
-                    get_words(sentL),
+                    sentL_words,
                     add_special_tokens=False)
+                # specified when initialized self.auto_tokenizer
+                # add_special_tokens=False,
+                # additional_special_tokens=UNUSED_TOKENS
+                # but ignored unless repeat it
                 # print("encoding_d", e.ncoding_d)
                 osent_icodes = [BOS_ICODE]
                 osent_wstart_locs = []
@@ -366,7 +379,7 @@ class MInput:
                     # print("ppokl" , k)
                     # special spacy tokens like \x9c have zero length
                     if len(icodes) == 0:
-                        icodes = [100]
+                        icodes = [100]  # SEP_ICODE = 100
                     # note osent_wstart_locs[0]=1 because first
                     # icodes =[BOS_ICODE]
                     osent_wstart_locs.append(len(osent_icodes))
@@ -374,25 +387,38 @@ class MInput:
                     osent_icodes += icodes
                 osent_icodes.append(EOS_ICODE)
                 # print("lmki", sentL)
-                # print("lmklo", osent_wstart_locs)
+                # print("lmklo", k, osent_wstart_locs)
+                # end of if osent line
 
             elif is_tag_line_of_sample(line):
                 # print("sdfrg-tag", k)
+                # some tag lines have excess of NONE at the end
+
+                line_words = get_words(line)
+                line_words = line_words[:len(osent_wstart_locs)]
+                # print("fgbt", k, osent_wstart_locs)
 
                 ilabels = [get_tag_to_ilabel(self.params.task)[tag]
-                           for tag in get_words(line)]
+                           for tag in line_words]
                 # print("nnmk-line number= " + str(k))
-                # assert len(ilabels) == len(osent_wstart_locs)
+
+                # print("xxcv", get_words(sentL), len(get_words(sentL)))
+                # print("vvbn-line-words", get_words(line), len(get_words(line)))
+                assert len(ilabels) == len(osent_wstart_locs), \
+                    "\n" + str(ilabels) + \
+                    str(len(ilabels)) + \
+                    ",\n" + str(osent_wstart_locs) + \
+                    str(len(osent_wstart_locs))
                 ll_ilabel.append(ilabels)
                 # print("dfgthj", ll_ilabel)
+                # end of if tag line
             else:
                 pass
-            if is_ending_of_sample(k, prev_line, line):
+            #} if osent line or tag line
+            if is_finalization_of_sample(prev_line, line):
                 # print("ddft-end", k)
                 if len(ll_osent_icode) == 0:
-                    ll_osent_icode = [[0]]
-
-                sentL_words = get_words(sentL)
+                    ll_osent_icode = [[0]]  # 0 = PAD
                 if sentL and len(sentL_words) > 100:
                     num_omitted_sents += 1
                     print(str(num_omitted_sents) +
@@ -400,15 +426,15 @@ class MInput:
                           f" length={len(sentL_words)}\n[" + sentL[0:60] + "]")
                     # print("prev_line_rrt", prev_line)
                     # print("line_rrt", line)
-                    # print(is_beginning_of_sample(line))
+                    # print(is_osent_line_of_sample(line))
                     # print(has_puntuation(line,
                     #                      ignored_chs="_",
                     #                      verbose=True))
                 else:
-                    ll_osent_icode.append(deepcopy(osent_icodes))
-                    # print("dfeg", ll_osent_icode)
                     orig_sent = undoL(sentL)
                     l_orig_sent.append(orig_sent)
+                    ll_osent_icode.append(deepcopy(osent_icodes))
+                    # print("dfeg", ll_osent_icode)
 
                     # note that if li=[2,3]
                     # then li[:100] = [2,3]
@@ -417,16 +443,15 @@ class MInput:
                         ll_ilabel = [[0]]
                     lll_ilabel.append(deepcopy(ll_ilabel))
                     ll_osent_wstart_loc.append(deepcopy(osent_wstart_locs))
-                osent_icodes = []
-                ll_ilabel = []
-                osent_wstart_locs = []
-
+                #} if > 100 words or else
+                    ll_ilabel = []
+            #} if is_finalization
             prev_line = line
-
+        #} line loop
         num_samples = len(l_orig_sent)
         print()
-        print("MInput finished reading '" + tags_in_fp + "'")
-        print("number of lines= " + str(k))
+        print("MInput finished reading '" + self.tags_in_fp + "'")
+        print("number of lines= " + str(len(lines))) # exclude empty line
         print("number of used samples= ", num_samples)
         print("number of omitted samples= ", num_omitted_sents)
 
@@ -469,7 +494,7 @@ class MInput:
 
 
 if __name__ == "__main__":
-    def main1(tags_in_fp, verbose):
+    def main1(tags_in_fp, verbose=False):
         params = Params(1)  # 1, task="ex", mode="train_test"
         model_str = "bert-base-uncased"
         auto_tokenizer = AutoTokenizer.from_pretrained(
@@ -484,18 +509,20 @@ if __name__ == "__main__":
                       auto_tokenizer,
                       verbose=verbose)
         num_samples = len(m_in.l_orig_sent)
-        print(to_dict(m_in).keys())
-        for k in range(min(num_samples, 6)):
-            print("************** k=", k)
-            print("num_samples=", num_samples)
-            print("get_words(l_osentL[k])=",
-                  get_words(redoL(m_in.l_orig_sent[k])))
-            print("ll_osent_icode[k]=\n", m_in.ll_osent_icode[k])
-            print("ll_osent_pos_loc[k]=\n", m_in.ll_osent_pos_loc[k])
-            print("ll_osent_pos_bool[k]=\n", m_in.ll_osent_pos_bool[k])
-            print("ll_osent_verb_loc[k]=\n", m_in.ll_osent_verb_loc[k])
-            print("ll_osent_verb_bool[k]=\n", m_in.ll_osent_verb_bool[k])
-            print("ll_osent_wstart_loc[k]=\n", m_in.ll_osent_wstart_loc[k])
+        # print(to_dict(m_in).keys())
+        print("num_samples=", num_samples)
+        for isam in [0, num_samples-1]:
+            print("************** isam=", isam)
+            print("get_words(l_osentL[isam])=",
+                  get_words(redoL(m_in.l_orig_sent[isam])))
+            print("ll_osent_icode[isam]=\n", m_in.ll_osent_icode[isam])
+            print("ll_osent_pos_loc[isam]=\n", m_in.ll_osent_pos_loc[isam])
+            print("ll_osent_pos_bool[isam]=\n", m_in.ll_osent_pos_bool[isam])
+            print("ll_osent_verb_loc[isam]=\n", m_in.ll_osent_verb_loc[isam])
+            print("ll_osent_verb_bool[isam]=\n",
+                  m_in.ll_osent_verb_bool[isam])
+            print("ll_osent_wstart_loc[isam]=\n",
+                  m_in.ll_osent_wstart_loc[isam])
             if verbose:
                 print("lll_ilabel=\n", m_in.lll_ilabel)
 
@@ -522,10 +549,8 @@ if __name__ == "__main__":
         pprint(l_sent2)
 
 
-
-
     main1(tags_in_fp="tests/extags_test.txt",
           verbose=False)
     main2()
     main1(tags_in_fp="predictions/small_pred.txt",
-          verbose=True)
+        verbose=True)

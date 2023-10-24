@@ -7,8 +7,8 @@ from PaddedMInput import *
 class SaxDataSet(Dataset):
     """
     data processing chain
-    tags_in_fp->MInput->PaddedMInput->SaxDataSet->DataLoader
-                                     ->Model->MOutput
+    (optional allen_fp->)tags_in_fp->MInput->PaddedMInput->SaxDataSet
+    ->SaxDataLoaderTool
 
     Openie6 uses torchtext classes data.Example and data.Field to create its
     Dataset  instances. Those classes are now deprecated.

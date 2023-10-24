@@ -11,7 +11,8 @@ from MInput import *
 class PaddedMInput(MInput):
     """
     data processing chain
-    tags_in_fp->MInput->PaddedMInput->SaxDataSet->DataLoader
+    (optional allen_fp->)tags_in_fp->MInput->PaddedMInput->SaxDataSet
+    ->SaxDataLoaderTool
 
     Attributes
     ----------
@@ -103,10 +104,16 @@ class PaddedMInput(MInput):
         return torch.Tensor(padded_ll_x).long()
 
     @staticmethod
-    def get_padded_lll_ilabel(unpadded_lll_ilabel, ipad1=0, ipad2=0):
+    def get_padded_lll_ilabel(unpadded_lll_ilabel,
+                              ipad1=0, ipad2=-100):
         """
         The number at the end of `ipad` refers to the dimension. The
         dimensions here are called 0, 1, 2 (2 is the innermost).
+
+        Both 0 and -100 are recognized as pad icode. Openie6 uses both to
+        distinguish between dim1 and dim2 padding.
+
+        -100 is necessary to distinguish padding from ilabel=0
 
         Parameters
         ----------
@@ -132,7 +139,7 @@ class PaddedMInput(MInput):
                     [ipad1] * num_words] * pad_depth
             elif pad_depth == 0:
                 pass
-            else:
+            else: # pad_depth < 0
                 rg = range(EX_NUM_DEPTHS, len(lll_ilabel[sam]))
                 # must delete last extraction first
                 for depth in reversed(rg):
@@ -141,9 +148,13 @@ class PaddedMInput(MInput):
                     sam) + ", depths=" + str(list(rg)))
 
         max_num_words = -1
+
         for ll_ilabel in lll_ilabel:
-            if len(ll_ilabel[0]) > max_num_words:
-                max_num_words = len(ll_ilabel[0])
+            for l_ilabel in ll_ilabel:
+                # print("mnjk", len(l_ilabel))
+                if len(l_ilabel) > max_num_words:
+                    max_num_words = len(l_ilabel)
+        # print("vvvv-max_num_words=", max_num_words)
         for ll_ilabel in lll_ilabel:
             for l_ilabel in ll_ilabel:
                 padding_len = max_num_words - len(l_ilabel)
@@ -253,14 +264,16 @@ if __name__ == "__main__":
             data_dir=CACHE_DIR,
             add_special_tokens=False,
             additional_special_tokens=UNUSED_TOKENS)
+
         m_in = MInput(params,
                       in_fp,
                       auto)
-        # full encoding is [101, 0, 102], 101=BOS_ICODE, 102=EOS_ICODE
-        pad_icode = auto.encode(auto.pad_token)[1]
-        print("pad_token, pad_icode=", auto.pad_token, pad_icode)
         padded_m_in = PaddedMInput(m_in)
         padded_m_in.print_padded_data_shapes()
+        li1 = get_words(padded_m_in.l_orig_sent[0])
+        li2 = padded_m_in.lll_ilabel[0][0]
+        print([(k, li1[k]) for k in range(len(li1))])
+        print([(k, li2[k]) for k in range(len(li2))])
 
 
     main(in_fp="tests/extags_test.txt")

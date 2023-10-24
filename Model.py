@@ -154,7 +154,7 @@ class Model(pl.LightningModule):
         an embedding or encoding takes a tensor ll_x with shape (2, 4)
         to a tensor lll_x of shape (2, 4, 3)
         The elements of the tensor will be called icodes. The num of 
-        possible icodes here is 10.
+        possible icodes here is 10. This is also the vocab size.
 
         a = torch.LongTensor([[1, 2, 3, 9], [4, 3, 2, 0]]) # (2, 4)
         embedding(a) has shape (2, 4, 3)
@@ -169,8 +169,9 @@ class Model(pl.LightningModule):
         If input has shape (10, 20, na), then output has shape (10, 20, nb)
             
         """
-        self.embedding = nn.Embedding(NUM_ICODES,  # 100
-                                      self.hidden_size)
+        self.embedding = nn.Embedding(
+            100,  # vocab size
+            self.hidden_size)  # dim of embedding space
         self.merge_layer = nn.Linear(self.hidden_size,
                                      ILABELLING_DIM)  # 300
         self.ilabelling_layer = nn.Linear(ILABELLING_DIM,  # 300
@@ -385,7 +386,7 @@ class Model(pl.LightningModule):
             # a chaptgpt generated explanation of this transformation
             # is given in misc/hidden_states_transformation2.txt
             #
-            lll_loc = x_d["ll_wstart_loc"].unsqueeze(2). \
+            lll_loc = x_d["ll_osent_wstart_loc"].unsqueeze(2). \
                 repeat(1, 1, lll_hidden_state.shape[2])
             lll_word_hidden_state = torch.gather(
                 input=lll_hidden_state,
@@ -461,24 +462,30 @@ class Model(pl.LightningModule):
                 l_loss_target = \
                     y_d["lll_ilabel"][:, depth, :].reshape(-1)
                 loss += self.loss_fun(l_loss_input, l_loss_target)
+                print("l_loss_input.shape, l_loss_target.shape, loss",
+                      l_loss_input.shape, l_loss_target.shape, loss)
             else:
                 lll_soft_word_score = \
                     torch.log_softmax(lll_word_score0, dim=2)
                 ll_max_log_prob, ll_pred_ilabel = \
                     torch.max(lll_soft_word_score, dim=2)
-                # remember: lll_label was similar to labels
+                # remember: lll_ilabel was similar to labels
                 # first (outer) list over batch events
                 # second list over extractions
-                # third (inner) list over number of labels in a line
-                ll_pred_bool = \
+                # third (inner) list over number of ilabels in a line
+                print("ttt, mode", ttt, self.params.mode)
+                ll_nonpad_bool = \
                     (y_d["lll_ilabel"][:, 0, :] != -100).float()
 
+                print("ll_nonpad_bool", ll_nonpad_bool.shape, ll_nonpad_bool)
+                print("(ll_pred_ilabel != 0)", (ll_pred_ilabel != 0).shape,
+                      (ll_pred_ilabel != 0))
                 # * is element-wise multiplication of tensors
-                ll_pred_bool = \
-                    (ll_pred_ilabel != 0).float() * ll_pred_bool
+                ll_nonpad_bool = \
+                    (ll_pred_ilabel != 0).float() * ll_nonpad_bool
                 ll_norm_log_prob = \
-                    (ll_max_log_prob * ll_pred_bool) \
-                    / (1 + ll_pred_bool.sum(dim=0))
+                    (ll_max_log_prob * ll_nonpad_bool) \
+                    / (1 + ll_nonpad_bool.sum(dim=0))
                 l_confi = torch.exp(
                     torch.sum(ll_norm_log_prob, dim=1))
 

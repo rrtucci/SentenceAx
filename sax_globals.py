@@ -66,7 +66,7 @@ EX_NUM_DEPTHS = 5
 CC_NUM_DEPTHS = 3
 
 PAD_ICODE = 0  # ipad
-NUM_ICODES = 100
+SEP_ICODE = 100
 BOS_ICODE = 101  # bos = begin of sentence
 EOS_ICODE = 102  # eos = end of sentence
 

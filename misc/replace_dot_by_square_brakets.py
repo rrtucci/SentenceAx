@@ -7,8 +7,7 @@ terms like "params_d.word" by "params_d["word"]".
 import os
 from copy import copy
 
-file_paths = ["DataLoaderTool.py",
-              "ModelDataLoader_old.py",
+file_paths = ["SaxDataLoaderTool.py",
               "MConductor.py"]
 
 word_d =\

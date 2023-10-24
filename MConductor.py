@@ -9,7 +9,7 @@ import shutil
 from glob import glob
 from time import time
 from Model import *
-from DataLoaderTool import *
+from SaxDataLoaderTool import *
 from sax_utils import *
 from Params import *
 from transformers import AutoTokenizer
@@ -42,7 +42,7 @@ class MConductor:
     auto_tokenizer: AutoTokenizer
     checkpoint_callback: ModelCheckpoint
     decode: function
-    dloader_tool: DataLoaderTool
+    dloader_tool: SaxDataLoaderTool
     encode: function
     has_cuda: bool
     model: Model
@@ -59,7 +59,7 @@ class MConductor:
         A new
         ModelCheckpoint,
         AutoTokenizer,
-        DataLoaderTool,
+        SaxDataLoaderTool,
         TensorBoardLogger
 
         is created everytime this constructor is called
@@ -106,11 +106,11 @@ class MConductor:
         self.decode = self.auto_tokenizer.decode
         self.pad_icode = self.encode(self.auto_tokenizer.pad_token)[1]
 
-        self.dloader_tool = DataLoaderTool(params,
-                                           self.auto_tokenizer,
-                                           self.tags_train_fp,
-                                           self.tags_tune_fp,
-                                           self.tags_test_fp)
+        self.dloader_tool = SaxDataLoaderTool(params,
+                                              self.auto_tokenizer,
+                                              self.tags_train_fp,
+                                              self.tags_tune_fp,
+                                              self.tags_test_fp)
 
         if 'predict' not in params.mode:
             # ttt dloaders not used for mode="predict", "splitpredict"

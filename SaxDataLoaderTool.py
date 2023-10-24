@@ -20,10 +20,11 @@ from MInput import *
 from Params import *
 
 
-class DataLoaderTool:
+class SaxDataLoaderTool:
     """
     data processing chain
-    tags_in_fp->MInput->PaddedMInput->SaxDataSet->DataLoader
+    (optional allen_fp->)tags_in_fp->MInput->PaddedMInput->SaxDataSet
+    ->SaxDataLoaderTool
     
     Classes Example and Field from tt were used in the Openie6 code,
     but they are now deprecated, so they are not used Mappa Mundi. Here is
@@ -263,11 +264,11 @@ if __name__ == "__main__":
         tags_tune_fp = "tests/extags_tune.txt"
         tags_test_fp = "tests/extags_test.txt"
 
-        dl_tool = DataLoaderTool(params,
-                                 auto,
-                                 tags_train_fp,
-                                 tags_tune_fp,
-                                 tags_test_fp)
+        dl_tool = SaxDataLoaderTool(params,
+                                    auto,
+                                    tags_train_fp,
+                                    tags_tune_fp,
+                                    tags_test_fp)
         train_dataset, tune_dataset, test_dataset = \
             dl_tool.get_all_ttt_datasets()
 

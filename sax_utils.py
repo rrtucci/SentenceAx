@@ -465,7 +465,7 @@ def to_dict(class_obj):
             attributes_dict[attr_name] = attr
     return attributes_dict
 
-def desc_li(li):
+def desc_list(li):
     """
     describe list
 

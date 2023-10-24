@@ -138,6 +138,9 @@ class MInput:
         """
         similar to Openie6.data.remerge_sent()
 
+        remerge is only necessary if use get_words() with algo="ss" instead
+        of algo="nltk"
+
         Parameters
         ----------
         tokens: spacy.Doc
@@ -262,10 +265,11 @@ class MInput:
         for sent_id, spacy_tokens in enumerate(
                 self.spacy_model.pipe(self.l_orig_sent,
                                       batch_size=10000)):
-            if DO_REMERGE:
+            if REMERGE_TOKENS:
                 spacy_tokens = self.remerge_tokens(spacy_tokens)
-            assert len(self.l_orig_sent[sent_id].split()) == len(
-                 spacy_tokens)
+
+                # assert len(self.l_orig_sent[sent_id].split()) == len(
+                #      spacy_tokens)
 
             pos_locs, pos_bools, pos_words = \
                 MInput.pos_info(spacy_tokens)
@@ -387,21 +391,23 @@ class MInput:
                     # same as osent_icodes.extend(icodes)
                     osent_icodes += icodes
                 osent_icodes.append(EOS_ICODE)
-                print("lmki", k, sentL)
-                print("lmklo", k, osent_wstart_locs)
+                # print("lmklo", k, desc_list(osent_wstart_locs))
                 # end of if osent line
 
             elif is_tag_line_of_sample(line):
                 # print("sdfrg-tag", k)
-                # some tag lines have excess of NONE at the end
+                # some tag lines have too many or too few NONE at the end
 
+                # print("lmklo", k, desc_list(osent_wstart_locs))
                 line_words = get_words(line)
+                # print("lmklo", k, desc_list(line_words))
+                line_words += ["NONE", "NONE", "NONE"]
                 line_words = line_words[:len(osent_wstart_locs)]
-                # print("fgbt", k, osent_wstart_locs)
+
 
                 ilabels = [get_tag_to_ilabel(self.params.task)[tag]
                            for tag in line_words]
-                print("nnmk-line number= " + str(k))
+                # print("nnmk-line number= " + str(k))
 
                 # print("xxcv", desc_list(get_words(sentL)))
                 # print("vvbn-line-words", desc_list(get_words(line)))
@@ -472,7 +478,7 @@ class MInput:
 
         # so far, we haven't assumed any spacy derived data nanalysis
         # if spacy is allowed, the example_d can carry more info.
-        if self.spacy_model:
+        if USE_SPACY_MODEL:
             self.fill_pos_and_verb_info()
 
         # example_d = {
@@ -550,10 +556,10 @@ if __name__ == "__main__":
         pprint(l_sent2)
 
 
-    # main1(tags_in_fp="tests/extags_test.txt",
-    #       verbose=False)
-    # main2()
-    # main1(tags_in_fp="predictions/small_pred.txt",
-    #     verbose=True)
+    main1(tags_in_fp="tests/extags_test.txt",
+          verbose=False)
+    main2()
+    main1(tags_in_fp="predictions/small_pred.txt",
+        verbose=True)
 
     main1(tags_in_fp='input_data/carb-data/test.txt')

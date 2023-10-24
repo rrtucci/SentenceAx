@@ -405,7 +405,7 @@ class Model(pl.LightningModule):
             if depth >= num_depths:
                 break
             # this means task="ex"
-            if 'train' not in self.params.mode:
+            if ttt != 'train':
                 ll_prob_ilabel = torch.max(lll_word_score, dim=2)[1]
                 valid_extraction = False
                 assert self.params.task == "ex"
@@ -447,11 +447,9 @@ class Model(pl.LightningModule):
 
 
         """
-        print("vvbg", describe_tensor("lll_word_score",
-                                      lll_word_score))
+        print_tensor("lll_word_score", lll_word_score)
         print("vvbg", "len(llll_word_score)", len(llll_word_score))
-        print("vvbg", describe_tensor("llll_word_score[0]",
-                              llll_word_score[0]))
+        print_tensor("llll_word_score[0]", llll_word_score[0])
         loss = 0
         llll_pred_ex_ilabel = []  # all_depth_predictions
         lll_pred_ex_ilabel0 = []  # all_depth_predictions after cat dim=1
@@ -474,6 +472,8 @@ class Model(pl.LightningModule):
                     torch.log_softmax(lll_word_score0, dim=2)
                 ll_max_log_prob, ll_pred_ilabel = \
                     torch.max(lll_soft_word_score, dim=2)
+                print_tensor("ll_max_log_prob", ll_max_log_prob)
+                print_tensor("ll_pred_ilabel", ll_pred_ilabel)
                 # remember: lll_ilabel was similar to labels
                 # first (outer) list over batch events
                 # second list over extractions
@@ -482,10 +482,8 @@ class Model(pl.LightningModule):
                 ll_nonpad_bool = \
                     (y_d["lll_ilabel"][:, 0, :] != -100).float()
 
-                print("bbng", describe_tensor("ll_nonpad_bool",
-                                              ll_nonpad_bool))
-                print(describe_tensor("(ll_pred_ilabel != 0)",
-                                      (ll_pred_ilabel != 0)))
+                print_tensor("ll_nonpad_bool", ll_nonpad_bool)
+                print_tensor("(ll_pred_ilabel != 0)", (ll_pred_ilabel != 0))
                 # * is element-wise multiplication of tensors
                 ll_nonpad_bool = \
                     (ll_pred_ilabel != 0).float() * ll_nonpad_bool
@@ -498,7 +496,7 @@ class Model(pl.LightningModule):
                 # this unsqueezes depth dim=1
                 llll_pred_ex_ilabel.append(ll_pred_ilabel.unsqueeze(1))
                 lll_pred_ex_confi.append(l_confi.unsqueeze(1))
-
+        # } on of for depth, lll_word_score0
         if ttt == 'train':
             if self.constraint_str:
                 # dim=1 is depth. This cats along depth dimension
@@ -653,7 +651,7 @@ class Model(pl.LightningModule):
         """
         batch_m_out = self.forward(batch, batch_idx, ttt='train')
 
-        return to_dict(batch_m_out) # contains loss as variable
+        return to_dict(batch_m_out)  # contains loss as variable
 
     def validation_step(self, batch, batch_idx):
         """

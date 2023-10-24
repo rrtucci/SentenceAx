@@ -466,7 +466,7 @@ def to_dict(class_obj):
     return attributes_dict
 
 
-def describe_list(list_name, li):
+def print_list(list_name, li):
     """
     describe list
 
@@ -477,13 +477,13 @@ def describe_list(list_name, li):
 
     Returns
     -------
-    str
+    None
 
     """
-    return list_name + str(len(li)) +"\n" + str(li)
+    print(list_name + " " + str(len(li)) + "\n" + str(li))
 
 
-def describe_tensor(tensor_name, ten):
+def print_tensor(tensor_name, ten):
     """
 
     Parameters
@@ -493,10 +493,10 @@ def describe_tensor(tensor_name, ten):
 
     Returns
     -------
-    str
+    None
 
     """
-    return tensor_name + str(ten.shape) + "\n" + str(ten)
+    print(tensor_name + " " + str(ten.shape) + "\n" + str(ten))
 
 
 if __name__ == "__main__":

@@ -401,7 +401,7 @@ class MInput:
                 # print("lmklo", k, desc_list(osent_wstart_locs))
                 line_words = get_words(line)
                 # print("lmklo", k, desc_list(line_words))
-                line_words += ["NONE", "NONE", "NONE"]
+                line_words += ["NONE"]*10
                 line_words = line_words[:len(osent_wstart_locs)]
 
 

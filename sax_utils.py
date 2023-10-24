@@ -465,19 +465,38 @@ def to_dict(class_obj):
             attributes_dict[attr_name] = attr
     return attributes_dict
 
-def desc_list(li):
+
+def describe_list(list_name, li):
     """
     describe list
 
     Parameters
     ----------
+    list_name: str
     li: list[Any, Any]
 
     Returns
     -------
+    str
 
     """
-    return str(li) + ' ' + str(len(li))
+    return list_name + str(len(li)) +"\n" + str(li)
+
+
+def describe_tensor(tensor_name, ten):
+    """
+
+    Parameters
+    ----------
+    tensor_name: str
+    ten: torch.tensor
+
+    Returns
+    -------
+    str
+
+    """
+    return tensor_name + str(ten.shape) + "\n" + str(ten)
 
 
 if __name__ == "__main__":

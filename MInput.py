@@ -391,16 +391,16 @@ class MInput:
                     # same as osent_icodes.extend(icodes)
                     osent_icodes += icodes
                 osent_icodes.append(EOS_ICODE)
-                # print("lmklo", k, desc_list(osent_wstart_locs))
+                # print("lmklo", k, str_list(osent_wstart_locs))
                 # end of if osent line
 
             elif is_tag_line_of_sample(line):
                 # print("sdfrg-tag", k)
                 # some tag lines have too many or too few NONE at the end
 
-                # print("lmklo", k, desc_list(osent_wstart_locs))
+                # print("lmklo", k, str_list(osent_wstart_locs))
                 line_words = get_words(line)
-                # print("lmklo", k, desc_list(line_words))
+                # print("lmklo", k, str_list(line_words))
                 line_words += ["NONE"]*10
                 line_words = line_words[:len(osent_wstart_locs)]
 
@@ -409,8 +409,8 @@ class MInput:
                            for tag in line_words]
                 # print("nnmk-line number= " + str(k))
 
-                # print("xxcv", desc_list(get_words(sentL)))
-                # print("vvbn-line-words", desc_list(get_words(line)))
+                # print("xxcv", str_list(get_words(sentL)))
+                # print("vvbn-line-words", str_list(get_words(line)))
                 assert len(ilabels) == len(osent_wstart_locs), \
                     "\n" + str(ilabels) + \
                     str(len(ilabels)) + \

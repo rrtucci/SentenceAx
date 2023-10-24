@@ -360,8 +360,7 @@ class Model(pl.LightningModule):
         # second list over extractions
         # third (inner) list over number of labels in a line
         # after padding and adding the 3 unused tokens
-        batch_size, num_depths, num_words = \
-            y_d["lll_ilabel"].shape
+        batch_size, num_depths, num_words = y_d["lll_ilabel"].shape
 
         # `loss_fun` is not used in this function anymore
         # loss_fun, lstm_loss = 0, 0
@@ -385,7 +384,6 @@ class Model(pl.LightningModule):
             lll_hidden_state = self.dropout_fun(lll_hidden_state)
             # a chaptgpt generated explanation of this transformation
             # is given in misc/hidden_states_transformation2.txt
-            #
             lll_loc = x_d["ll_osent_wstart_loc"].unsqueeze(2). \
                 repeat(1, 1, lll_hidden_state.shape[2])
             lll_word_hidden_state = torch.gather(
@@ -394,8 +392,9 @@ class Model(pl.LightningModule):
                 index=lll_loc)
 
             if depth != 0:
-                ll_pred_ilabel = torch.argmax(lll_word_score, dim=-1)
-                lll_pred_code = self.embedding(ll_pred_ilabel)
+                ll_word_score = torch.argmax(lll_word_score, dim=-1)
+                # not an integer code/embedding
+                lll_pred_code = self.embedding(ll_word_score)
                 lll_word_hidden_state += lll_pred_code
 
             lll_word_hidden_state = self.merge_layer(lll_word_hidden_state)
@@ -405,7 +404,8 @@ class Model(pl.LightningModule):
             depth += 1
             if depth >= num_depths:
                 break
-            if self.params.mode != 'train':
+            # this means task="ex"
+            if 'train' not in self.params.mode:
                 ll_prob_ilabel = torch.max(lll_word_score, dim=2)[1]
                 valid_extraction = False
                 assert self.params.task == "ex"
@@ -447,6 +447,11 @@ class Model(pl.LightningModule):
 
 
         """
+        print("vvbg", describe_tensor("lll_word_score",
+                                      lll_word_score))
+        print("vvbg", "len(llll_word_score)", len(llll_word_score))
+        print("vvbg", describe_tensor("llll_word_score[0]",
+                              llll_word_score[0]))
         loss = 0
         llll_pred_ex_ilabel = []  # all_depth_predictions
         lll_pred_ex_ilabel0 = []  # all_depth_predictions after cat dim=1
@@ -477,9 +482,10 @@ class Model(pl.LightningModule):
                 ll_nonpad_bool = \
                     (y_d["lll_ilabel"][:, 0, :] != -100).float()
 
-                print("ll_nonpad_bool", ll_nonpad_bool.shape, ll_nonpad_bool)
-                print("(ll_pred_ilabel != 0)", (ll_pred_ilabel != 0).shape,
-                      (ll_pred_ilabel != 0))
+                print("bbng", describe_tensor("ll_nonpad_bool",
+                                              ll_nonpad_bool))
+                print(describe_tensor("(ll_pred_ilabel != 0)",
+                                      (ll_pred_ilabel != 0)))
                 # * is element-wise multiplication of tensors
                 ll_nonpad_bool = \
                     (ll_pred_ilabel != 0).float() * ll_nonpad_bool

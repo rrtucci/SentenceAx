@@ -479,6 +479,7 @@ class Model(pl.LightningModule):
                 # second list over extractions
                 # third (inner) list over number of ilabels in a line
                 print("ttt, mode", ttt, self.params.mode)
+                print_tensor("lll_ilabel", y_d["lll_ilabel"])
                 ll_nonpad_bool = \
                     (y_d["lll_ilabel"][:, 0, :] != -100).float()
 
@@ -635,6 +636,34 @@ class Model(pl.LightningModule):
 
         return hinge_loss
 
+    def sax_ttt_step(self, batch, batch_idx, ttt):
+        """
+        inherited method
+
+        Parameters
+        ----------
+        batch: tuple[torch.Tensor, torch.Tensor, list[str]]
+        batch_idx: int
+
+        # tune_out_d = {"lll_ilabel": lll_ilabel,
+        #               "lll_pred_ex_confi": lll_pred_ex_confi,
+        #               "ground_truth": y_d["lll_ilabel"],
+        #               "l_orig_sent": meta_d["l_orig_sent"]}
+        # tune_out_d = OrderedDict(tune_out_d)
+
+        Returns
+        -------
+        dict[str, Any]
+
+        """
+        batch_m_out = self.forward(batch, batch_idx, ttt)
+
+        if ttt == "tune":
+            self.sax_write_batch_sents_out(batch_idx)
+            self.l_batch_m_out.append(batch_m_out)
+
+        return to_dict(batch_m_out)  # contains loss as variable
+
     def training_step(self, batch, batch_idx):
         """
         inherited method
@@ -649,9 +678,7 @@ class Model(pl.LightningModule):
         dict[str, Any]
 
         """
-        batch_m_out = self.forward(batch, batch_idx, ttt='train')
-
-        return to_dict(batch_m_out)  # contains loss as variable
+        return self.sax_ttt_step(batch, batch_idx, "train")
 
     def validation_step(self, batch, batch_idx):
         """
@@ -670,21 +697,7 @@ class Model(pl.LightningModule):
             to_dict(batch_m_out)
 
         """
-        batch_m_out = self.forward(batch, batch_idx, "tune")
-
-        # tune_out_d = {"lll_ilabel": lll_ilabel,
-        #               "lll_pred_ex_confi": lll_pred_ex_confi,
-        #               "ground_truth": y_d["lll_ilabel"],
-        #               "l_orig_sent": meta_d["l_orig_sent"]}
-        # tune_out_d = OrderedDict(tune_out_d)
-
-        # when this method is called by `test_step()`,
-        # skip the writing part
-        if self.params.mode != 'test':
-            self.sax_write_batch_sents_out(batch_idx)
-
-        self.l_batch_m_out.append(batch_m_out)
-        return to_dict(batch_m_out)
+        return self.sax_ttt_step(batch, batch_idx, "tune")
 
     def test_step(self, batch, batch_idx):
         """
@@ -704,7 +717,7 @@ class Model(pl.LightningModule):
             to_dict(batch_m_out)
 
         """
-        return self.validation_step(batch, batch_idx)
+        return self.sax_ttt_step(batch, batch_idx, "test")
 
     def sax_eval_metrics_at_epoch_end(self, ttt):
         """
@@ -777,9 +790,29 @@ class Model(pl.LightningModule):
         #     self.con_to_l_loss = dict()
         return eval_epoch_end_d
 
+    def sax_on_ttt_epoch_end(self, ttt):
+        """
+
+         Returns
+         -------
+         dict[str, Any]
+             val_ee_out_d
+
+         """
+        eval_epoch_end_d = \
+            self.sax_eval_metrics_at_epoch_end(ttt)
+        out_d = {}
+        if eval_epoch_end_d:
+            out_d = {"log": eval_epoch_end_d,
+                     "eval_acc": eval_epoch_end_d["eval_f1"]}
+            if ttt == "text":
+                out_d["progress_bar"] = self.eval_epoch_end_d
+
+        self.l_batch_m_out.clear()  # free memory
+        return out_d
+
     def on_validation_epoch_end(self):
         """
-        inherited method
 
         Returns
         -------
@@ -787,15 +820,7 @@ class Model(pl.LightningModule):
             val_ee_out_d
 
         """
-        eval_epoch_end_d = \
-            self.sax_eval_metrics_at_epoch_end("tune")
-        val_ee_out_d = {}
-        if eval_epoch_end_d:
-            val_ee_out_d = {"log": eval_epoch_end_d,
-                            "eval_acc": eval_epoch_end_d["eval_f1"]}
-
-        self.l_batch_m_out.clear()  # free memory
-        return val_ee_out_d
+        return self.sax_on_ttt_epoch_end("tune")
 
     def on_test_epoch_end(self):
         """
@@ -807,15 +832,7 @@ class Model(pl.LightningModule):
             test_ee_out_d
 
         """
-        self.eval_epoch_end_d = \
-            self.sax_eval_metrics_at_epoch_end(ttt='test')
-        test_ee_out_d = {"log": self.eval_epoch_end_d,
-                         "progress_bar": self.eval_epoch_end_d,
-                         "test_acc": self.eval_epoch_end_d["eval_f1"]}
-        # self.results = d_eval_results # never used!
-
-        self.l_batch_m_out.clear()  # free memory
-        return test_ee_out_d
+        return self.sax_on_ttt_epoch_end("test")
 
     def train_dataloader(self):
         """

@@ -51,10 +51,11 @@ class MConductor:
     tags_test_fp: str
     tags_train_fp: str
     tags_tune_fp: str
+    verbose_model: bool
 
     """
 
-    def __init__(self, params, save=True):
+    def __init__(self, params, save=True, verbose_model=True):
         """
         A new
         ModelCheckpoint,
@@ -68,11 +69,13 @@ class MConductor:
         ----------
         params: Params
         save: bool
+        verbose_model: bool
 
 
 
         """
         self.params = params
+        self.verbose_model = verbose_model
         self.has_cuda = torch.cuda.is_available()
         warnings.filterwarnings('ignore')
 
@@ -291,7 +294,8 @@ class MConductor:
         # train is the only mode that doesn't require update_params()
         self.model = Model(self.params,
                            self.auto_tokenizer,
-                           self.xname_to_dim1)
+                           self.xname_to_dim1,
+                           self.verbose_model)
         trainer = self.get_trainer(self.get_logger("train"),
                                    checkpoint_fp=None,
                                    use_minimal=False)
@@ -321,7 +325,8 @@ class MConductor:
         self.update_params(checkpoint_fp)
         self.model = Model(self.params,
                            self.auto_tokenizer,
-                           self.xname_to_dim1)
+                           self.xname_to_dim1,
+                           self.verbose_model)
         trainer = self.get_trainer(self.get_logger("tune"),
                                    checkpoint_fp,
                                    use_minimal=False)
@@ -351,7 +356,8 @@ class MConductor:
 
         self.model = Model(self.params,
                            self.auto_tokenizer,
-                           self.xname_to_dim1)
+                           self.xname_to_dim1,
+                           self.verbose_model)
         # if self.params.task == "ex" and self.ex_sent_to_sent:
         #     self.model.metric.sent_to_sent = self.ex_sent_to_sent
         # if self.params.task == "cc" and self.cc_sent_to_words:
@@ -410,7 +416,8 @@ class MConductor:
         self.xname_to_dim1 = self.dloader_tool.xname_to_dim1
         self.model = Model(self.params,
                            self.auto_tokenizer,
-                           self.xname_to_dim1)
+                           self.xname_to_dim1,
+                           self.verbose_model)
 
         # No
         # self.model.metric.sent_to_sent = self.ex_sent_to_sent

@@ -102,6 +102,7 @@ class Model(pl.LightningModule):
     metric: CCMetric | ExMetric
     params: Params
     xname_to_dim1: OrderedDict
+    verbose_model: bool
     # some inherited attributes that won't be used
     # hparams (dictionary, Used by Openie6, not by us.
     #    We use the class Params instead.)
@@ -114,19 +115,22 @@ class Model(pl.LightningModule):
     def __init__(self,
                  params,
                  auto_tokenizer,
-                 xname_to_dim1):
+                 xname_to_dim1,
+                 verbose_model):
         """
         lightning/src/lightning/pytorch/core/module.py
         Parameters
         ----------
         params: Params
         auto_tokenizer: AutoTokenizer
-        xname_to_dim1: OrderedDict
+        xname_to_dim1:
+        verbose_model: bool
         """
         super().__init__()
         self.params = params
         self.auto_tokenizer = auto_tokenizer
         self.init_name_to_param = None
+        self.verbose_model = verbose_model
 
         # return_dict=False avoids error message from Dropout
         self.base_model = AutoModel.from_pretrained(
@@ -640,31 +644,38 @@ class Model(pl.LightningModule):
 
     def sax_ttt_step(self, batch, batch_idx, ttt):
         """
-        inherited method
 
         Parameters
         ----------
-        batch: tuple[torch.Tensor, torch.Tensor, list[str]]
+        batch: tuple[torch.Tensor, torch.Tensor]
         batch_idx: int
-
-        # tune_out_d = {"lll_ilabel": lll_ilabel,
-        #               "lll_pred_ex_confi": lll_pred_ex_confi,
-        #               "ground_truth": y_d["lll_ilabel"],
-        #               "l_orig_sent": meta_d["l_orig_sent"]}
-        # tune_out_d = OrderedDict(tune_out_d)
+        ttt: str
 
         Returns
         -------
         dict[str, Any]
+            to_dict(batch_m_out), contains "loss" as key
 
         """
+        if self.verbose_model:
+            if ttt== "train":
+                str0 = "training_step"
+            elif ttt== "tune":
+                str0 = "validation_step"
+            elif ttt== "test":
+                str0 = "test_step"
+            else:
+                assert False
+            print("Entering '" + str0 + "' method, batch_idx=" + str(
+                batch_idx))
+
         batch_m_out = self.forward(batch, batch_idx, ttt)
 
         if ttt == "tune":
             self.sax_write_batch_sents_out(batch_idx)
             self.l_batch_m_out.append(batch_m_out)
 
-        return to_dict(batch_m_out)  # contains loss as variable
+        return to_dict(batch_m_out)  # contains "loss" as key
 
     def training_step(self, batch, batch_idx):
         """
@@ -795,12 +806,27 @@ class Model(pl.LightningModule):
     def sax_on_ttt_epoch_end(self, ttt):
         """
 
-         Returns
-         -------
-         dict[str, Any]
-             val_ee_out_d
+        Parameters
+        ----------
+        ttt: str
 
-         """
+        Returns
+        -------
+        dict[str, Any]
+         out_d
+
+        """
+        if self.verbose_model:
+            if ttt == "train":
+                assert False
+            elif ttt == "tune":
+                str0 = "on_validation_epoch_end"
+            elif ttt == "test":
+                str0 = "on_test_epoch_end"
+            else:
+                assert False
+            print("Entering '" + str0 + "' method")
+
         eval_epoch_end_d = \
             self.sax_eval_metrics_at_epoch_end(ttt)
         out_d = {}

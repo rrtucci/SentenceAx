@@ -482,9 +482,11 @@ class Model(pl.LightningModule):
                 print_tensor("lll_ilabel", y_d["lll_ilabel"])
                 ll_nonpad_bool = \
                     (y_d["lll_ilabel"][:, 0, :] != -100).float()
-
+                print("dfrt", {name: x_d[name].shape for name in x_d.keys()})
+                print("vbgy", self.xname_to_dim1)
                 print_tensor("ll_nonpad_bool", ll_nonpad_bool)
-                print_tensor("(ll_pred_ilabel != 0)", (ll_pred_ilabel != 0))
+                print_tensor("(ll_pred_ilabel != 0)",
+                             (ll_pred_ilabel != 0).float())
                 # * is element-wise multiplication of tensors
                 ll_nonpad_bool = \
                     (ll_pred_ilabel != 0).float() * ll_nonpad_bool

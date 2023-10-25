@@ -55,7 +55,7 @@ class MConductor:
 
     """
 
-    def __init__(self, params, save=True, verbose_model=True):
+    def __init__(self, params, save=True, verbose_model=False):
         """
         A new
         ModelCheckpoint,

@@ -278,4 +278,4 @@ if __name__ == "__main__":
 
     # main(in_fp="tests/extags_test.txt")
     # main(in_fp="predictions/small_pred.txt")
-    main(in_fp="input_data/carb-data/test.txt")
+    main(in_fp="input_data/carb-data/dev.txt")

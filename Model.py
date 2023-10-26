@@ -451,9 +451,9 @@ class Model(pl.LightningModule):
 
 
         """
-        print_tensor("lll_word_score", lll_word_score)
-        print("vvbg", "len(llll_word_score)", len(llll_word_score))
-        print_tensor("llll_word_score[0]", llll_word_score[0])
+        # print_tensor("lll_word_score", lll_word_score)
+        # print("vvbg", "len(llll_word_score)", len(llll_word_score))
+        # print_tensor("llll_word_score[0]", llll_word_score[0])
         loss = 0
         llll_pred_ex_ilabel = []  # all_depth_predictions
         lll_pred_ex_ilabel0 = []  # all_depth_predictions after cat dim=1
@@ -469,8 +469,8 @@ class Model(pl.LightningModule):
                 l_loss_target = \
                     y_d["lll_ilabel"][:, depth, :].reshape(-1)
                 loss += self.loss_fun(l_loss_input, l_loss_target)
-                print("l_loss_input.shape, l_loss_target.shape, loss",
-                      l_loss_input.shape, l_loss_target.shape, loss)
+                # print("l_loss_input.shape, l_loss_target.shape, loss",
+                #       l_loss_input.shape, l_loss_target.shape, loss)
             else:
                 lll_soft_word_score = \
                     torch.log_softmax(lll_word_score0, dim=2)
@@ -482,15 +482,15 @@ class Model(pl.LightningModule):
                 # first (outer) list over batch events
                 # second list over extractions
                 # third (inner) list over number of ilabels in a line
-                print("ttt, mode", ttt, self.params.mode)
-                print_tensor("lll_ilabel", y_d["lll_ilabel"])
+                # print("ttt, mode", ttt, self.params.mode)
+                # print_tensor("lll_ilabel", y_d["lll_ilabel"])
                 ll_nonpad_bool = \
                     (y_d["lll_ilabel"][:, 0, :] != -100).float()
-                print("dfrt", {name: x_d[name].shape for name in x_d.keys()})
-                print("vbgy", self.xname_to_dim1)
-                print_tensor("ll_nonpad_bool", ll_nonpad_bool)
-                print_tensor("(ll_pred_ilabel != 0)",
-                             (ll_pred_ilabel != 0).float())
+                # print("dfrt", {name: x_d[name].shape for name in x_d.keys()})
+                # print("vbgy", self.xname_to_dim1)
+                # print_tensor("ll_nonpad_bool", ll_nonpad_bool)
+                # print_tensor("(ll_pred_ilabel != 0)",
+                #              (ll_pred_ilabel != 0).float())
                 # * is element-wise multiplication of tensors
                 ll_nonpad_bool = \
                     (ll_pred_ilabel != 0).float() * ll_nonpad_bool
@@ -505,7 +505,7 @@ class Model(pl.LightningModule):
                 lll_pred_ex_confi.append(l_confi.unsqueeze(1))
         # } on of for depth, lll_word_score0
         if ttt == 'train':
-            if self.constraint_str:
+            if self.con_to_weight:
                 # dim=1 is depth. This cats along depth dimension
                 llll_word_score = torch.cat(
                     [lll.unsqueeze(1) for lll in llll_word_score], dim=1)
@@ -517,7 +517,7 @@ class Model(pl.LightningModule):
                     self.con_to_weight) / batch_size
                 loss = con_loss
 
-            if "wreg" in self.params.d["wreg"]:
+            if "wreg" in self.params.d:
                 weight_diff = 0
                 name_to_param = dict(self.named_parameters())
                 for name in self.init_name_to_param:

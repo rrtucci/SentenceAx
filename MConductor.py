@@ -236,11 +236,13 @@ class MConductor:
         #     use_tpu = params_d.use_tpu,
         #     val_check_interval = params_d.val_check_interval)
 
+        # num_sanity_val_steps=0 to avoid validation vanity check bug
         if use_minimal:
             trainer = Trainer(
                 gpus=self.params.d["gpus"],
                 logger=logger,
-                resume_from_checkpoint=checkpoint_fp)
+                resume_from_checkpoint=checkpoint_fp,
+                num_sanity_val_steps=0)
         else:
             trainer = Trainer(
                 # bug (?) in Trainer software allow this to be set
@@ -253,6 +255,7 @@ class MConductor:
                 resume_from_checkpoint=checkpoint_fp if
                 self.params.mode == "resume" else None,
                 show_progress_bar=True,
+                num_sanity_val_steps=0
                 **self.params.d)
         return trainer
 

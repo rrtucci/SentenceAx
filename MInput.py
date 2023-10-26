@@ -520,18 +520,22 @@ if __name__ == "__main__":
         print("num_samples=", num_samples)
         for isam in [0, num_samples-1]:
             print("************** isam=", isam)
-            print("get_words(l_osentL[isam])=",
+            print_list("get_words(l_osentL[isam])",
                   get_words(redoL(m_in.l_orig_sent[isam])))
-            print("ll_osent_icode[isam]=\n", m_in.ll_osent_icode[isam])
-            print("ll_osent_pos_loc[isam]=\n", m_in.ll_osent_pos_loc[isam])
-            print("ll_osent_pos_bool[isam]=\n", m_in.ll_osent_pos_bool[isam])
-            print("ll_osent_verb_loc[isam]=\n", m_in.ll_osent_verb_loc[isam])
-            print("ll_osent_verb_bool[isam]=\n",
+            print_list("ll_osent_icode[isam]",
+                  m_in.ll_osent_icode[isam])
+            print_list("ll_osent_pos_loc[isam]",
+                       m_in.ll_osent_pos_loc[isam])
+            print_list("ll_osent_pos_bool[isam]",
+                       m_in.ll_osent_pos_bool[isam])
+            print_list("ll_osent_verb_loc[isam]",
+                       m_in.ll_osent_verb_loc[isam])
+            print_list("ll_osent_verb_bool[isam]",
                   m_in.ll_osent_verb_bool[isam])
-            print("ll_osent_wstart_loc[isam]=\n",
+            print_list("ll_osent_wstart_loc[isam]",
                   m_in.ll_osent_wstart_loc[isam])
             if verbose:
-                print("lll_ilabel=\n", m_in.lll_ilabel)
+                print_list("lll_ilabel", m_in.lll_ilabel)
 
 
     def main2():
@@ -556,10 +560,11 @@ if __name__ == "__main__":
         pprint(l_sent2)
 
 
-    main1(tags_in_fp="tests/extags_test.txt",
-          verbose=False)
-    main2()
-    main1(tags_in_fp="predictions/small_pred.txt",
-        verbose=True)
-
-    main1(tags_in_fp='input_data/carb-data/test.txt')
+    # main1(tags_in_fp="tests/extags_test.txt",
+    #       verbose=False)
+    # main2()
+    # main1(tags_in_fp="predictions/small_pred.txt",
+    #     verbose=True)
+    #
+    # main1(tags_in_fp='input_data/carb-data/test.txt')
+    main1(tags_in_fp='input_data/carb-data/dev.txt')

@@ -66,6 +66,7 @@ class PaddedMInput(MInput):
             self.x_d["ll_osent_verb_bool"] = self.ll_osent_verb_bool
             self.x_d["ll_osent_verb_loc"] = self.ll_osent_verb_loc
 
+
     @staticmethod
     def get_padded_ll_x(unpadded_ll_x, ipad1=0):
         """

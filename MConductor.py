@@ -119,9 +119,7 @@ class MConductor:
             # ttt dloaders not used for mode="predict", "splitpredict"
             # for those modes, only a predict dloader is used.
             self.dloader_tool.set_all_ttt_dataloaders()
-            # always fill xname_to_dim1 after setting dataloader. Also,
             # always set dataloader before constructing a Model instance
-            self.xname_to_dim1 = self.dloader_tool.xname_to_dim1
 
         self.model = None
 
@@ -241,8 +239,7 @@ class MConductor:
             trainer = Trainer(
                 gpus=self.params.d["gpus"],
                 logger=logger,
-                resume_from_checkpoint=checkpoint_fp,
-                num_sanity_val_steps=0)
+                resume_from_checkpoint=checkpoint_fp)
         else:
             trainer = Trainer(
                 # bug (?) in Trainer software allow this to be set
@@ -255,7 +252,6 @@ class MConductor:
                 resume_from_checkpoint=checkpoint_fp if
                 self.params.mode == "resume" else None,
                 show_progress_bar=True,
-                num_sanity_val_steps=0
                 **self.params.d)
         return trainer
 
@@ -297,7 +293,6 @@ class MConductor:
         # train is the only mode that doesn't require update_params()
         self.model = Model(self.params,
                            self.auto_tokenizer,
-                           self.xname_to_dim1,
                            self.verbose_model)
         trainer = self.get_trainer(self.get_logger("train"),
                                    checkpoint_fp=None,
@@ -328,7 +323,6 @@ class MConductor:
         self.update_params(checkpoint_fp)
         self.model = Model(self.params,
                            self.auto_tokenizer,
-                           self.xname_to_dim1,
                            self.verbose_model)
         trainer = self.get_trainer(self.get_logger("tune"),
                                    checkpoint_fp,
@@ -359,7 +353,6 @@ class MConductor:
 
         self.model = Model(self.params,
                            self.auto_tokenizer,
-                           self.xname_to_dim1,
                            self.verbose_model)
         # if self.params.task == "ex" and self.ex_sent_to_sent:
         #     self.model.metric.sent_to_sent = self.ex_sent_to_sent
@@ -414,12 +407,9 @@ class MConductor:
         checkpoint_fp = self.get_checkpoint_fp()
         self.update_params(checkpoint_fp)
         self.dloader_tool.set_predict_dataloader(pred_in_fp)
-        # always fill xname_to_dim1 after setting dataloader. Also,
         # always set dataloader before constructing a Model instance
-        self.xname_to_dim1 = self.dloader_tool.xname_to_dim1
         self.model = Model(self.params,
                            self.auto_tokenizer,
-                           self.xname_to_dim1,
                            self.verbose_model)
 
         # No

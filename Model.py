@@ -101,7 +101,6 @@ class Model(pl.LightningModule):
     merge_layer: nn.Linear
     metric: CCMetric | ExMetric
     params: Params
-    xname_to_dim1: OrderedDict
     verbose_model: bool
     # some inherited attributes that won't be used
     # hparams (dictionary, Used by Openie6, not by us.
@@ -115,7 +114,6 @@ class Model(pl.LightningModule):
     def __init__(self,
                  params,
                  auto_tokenizer,
-                 xname_to_dim1,
                  verbose_model):
         """
         lightning/src/lightning/pytorch/core/module.py
@@ -123,7 +121,6 @@ class Model(pl.LightningModule):
         ----------
         params: Params
         auto_tokenizer: AutoTokenizer
-        xname_to_dim1:
         verbose_model: bool
         """
         super().__init__()
@@ -221,7 +218,6 @@ class Model(pl.LightningModule):
         self.lll_cc_spanned_loc = []  # all_sentence_indices_conj
         self.l_ex_pred_str = []  # all_predictions_oie
 
-        self.xname_to_dim1 = xname_to_dim1
         self.l_batch_m_out = []
 
     def configure_optimizers(self):
@@ -322,10 +318,10 @@ class Model(pl.LightningModule):
         OrderedDict, dict[str, torch.Tensor], dict[str, list[str]]
 
         """
-        x, y, l_orig_sent = batch
+        x, y, l_orig_sent, l_xname_to_dim1 = batch
         y_d = {"lll_ilabel": y}
         meta_d = {"l_orig_sent": l_orig_sent}
-        x_d = SaxDataSet.invert_cat(x, self.xname_to_dim1)
+        x_d = SaxDataSet.invert_cat(x, l_xname_to_dim1[0])
         return x_d, y_d, meta_d
 
     def forward(self,
@@ -464,13 +460,15 @@ class Model(pl.LightningModule):
         #     y_d["lll_ilabel"].long()
         for depth, lll_word_score0 in enumerate(llll_word_score):
             if ttt == 'train':
-                l_loss_input = \
+                ll_loss_input = \
                     lll_word_score0.reshape(batch_size * num_words, -1)
+                print_tensor("lll_word_score0", lll_word_score0)
+                print_tensor("ll_loss_input", ll_loss_input)
                 l_loss_target = \
                     y_d["lll_ilabel"][:, depth, :].reshape(-1)
-                loss += self.loss_fun(l_loss_input, l_loss_target)
-                # print("l_loss_input.shape, l_loss_target.shape, loss",
-                #       l_loss_input.shape, l_loss_target.shape, loss)
+                loss += self.loss_fun(ll_loss_input, l_loss_target)
+                print_tensor("l_loss_target", l_loss_target)
+                print("loss", loss)
             else:
                 lll_soft_word_score = \
                     torch.log_softmax(lll_word_score0, dim=2)
@@ -487,7 +485,6 @@ class Model(pl.LightningModule):
                 ll_nonpad_bool = \
                     (y_d["lll_ilabel"][:, 0, :] != -100).float()
                 # print("dfrt", {name: x_d[name].shape for name in x_d.keys()})
-                # print("vbgy", self.xname_to_dim1)
                 # print_tensor("ll_nonpad_bool", ll_nonpad_bool)
                 # print_tensor("(ll_pred_ilabel != 0)",
                 #              (ll_pred_ilabel != 0).float())

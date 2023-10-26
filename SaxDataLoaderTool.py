@@ -44,7 +44,6 @@ class SaxDataLoaderTool:
     test_dloader: DataLoader
     train_dloader: DataLoader
     tune_dloader: DataLoader
-    xname_to_dim1: OrderedDict
     
     """
 
@@ -79,8 +78,6 @@ class SaxDataLoaderTool:
         self.tune_dloader = []
         self.test_dloader = []
         self.predict_dloader = []
-
-        self.xname_to_dim1 = OrderedDict()
 
     def get_dataset_common(self):
         return
@@ -141,7 +138,6 @@ class SaxDataLoaderTool:
         # to simulate bucket sort (along with pad_data)
         # train_dataset.sort()
 
-        self.xname_to_dim1 = train_dataset.xname_to_dim1
 
         return train_dataset, tune_dataset, test_dataset
         # , vocab, orig_sents
@@ -196,7 +192,6 @@ class SaxDataLoaderTool:
         # vocab = build_vocab(predict_m_in)
 
         predict_dataset = SaxDataSet(predict_m_in)
-        self.xname_to_dim1 = predict_dataset.xname_to_dim1
 
         return predict_dataset
 

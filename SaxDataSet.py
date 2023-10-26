@@ -99,7 +99,8 @@ class SaxDataSet(Dataset):
         self.l_orig_sent[isample]   is what is called metadata.
         It is broken into batches along dim=0, just like self.x and self.y are
         """
-        return self.x[isample], self.y[isample], self.l_orig_sent[isample]
+        return self.x[isample], self.y[isample], \
+            self.l_orig_sent[isample], self.xname_to_dim1
 
     def __len__(self):
         """

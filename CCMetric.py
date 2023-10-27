@@ -125,6 +125,17 @@ class CCMetric:
         })
         return score_d
 
+    def reset_score_d(self):
+        """
+
+        Returns
+        -------
+        None
+
+        """
+        for name in self.score_d.keys():
+            self.score_d[name] = 0.0
+
     def reset_reports(self):
         """
         similar to Openie6.metric.Conjunction.reset()
@@ -169,8 +180,7 @@ class CCMetric:
         })
         self.score_d = copy(score_d)
         if do_reset:
-            for name in self.score_d.keys():
-                self.score_d[name] = 0.0
+            self.reset_score_d()
         return score_d
 
     def get_overall_score(self, report_category='exact'):

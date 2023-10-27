@@ -21,7 +21,7 @@ class CCMetric:
 
     """
 
-    def __init__(self, storage_dir=None, sent_to_words=None):
+    def __init__(self, store=True, sent_to_words=None):
         """
 
         Parameters
@@ -39,14 +39,15 @@ class CCMetric:
         self.report_exact = CCReport("exact")
         # self.n_complete = 0 # not used
         # self.n_sentence = 0 # not used
-        self.storage_dir = storage_dir
-        if self.storage_dir:
-            if os.path.exists(storage_dir + '/l_osent.pkl'):
-                os.remove(storage_dir + '/l_osent.pkl')
-            if os.path.exists(storage_dir + '/l_pred_ccnodes.pkl'):
-                os.remove(storage_dir + '/l_pred_ccnodes.pkl')
-            if os.path.exists(storage_dir + '/l_true_ccnodes.pkl'):
-                os.remove(storage_dir + '/l_true_ccnodes.pkl')
+        if store:
+            print("Storing cc metric info")
+            di = CC_METRIC_STORAGE_DIR
+            if os.path.exists(di + '/l_osent.pkl'):
+                os.remove( di + '/l_osent.pkl')
+            if os.path.exists(di + '/l_pred_ccnodes.pkl'):
+                os.remove(di + '/l_pred_ccnodes.pkl')
+            if os.path.exists(di + '/l_true_ccnodes.pkl'):
+                os.remove(di + '/l_true_ccnodes.pkl')
 
         self.sent_to_words = sent_to_words
 
@@ -118,7 +119,7 @@ class CCMetric:
         })
         return score_d
 
-    def reset(self):
+    def reset_reports(self):
         """
         similar to Openie6.metric.Conjunction.reset()
 
@@ -131,11 +132,10 @@ class CCMetric:
         self.report_outer.reset()
         self.report_inner.reset()
         self.report_exact.reset()
-        self.score_d = CCMetric.get_zero_score_d()
         # self.n_complete = 0
         # self.n_sentence = 0
 
-    def get_score_d(self, ttt, do_reset=False):
+    def get_score_d(self, ttt, do_reset=True):
         """
         similar to Openie6.metric.Conjunction.get_metric()
 
@@ -163,14 +163,12 @@ class CCMetric:
         })
         self.score_d = copy(score_d)
         if do_reset:
-            self.reset()
+            self.score_d = CCMetric.get_zero_score_d()
         return score_d
 
     def get_overall_score(self, report_category='exact'):
         """
-        Similar to Openie6.metric.Conjunction.get_overall_score()
-        This gives nan iff reset=False in get_score_d(). this method
-        is not used anywhere in the project except in the main90's.
+        Similar to Openie6.metric.Conjunction.get_overall_score().
 
         Parameters
         ----------
@@ -222,7 +220,7 @@ if __name__ == "__main__":
         if ll_ilabel:
             lll_ilabel.append(ll_ilabel)
         cc_met(l_osent, lll_ilabel, lll_ilabel)
-        score_d = cc_met.get_score_d(ttt="train", do_reset=False)
+        score_d = cc_met.get_score_d(ttt="train", do_reset=True)
         print(score_d)
         print("overall-exact score:", cc_met.get_overall_score("exact"))
 

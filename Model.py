@@ -11,6 +11,7 @@ from copy import copy, deepcopy
 from collections import OrderedDict
 import logging
 import regex as re
+from pprint import pprint
 
 import torch
 import torch.nn.functional as F
@@ -659,11 +660,11 @@ class Model(pl.LightningModule):
 
         """
         if self.verbose_model:
-            if ttt== "train":
+            if ttt == "train":
                 str0 = "training_step"
-            elif ttt== "tune":
+            elif ttt == "tune":
                 str0 = "validation_step"
-            elif ttt== "test":
+            elif ttt == "test":
                 str0 = "test_step"
             else:
                 assert False
@@ -676,7 +677,11 @@ class Model(pl.LightningModule):
             self.l_batch_m_out.append(batch_m_out)
             self.sax_write_batch_sents_out(batch_idx)
 
-        return to_dict(batch_m_out)  # contains "loss" as key
+        step_end_d = to_dict(batch_m_out)  # contains "loss" as key
+        loss = step_end_d["loss"]
+        step_end_d["log"] = {"train_loss": loss}
+
+        return step_end_d
 
     def training_step(self, batch, batch_idx):
         """
@@ -690,6 +695,7 @@ class Model(pl.LightningModule):
         Returns
         -------
         dict[str, Any]
+            step_end_d
 
         """
         return self.sax_ttt_step(batch, batch_idx, "train")
@@ -708,7 +714,7 @@ class Model(pl.LightningModule):
         Returns
         -------
         dict[str, Any]
-            to_dict(batch_m_out)
+            step_end_d
 
         """
         return self.sax_ttt_step(batch, batch_idx, "tune")
@@ -728,7 +734,7 @@ class Model(pl.LightningModule):
         Returns
         -------
         dict[str, Any]
-            to_dict(batch_m_out)
+            step_end_d
 
         """
         return self.sax_ttt_step(batch, batch_idx, "test")
@@ -772,9 +778,10 @@ class Model(pl.LightningModule):
 
             val_acc = metrics_d["F1_exact"]
             # val_auc = 0
-            eval_epoch_end_d = {"eval_f1": val_acc,
-                                "eval_p": metrics_d["P_exact"],
-                                "eval_r": metrics_d["R_exact"]}
+            eval_epoch_end_d = OrderedDict(
+                {"eval_f1": val_acc,
+                 "eval_p": metrics_d["P_exact"],
+                 "eval_r": metrics_d["R_exact"]})
 
         elif self.params.task == "ex":
             if 'predict' in self.params.mode:
@@ -790,18 +797,20 @@ class Model(pl.LightningModule):
                 metrics_d = self.metric.get_score_d(ttt,
                                                     do_reset=True)
 
-            eval_epoch_end_d = {"eval_f1": metrics_d["ex_f1"],
-                                "eval_auc": metrics_d["ex_auc"],
-                                "eval_last_f1": metrics_d["ex_last_f1"]}
+            eval_epoch_end_d = OrderedDict(
+                {"eval_f1": metrics_d["ex_f1"],
+                 "eval_auc": metrics_d["ex_auc"],
+                 "eval_last_f1": metrics_d["ex_last_f1"]})
 
-        print('\nResults:\n' + str(eval_epoch_end_d))
-        # For computing the constraint violations
-        # if hasattr(self, 'con_to_l_loss') and \
-        # self.params.d["constraint_str"] != '':
-        #     for key in self.con_to_l_loss:
-        #         self.con_to_l_loss[key] = sum(self.con_to_l_loss[key]).item()
-        #     print('\nViolations: ', self.con_to_l_loss)
-        #     self.con_to_l_loss = dict()
+            print('\nResults:')
+            pprint(eval_epoch_end_d)
+            # For computing the constraint violations
+            # if hasattr(self, 'con_to_l_loss') and \
+            # self.params.d["constraint_str"] != '':
+            #     for key in self.con_to_l_loss:
+            #         self.con_to_l_loss[key] = sum(self.con_to_l_loss[key]).item()
+            #     print('\nViolations: ', self.con_to_l_loss)
+            #     self.con_to_l_loss = dict()
         return eval_epoch_end_d
 
     def sax_on_ttt_epoch_end(self, ttt):
@@ -814,7 +823,7 @@ class Model(pl.LightningModule):
         Returns
         -------
         dict[str, Any]
-         out_d
+            epoch_end_d
 
         """
         if self.verbose_model:
@@ -830,15 +839,14 @@ class Model(pl.LightningModule):
 
         eval_epoch_end_d = \
             self.sax_eval_metrics_at_epoch_end(ttt)
-        out_d = {}
-        if eval_epoch_end_d:
-            out_d = {"log": eval_epoch_end_d,
-                     "eval_acc": eval_epoch_end_d["eval_f1"]}
-            if ttt == "text":
-                out_d["progress_bar"] = self.eval_epoch_end_d
+        epoch_end_d = {}
+        epoch_end_d = {"log": eval_epoch_end_d,
+                       "eval_acc": eval_epoch_end_d["eval_f1"]}
+        if ttt == "test":
+            epoch_end_d["progress_bar"] = self.eval_epoch_end_d
 
         self.l_batch_m_out.clear()  # free memory
-        return out_d
+        return epoch_end_d
 
     def on_validation_epoch_end(self):
         """
@@ -846,7 +854,7 @@ class Model(pl.LightningModule):
         Returns
         -------
         dict[str, Any]
-            val_ee_out_d
+            epoch_end_d
 
         """
         return self.sax_on_ttt_epoch_end("tune")
@@ -858,7 +866,7 @@ class Model(pl.LightningModule):
         Returns
         -------
         dict[str, Any]
-            test_ee_out_d
+            epoch_end_d
 
         """
         return self.sax_on_ttt_epoch_end("test")

@@ -50,11 +50,14 @@ class CCMetric:
 
         self.sent_to_words = sent_to_words
 
+        self.score_d = CCMetric.get_zero_score_d()
+
     def __call__(self,
                  l_osent,  # meta data
                  lll_pred_ex_ilabel,  # predicted
                  lll_ilabel):  # ground truth
         """
+        similar to Openie6.metric.Conjunction.__call__
 
         ccnodes  when we give it the complete ccnodes
         happens when we want to evaluate on the original system outputs
@@ -96,9 +99,28 @@ class CCMetric:
                     self.storage_dir + '/l_pred_ccnodes.pkl', 'ab'))
                 pickle.dump(true_ccnodes, open(
                     self.storage_dir + '/l_true_ccnodes.pkl', 'ab'))
+    @staticmethod
+    def get_zero_score_d():
+        """
+
+        Returns
+        -------
+        dict[str, float]
+
+        """
+        score_d = OrderedDict({
+            'F1_whole': 0,
+            'F1_outer': 0,
+            'F1_inner': 0,
+            'F1_exact': 0,
+            'P_exact': 0,
+            'R_exact': 0
+        })
+        return score_d
 
     def reset(self):
         """
+        similar to Openie6.metric.Conjunction.reset()
 
         Returns
         -------
@@ -109,6 +131,7 @@ class CCMetric:
         self.report_outer.reset()
         self.report_inner.reset()
         self.report_exact.reset()
+        self.score_d = CCMetric.get_zero_score_d()
         # self.n_complete = 0
         # self.n_sentence = 0
 
@@ -130,19 +153,24 @@ class CCMetric:
 
         """
 
-        score_d = dict()
-        score_d['P_exact'] = self.report_exact.overall_scorer.precision()
-        score_d['R_exact'] = self.report_exact.overall_scorer.recall()
-        score_d['F1_whole'] = self.report_whole.overall_scorer.f1_score()
-        score_d['F1_outer'] = self.report_outer.overall_scorer.f1_score()
-        score_d['F1_inner'] = self.report_inner.overall_scorer.f1_score()
-        score_d['F1_exact'] = self.report_exact.overall_scorer.f1_score()
+        score_d = OrderedDict({
+            'F1_whole': self.report_whole.overall_scorer.f1_score(),
+            'F1_outer': self.report_outer.overall_scorer.f1_score(),
+            'F1_inner': self.report_inner.overall_scorer.f1_score(),
+            'F1_exact': self.report_exact.overall_scorer.f1_score(),
+            'P_exact': self.report_exact.overall_scorer.precision(),
+            'R_exact': self.report_exact.overall_scorer.recall()
+        })
+        self.score_d = copy(score_d)
         if do_reset:
             self.reset()
         return score_d
 
     def get_overall_score(self, report_category='exact'):
         """
+        Similar to Openie6.metric.Conjunction.get_overall_score()
+        This gives nan iff reset=False in get_score_d(). this method
+        is not used anywhere in the project except in the main90's.
 
         Parameters
         ----------
@@ -194,9 +222,8 @@ if __name__ == "__main__":
         if ll_ilabel:
             lll_ilabel.append(ll_ilabel)
         cc_met(l_osent, lll_ilabel, lll_ilabel)
-        score_d = cc_met.get_score_d(do_reset=False)
+        score_d = cc_met.get_score_d(ttt="train", do_reset=False)
         print(score_d)
-        # this gives nan if do_reset = True
         print("overall-exact score:", cc_met.get_overall_score("exact"))
 
 

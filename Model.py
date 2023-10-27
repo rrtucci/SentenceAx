@@ -467,13 +467,13 @@ class Model(pl.LightningModule):
             if ttt == 'train':
                 ll_loss_input = \
                     lll_word_score0.reshape(batch_size * num_words, -1)
-                print_tensor("lll_word_score0", lll_word_score0)
-                print_tensor("ll_loss_input", ll_loss_input)
+                # print_tensor("lll_word_score0", lll_word_score0)
+                # print_tensor("ll_loss_input", ll_loss_input)
                 l_loss_target = \
                     y_d["lll_ilabel"][:, depth, :].reshape(-1)
                 loss += self.loss_fun(ll_loss_input, l_loss_target)
-                print_tensor("l_loss_target", l_loss_target)
-                print("loss", loss)
+                # print_tensor("l_loss_target", l_loss_target)
+                # print("loss", loss)
             else:
                 lll_soft_word_score = \
                     torch.log_softmax(lll_word_score0, dim=2)
@@ -763,46 +763,49 @@ class Model(pl.LightningModule):
             for batch_m_out in self.l_batch_m_out:
                 batch_m_out.move_to_cpu()
 
+        def get_zero_dict(task):
+            if task == "cc":
+                di = OrderedDict({'F1_exact': 0,
+                                  'P_exact': 0,
+                                  'R_exact': 0})
+            elif task == "ex":
+                di = OrderedDict({'AUC': 0,
+                                  'F1': 0,
+                                  'last_F1': 0})
+            else:
+                assert False
+            return di
+
         if self.params.task == "cc":
             if 'predict' in self.params.mode:
-                metrics_d = {'P_exact': 0, 'R_exact': 0, 'F1_exact': 0}
+                metrics_d = get_zero_dict("cc")
             else:
                 for batch_m_out in self.l_batch_m_out:
                     self.metric(
                         batch_m_out.l_orig_sent,  # meta data
-                        Li(batch_m_out.lll_pred_ex_ilabel),  # predictions
-                        Li(batch_m_out.lll_ilabel))  # ground truth
+                        batch_m_out.lll_pred_ex_ilabel,  # predictions
+                        batch_m_out.lll_ilabel)  # ground truth
 
                 metrics_d = self.metric.get_score_d(ttt,
                                                     do_reset=True)
 
-            val_acc = metrics_d["F1_exact"]
-            # val_auc = 0
-            eval_epoch_end_d = OrderedDict(
-                {"eval_f1": val_acc,
-                 "eval_p": metrics_d["P_exact"],
-                 "eval_r": metrics_d["R_exact"]})
+            eval_epoch_end_d = metrics_d
 
         elif self.params.task == "ex":
             if 'predict' in self.params.mode:
-                metrics_d = {'ex_f1': 0,
-                             'ex_auc': 0,
-                             'ex_last_f1': 0}
+                metrics_d = get_zero_dict("ex")
             else:
                 for batch_m_out in self.l_batch_m_out:
                     self.metric(
                         batch_m_out.l_orig_sent,  # meta data
-                        Li(batch_m_out.lll_pred_ex_ilabel),  # predictions
-                        Li(batch_m_out.ll_pred_ex_confi))  # scores
+                        batch_m_out.lll_pred_ex_ilabel,  # predictions
+                        batch_m_out.ll_pred_ex_confi)  # scores
                 metrics_d = self.metric.get_score_d(ttt,
                                                     do_reset=True)
 
-            eval_epoch_end_d = OrderedDict(
-                {"eval_f1": metrics_d["ex_f1"],
-                 "eval_auc": metrics_d["ex_auc"],
-                 "eval_last_f1": metrics_d["ex_last_f1"]})
+            eval_epoch_end_d = metrics_d
 
-            print('\nResults:')
+            print('\nEpoch End Results:')
             pprint(eval_epoch_end_d)
             # For computing the constraint violations
             # if hasattr(self, 'con_to_l_loss') and \
@@ -839,7 +842,6 @@ class Model(pl.LightningModule):
 
         eval_epoch_end_d = \
             self.sax_eval_metrics_at_epoch_end(ttt)
-        epoch_end_d = {}
         epoch_end_d = {"log": eval_epoch_end_d,
                        "eval_acc": eval_epoch_end_d["eval_f1"]}
         if ttt == "test":

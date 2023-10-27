@@ -72,7 +72,7 @@ class CCTree:
             self.set_ccsents()
 
     @staticmethod
-    def tags_in_fp_ccnode_from_ccloc(ccloc, ccnodes):
+    def get_ccnode_from_ccloc(ccloc, ccnodes):
         """
 
         Parameters

@@ -43,7 +43,7 @@ class ExMetric:
         self.osentL_to_exs = osentL_to_exs
         # self.ll_osent_pos_bool = [] # not used
         # self.ll_osent_verb_bool = [] # not used
-        self.score_d = {'carb_auc': 0.0, 'carb_f1': 0.0, 'carb_sum': 0.0}
+        self.score_d = ExMetric.get_zero_score_d()
         self.sent_to_sent = sent_to_sent
         self.use_carb_ex = use_carb_ex
 
@@ -52,7 +52,7 @@ class ExMetric:
                  lll_ilabel,  # predictions
                  ll_confi):  # scores
         """
-
+        similar to Openie6.metric.Carb.__call__
 
         Parameters
         ----------
@@ -81,8 +81,23 @@ class ExMetric:
               "__call__() method.")
         print("number of samples=", len(lll_ilabel))
 
+    @staticmethod
+    def get_zero_score_d():
+        """
+
+        Returns
+        -------
+        dict[str, float]
+
+        """
+        score_d = OrderedDict({'AUC': 0.0,
+                               'F1': 0.0,
+                               'last_F1': 0.0})
+        return score_d
+
     def reset(self):
         """
+        similar to Openie6.metric.Carb.reset()
         
         Returns
         -------
@@ -90,7 +105,7 @@ class ExMetric:
 
         """
         self.osentL_to_exs = {}
-        self.score_d = {'carb_auc': 0.0, 'carb_f1': 0.0, 'carb_sum': 0.0}
+        self.score_d = ExMetric.get_zero_score_d()
 
     def get_score_d(self, ttt, do_reset=True):
         """
@@ -144,11 +159,10 @@ class ExMetric:
                 error_file=None,
                 binary=False)
 
-        self.score_d = {
-            'carb_auc': auc,
-            'carb_f1': optimal_f1_point[2],
-            'carb_last_f1': last_f1_point[2]}
-        score_d = self.score_d
+        score_d = OrderedDict({'AUC': auc,
+                               'F1': optimal_f1_point[2],
+                               'last_F1': last_f1_point[2]})
+        self.score_d = copy(score_d)
         if ttt == "tune" and do_reset:
             # this resets score_d
             self.reset()
@@ -194,8 +208,7 @@ if __name__ == "__main__":
         ex_met = ExMetric(carb_osent_to_exs, use_carb_ex=True)
         # unnecessary
         # ex_met()
-        ttt = "test"
-        score_d = ex_met.get_score_d(ttt, do_reset=True)
+        score_d = ex_met.get_score_d(ttt="test", do_reset=True)
         print(score_d)
 
 

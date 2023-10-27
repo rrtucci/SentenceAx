@@ -32,7 +32,7 @@ REMERGE_TOKENS = False
 INPUT_DIR = "input_data"
 CACHE_DIR = 'cache'
 WEIGHTS_DIR = "weights"
-PRED_DIR = "predictions_in"
+PRED_DIR = "predictions"
 LOGS_DIR = "logs"
 CC_METRIC_STORAGE_DIR = "cc_metric_storage"
 

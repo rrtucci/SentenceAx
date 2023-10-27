@@ -11,12 +11,13 @@ class CCMetric:
 
     Attributes
     ----------
-    storage_dir: str
-    sent_to_words: dict[str, list[str]]
     report_exact: CCReport
     report_inner: CCReport
     report_outer: CCReport
     report_whole: CCReport
+    score_d: dict[str, float]
+    sent_to_words: dict[str, list[str]]
+    store: bool
 
 
     """
@@ -26,13 +27,14 @@ class CCMetric:
 
         Parameters
         ----------
-        storage_dir: str
+        store: bool
         sent_to_words: dict[str, list[str]]
 
         Returns
         -------
         CCMetric
         """
+        self.store = store
         self.report_whole = CCReport("whole")
         self.report_outer = CCReport("outer")
         self.report_inner = CCReport("inner")
@@ -40,10 +42,10 @@ class CCMetric:
         # self.n_complete = 0 # not used
         # self.n_sentence = 0 # not used
         if store:
-            print("Storing cc metric info")
+            print("Deleting previous cc metric pkl files")
             di = CC_METRIC_STORAGE_DIR
             if os.path.exists(di + '/l_osent.pkl'):
-                os.remove( di + '/l_osent.pkl')
+                os.remove(di + '/l_osent.pkl')
             if os.path.exists(di + '/l_pred_ccnodes.pkl'):
                 os.remove(di + '/l_pred_ccnodes.pkl')
             if os.path.exists(di + '/l_true_ccnodes.pkl'):
@@ -93,13 +95,17 @@ class CCMetric:
             self.report_inner.absorb_new_sample(pred_ccnodes, true_ccnodes)
             self.report_exact.absorb_new_sample(pred_ccnodes, true_ccnodes)
 
-            if self.storage_dir:
-                pickle.dump(l_osent[k],
-                            open(self.storage_dir + '/l_osent.pkl', 'ab'))
+            if self.store:
+                # this happens for each sample
+                # print("Storing new cc metric pkl files.")
+                di = CC_METRIC_STORAGE_DIR
+                pickle.dump(l_osent[k], open(
+                    di + '/l_osent.pkl', 'ab'))
                 pickle.dump(pred_ccnodes, open(
-                    self.storage_dir + '/l_pred_ccnodes.pkl', 'ab'))
+                    di + '/l_pred_ccnodes.pkl', 'ab'))
                 pickle.dump(true_ccnodes, open(
-                    self.storage_dir + '/l_true_ccnodes.pkl', 'ab'))
+                    di + '/l_true_ccnodes.pkl', 'ab'))
+
     @staticmethod
     def get_zero_score_d():
         """

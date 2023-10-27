@@ -96,7 +96,7 @@ class CCTree:
         if sum(one_hot) == 0:
             return None
         elif sum(one_hot) > 1:
-            print("kghj", one_hot)
+            print(one_hot)
             print("more than one ccnode with cc at " + str(ccloc))
             assert False
         else:
@@ -111,15 +111,17 @@ class CCTree:
         None
 
         """
-        print("nodes before fixing: ", [str(ccnode) for ccnode in
-                                        self.ccnodes])
+        if self.verbose:
+            print("nodes before fixing: ", [str(ccnode) for ccnode in
+                                            self.ccnodes])
         for ccnode in self.ccnodes:
             if not self.osent_words[ccnode.ccloc] or \
                     self.osent_words[ccnode.ccloc] in ['nor', '&'] or \
                     ccnode.an_unbreakable_word_is_not_spanned():
                 k = self.ccnodes.index(ccnode)
-                print("node " + str(self.ccnodes[k]) +
-                      " thrown away in fixing ccnodes")
+                if self.verbose:
+                    print("node " + str(self.ccnodes[k]) +
+                          " thrown away in fixing ccnodes")
                 self.ccnodes.pop(k)
 
     def set_ccnodes(self, fix_it=True):
@@ -307,7 +309,8 @@ class CCTree:
     @staticmethod
     def fatten_ll_spanned_loc(ll_spanned_loc,
                               level_ccnodes,
-                              level):
+                              level,
+                              verbose):
         """
         similar to Openie6.data.get_sentences(sentences,
                   conj_same_level,
@@ -364,7 +367,8 @@ class CCTree:
                 #     ll_spanned_loc.remove(l_loc)
                 # for l_loc in to_be_added_ll_loc:
                 #     ll_spanned_loc.append(l_loc)
-        print("new_ll_spanned_loc", ll_spanned_loc)
+        if verbose:
+            print("new_ll_spanned_loc", ll_spanned_loc)
         return ll_spanned_loc
 
     def set_ccsents(self):
@@ -433,7 +437,8 @@ class CCTree:
                     CCTree.fatten_ll_spanned_loc(
                         ll_spanned_loc,
                         level_ccnodes,
-                        level)
+                        level,
+                        self.verbose)
                 if level not in self.level_to_fat_ll_spanned_loc.keys():
                     self.level_to_fat_ll_spanned_loc[level] = []
                 self.level_to_ccnodes[level] = level_ccnodes

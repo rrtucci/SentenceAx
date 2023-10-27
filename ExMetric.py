@@ -105,7 +105,8 @@ class ExMetric:
 
         """
         self.osentL_to_exs = {}
-        self.score_d = ExMetric.get_zero_score_d()
+        for name in self.score_d.keys():
+            self.score_d[name] = 0.0
 
     def get_score_d(self, ttt, do_reset=True):
         """

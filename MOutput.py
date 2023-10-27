@@ -9,7 +9,6 @@ class MOutput:
     Attributes
     ----------
     auto_tokenizer: AutoTokenizer
-    in_cpu: bool
     lll_pred_ex_confi: torch.Tensor
     lll_osent_icode: torch.Tensor
     llll_pred_ex_ilabel: torch.Tensor]
@@ -45,8 +44,6 @@ class MOutput:
         self.ll_pred_ex_confi = ll_pred_ex_confi
         self.loss = loss
 
-        self.in_cpu = False
-
     def move_to_cpu(self):
         """
 
@@ -55,13 +52,11 @@ class MOutput:
         None
 
         """
-        assert not self.in_cpu
-        self.in_cpu = True
 
         self.lll_ilabel = self.lll_ilabel.cpu()
         self.lll_pred_ex_ilabel = self.lll_pred_ex_ilabel.cpu()
         self.ll_pred_ex_confi = self.ll_pred_ex_confi.cpu()
-        self.loss = self.loss.cpu()
+        # self.loss = self.loss.cpu()
 
         self.ll_pred_ex_confi = (self.ll_pred_ex_confi * 100).round() / 100
 

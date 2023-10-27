@@ -32,7 +32,7 @@ REMERGE_TOKENS = False
 INPUT_DIR = "input_data"
 CACHE_DIR = 'cache'
 WEIGHTS_DIR = "weights"
-PRED_DIR = "predictions"
+PRED_DIR = "predictions_in"
 LOGS_DIR = "logs"
 CC_METRIC_STORAGE_DIR = "cc_metric_storage"
 
@@ -47,10 +47,6 @@ EXTAGS_TEST_FP = INPUT_DIR + '/carb-data/test.txt'
 EX_FIN_WEIGHTS_FP = WEIGHTS_DIR + '/ex.txt'
 
 PRED_IN_FP = PRED_DIR + "/carb_sentences"
-PRED_OUT_FP = PRED_DIR + "/out.txt"
-PRED_ALLEN_OUT_FP = PRED_DIR + "/allen_out.txt"
-RE_ALLEN_IN_FP = PRED_ALLEN_OUT_FP
-RE_ALLEN_OUT_FP = PRED_DIR + "/re_allen_out.txt"
 
 QUOTES = "\"\'"  # 2
 BRACKETS = "(){}[]<>"  # 8

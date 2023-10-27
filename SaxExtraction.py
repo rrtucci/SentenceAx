@@ -925,13 +925,10 @@ class SaxExtraction:
                 arg1_words.append(word)
             elif ex_ilabels[i] == 2:  # REL
                 rel_words.append(word)
-            elif ex_ilabels[i] == 3:  # ARG2
-                arg2_words.append(word)
-            elif ex_ilabels[i] == 4:  # ARG2
-                # l_loc_time.append(word)
+            elif ex_ilabels[i] in [3, 4, 5]:  # ARG2
                 arg2_words.append(word)
             else:
-                assert False
+                assert False, ex_ilabels[i]
 
         rel = ' '.join(rel_words)
         if rel_case == 1:

@@ -296,7 +296,8 @@ class Model(pl.LightningModule):
         avg_training_loss = running_train_loss.cpu().item() if \
             running_train_loss else float('NaN')
         # get `best` as float
-        if type(self.trainer.checkpoint_callback.kth_value) != float:
+        if type(self.trainer.checkpoint_callback.kth_value) \
+                not in [int, float]:
             best = self.trainer.checkpoint_callback.kth_value.item()
         else:
             best = self.trainer.checkpoint_callback.kth_value
@@ -318,10 +319,13 @@ class Model(pl.LightningModule):
         OrderedDict, dict[str, torch.Tensor], dict[str, list[str]]
 
         """
-        x, y, l_orig_sent, l_xname_to_dim1 = batch
+        x, y, l_orig_sent, xname_to_l_dim1 = batch
         y_d = {"lll_ilabel": y}
         meta_d = {"l_orig_sent": l_orig_sent}
-        x_d = SaxDataSet.invert_cat(x, l_xname_to_dim1[0])
+        xname_to_dim1 = OrderedDict(
+            {xname: int(l_dim1[0]) for xname, l_dim1 in
+             xname_to_l_dim1.items()})
+        x_d = SaxDataSet.invert_cat(x, xname_to_dim1)
         return x_d, y_d, meta_d
 
     def forward(self,
@@ -474,8 +478,8 @@ class Model(pl.LightningModule):
                     torch.log_softmax(lll_word_score0, dim=2)
                 ll_max_log_prob, ll_pred_ilabel = \
                     torch.max(lll_soft_word_score, dim=2)
-                print_tensor("ll_max_log_prob", ll_max_log_prob)
-                print_tensor("ll_pred_ilabel", ll_pred_ilabel)
+                # print_tensor("ll_max_log_prob", ll_max_log_prob)
+                # print_tensor("ll_pred_ilabel", ll_pred_ilabel)
                 # remember: lll_ilabel was similar to labels
                 # first (outer) list over batch events
                 # second list over extractions
@@ -669,8 +673,8 @@ class Model(pl.LightningModule):
         batch_m_out = self.forward(batch, batch_idx, ttt)
 
         if ttt == "tune":
-            self.sax_write_batch_sents_out(batch_idx)
             self.l_batch_m_out.append(batch_m_out)
+            self.sax_write_batch_sents_out(batch_idx)
 
         return to_dict(batch_m_out)  # contains "loss" as key
 
@@ -906,7 +910,7 @@ class Model(pl.LightningModule):
         for sample_id, orig_sent in enumerate(l_orig_sent):
             orig_sentL = redoL(orig_sent)
             add_key_to_target_d(key=orig_sent,
-                                fix_d=self.sent_to_sent,
+                                fix_d=self.ex_sent_to_sent,
                                 target_d=osent_to_l_pred_ex)
             for depth in range(num_depths):
                 num_words = len(get_words(orig_sentL))
@@ -919,12 +923,12 @@ class Model(pl.LightningModule):
                     add_key_value_pair_to_target_d(
                         key=orig_sent,
                         value=ex,
-                        fix_d=self.sent_to_sent,
+                        fix_d=self.ex_sent_to_sent,
                         target_d=osent_to_l_pred_ex)
         l_pred_str = []  # similar to `all_pred`
         l_pred_allen_str = []  # similar to `all_pred_allen_nlp`
-        for sample_id, l_pred_ex in enumerate(osent_to_l_pred_ex):
-            orig_sentL = redoL(l_orig_sent[sample_id])
+        for osent, l_pred_ex in osent_to_l_pred_ex.items():
+            orig_sentL = redoL(osent)
             str0 = ""
             for pred_ex in l_pred_ex:
                 str0 += pred_ex.get_simple_sent() + '\n'
@@ -946,7 +950,8 @@ class Model(pl.LightningModule):
         with open(fpath, fmode) as pred_f:
             pred_f.write('\n'.join(l_pred_str) + '\n')
         if self.params.d["write_allen_file"]:
-            with open(PRED_ALLEN_OUT_FP, fmode) as allen_f:
+            out_fp = PRED_IN_FP.replace(".txt", "") + "_ex_out_allen.txt"
+            with open(out_fp, fmode) as allen_f:
                 allen_f.write('\n'.join(l_pred_allen_str) + '\n')
 
         self.l_ex_pred_str = l_pred_str
@@ -1018,8 +1023,8 @@ class Model(pl.LightningModule):
         lll_cc_spanned_loc += lll_spanned_loc
 
         fmode = "w" if batch_idx == 0 else "a"
-        fpath = self.params.task + ".txt"
-        with open(fpath, fmode) as pred_f:
+        out_fp = PRED_IN_FP.replace(".txt", "") + "_cc_out.txt"
+        with open(out_fp, fmode) as pred_f:
             pred_f.write('\n'.join(l_pred_str) + '\n')
 
         self.l_cc_pred_str = l_cc_pred_str

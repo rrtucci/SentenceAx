@@ -42,7 +42,7 @@ class CCMetric:
         # self.n_complete = 0 # not used
         # self.n_sentence = 0 # not used
         if save:
-            print("CCMetric deleting previous pkl files")
+            print("CCMetric deleting previous pkl files.")
             di = CC_METRIC_STORAGE_DIR
             if os.path.exists(di + '/l_osent.pkl'):
                 os.remove(di + '/l_osent.pkl')
@@ -79,9 +79,8 @@ class CCMetric:
         """
 
         num_samples = len(lll_ilabel)
-        print("CCMetric Entering (and saving if save=True) samples."
-              "instance via its __call__() "
-              "method.")
+        print("CCMetric entering (and saving if save=True) "
+              "samples via its __call__() method.")
         print("number of samples=", num_samples)
         for k in range(num_samples):
             pred_ccnodes = CCTree(l_osent[k],

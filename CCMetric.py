@@ -41,7 +41,7 @@ class CCMetric:
         self.report_exact = CCReport("exact")
         # self.n_complete = 0 # not used
         # self.n_sentence = 0 # not used
-        if save:
+        if self.save:
             print("CCMetric deleting previous pkl files.")
             di = CC_METRIC_STORAGE_DIR
             if os.path.exists(di + '/l_osent.pkl'):

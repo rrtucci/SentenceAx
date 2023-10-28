@@ -17,7 +17,7 @@ import torch
 import torch.nn.functional as F
 from torch import nn
 from torch.optim import Adam
-import pytorch_lightning as pl
+import lightning as  L
 from transformers import AdamW, AutoModel
 
 # prevents printing of model weights, etc
@@ -27,8 +27,16 @@ logging.getLogger(
     'transformers.modeling_utils').setLevel(logging.ERROR)
 logging.getLogger().setLevel(logging.ERROR)
 
+"""on_test_epoch_end() and on_validation_epoch_end() have only been 
+available in `lightining` since version 2.01 
+https://stackoverflow.com/questions/70790473/pytorch-lightning-epoch-end 
+-validation-epoch-end.
+In addition, note that `pytorch_lightning` has been superceeded by 
+`lightning`. 'pytorch_lightning` is now deprecated"""
+check_module_version("lightning", "2.1.0")
 
-class Model(pl.LightningModule):
+
+class Model(L.LightningModule):
     """
     import lightning.pytorch as pl
     import torch.nn as nn
@@ -78,6 +86,7 @@ class Model(pl.LightningModule):
 
     BERTBASE (L=12, HL=768, AH=12, Total Parameters=110M)
     BERTLARGE (L=24, HL=1024, AH=16, Total Parameters=340M).
+
 
     Attributes
     ----------
@@ -763,22 +772,19 @@ class Model(pl.LightningModule):
             for batch_m_out in self.l_batch_m_out:
                 batch_m_out.move_to_cpu()
 
-        def get_zero_dict(task):
+        def get_zero_dict():
+            task = self.params.task
             if task == "cc":
-                di = OrderedDict({'F1_exact': 0,
-                                  'P_exact': 0,
-                                  'R_exact': 0})
+                di = CCMetric.get_zero_score_d()
             elif task == "ex":
-                di = OrderedDict({'AUC': 0,
-                                  'F1': 0,
-                                  'last_F1': 0})
+                di = ExMetric.get_zero_score_d()
             else:
                 assert False
             return di
 
         if self.params.task == "cc":
             if 'predict' in self.params.mode:
-                metrics_d = get_zero_dict("cc")
+                metrics_d = get_zero_dict()
             else:
                 for batch_m_out in self.l_batch_m_out:
                     self.metric(
@@ -790,10 +796,11 @@ class Model(pl.LightningModule):
                                                     do_reset=True)
 
             eval_epoch_end_d = metrics_d
+            eval_epoch_end_d["eval_acc"] = metrics_d["F1_exact"]
 
         elif self.params.task == "ex":
             if 'predict' in self.params.mode:
-                metrics_d = get_zero_dict("ex")
+                metrics_d = get_zero_dict()
             else:
                 for batch_m_out in self.l_batch_m_out:
                     self.metric(
@@ -804,6 +811,7 @@ class Model(pl.LightningModule):
                                                     do_reset=True)
 
             eval_epoch_end_d = metrics_d
+            eval_epoch_end_d["eval_acc"] = metrics_d["F1"]
 
             print('\nEpoch End Results:')
             pprint(eval_epoch_end_d)
@@ -843,7 +851,7 @@ class Model(pl.LightningModule):
         eval_epoch_end_d = \
             self.sax_eval_metrics_at_epoch_end(ttt)
         epoch_end_d = {"log": eval_epoch_end_d,
-                       "eval_acc": eval_epoch_end_d["eval_f1"]}
+                       "eval_acc": eval_epoch_end_d["eval_acc"]}
         if ttt == "test":
             epoch_end_d["progress_bar"] = self.eval_epoch_end_d
 

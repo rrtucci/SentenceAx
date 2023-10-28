@@ -7,6 +7,7 @@ import nltk
 from Params import *
 from math import floor
 from copy import copy
+import pkg_resources as pkg
 
 
 class DotDict(dict):
@@ -497,6 +498,31 @@ def print_tensor(tensor_name, ten):
 
     """
     print(tensor_name + " " + str(ten.shape) + "\n" + str(ten))
+
+
+def check_module_version(module_name, lub_version):
+    """
+
+    Parameters
+    ----------
+    module_name: str
+    lub_version: str
+
+    Returns
+    -------
+    None
+
+    """
+    try:
+        module_version = pkg.get_distribution(module_name).version
+        if pkg.parse_version(module_version) >= \
+                pkg.parse_version(lub_version):
+            print(f"{module_name} version is equal to or greater than "
+                  f"{lub_version}")
+        else:
+            print(f"{module_name} version is less than {lub_version}")
+    except pkg.DistributionNotFound:
+        print(f"{module_name} is not installed.")
 
 
 if __name__ == "__main__":

@@ -1,6 +1,6 @@
-from pytorch_lightning import Trainer
-from pytorch_lightning.logging import TensorBoardLogger
-from pytorch_lightning.callbacks import ModelCheckpoint
+from lightning.pytorch import Trainer
+from lightning.pytorch.loggers import TensorBoardLogger
+from lightning.pytorch.callbacks import ModelCheckpoint
 import warnings
 
 import os
@@ -131,14 +131,14 @@ class MConductor:
         ModelCheckpoint
 
         """
+        # epoch and eval_acc known by ModelCheckPoint instance
         return ModelCheckpoint(
-            filepath=WEIGHTS_DIR + "/" + self.params.task +
-                     '_model/{epoch:02d}_{eval_acc:.3f}',
+            dirpath=f"{WEIGHTS_DIR}/{self.params.task}_model",
+            filename='{epoch:02d}_{eval_acc:.3f}',
             verbose=True,
             monitor='eval_acc',
             mode='max',
-            save_top_k=self.params.d["save_k"],
-            period=0)
+            save_top_k=self.params.d["save_k"])
 
     def get_all_checkpoint_fp(self):
         """
@@ -203,13 +203,12 @@ class MConductor:
             version=ttt + '.part')
         return logger
 
-    def get_trainer(self, logger, checkpoint_fp, use_minimal):
+    def get_trainer(self, logger, use_minimal):
         """
 
         Parameters
         ----------
         logger: TensorBoardLogger | None
-        checkpoint_fp: str | None
         use_minimal: bool
 
         Returns
@@ -238,20 +237,17 @@ class MConductor:
         if use_minimal:
             trainer = Trainer(
                 gpus=self.params.d["gpus"],
-                logger=logger,
-                resume_from_checkpoint=checkpoint_fp)
+                logger=logger)
         else:
             trainer = Trainer(
                 # bug (?) in Trainer software allow this to be set
                 # accumulate_grad_batches=
                 # self.params.d["accumulate_grad_batches"],
-                checkpoint_callback=self.checkpoint_callback,
+                callbacks=self.checkpoint_callback,
                 logger=logger,
                 max_epochs=self.params.d["epochs"],
                 min_epochs=self.params.d["epochs"],
-                resume_from_checkpoint=checkpoint_fp if
-                self.params.mode == "resume" else None,
-                show_progress_bar=True,
+                enable_progress_bar=True,
                 **self.params.d)
         return trainer
 
@@ -295,11 +291,10 @@ class MConductor:
                            self.auto_tokenizer,
                            self.verbose_model)
         trainer = self.get_trainer(self.get_logger("train"),
-                                   checkpoint_fp=None,
                                    use_minimal=False)
         trainer.fit(
             self.model,
-            train_dataloader=self.dloader_tool.train_dloader,
+            train_dataloaders=self.dloader_tool.train_dloader,
             val_dataloaders=self.dloader_tool.tune_dloader)
         tdir = get_task_logs_dir(self.params.task)
         shutil.move(tdir + '/train.part',
@@ -325,12 +320,12 @@ class MConductor:
                            self.auto_tokenizer,
                            self.verbose_model)
         trainer = self.get_trainer(self.get_logger("tune"),
-                                   checkpoint_fp,
                                    use_minimal=False)
         trainer.fit(
             self.model,
-            train_dataloader=self.dloader_tool.train_dloader,
-            val_dataloaders=self.dloader_tool.tune_dloader)
+            train_dataloaders=self.dloader_tool.train_dloader,
+            val_dataloaders=self.dloader_tool.tune_dloader,
+            ckpt_path=self.get_checkpoint_fp())  # only if resuming
         tdir = get_task_logs_dir(self.params.task)
         shutil.move(tdir + '/resume.part',
                     tdir + '/resume')
@@ -365,11 +360,10 @@ class MConductor:
             # one checkpoint at end of each epoch
             for checkpoint_fp in self.get_all_checkpoint_fp():
                 trainer = self.get_trainer(logger,
-                                           checkpoint_fp,
                                            use_minimal=True)
                 # trainer.fit() and trainer.test() are different
                 test_dloader = self.dloader_tool.test_dloader
-                trainer.test(self.model, test_dataloaders=test_dloader)
+                trainer.test(self.model, dataloaders=test_dloader)
                 eval_epoch_end_d = self.model.eval_epoch_end_d
                 test_f.write(f'{checkpoint_fp}\t{eval_epoch_end_d}\n')
                 # note test_f created outside loop.
@@ -418,7 +412,6 @@ class MConductor:
 
         logger = None
         trainer = self.get_trainer(logger,
-                                   checkpoint_fp,
                                    use_minimal=True)
         start_time = time()
         # self.model.all_sentences = all_sentences # never used

@@ -17,32 +17,32 @@ class CCMetric:
     report_whole: CCReport
     score_d: dict[str, float]
     sent_to_words: dict[str, list[str]]
-    store: bool
+    save: bool
 
 
     """
 
-    def __init__(self, store=True, sent_to_words=None):
+    def __init__(self, sent_to_words=None):
         """
 
         Parameters
         ----------
-        store: bool
+        save: bool
         sent_to_words: dict[str, list[str]]
 
         Returns
         -------
         CCMetric
         """
-        self.store = store
+        self.save = CC_METRIC_SAVE
         self.report_whole = CCReport("whole")
         self.report_outer = CCReport("outer")
         self.report_inner = CCReport("inner")
         self.report_exact = CCReport("exact")
         # self.n_complete = 0 # not used
         # self.n_sentence = 0 # not used
-        if store:
-            print("Deleting previous cc metric pkl files")
+        if save:
+            print("CCMetric deleting previous pkl files")
             di = CC_METRIC_STORAGE_DIR
             if os.path.exists(di + '/l_osent.pkl'):
                 os.remove(di + '/l_osent.pkl')
@@ -79,7 +79,8 @@ class CCMetric:
         """
 
         num_samples = len(lll_ilabel)
-        print("Entering samples into CCMetric instance via its __call__() "
+        print("CCMetric Entering (and saving if save=True) samples."
+              "instance via its __call__() "
               "method.")
         print("number of samples=", num_samples)
         for k in range(num_samples):
@@ -95,7 +96,7 @@ class CCMetric:
             self.report_inner.absorb_new_sample(pred_ccnodes, true_ccnodes)
             self.report_exact.absorb_new_sample(pred_ccnodes, true_ccnodes)
 
-            if self.store:
+            if self.save:
                 # this happens for each sample
                 # print("Storing new cc metric pkl files.")
                 di = CC_METRIC_STORAGE_DIR

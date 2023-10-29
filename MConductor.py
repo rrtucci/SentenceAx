@@ -131,12 +131,12 @@ class MConductor:
         ModelCheckpoint
 
         """
-        # epoch and eval_acc known by ModelCheckPoint instance
+        # epoch and epoch_acc known by ModelCheckPoint instance
         return ModelCheckpoint(
             dirpath=f"{WEIGHTS_DIR}/{self.params.task}_model",
-            filename='{epoch:02d}_{eval_acc:.3f}',
+            filename='{epoch:02d}_{epoch_acc:.3f}',
             verbose=True,
-            monitor='eval_acc',
+            monitor='epoch_acc',
             mode='max',
             save_top_k=self.params.d["save_k"])
 
@@ -236,19 +236,23 @@ class MConductor:
         # num_sanity_val_steps=0 to avoid validation vanity check bug
         if use_minimal:
             trainer = Trainer(
-                gpus=self.params.d["gpus"],
+                # gpus=self.params.d["gpus"],
                 logger=logger)
         else:
             trainer = Trainer(
-                # bug (?) in Trainer software allow this to be set
-                # accumulate_grad_batches=
-                # self.params.d["accumulate_grad_batches"],
+                accumulate_grad_batches=
+                    self.params.d["accumulate_grad_batches"],
                 callbacks=self.checkpoint_callback,
+                enable_progress_bar=True,
+                # gradient_clip_value=,
                 logger=logger,
                 max_epochs=self.params.d["epochs"],
                 min_epochs=self.params.d["epochs"],
-                enable_progress_bar=True,
-                **self.params.d)
+                # num_sanity_val_steps=self.params.d["num_sanity_val_steps"],
+                # use_tpu=,
+                # train_percent_check=,
+                #track_grad_norm=
+            )
         return trainer
 
     def update_params(self, checkpoint_fp):
@@ -340,11 +344,11 @@ class MConductor:
         None
 
         """
-        checkpoint_fp = self.get_checkpoint_fp()
+        checkpoint_paths = self.get_all_checkpoint_fp()
         if 'train' not in self.params.mode:
             # train is the only mode that doesn't require
             # update_params() because it is called first
-            self.update_params(checkpoint_fp)
+            self.update_params(checkpoint_paths[0])
 
         self.model = Model(self.params,
                            self.auto_tokenizer,
@@ -358,12 +362,14 @@ class MConductor:
         with open(tdir + '/test.txt', "w") as test_f:
             logger = self.get_logger("test")
             # one checkpoint at end of each epoch
-            for checkpoint_fp in self.get_all_checkpoint_fp():
+            for checkpoint_fp in checkpoint_paths:
                 trainer = self.get_trainer(logger,
                                            use_minimal=True)
                 # trainer.fit() and trainer.test() are different
                 test_dloader = self.dloader_tool.test_dloader
-                trainer.test(self.model, dataloaders=test_dloader)
+                trainer.test(model=self.model,
+                             dataloaders=test_dloader,
+                             ckpt_path=checkpoint_fp)
                 eval_epoch_end_d = self.model.eval_epoch_end_d
                 test_f.write(f'{checkpoint_fp}\t{eval_epoch_end_d}\n')
                 # note test_f created outside loop.

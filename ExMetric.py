@@ -65,6 +65,7 @@ class ExMetric:
         None
 
         """
+        print("Entering ExMetric.__call__() method.")
         assert not self.use_carb_ex
         if not self.osentL_to_exs:
             self.osentL_to_exs = \
@@ -74,12 +75,8 @@ class ExMetric:
                     ll_confi,
                     self.sent_to_sent)
         else:
-            assert False, "This __call__ is redundant. osentL_to_exs" \
-                          " has already been entered in the " \
-                          "ExMetric constructor"
-        print("Just entered samples into ExMetric instance via its "
-              "__call__() method.")
-        print("number of samples=", len(lll_ilabel))
+            print("osentL_to_exs has already been entered in the " 
+                  "ExMetric constructor")
 
     @staticmethod
     def get_zero_score_d():
@@ -122,17 +119,19 @@ class ExMetric:
         dict[str, float]
 
         """
+        print("Entering ExMetric.get_score_d() method.")
 
-        def fun(x):
-            if hasattr(x, "confi"):
-                return x.confi
-            elif hasattr(x, "confidence"):
-                return x.confidence
+        def fun(ex):
+            if hasattr(ex, "confi"):
+                return ex.confi
+            elif hasattr(ex, "confidence"):
+                return ex.confidence
 
         if EX_NUM_DEPTHS:
-            for osentL in self.osentL_to_exs:
+            for osentL, exs in self.osentL_to_exs.items():
+                print("mjkl", [fun(ex) for ex in exs])
                 self.osentL_to_exs[osentL] = \
-                    sorted(self.osentL_to_exs[osentL],
+                    sorted(exs,
                            key=fun,
                            reverse=True)[:EX_NUM_DEPTHS]
         if not self.use_carb_ex:
@@ -164,7 +163,7 @@ class ExMetric:
                                'F1': optimal_f1_point[2],
                                'last_F1': last_f1_point[2]})
         self.score_d = copy(score_d)
-        if ttt == "tune" and do_reset:
+        if do_reset:
             # this resets score_d
             self.reset()
         return score_d

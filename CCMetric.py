@@ -57,7 +57,7 @@ class CCMetric:
 
     def __call__(self,
                  l_osent,  # meta data
-                 lll_pred_ex_ilabel,  # predicted
+                 lll_pred_ilabel,  # predicted
                  lll_ilabel):  # ground truth
         """
         similar to Openie6.metric.Conjunction.__call__
@@ -69,7 +69,7 @@ class CCMetric:
         Parameters
         ----------
         l_osent: list[str]
-        lll_pred_ex_ilabel: list[list[list[[int]]]
+        lll_pred_ilabel: list[list[list[[int]]]
         lll_ilabel: list[list[list[[int]]]
 
         Returns
@@ -77,14 +77,14 @@ class CCMetric:
         None
 
         """
-
+        print("Entering CCMetric.__call__() method.")
         num_samples = len(lll_ilabel)
         print("CCMetric entering (and saving if save=True) "
               "samples via its __call__() method.")
         print("number of samples=", num_samples)
         for k in range(num_samples):
             pred_ccnodes = CCTree(l_osent[k],
-                                  lll_pred_ex_ilabel[k],
+                                  lll_pred_ilabel[k],
                                   calc_tree_struc=True).ccnodes
             true_ccnodes = CCTree(l_osent[k],
                                   lll_ilabel[k],
@@ -169,7 +169,7 @@ class CCMetric:
         dict[str, float]
 
         """
-
+        print("Entering CCMetric.get_score_d method.")
         score_d = OrderedDict({
             'F1_whole': self.report_whole.overall_scorer.f1_score(),
             'F1_outer': self.report_outer.overall_scorer.f1_score(),

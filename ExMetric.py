@@ -50,7 +50,7 @@ class ExMetric:
     def __call__(self,
                  l_osentL,  # meta data
                  lll_ilabel,  # predictions
-                 ll_confi):  # scores
+                 ll_confi): # scores
         """
         similar to Openie6.metric.Carb.__call__
 
@@ -59,6 +59,7 @@ class ExMetric:
         l_osentL: list[str]
         lll_ilabel: list[list[list[int]]]
         ll_confi: list[list[float]]
+        begin_reset: bool
 
         Returns
         -------
@@ -67,16 +68,13 @@ class ExMetric:
         """
         print("Entering ExMetric.__call__() method.")
         assert not self.use_carb_ex
-        if not self.osentL_to_exs:
-            self.osentL_to_exs = \
-                AllenTool.get_osent2_to_exs_from_lll_ilabel(
-                    l_osentL,
-                    lll_ilabel,
-                    ll_confi,
-                    self.sent_to_sent)
-        else:
-            print("osentL_to_exs has already been entered in the " 
-                  "ExMetric constructor")
+        self.reset()
+        self.osentL_to_exs = \
+            AllenTool.get_osent2_to_exs_from_lll_ilabel(
+                l_osentL,
+                lll_ilabel,
+                ll_confi,
+                self.sent_to_sent)
 
     @staticmethod
     def get_zero_score_d():

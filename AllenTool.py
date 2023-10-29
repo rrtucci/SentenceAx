@@ -92,15 +92,15 @@ class AllenTool:
             return ilabels
 
         lll_ilabel = [[get_ilabels(ex) for ex in exs] for
-                         exs in l_exs]
+                      exs in l_exs]
         ll_confi = [[ex.confi for ex in exs] for exs in l_exs]
         return l_osent2, lll_ilabel, ll_confi
 
     @staticmethod
     def get_osent2_to_exs_from_lll_ilabel(l_osent2,
-                                             lll_ilabel,
-                                             ll_confi,
-                                             sent_to_sent):
+                                          lll_ilabel,
+                                          ll_confi,
+                                          sent_to_sent):
         """
         similar to Openie6.metric.Carb.__call__()
 

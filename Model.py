@@ -97,7 +97,7 @@ class Model(L.LightningModule):
     con_to_weight: dict[str, float]
     dropout_fun: Dropout
     embedding: Embedding
-    metrics_epoch_end_d: dict[str, Any]
+    scores_epoch_end_d: dict[str, Any]
     ex_sent_to_sent: dict[str, str]
     hidden_size: int
     ilabelling_layer: Linear
@@ -200,7 +200,7 @@ class Model(L.LightningModule):
             self.cc_sent_to_words = self.metric.sent_to_words
             self.ex_sent_to_sent = None
 
-        self.metrics_epoch_end_d = {}  # filled in test_epoch_end()
+        self.scores_epoch_end_d = {}  # filled in test_epoch_end()
 
         # self.init_name_to_param=None #Openie6 has this as Model attribute but
         # not us
@@ -749,7 +749,7 @@ class Model(L.LightningModule):
         """
         return self.sax_ttt_step(batch, batch_idx, "test")
 
-    def sax_get_metrics_at_epoch_end(self, ttt):
+    def sax_get_scores_at_epoch_end(self, ttt):
         """
         similar to Openie6.model.evaluation_end()
         not inherited method, used in *_epoch_end methods
@@ -765,7 +765,7 @@ class Model(L.LightningModule):
         Returns
         -------
         dict[str, Any]
-            metrics_epoch_end_d
+            scores_epoch_end_d
 
         """
         if self.params.mode == 'test':
@@ -795,11 +795,11 @@ class Model(L.LightningModule):
             epoch_acc = score_d["F1"]
         else:
             assert False
-        metrics_epoch_end_d = copy(score_d)
-        metrics_epoch_end_d["epoch_acc"] = epoch_acc
+        scores_epoch_end_d = copy(score_d)
+        scores_epoch_end_d["epoch_acc"] = epoch_acc
 
         print('\nEpoch End Results:')
-        pprint(dict(metrics_epoch_end_d))
+        pprint(dict(scores_epoch_end_d))
         # For computing the constraint violations
         # if hasattr(self, 'con_to_l_loss') and \
         # self.params.d["constraint_str"] != '':
@@ -807,7 +807,7 @@ class Model(L.LightningModule):
         #         self.con_to_l_loss[key] = sum(self.con_to_l_loss[key]).item()
         #     print('\nViolations: ', self.con_to_l_loss)
         #     self.con_to_l_loss = dict()
-        return metrics_epoch_end_d
+        return scores_epoch_end_d
 
     def sax_on_ttt_epoch_end(self, ttt):
         """
@@ -833,14 +833,14 @@ class Model(L.LightningModule):
                 assert False
             print("Entering 'Model." + str0 + "' method")
 
-        metrics_epoch_end_d = \
-            self.sax_get_metrics_at_epoch_end(ttt)
-        # epoch_end_d = {"log": metrics_epoch_end_d,
-        #                "epoch_acc": metrics_epoch_end_d["epoch_acc"]}
+        scores_epoch_end_d = \
+            self.sax_get_scores_at_epoch_end(ttt)
+        # epoch_end_d = {"log": scores_epoch_end_d,
+        #                "epoch_acc": scores_epoch_end_d["epoch_acc"]}
         # if ttt == "test":
-        #     epoch_end_d["progress_bar"] = self.metrics_epoch_end_d
+        #     epoch_end_d["progress_bar"] = self.scores_epoch_end_d
 
-        epoch_acc = metrics_epoch_end_d["epoch_acc"]
+        epoch_acc = scores_epoch_end_d["epoch_acc"]
         self.log("epoch_acc", epoch_acc, prog_bar=True)
 
         self.l_batch_m_out.clear()  # free memory

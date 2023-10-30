@@ -678,7 +678,7 @@ class Model(L.LightningModule):
                 str0 = "test_step"
             else:
                 assert False
-            print("Entering 'Model." + str0 + "' method, batch_idx=" + str(
+            print("Entering Model." + str0 + " method, batch_idx=" + str(
                 batch_idx))
 
         batch_m_out = self.forward(batch, batch_idx, ttt)
@@ -775,7 +775,8 @@ class Model(L.LightningModule):
         if 'predict' in self.params.mode:
             score_d = self.metric.get_zero_score_d()
         else:
-            for batch_m_out in self.l_batch_m_out:
+            for k, batch_m_out in enumerate(self.l_batch_m_out):
+                print("batch id", k)
                 if self.params.task == "cc":
                     self.metric(
                         batch_m_out.l_orig_sent,  # meta data
@@ -831,7 +832,7 @@ class Model(L.LightningModule):
                 str0 = "on_test_epoch_end"
             else:
                 assert False
-            print("Entering 'Model." + str0 + "' method")
+            print("Entering Model." + str0 + " method")
 
         scores_epoch_end_d = \
             self.sax_get_scores_at_epoch_end(ttt)

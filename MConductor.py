@@ -423,7 +423,8 @@ class MConductor:
         # self.model.all_sentences = all_sentences # never used
         trainer.test(
             self.model,
-            test_dataloaders=self.dloader_tool.predict_dloader)
+            dataloaders=self.dloader_tool.predict_dloader,
+            ckpt_path=checkpoint_fp)
         end_time = time()
         minutes = (end_time - start_time) / 60
         print(f'Total Time taken = {minutes : 2f} minutes')

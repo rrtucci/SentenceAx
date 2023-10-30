@@ -66,6 +66,9 @@ class CCMetric:
         happens when we want to evaluate on the original system outputs
         meta_data same as osent
 
+        This method can be called multiple times for the same class
+        instance. Each time, the scores in the reports grow.
+
         Parameters
         ----------
         l_osent: list[str]

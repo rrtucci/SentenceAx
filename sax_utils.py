@@ -40,6 +40,8 @@ def merge_dicts(dominant_d, default_d):
     dict
 
     """
+    if not default_d:
+        default_d = {}
     new_dict = copy(default_d)
     for key in dominant_d:
         new_dict[key] = dominant_d[key]
@@ -258,17 +260,22 @@ def undoL(x):
 
     Parameters
     ----------
-    x: str|list[str]
+    x: str|list[str]|dict[str, Any]
 
     Returns
     -------
-    str|list[str]
+    str|list[str]|dict[str, Any]
 
     """
     if type(x) == str:
         return x.split("[unused")[0].strip()
-    else:
+    elif type(x) == list:
         return [a.split("[unused")[0].strip() for a in x]
+    elif type(x) == dict:
+        return {key.split("[unused")[0].strip():value
+                for key, value in x.items()}
+    else:
+        assert False
 
 
 def redoL(x):
@@ -276,16 +283,21 @@ def redoL(x):
 
     Parameters
     ----------
-    x: str|list[str]
+    x: str|list[str]|dict[str, Any]
 
     Returns
     -------
-    str|list[str]
+    str|list[str]|dict[str, Any]
     """
     if type(x) == str:
         return x + UNUSED_TOKENS_STR
-    else:
+    elif type(x) == list:
         return [a + UNUSED_TOKENS_STR for a in x]
+    elif type(x) == dict:
+        return {key + UNUSED_TOKENS_STR: value
+                for key, value in x.items()}
+    else:
+        assert False
 
 
 # Don't use, even if the inner dimmension of lll_ilabel

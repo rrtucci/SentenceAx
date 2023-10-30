@@ -97,64 +97,6 @@ class AllenTool:
         return l_osent2, lll_ilabel, ll_confi
 
     @staticmethod
-    def get_osent2_to_exs_from_lll_ilabel(l_osent2,
-                                          lll_ilabel,
-                                          ll_confi,
-                                          sent_to_sent):
-        """
-        similar to Openie6.metric.Carb.__call__()
-
-        This method takes as `lll_ilabel` and other variables and returns
-
-        `osent2_to_exs`
-
-        osent = original sentence
-        osentL = osent + UNUSED_TOKEN_STR
-
-        This method does not care internally whether we are using `osentL,
-        lll_ilabels` or `osent, lll_ilabels`. that is why we are introducing
-        the symbol `osent2`, which can stand for `osent` or `osentL`
-
-
-        Parameters
-        ----------
-        l_osent2: list[str]
-        lll_ilabel: list[list[list[int]]]
-        ll_confi: list[list[float]]
-        sent_to_sent: dict[str, str]
-            a dictionary that makes small fixes on osent2
-
-        Returns
-        -------
-        dict[str, list[SaxExtraction]]
-
-        """
-
-        osent2_to_exs = {}
-        for sam_id, osent2 in enumerate(l_osent2):
-            add_key_to_target_d(key=osent2,
-                                fix_d=sent_to_sent,
-                                target_d=osent2_to_exs)
-
-            num_exs = len(ll_confi[sam_id])
-            for depth in range(num_exs):
-                ilabels = lll_ilabel[sam_id][depth]
-                # all ilabels=0 once no more extractions
-                if sum(ilabels) == 0:
-                    break
-                ex0 = SaxExtraction.get_ex_from_ilabels(
-                    ilabels,
-                    osent2,
-                    ll_confi[sam_id][depth])
-                if ex0.arg1 and ex0.rel:
-                    add_key_value_pair_to_target_d(
-                        key=osent2,
-                        value=ex0,
-                        fix_d=sent_to_sent,
-                        target_d=osent2_to_exs)
-        return osent2_to_exs
-
-    @staticmethod
     def get_ex_from_allen_line(line):
         """
         This method takes as input a single line `line` from an Allen file

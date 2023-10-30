@@ -40,6 +40,10 @@ class ExMetric:
         self.tune_benchmark = Benchmark('carb_subset/data/gold/dev.tsv')
         self.test_benchmark = Benchmark('carb_subset/data/gold/test.tsv')
         self.matchingFunc = Matcher.binary_linient_tuple_match
+        if not osentL_to_exs:
+            # important to initialize it as empty dictionary if using
+            # __call__
+            osentL_to_exs = {}
         self.osentL_to_exs = osentL_to_exs
         # self.ll_osent_pos_bool = [] # not used
         # self.ll_osent_verb_bool = [] # not used
@@ -47,12 +51,73 @@ class ExMetric:
         self.sent_to_sent = sent_to_sent
         self.use_carb_ex = use_carb_ex
 
+    @staticmethod
+    def get_osent2_to_exs_from_lll_ilabel(l_osent2,
+                                          lll_ilabel,
+                                          ll_confi,
+                                          sent_to_sent):
+        """
+        similar to Openie6.metric.Carb.__call__()
+
+        This method takes as `lll_ilabel` and other variables and returns
+
+        `osent2_to_exs`
+
+        osent = original sentence
+        osentL = osent + UNUSED_TOKEN_STR
+
+        This method does not care internally whether we are using `osentL,
+        lll_ilabels` or `osent, lll_ilabels`. that is why we are introducing
+        the symbol `osent2`, which can stand for `osent` or `osentL`
+
+
+        Parameters
+        ----------
+        l_osent2: list[str]
+        lll_ilabel: list[list[list[int]]]
+        ll_confi: list[list[float]]
+        sent_to_sent: dict[str, str]
+            a dictionary that makes small fixes on osent2
+
+        Returns
+        -------
+        dict[str, list[SaxExtraction]]
+
+        """
+
+        osent2_to_exs = {}
+        for sam_id, osent2 in enumerate(l_osent2):
+            add_key_to_target_d(key=osent2,
+                                fix_d=sent_to_sent,
+                                target_d=osent2_to_exs)
+
+            num_exs = len(ll_confi[sam_id])
+            for depth in range(num_exs):
+                ilabels = lll_ilabel[sam_id][depth]
+                # all ilabels=0 once no more extractions
+                if sum(ilabels) == 0:
+                    break
+                ex0 = SaxExtraction.get_ex_from_ilabels(
+                    ilabels,
+                    osent2,
+                    ll_confi[sam_id][depth])
+                if ex0.arg1 and ex0.rel:
+                    add_key_value_pair_to_target_d(
+                        key=osent2,
+                        value=ex0,
+                        fix_d=sent_to_sent,
+                        target_d=osent2_to_exs)
+        return osent2_to_exs
+
     def __call__(self,
                  l_osentL,  # meta data
                  lll_ilabel,  # predictions
                  ll_confi): # scores
         """
         similar to Openie6.metric.Carb.__call__
+
+        This method  can be called multiple times for the same class instance.
+        Each time, self.osentL_to_exs grows.
 
         Parameters
         ----------
@@ -68,13 +133,16 @@ class ExMetric:
         """
         print("Entering ExMetric.__call__() method.")
         assert not self.use_carb_ex
-        self.reset()
-        self.osentL_to_exs = \
-            AllenTool.get_osent2_to_exs_from_lll_ilabel(
+        print("ll_confi.shape", ll_confi.shape)
+        print("len(self.osentL_to_exs)",  len(self.osentL_to_exs))
+        dominant_d =\
+            ExMetric.get_osent2_to_exs_from_lll_ilabel(
                 l_osentL,
                 lll_ilabel,
                 ll_confi,
                 self.sent_to_sent)
+        self.osentL_to_exs = merge_dicts(dominant_d, self.osentL_to_exs)
+        print("len(self.osentL_to_exs) after merge", len(self.osentL_to_exs))
 
     @staticmethod
     def get_zero_score_d():
@@ -119,22 +187,22 @@ class ExMetric:
         """
         print("Entering ExMetric.get_score_d() method.")
 
-        def fun(ex):
-            if hasattr(ex, "confi"):
-                return ex.confi
-            elif hasattr(ex, "confidence"):
-                return ex.confidence
+        def fun(x):
+            # if x is sax extraction
+            if hasattr(x, "confi"):
+                return x.confi
+            # if ex is carb extraction
+            elif hasattr(x, "confidence"):
+                return x.confidence
 
-        if EX_NUM_DEPTHS:
-            for osentL, exs in self.osentL_to_exs.items():
-                print("mjkl", [fun(ex) for ex in exs])
-                self.osentL_to_exs[osentL] = \
-                    sorted(exs,
-                           key=fun,
-                           reverse=True)[:EX_NUM_DEPTHS]
+        for osentL, exs in self.osentL_to_exs.items():
+            print("confi", [fun(ex) for ex in exs])
+            self.osentL_to_exs[osentL] = \
+                sorted(exs,
+                       key=fun,
+                       reverse=True)[:EX_NUM_DEPTHS]
         if not self.use_carb_ex:
-            osent_to_exs = \
-                SaxExtraction.shorten_osentL_to_exs(self.osentL_to_exs)
+            osent_to_exs = undoL(self.osentL_to_exs)
             carb_osent_to_exs = \
                 SaxExtraction.get_carb_osent2_to_exs(osent_to_exs)
         else:
@@ -162,7 +230,8 @@ class ExMetric:
                                'last_F1': last_f1_point[2]})
         self.score_d = copy(score_d)
         if do_reset:
-            # this resets score_d
+            # this resets self.osentL_to_exs and self.score_d
+            # whic you always want to do at the end on an epoch
             self.reset()
         return score_d
 
@@ -190,8 +259,7 @@ if __name__ == "__main__":
         carb_osent_to_exs = bm.gold
         sax_osent_to_exs = \
             SaxExtraction.get_sax_osent2_to_exs(carb_osent_to_exs)
-        sax_osentL_to_exs = \
-            SaxExtraction.elongate_osent_to_exs(sax_osent_to_exs)
+        sax_osentL_to_exs = redoL(sax_osent_to_exs)
         ex_met = ExMetric(sax_osentL_to_exs)
         # unnecessary
         # ex_met()

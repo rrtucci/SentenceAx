@@ -392,9 +392,9 @@ class SaxExtraction:
         """
 
         li_2lt = self.arg2_words + self.loc_arg_words + \
-            self.time_arg_words
+                 self.time_arg_words
         li_2tl = self.arg2_words + self.time_arg_words + \
-            self.loc_arg_words
+                 self.loc_arg_words
         li_2t = self.arg2_words + self.time_arg_words
         li_2l = self.arg2_words + self.loc_arg_words
         li_2 = self.arg2_words
@@ -626,7 +626,8 @@ class SaxExtraction:
                                                                     cost_fun)
 
                         assert rel_words == \
-                            self.orig_sentL_words[loc0: loc0 + len(rel_words)]
+                               self.orig_sentL_words[
+                               loc0: loc0 + len(rel_words)]
                         self.set_the_is_extagged_flag_to_true("REL")
                         self.extags[loc0: loc0 + len(rel_words)] = \
                             ['REL'] * len(rel_words)
@@ -817,66 +818,6 @@ class SaxExtraction:
                 [SaxExtraction.convert_to_sax_ex(carb_ex)
                  for carb_ex in carb_exs]
         return sax_osent2_to_exs
-
-    @staticmethod
-    def elongate_osent_to_exs(osent_to_exs):
-        """
-
-        Parameters
-        ----------
-        osent_to_exs: dict[str, list[saxExtraction]]
-
-        Returns
-        -------
-        dict[str, list[saxExtraction]]
-
-        """
-        osentL_to_exs = {}
-        for osent, exs in osent_to_exs.items():
-            osentL = osent + UNUSED_TOKENS_STR
-            osentL_to_exs[osentL] = exs
-        return osentL_to_exs
-
-    @staticmethod
-    def shorten_osentL_to_exs(osentL_to_exs):
-        """
-        In the output of this method, the inner dimension of lll_ilabel
-        might not agree with the number of words in osent2
-
-        Parameters
-        ----------
-        osentL_to_exs: dict[str, list[SaxExtraction]]
-
-        Returns
-        -------
-        dict[str, list[SaxExtraction]]
-
-        """
-        osent_to_exs = {}
-        for osentL, exs in osentL_to_exs.items():
-            osent = undoL(osentL)
-            osent_to_exs[osent] = exs
-        return osent_to_exs
-        # Don't use this, even if in the output of this method, the inner
-        # dimension of lll_ilabel does not agree with the number of words
-        # in osent2
-
-        # osent_to_exs = {}
-        # for osentL, exs in osentL_to_exs.items():
-        #     osent = undoL(osentL)
-        #     new_exs = []
-        #     for ex in exs:
-        #         new_ex = SaxExtraction(
-        #             osent,
-        #             ex.arg1,
-        #             ex.rel,
-        #             ex.arg2,
-        #             ex.confi)
-        #         if ex.extags:
-        #             new_ex.extags = ex.extags[:-3]
-        #         new_exs.append(new_ex)
-        #     osent_to_exs[osent] = new_exs
-        # return osent_to_exs
 
     @staticmethod
     def get_ex_from_ilabels(ex_ilabels, orig_sentL, confi):

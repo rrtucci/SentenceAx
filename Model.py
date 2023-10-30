@@ -233,7 +233,7 @@ class Model(L.LightningModule):
         self.ttt_to_l_batch_m_out = {}
         for ttt in TTT_LIST:
             self.ttt_to_l_batch_m_out[ttt] = \
-                PickleList(f"{ttt}_l_batch_m_out_dir")
+                PickleList(f"_{ttt}_l_batch_m_out_dir")
 
     def configure_optimizers(self):
         """
@@ -689,7 +689,7 @@ class Model(L.LightningModule):
 
         self.ttt_to_l_batch_m_out[ttt].append(batch_m_out)
         if ttt == "tune":
-            self.sax_write_batch_sents_out(batch_idx, ttt="tune")
+            self.sax_write_batch_sents_out(batch_idx, batch_m_out)
 
         loss = batch_m_out.loss
 
@@ -896,7 +896,7 @@ class Model(L.LightningModule):
         """
         return
 
-    def sax_write_if_task_ex(self, batch_idx, ttt):
+    def sax_write_if_task_ex(self, batch_idx, batch_m_out):
         """
 
         called by `sax_write_batch_sents_out()`
@@ -904,15 +904,13 @@ class Model(L.LightningModule):
         Parameters
         ----------
         batch_idx: int
-        ttt: str
+        batch_m_out: MOutput
 
         Returns
         -------
         None
 
         """
-
-        batch_m_out = self.ttt_to_l_batch_m_out[ttt][batch_idx]
         lll_ilabel = batch_m_out.lll_pred_ilabel
         ll_confi = batch_m_out.ll_pred_confi
         num_samples, num_depths, _ = lll_ilabel.shape
@@ -959,7 +957,7 @@ class Model(L.LightningModule):
 
         fmode = "w" if batch_idx == 0 else "a"
         fpath = self.params.task + ".txt"
-        with open(fpath, fmode) as pred_f:
+        with open(fpath, "a") as pred_f:
             pred_f.write('\n'.join(l_pred_str) + '\n')
         if self.params.d["write_allen_file"]:
             out_fp = PRED_IN_FP.replace(".txt", "") + "_ex_out_allen.txt"
@@ -968,7 +966,7 @@ class Model(L.LightningModule):
 
         self.l_ex_pred_str = l_pred_str
 
-    def sax_write_if_task_cc(self, batch_idx, ttt):
+    def sax_write_if_task_cc(self, batch_idx, batch_m_out):
         """
 
         called by `sax_write_batch_sents_out()`
@@ -976,14 +974,13 @@ class Model(L.LightningModule):
         Parameters
         ----------
         batch_idx: int
-        ttt: str
+        batch_m_out: MOutput
 
         Returns
         -------
         None
 
         """
-        batch_m_out = self.ttt_to_l_batch_m_out[ttt][batch_idx]
 
         # correct = True
         total_num_ccsents1 = 0
@@ -1044,7 +1041,7 @@ class Model(L.LightningModule):
         self.ll_cc_spanned_word = ll_cc_spanned_word
         self.lll_cc_spanned_loc = lll_cc_spanned_loc
 
-    def sax_write_batch_sents_out(self, batch_idx, ttt):
+    def sax_write_batch_sents_out(self, batch_idx, batch_m_out):
         """
         similar to Openie6.model.write_to_file()
 
@@ -1053,6 +1050,7 @@ class Model(L.LightningModule):
         Parameters
         ----------
         batch_idx: int
+        batch_m_out: MOutput
 
         Returns
         -------
@@ -1062,8 +1060,8 @@ class Model(L.LightningModule):
         # batch_m_out = self.l_batch_m_out[batch_idx]
         # batch_m_out.move_to_cpu()
         if self.params.task == "ex":
-            self.sax_write_if_task_ex(batch_idx, ttt)
+            self.sax_write_if_task_ex(batch_idx, batch_m_out)
         elif self.params.task == "cc":
-            self.sax_write_if_task_cc(batch_idx, ttt)
+            self.sax_write_if_task_cc(batch_idx, batch_m_out)
         else:
             assert False

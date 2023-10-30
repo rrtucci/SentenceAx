@@ -196,7 +196,8 @@ class ExMetric:
                 return x.confidence
 
         for osentL, exs in self.osentL_to_exs.items():
-            print("confi", [fun(ex) for ex in exs])
+            # print("confi", [fun(ex) for ex in exs])
+            print("len(exs)", len(exs))
             self.osentL_to_exs[osentL] = \
                 sorted(exs,
                        key=fun,

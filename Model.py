@@ -5,6 +5,7 @@ from CCTree import *
 from MOutput import *
 from PaddedMInput import *
 from SaxDataSet import *
+from PickleList import *
 
 import os
 from copy import copy, deepcopy
@@ -103,7 +104,7 @@ class Model(L.LightningModule):
     ilabelling_layer: Linear
     init_name_to_param: dict[str, variable]
     iterative_transformer: ModuleList
-    l_batch_m_out: list[MOutput]
+    l_batch_m_out: PickleList
     l_cc_pred_str: list[str]
     l_ex_pred_str: list[str]
     ll_cc_spanned_word: list[list[str]]
@@ -229,7 +230,7 @@ class Model(L.LightningModule):
         self.lll_cc_spanned_loc = []  # all_sentence_indices_conj
         self.l_ex_pred_str = []  # all_predictions_oie
 
-        self.l_batch_m_out = []
+        self.l_batch_m_out = PickleList("l_batch_m_out_dir")
 
     def configure_optimizers(self):
         """
@@ -683,8 +684,8 @@ class Model(L.LightningModule):
 
         batch_m_out = self.forward(batch, batch_idx, ttt)
 
+        self.l_batch_m_out.append(batch_m_out)
         if ttt == "tune":
-            self.l_batch_m_out.append(batch_m_out)
             self.sax_write_batch_sents_out(batch_idx)
 
         loss = batch_m_out.loss
@@ -768,9 +769,9 @@ class Model(L.LightningModule):
             scores_epoch_end_d
 
         """
-        if self.params.mode == 'test':
-            for batch_m_out in self.l_batch_m_out:
-                batch_m_out.move_to_cpu()
+        # if self.params.mode == 'test':
+        #     for batch_m_out in self.l_batch_m_out:
+        #         batch_m_out.move_to_cpu()
 
         if 'predict' in self.params.mode:
             score_d = self.metric.get_zero_score_d()
@@ -844,7 +845,7 @@ class Model(L.LightningModule):
         epoch_acc = scores_epoch_end_d["epoch_acc"]
         self.log("epoch_acc", epoch_acc, prog_bar=True)
 
-        self.l_batch_m_out.clear()  # free memory
+        # self.l_batch_m_out.clear()  # free memory
         # return epoch_end_d
 
     def on_validation_epoch_end(self):
@@ -1054,7 +1055,7 @@ class Model(L.LightningModule):
 
         """
         batch_m_out = self.l_batch_m_out[batch_idx]
-        batch_m_out.move_to_cpu()
+        # batch_m_out.move_to_cpu()
         if self.params.task == "ex":
             self.sax_write_if_task_ex(batch_idx)
         elif self.params.task == "cc":

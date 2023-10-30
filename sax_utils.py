@@ -529,10 +529,12 @@ def check_module_version(module_name, lub_version):
         module_version = pkg.get_distribution(module_name).version
         if pkg.parse_version(module_version) >= \
                 pkg.parse_version(lub_version):
-            print(f"{module_name} version is equal to or greater than "
-                  f"{lub_version}")
+            print(f"{module_name} version is {module_version} "
+                  f"so it is >= {lub_version} as required.")
         else:
-            print(f"{module_name} version is less than {lub_version}")
+            print(f"{module_name} version is {module_version}. "
+                  f" Version >= {lub_version} is required.")
+            assert False
     except pkg.DistributionNotFound:
         print(f"{module_name} is not installed.")
 

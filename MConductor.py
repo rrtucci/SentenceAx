@@ -569,7 +569,7 @@ class MConductor:
         None
 
         """
-        l_m_out = self.model.l_batch_m_out
+        l_m_out = self.model.ttt_to_l_batch_m_out["pred"]
 
         lines = []
         batch_id0 = 0  # similar to idx1

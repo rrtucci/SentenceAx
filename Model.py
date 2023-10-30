@@ -35,7 +35,7 @@ https://stackoverflow.com/questions/70790473/pytorch-lightning-epoch-end
 -validation-epoch-end.
 In addition, note that `pytorch_lightning` has been superceeded by 
 `lightning`. 'pytorch_lightning` is now deprecated"""
-check_module_version("lightning", "2.1.0")
+check_module_version("lightning", "2.0.1")
 
 
 class Model(L.LightningModule):
@@ -104,7 +104,7 @@ class Model(L.LightningModule):
     ilabelling_layer: Linear
     init_name_to_param: dict[str, variable]
     iterative_transformer: ModuleList
-    l_batch_m_out: PickleList
+    ttt_to_l_batch_m_out: dict[str, PickleList]
     l_cc_pred_str: list[str]
     l_ex_pred_str: list[str]
     ll_cc_spanned_word: list[list[str]]
@@ -230,7 +230,10 @@ class Model(L.LightningModule):
         self.lll_cc_spanned_loc = []  # all_sentence_indices_conj
         self.l_ex_pred_str = []  # all_predictions_oie
 
-        self.l_batch_m_out = PickleList("l_batch_m_out_dir")
+        self.ttt_to_l_batch_m_out = {}
+        for ttt in TTT_LIST:
+            self.ttt_to_l_batch_m_out[ttt] = \
+                PickleList(f"{ttt}_l_batch_m_out_dir")
 
     def configure_optimizers(self):
         """
@@ -684,9 +687,9 @@ class Model(L.LightningModule):
 
         batch_m_out = self.forward(batch, batch_idx, ttt)
 
-        self.l_batch_m_out.append(batch_m_out)
+        self.ttt_to_l_batch_m_out[ttt].append(batch_m_out)
         if ttt == "tune":
-            self.sax_write_batch_sents_out(batch_idx)
+            self.sax_write_batch_sents_out(batch_idx, ttt="tune")
 
         loss = batch_m_out.loss
 
@@ -761,7 +764,7 @@ class Model(L.LightningModule):
         Parameters
         ----------
         ttt: str
-            either "train", "tune", "test"
+            either "train", "tune", "test", "pred"
 
         Returns
         -------
@@ -776,7 +779,7 @@ class Model(L.LightningModule):
         if 'predict' in self.params.mode:
             score_d = self.metric.get_zero_score_d()
         else:
-            for k, batch_m_out in enumerate(self.l_batch_m_out):
+            for k, batch_m_out in enumerate(self.ttt_to_l_batch_m_out[ttt]):
                 print("batch id", k)
                 if self.params.task == "cc":
                     self.metric(
@@ -893,7 +896,7 @@ class Model(L.LightningModule):
         """
         return
 
-    def sax_write_if_task_ex(self, batch_idx):
+    def sax_write_if_task_ex(self, batch_idx, ttt):
         """
 
         called by `sax_write_batch_sents_out()`
@@ -901,6 +904,7 @@ class Model(L.LightningModule):
         Parameters
         ----------
         batch_idx: int
+        ttt: str
 
         Returns
         -------
@@ -908,7 +912,7 @@ class Model(L.LightningModule):
 
         """
 
-        batch_m_out = self.l_batch_m_out[batch_idx]
+        batch_m_out = self.ttt_to_l_batch_m_out[ttt][batch_idx]
         lll_ilabel = batch_m_out.lll_pred_ilabel
         ll_confi = batch_m_out.ll_pred_confi
         num_samples, num_depths, _ = lll_ilabel.shape
@@ -964,7 +968,7 @@ class Model(L.LightningModule):
 
         self.l_ex_pred_str = l_pred_str
 
-    def sax_write_if_task_cc(self, batch_idx):
+    def sax_write_if_task_cc(self, batch_idx, ttt):
         """
 
         called by `sax_write_batch_sents_out()`
@@ -972,13 +976,14 @@ class Model(L.LightningModule):
         Parameters
         ----------
         batch_idx: int
+        ttt: str
 
         Returns
         -------
         None
 
         """
-        batch_m_out = self.l_batch_m_out[batch_idx]
+        batch_m_out = self.ttt_to_l_batch_m_out[ttt][batch_idx]
 
         # correct = True
         total_num_ccsents1 = 0
@@ -1039,7 +1044,7 @@ class Model(L.LightningModule):
         self.ll_cc_spanned_word = ll_cc_spanned_word
         self.lll_cc_spanned_loc = lll_cc_spanned_loc
 
-    def sax_write_batch_sents_out(self, batch_idx):
+    def sax_write_batch_sents_out(self, batch_idx, ttt):
         """
         similar to Openie6.model.write_to_file()
 
@@ -1054,11 +1059,11 @@ class Model(L.LightningModule):
         None
 
         """
-        batch_m_out = self.l_batch_m_out[batch_idx]
+        # batch_m_out = self.l_batch_m_out[batch_idx]
         # batch_m_out.move_to_cpu()
         if self.params.task == "ex":
-            self.sax_write_if_task_ex(batch_idx)
+            self.sax_write_if_task_ex(batch_idx, ttt)
         elif self.params.task == "cc":
-            self.sax_write_if_task_cc(batch_idx)
+            self.sax_write_if_task_cc(batch_idx, ttt)
         else:
             assert False

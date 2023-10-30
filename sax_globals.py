@@ -59,6 +59,8 @@ PUNCT_MARKS = QUOTES + BRACKETS + SEPARATORS + ARITHMETICAL + ENDING
 UNUSED_TOKENS = ["[unused1]", "[unused2]", "[unused3]"]
 UNUSED_TOKENS_STR = " " + " ".join(UNUSED_TOKENS)
 
+TTT_LIST = ["train", "tune", "test", "pred"]
+
 DROPOUT = 0.0
 EX_NUM_DEPTHS = 5
 CC_NUM_DEPTHS = 3

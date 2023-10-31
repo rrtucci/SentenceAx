@@ -45,7 +45,6 @@ class ActionConductor:
     dloader_tool: SaxDataLoaderTool
     encode: function
     has_cuda: bool
-    model: Model
     pad_icode: int
     params: Param
     tags_test_fp: str
@@ -63,7 +62,10 @@ class ActionConductor:
         SaxDataLoaderTool,
         TensorBoardLogger
 
-        is created everytime this constructor is called
+        is created everytime this constructor is called.
+
+        Note that a different Model instance is created for each action,
+        but only one model is considered at a time??
 
         Parameters
         ----------
@@ -120,8 +122,6 @@ class ActionConductor:
             # for those actions, only a predict dloader is used.
             self.dloader_tool.set_all_ttt_dataloaders()
             # always set dataloader before constructing a Model instance
-
-        self.model = None
 
     def get_checkpoint_callback(self):
         """
@@ -241,7 +241,7 @@ class ActionConductor:
         else:
             trainer = Trainer(
                 accumulate_grad_batches=
-                    self.params.d["accumulate_grad_batches"],
+                self.params.d["accumulate_grad_batches"],
                 callbacks=self.checkpoint_callback,
                 enable_progress_bar=True,
                 # gradient_clip_value=,
@@ -251,7 +251,7 @@ class ActionConductor:
                 # num_sanity_val_steps=self.params.d["num_sanity_val_steps"],
                 # use_tpu=,
                 # train_percent_check=,
-                #track_grad_norm=
+                # track_grad_norm=
             )
         return trainer
 
@@ -291,14 +291,15 @@ class ActionConductor:
 
         """
         # train is the only action that doesn't require update_params()
-        self.model = Model(self.params,
-                           self.auto_tokenizer,
-                           self.verbose_model,
-                           "train")
+
+        model = Model(self.params,
+                      self.auto_tokenizer,
+                      self.verbose_model,
+                      "train")
         trainer = self.get_trainer(self.get_logger("train"),
                                    use_minimal=False)
         trainer.fit(
-            self.model,
+            model,
             train_dataloaders=self.dloader_tool.train_dloader,
             val_dataloaders=self.dloader_tool.tune_dloader)
         tdir = get_task_logs_dir(self.params.task)
@@ -321,14 +322,14 @@ class ActionConductor:
         # train is the only action that doesn't require
         # update_params() because it is called first
         self.update_params(checkpoint_fp)
-        self.model = Model(self.params,
-                           self.auto_tokenizer,
-                           self.verbose_model,
-                           "resume")
+        model = Model(self.params,
+                      self.auto_tokenizer,
+                      self.verbose_model,
+                      "resume")
         trainer = self.get_trainer(self.get_logger("tune"),
                                    use_minimal=False)
         trainer.fit(
-            self.model,
+            model,
             train_dataloaders=self.dloader_tool.train_dloader,
             val_dataloaders=self.dloader_tool.tune_dloader,
             ckpt_path=self.get_checkpoint_fp())  # only if resuming
@@ -352,14 +353,14 @@ class ActionConductor:
             # update_params() because it is called first
             self.update_params(checkpoint_paths[0])
 
-        self.model = Model(self.params,
-                           self.auto_tokenizer,
-                           self.verbose_model,
-                           "test")
+        model = Model(self.params,
+                      self.auto_tokenizer,
+                      self.verbose_model,
+                      "test")
         # if self.params.task == "ex" and self.ex_sent_to_sent:
-        #     self.model.metric.sent_to_sent = self.ex_sent_to_sent
+        #     model.metric.sent_to_sent = self.ex_sent_to_sent
         # if self.params.task == "cc" and self.cc_sent_to_words:
-        #     self.model.metric.sent_to_words = self.cc_sent_to_words
+        #     model.metric.sent_to_words = self.cc_sent_to_words
 
         tdir = get_task_logs_dir(self.params.task)
         with open(tdir + '/test.txt', "w") as test_f:
@@ -370,10 +371,10 @@ class ActionConductor:
                                            use_minimal=True)
                 # trainer.fit() and trainer.test() are different
                 test_dloader = self.dloader_tool.test_dloader
-                trainer.test(model=self.model,
+                trainer.test(model=model,
                              dataloaders=test_dloader,
                              ckpt_path=checkpoint_fp)
-                eval_epoch_end_d = self.model.eval_epoch_end_d
+                eval_epoch_end_d = model.eval_epoch_end_d
                 test_f.write(f'{checkpoint_fp}\t{eval_epoch_end_d}\n')
                 # note test_f created outside loop.
                 # refresh/clear/flush test_f after each write
@@ -393,7 +394,7 @@ class ActionConductor:
 
         Returns
         -------
-        None
+        Model
 
         """
 
@@ -411,27 +412,28 @@ class ActionConductor:
         self.update_params(checkpoint_fp)
         self.dloader_tool.set_predict_dataloader(pred_in_fp)
         # always set dataloader before constructing a Model instance
-        self.model = Model(self.params,
-                           self.auto_tokenizer,
-                           self.verbose_model,
-                           "pred")
+        model = Model(self.params,
+                      self.auto_tokenizer,
+                      self.verbose_model,
+                      "pred")
 
         # No
-        # self.model.metric.sent_to_sent = self.ex_sent_to_sent
-        # self.model.metric.sent_to_words = self.cc_sent_to_words
+        # model.metric.sent_to_sent = self.ex_sent_to_sent
+        # model.metric.sent_to_words = self.cc_sent_to_words
 
         logger = None
         trainer = self.get_trainer(logger,
                                    use_minimal=True)
         start_time = time()
-        # self.model.all_sentences = all_sentences # never used
+        # model.all_sentences = all_sentences # never used
         trainer.test(
-            self.model,
+            model,
             dataloaders=self.dloader_tool.predict_dloader,
             ckpt_path=checkpoint_fp)
         end_time = time()
         minutes = (end_time - start_time) / 60
         print(f'Total Time taken = {minutes : 2f} minutes')
+        return model
 
     def splitpredict_for_cc(self, pred_in_fp):
         """
@@ -450,34 +452,38 @@ class ActionConductor:
 
         """
 
-        def common_splitpredict_ex():
+        def repeated_splitpredict_for_cc():
             cc_words = ll_cc_spanned_word[sample_id]
             if len(l_pred_sent) == 1:
                 l_osentL.append(redoL(l_pred_sent[0]))
-                self.model.ex_sent_to_sent[l_pred_sent[0]] = \
+                model.ex_sent_to_sent[l_pred_sent[0]] = \
                     l_pred_sent[0]
 
                 l_ccsentL.append(redoL(l_pred_sent[0]))
                 # added
-                self.model.cc_sent_to_words[l_pred_sent[0]] = cc_words
+                model.cc_sent_to_words[l_pred_sent[0]] = cc_words
             elif len(l_pred_sent) > 1:
                 l_osentL.append(redoL(l_pred_sent[0]))
                 for sent in l_pred_sent[1:]:
-                    self.model.ex_sent_to_sent[sent] = l_pred_sent[0]
+                    model.ex_sent_to_sent[sent] = l_pred_sent[0]
                     l_ccsentL.append(redoL(sent))
                 # added
-                self.model.cc_sent_to_words[l_pred_sent[0]] = cc_words
+                model.cc_sent_to_words[l_pred_sent[0]] = cc_words
             else:
                 assert False
 
         self.params.d["suggested_checkpoint_fp"] = CC_FIN_WEIGHTS_FP
         self.params.d["model_str"] = 'bert-base-cased'
         self.params.d["action"] = self.params.action = 'predict'
-        self.predict(pred_in_fp)
-        l_cc_pred_str = self.model.l_cc_pred_str
-        lll_cc_spanned_loc = self.model.lll_cc_spanned_loc
+
+        model = self.predict(pred_in_fp)
+        model.cc_sent_to_words = {}
+        model.ex_sent_to_sent = {}
+
+        l_cc_pred_str = model.l_cc_pred_str
+        lll_cc_spanned_loc = model.lll_cc_spanned_loc
         assert len(l_cc_pred_str) == len(lll_cc_spanned_loc)
-        ll_cc_spanned_word = self.model.ll_cc_spanned_word
+        ll_cc_spanned_word = model.ll_cc_spanned_word
 
         l_ccsentL = []  # sentences
         l_osentL = []  # orig_sentences
@@ -486,7 +492,7 @@ class ActionConductor:
             for sample_id, pred_str in enumerate(l_cc_pred_str):
                 # example_sentences
                 l_pred_sent = pred_str.strip('\n').split('\n')
-                common_splitpredict_ex()
+                repeated_splitpredict_for_cc()
             # l_ccsentL.append("\n")
         # count = 0
         # for l_spanned_loc in ll_cc_spanned_loc:
@@ -504,9 +510,9 @@ class ActionConductor:
                 if len(line) > 0:
                     # example_sentences
                     l_pred_sent = line.strip().split("\n")
-                    common_splitpredict_ex()
+                    repeated_splitpredict_for_cc()
 
-        return l_osentL, l_ccsentL
+        return model, l_osentL, l_ccsentL
 
     def splitpredict_for_ex(self,
                             l_osentL,
@@ -527,7 +533,7 @@ class ActionConductor:
 
         Returns
         -------
-        None
+        Model
 
         """
         self.params.d["suggested_checkpoint_fp"] = EX_FIN_WEIGHTS_FP
@@ -537,7 +543,7 @@ class ActionConductor:
         with open(in_fp, "r", encoding="utf-8") as f:
             f.write("\n".join(l_ccsentL))
 
-        self.predict(in_fp)
+        model = self.predict(in_fp)
 
         if delete_ccsents_file:
             os.remove(in_fp)
@@ -546,13 +552,16 @@ class ActionConductor:
         if self.params.d["write_extags_file"]:
             self.write_extags_file_from_preds(l_osentL,
                                               l_ccsentL,
-                                              pred_out_fp)
+                                              pred_out_fp,
+                                              model)
+        return model
 
     def write_extags_file_from_preds(
             self,
             l_osentL,  # orig_sentences
             l_ccsentL,  # sentences
-            pred_out_fp):
+            pred_out_fp,
+            model):
         """
         similar to Openie6.run.get_labels()
         ILABEL_TO_EXTAG={0: 'NONE', 1: 'ARG1', 2: 'REL', 3: 'ARG2',
@@ -573,7 +582,7 @@ class ActionConductor:
         None
 
         """
-        l_m_out = self.model.l_batch_m_out
+        l_m_out = model.l_batch_m_out
 
         lines = []
         batch_id0 = 0  # similar to idx1
@@ -585,7 +594,7 @@ class ActionConductor:
         # lll_cc_spanned_loc is similar to
         # sentence_indices_list, model.all_sentence_indices_conj
         lll_cc_spanned_loc = \
-            self.model.lll_cc_spanned_loc
+            model.lll_cc_spanned_loc
         for isam in range(len(lll_cc_spanned_loc)):
             osent = undoL(l_osentL[isam])
             if len(lll_cc_spanned_loc[isam]) == 0:
@@ -635,7 +644,7 @@ class ActionConductor:
         with open(pred_out_fp, "w") as f:
             f.writelines(lines)
 
-    def splitpredict_for_rescore(self):
+    def splitpredict_for_rescore(self, model):
         """
         reads re_allen_in_fp
         writes re_allen_out_fp
@@ -643,6 +652,7 @@ class ActionConductor:
 
         Parameters
         ----------
+        model: Model
 
         Returns
         -------
@@ -658,7 +668,7 @@ class ActionConductor:
         # prev_iline = 0
         # iline_to_exless_sents = {}
         # cur_iline = 0
-        # for sample_str in self.model.l_ex_pred_str:
+        # for sample_str in model.l_ex_pred_str:
         #     sample_str = sample_str.strip('\n')
         #     num_ex = len(sample_str) - 1
         #     if num_ex == 0:
@@ -744,8 +754,6 @@ class ActionConductor:
         #                  train_dataloader, val_dataloader, test_dataloader,
         #                  all_sentences):
 
-        self.model.cc_sent_to_words = {}
-        self.model.ex_sent_to_sent = {}
         self.params.d["write_allen_file"] = True
 
         self.params.d["task"] = self.params.task = "cc"
@@ -753,12 +761,12 @@ class ActionConductor:
 
         self.params.d["task"] = self.params.task = "ex"
         pred_out_fp = pred_in_fp.strip(".txt") + "_extags_out.txt"
-        self.splitpredict_for_ex(l_osentL,
+        model = self.splitpredict_for_ex(l_osentL,
                                  l_ccsentL,
                                  pred_out_fp)
 
         if self.params.d["do_rescoring"]:
-            self.splitpredict_for_rescore()
+            self.splitpredict_for_rescore(model)
         else:
             print("not doing rescoring")
 

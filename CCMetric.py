@@ -16,19 +16,17 @@ class CCMetric:
     report_outer: CCReport
     report_whole: CCReport
     score_d: dict[str, float]
-    sent_to_words: dict[str, list[str]]
     save: bool
 
 
     """
 
-    def __init__(self, sent_to_words=None):
+    def __init__(self):
         """
 
         Parameters
         ----------
         save: bool
-        sent_to_words: dict[str, list[str]]
 
         Returns
         -------
@@ -50,8 +48,6 @@ class CCMetric:
                 os.remove(di + '/l_pred_ccnodes.pkl')
             if os.path.exists(di + '/l_true_ccnodes.pkl'):
                 os.remove(di + '/l_true_ccnodes.pkl')
-
-        self.sent_to_words = sent_to_words
 
         self.score_d = CCMetric.get_zero_score_d()
 

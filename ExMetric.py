@@ -124,7 +124,6 @@ class ExMetric:
         l_osentL: list[str]
         lll_ilabel: list[list[list[int]]]
         ll_confi: list[list[float]]
-        begin_reset: bool
 
         Returns
         -------

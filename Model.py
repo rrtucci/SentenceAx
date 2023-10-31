@@ -99,7 +99,7 @@ class Model(L.LightningModule):
     dropout_fun: Dropout
     embedding: Embedding
     scores_epoch_end_d: dict[str, Any]
-    ex_sent_to_sent: dict[str, str]
+    _ex_sent_to_sent: dict[str, str]
     hidden_size: int
     ilabelling_layer: Linear
     init_name_to_param: dict[str, variable]
@@ -197,12 +197,11 @@ class Model(L.LightningModule):
 
         if self.params.task == "ex":
             self.metric = ExMetric()
-            self.ex_sent_to_sent = self.metric.sent_to_sent
-            self.cc_sent_to_words = None
         elif self.params.task == "cc":
             self.metric = CCMetric()
-            self.cc_sent_to_words = self.metric.sent_to_words
-            self.ex_sent_to_sent = None
+
+        self._ex_sent_to_sent = None  # property
+        self.cc_sent_to_words = None
 
         self.scores_epoch_end_d = {}  # filled in test_epoch_end()
 
@@ -234,7 +233,35 @@ class Model(L.LightningModule):
         self.l_ex_pred_str = []  # all_predictions_oie
 
         self.l_batch_m_out = \
-                PickleList(f"action_{model_name}_l_batch_m_out_dir")
+            PickleList(f"action_{model_name}_l_batch_m_out_dir")
+
+    @property
+    def ex_sent_to_sent(self):
+        """
+
+        Returns
+        -------
+        dict[str, str]
+
+        """
+        return self._ex_sent_to_sent
+
+    @ex_sent_to_sent.setter
+    def ex_sent_to_sent(self, value):
+        """
+
+        Parameters
+        ----------
+        value: dict[str, str]
+
+        Returns
+        -------
+        None
+
+        """
+        self._ex_sent_to_sent = value
+        if self.params.task == "ex":
+            self.metric.sent_to_sent = value
 
     def configure_optimizers(self):
         """
@@ -297,33 +324,53 @@ class Model(L.LightningModule):
         """
         inherited method
 
+        Additional items to be displayed in the progress bar.
+
+        Openie6 uses tqdm for all progress bars, including this one.
+        For this one, we use the one built into lightning.
+
         tqdm derives from the Arabic word taqaddum which can mean "progress"
         and is an abbreviation for "I love you so much" in Spanish (te
         quiero demasiado).
 
         Returns
         -------
-        dict[str, Any]
-            tqdm_d
+        Dict[str, Union[int, str]]
+            Dictionary with the items to be displayed in the progress bar.
+
 
         """
-        # get avg_training_loss
-        running_train_loss = self.trainer.running_loss.mean()
-        avg_training_loss = running_train_loss.cpu().item() if \
-            running_train_loss else float('NaN')
-        # get `best` as float
-        if type(self.trainer.checkpoint_callback.kth_value) \
-                not in [int, float]:
-            best = self.trainer.checkpoint_callback.kth_value.item()
-        else:
-            best = self.trainer.checkpoint_callback.kth_value
+        # # get avg_training_loss
+        # running_train_loss = self.trainer.running_loss.mean()
+        # avg_training_loss = running_train_loss.cpu().item() if \
+        #     running_train_loss else float('NaN')
+        # # get `best` as float
+        # if type(self.trainer.checkpoint_callback.kth_value) \
+        #         not in [int, float]:
+        #     best = self.trainer.checkpoint_callback.kth_value.item()
+        # else:
+        #     best = self.trainer.checkpoint_callback.kth_value
+        #
+        # tqdm_d = OrderedDict()
+        # tqdm_d['loss_fun'] = '{:.3f}'.format(avg_training_loss)
+        # tqdm_d['best'] = best
+        # return tqdm_d
 
-        tqdm_d = OrderedDict()
-        tqdm_d['loss_fun'] = '{:.3f}'.format(avg_training_loss)
-        tqdm_d['best'] = best
-        return tqdm_d
+        # # Get the losses
+        # losses = self.log_dict.pop('val_loss', None)
+        # val_losses = losses if losses is not None else self.log_dict.pop(
+        #     'val_main_loss', None)
 
-    def sax_get_batch_in_dicts(self, batch):
+        # Get the progress bar
+        progress_bar_d = super().get_progress_bar_dict()
+
+        # # Add the losses to the progress bar
+        # progress_bar_d['loss'] = self.log_dict['loss']
+        # progress_bar_d['epoch_acc'] = self.log_dict['epoch_acc']
+        return progress_bar_d
+
+    @staticmethod
+    def sax_get_batch_in_dicts(batch):
         """
         
         Parameters
@@ -358,7 +405,7 @@ class Model(L.LightningModule):
         The following methods invoke forward() once:
         training_step(), validation_step(), test_step()
         
-        Parameters
+        Parameter
         ----------
         batch: tuple[torch.Tensor, torch.Tensor, list[str]]
         batch_idx: int
@@ -370,7 +417,7 @@ class Model(L.LightningModule):
             batch_m_out
 
         """
-        x_d, y_d, meta_d = self.sax_get_batch_in_dicts(batch)
+        x_d, y_d, meta_d = Model.sax_get_batch_in_dicts(batch)
         if "wreg" in self.params.d:
             self.init_name_to_param = deepcopy(
                 dict(self.named_parameters()))
@@ -664,14 +711,14 @@ class Model(L.LightningModule):
 
         Parameters
         ----------
-        batch: tuple[torch.Tensor, torch.Tensor]
+        batch: tuple[torch.Tensor, torch.Tensor, list[str]]
         batch_idx: int
         ttt: str
 
         Returns
         -------
-        dict[str, Any]
-            to_dict(batch_m_out), contains "loss" as key
+        float
+            loss
 
         """
         if self.verbose_model:
@@ -688,7 +735,11 @@ class Model(L.LightningModule):
 
         batch_m_out = self.forward(batch, batch_idx, ttt)
 
-        self.l_batch_m_out.append(batch_m_out)
+        if ttt != ["train"]:
+            # only collect batch_m_out if going to score it.
+            # only ttt!="train" are scored
+            self.l_batch_m_out.append(batch_m_out)
+
         if ttt == "tune":
             self.sax_write_batch_sents_out(batch_idx, batch_m_out)
 

@@ -293,7 +293,8 @@ class MConductor:
         # train is the only mode that doesn't require update_params()
         self.model = Model(self.params,
                            self.auto_tokenizer,
-                           self.verbose_model)
+                           self.verbose_model,
+                           "train")
         trainer = self.get_trainer(self.get_logger("train"),
                                    use_minimal=False)
         trainer.fit(
@@ -322,7 +323,8 @@ class MConductor:
         self.update_params(checkpoint_fp)
         self.model = Model(self.params,
                            self.auto_tokenizer,
-                           self.verbose_model)
+                           self.verbose_model,
+                           "resume")
         trainer = self.get_trainer(self.get_logger("tune"),
                                    use_minimal=False)
         trainer.fit(
@@ -352,7 +354,8 @@ class MConductor:
 
         self.model = Model(self.params,
                            self.auto_tokenizer,
-                           self.verbose_model)
+                           self.verbose_model,
+                           "test")
         # if self.params.task == "ex" and self.ex_sent_to_sent:
         #     self.model.metric.sent_to_sent = self.ex_sent_to_sent
         # if self.params.task == "cc" and self.cc_sent_to_words:
@@ -410,7 +413,8 @@ class MConductor:
         # always set dataloader before constructing a Model instance
         self.model = Model(self.params,
                            self.auto_tokenizer,
-                           self.verbose_model)
+                           self.verbose_model,
+                           "pred")
 
         # No
         # self.model.metric.sent_to_sent = self.ex_sent_to_sent
@@ -569,7 +573,7 @@ class MConductor:
         None
 
         """
-        l_m_out = self.model.ttt_to_l_batch_m_out["pred"]
+        l_m_out = self.model.l_batch_m_out
 
         lines = []
         batch_id0 = 0  # similar to idx1

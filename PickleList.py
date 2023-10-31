@@ -1,12 +1,14 @@
 import os
 import pickle
 
+
 class PickleList:
     def __init__(self, base_dir):
         self.base_dir = base_dir
         self.index = 0
-        if not os.path.exists(base_dir):
-            os.makedirs(base_dir)
+        if os.path.exists(base_dir):
+            os.rmdir(base_dir)
+        os.makedirs(base_dir)
 
     def __len__(self):
         return self.index
@@ -74,5 +76,6 @@ if __name__ == "__main__":
         # Iterating over the stored items, deleting the pickle files as we go
         for item in plist:
             print(item)
+
 
     main()

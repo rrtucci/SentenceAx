@@ -104,7 +104,7 @@ class Model(L.LightningModule):
     ilabelling_layer: Linear
     init_name_to_param: dict[str, variable]
     iterative_transformer: ModuleList
-    ttt_to_l_batch_m_out: dict[str, PickleList]
+    l_batch_m_out: list[MOutput]
     l_cc_pred_str: list[str]
     l_ex_pred_str: list[str]
     ll_cc_spanned_word: list[list[str]]
@@ -112,6 +112,7 @@ class Model(L.LightningModule):
     loss_fun: CrossEntropyLoss
     merge_layer: Linear
     metric: CCMetric | ExMetric
+    model_name: str
     params: Params
     verbose_model: bool
     # some inherited attributes that won't be used
@@ -126,7 +127,8 @@ class Model(L.LightningModule):
     def __init__(self,
                  params,
                  auto_tokenizer,
-                 verbose_model):
+                 verbose_model,
+                 model_name):
         """
         lightning/src/lightning/pytorch/core/module.py
         Parameters
@@ -140,6 +142,7 @@ class Model(L.LightningModule):
         self.auto_tokenizer = auto_tokenizer
         self.init_name_to_param = None
         self.verbose_model = verbose_model
+        self.model_name = model_name
 
         # return_dict=False avoids error message from Dropout
         self.base_model = AutoModel.from_pretrained(
@@ -230,10 +233,8 @@ class Model(L.LightningModule):
         self.lll_cc_spanned_loc = []  # all_sentence_indices_conj
         self.l_ex_pred_str = []  # all_predictions_oie
 
-        self.ttt_to_l_batch_m_out = {}
-        for ttt in TTT_LIST:
-            self.ttt_to_l_batch_m_out[ttt] = \
-                PickleList(f"_{ttt}_l_batch_m_out_dir")
+        self.l_batch_m_out = \
+                PickleList(f"_{model_name}_l_batch_m_out_dir")
 
     def configure_optimizers(self):
         """
@@ -687,7 +688,7 @@ class Model(L.LightningModule):
 
         batch_m_out = self.forward(batch, batch_idx, ttt)
 
-        self.ttt_to_l_batch_m_out[ttt].append(batch_m_out)
+        self.l_batch_m_out.append(batch_m_out)
         if ttt == "tune":
             self.sax_write_batch_sents_out(batch_idx, batch_m_out)
 
@@ -779,7 +780,7 @@ class Model(L.LightningModule):
         if 'predict' in self.params.mode:
             score_d = self.metric.get_zero_score_d()
         else:
-            for k, batch_m_out in enumerate(self.ttt_to_l_batch_m_out[ttt]):
+            for k, batch_m_out in enumerate(self.l_batch_m_out):
                 print("batch id", k)
                 if self.params.task == "cc":
                     self.metric(

@@ -1060,6 +1060,7 @@ class Model(L.LightningModule):
         """
         # batch_m_out = self.l_batch_m_out[batch_idx]
         # batch_m_out.move_to_cpu()
+        
         if self.params.task == "ex":
             self.sax_write_if_task_ex(batch_idx, batch_m_out)
         elif self.params.task == "cc":

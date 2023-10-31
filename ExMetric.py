@@ -133,7 +133,7 @@ class ExMetric:
         """
         print("Entering ExMetric.__call__() method.")
         assert not self.use_carb_ex
-        print("ll_confi.shape", ll_confi.shape)
+        print("ll_confi", ll_confi)
         print("len(self.osentL_to_exs)",  len(self.osentL_to_exs))
         dominant_d =\
             ExMetric.get_osent2_to_exs_from_lll_ilabel(
@@ -226,15 +226,12 @@ class ExMetric:
                 error_file=None,
                 binary=False)
 
-        score_d = OrderedDict({'AUC': auc,
+        self.score_d = OrderedDict({'AUC': auc,
                                'F1': optimal_f1_point[2],
                                'last_F1': last_f1_point[2]})
-        self.score_d = copy(score_d)
-        if do_reset:
-            # this resets self.osentL_to_exs and self.score_d
-            # whic you always want to do at the end on an epoch
+        if ttt== "tune" and do_reset:
             self.reset()
-        return score_d
+        return self.score_d
 
 
 if __name__ == "__main__":

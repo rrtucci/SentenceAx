@@ -1,5 +1,6 @@
 import os
 import pickle
+import shutil
 
 
 class PickleList:
@@ -7,8 +8,12 @@ class PickleList:
         self.base_dir = base_dir
         self.index = 0
         if os.path.exists(base_dir):
-            os.rmdir(base_dir)
+            shutil.rmtree(base_dir)
         os.makedirs(base_dir)
+
+    def empty_base_dir(self):
+        shutil.rmtree(self.base_dir)
+        os.makedirs(self.base_dir)
 
     def __len__(self):
         return self.index
@@ -54,7 +59,7 @@ class PickleList:
                 item = pickle.load(file)
 
             # Delete the file after loading it
-            os.remove(file_path)
+            #os.remove(file_path)
 
             self.index += 1
             return item

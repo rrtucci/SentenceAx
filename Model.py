@@ -849,6 +849,7 @@ class Model(L.LightningModule):
         epoch_acc = scores_epoch_end_d["epoch_acc"]
         self.log("epoch_acc", epoch_acc, prog_bar=True)
 
+        self.l_batch_m_out.empty_base_dir()
         # self.l_batch_m_out.clear()  # free memory
         # return epoch_end_d
 
@@ -1060,7 +1061,7 @@ class Model(L.LightningModule):
         """
         # batch_m_out = self.l_batch_m_out[batch_idx]
         # batch_m_out.move_to_cpu()
-        
+
         if self.params.task == "ex":
             self.sax_write_if_task_ex(batch_idx, batch_m_out)
         elif self.params.task == "cc":

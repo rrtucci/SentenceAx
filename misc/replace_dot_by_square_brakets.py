@@ -8,7 +8,7 @@ import os
 from copy import copy
 
 file_paths = ["SaxDataLoaderTool.py",
-              "MConductor.py"]
+              "ActionConductor.py"]
 
 word_d =\
 {

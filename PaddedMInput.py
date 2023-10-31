@@ -255,7 +255,7 @@ class PaddedMInput(MInput):
 
 if __name__ == "__main__":
     def main(in_fp):
-        params = Params(1)  # 1, task="ex", mode="train_test"
+        params = Params(1)  # 1, task="ex", action="train_test"
         model_str = "bert-base-uncased"
         do_lower_case = ('uncased' in model_str)
         auto = AutoTokenizer.from_pretrained(

@@ -19,7 +19,7 @@ import io
 # from rescore import rescore
 
 
-class MConductor:
+class ActionConductor:
     """
     similar to Openie6.run.py
     
@@ -115,9 +115,9 @@ class MConductor:
                                               self.tags_tune_fp,
                                               self.tags_test_fp)
 
-        if 'predict' not in params.mode:
-            # ttt dloaders not used for mode="predict", "splitpredict"
-            # for those modes, only a predict dloader is used.
+        if 'predict' not in params.action:
+            # ttt dloaders not used for action="predict", "splitpredict"
+            # for those actions, only a predict dloader is used.
             self.dloader_tool.set_all_ttt_dataloaders()
             # always set dataloader before constructing a Model instance
 
@@ -174,7 +174,7 @@ class MConductor:
         """
         similar to Openie6.run.get_logger()
 
-        Logger depends on params.task and params.mode.
+        Logger depends on params.task and params.action.
         Start new logger everytime start a new trainer.
 
         Parameters
@@ -290,7 +290,7 @@ class MConductor:
         None
 
         """
-        # train is the only mode that doesn't require update_params()
+        # train is the only action that doesn't require update_params()
         self.model = Model(self.params,
                            self.auto_tokenizer,
                            self.verbose_model,
@@ -318,7 +318,7 @@ class MConductor:
 
         """
         checkpoint_fp = self.get_checkpoint_fp()
-        # train is the only mode that doesn't require
+        # train is the only action that doesn't require
         # update_params() because it is called first
         self.update_params(checkpoint_fp)
         self.model = Model(self.params,
@@ -347,8 +347,8 @@ class MConductor:
 
         """
         checkpoint_paths = self.get_all_checkpoint_fp()
-        if 'train' not in self.params.mode:
-            # train is the only mode that doesn't require
+        if 'train' not in self.params.action:
+            # train is the only action that doesn't require
             # update_params() because it is called first
             self.update_params(checkpoint_paths[0])
 
@@ -472,7 +472,7 @@ class MConductor:
 
         self.params.d["suggested_checkpoint_fp"] = CC_FIN_WEIGHTS_FP
         self.params.d["model_str"] = 'bert-base-cased'
-        self.params.d["mode"] = self.params.mode = 'predict'
+        self.params.d["action"] = self.params.action = 'predict'
         self.predict(pred_in_fp)
         l_cc_pred_str = self.model.l_cc_pred_str
         lll_cc_spanned_loc = self.model.lll_cc_spanned_loc
@@ -774,7 +774,7 @@ class MConductor:
         None
 
         """
-        for process in self.params.mode.split('_'):
+        for process in self.params.action.split('_'):
             if process in ["predict", "splitpredict"]:
                 assert pred_in_fp
                 getattr(self, process)(pred_in_fp)
@@ -784,7 +784,7 @@ class MConductor:
 
 if __name__ == "__main__":
     """
-        pid, task, mode   
+        pid, task, action   
         0. "", ""
         1. ex, train_test
         2. ex, test  (appears twice)
@@ -799,7 +799,7 @@ if __name__ == "__main__":
     def main(pid):
         params = Params(pid)
         params.d["gpus"] = 0
-        conductor = MConductor(params)
+        conductor = ActionConductor(params)
         conductor.run()
 
 

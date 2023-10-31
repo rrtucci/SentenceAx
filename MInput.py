@@ -255,7 +255,7 @@ class MInput:
         self.ll_osent_pos_loc = []
         self.ll_osent_verb_bool = []
         self.ll_osent_verb_loc = []
-        if not USE_SPACY_MODEL or "predict" in self.params.mode:
+        if not USE_SPACY_MODEL or "predict" in self.params.action:
             self.ll_osent_pos_bool = [[]]
             self.ll_osent_pos_loc = [[]]
             self.ll_osent_verb_bool = [[]]

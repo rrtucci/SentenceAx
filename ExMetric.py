@@ -112,7 +112,7 @@ class ExMetric:
     def __call__(self,
                  l_osentL,  # meta data
                  lll_ilabel,  # predictions
-                 ll_confi): # scores
+                 ll_confi):  # scores
         """
         similar to Openie6.metric.Carb.__call__
 
@@ -134,8 +134,8 @@ class ExMetric:
         print("Entering ExMetric.__call__() method.")
         assert not self.use_carb_ex
         print("ll_confi", ll_confi)
-        print("len(self.osentL_to_exs)",  len(self.osentL_to_exs))
-        dominant_d =\
+        print("len(self.osentL_to_exs)", len(self.osentL_to_exs))
+        dominant_d = \
             ExMetric.get_osent2_to_exs_from_lll_ilabel(
                 l_osentL,
                 lll_ilabel,
@@ -158,7 +158,18 @@ class ExMetric:
                                'last_F1': 0.0})
         return score_d
 
-    def reset(self):
+    def reset_osents(self):
+        """
+        similar to Openie6.metric.Carb.reset()
+
+        Returns
+        -------
+        None
+
+        """
+        self.osentL_to_exs = {}
+
+    def reset_score_d(self):
         """
         similar to Openie6.metric.Carb.reset()
         
@@ -226,11 +237,12 @@ class ExMetric:
                 error_file=None,
                 binary=False)
 
-        self.score_d = OrderedDict({'AUC': auc,
-                               'F1': optimal_f1_point[2],
-                               'last_F1': last_f1_point[2]})
-        if ttt== "tune" and do_reset:
-            self.reset()
+        self.score_d = OrderedDict(
+            {'AUC': auc,
+             'F1': optimal_f1_point[2],
+             'last_F1': last_f1_point[2]})
+        if do_reset:
+            self.reset_osents()
         return self.score_d
 
 

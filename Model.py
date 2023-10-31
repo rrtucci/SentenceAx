@@ -234,7 +234,7 @@ class Model(L.LightningModule):
         self.l_ex_pred_str = []  # all_predictions_oie
 
         self.l_batch_m_out = \
-                PickleList(f"_{model_name}_l_batch_m_out_dir")
+                PickleList(f"action_{model_name}_l_batch_m_out_dir")
 
     def configure_optimizers(self):
         """
@@ -500,7 +500,7 @@ class Model(L.LightningModule):
                 # first (outer) list over batch events
                 # second list over extractions
                 # third (inner) list over number of ilabels in a line
-                # print("ttt, mode", ttt, self.params.mode)
+                # print("ttt, action", ttt, self.params.action)
                 # print_tensor("lll_ilabel", y_d["lll_ilabel"])
                 ll_nonpad_bool = \
                     (y_d["lll_ilabel"][:, 0, :] != -100).float()
@@ -550,7 +550,7 @@ class Model(L.LightningModule):
 
             # not used
             # if self.constraint_str and \
-            #         'predict' not in self.params.d["mode"] and \
+            #         'predict' not in self.params.d["action"] and \
             #         self.params.d["batch_size"] != 1:
             #     llll_word_score = torch.cat([lll.unsqueeze(1) for
             #                                  lll in llll_word_score], dim=1)
@@ -694,7 +694,10 @@ class Model(L.LightningModule):
 
         loss = batch_m_out.loss
 
-        self.log('loss', loss, prog_bar=True)
+        self.log('loss', loss,
+                 prog_bar=True,
+                 logger=True,
+                 on_step=True)
 
         return loss
 
@@ -758,7 +761,7 @@ class Model(L.LightningModule):
         """
         similar to Openie6.model.evaluation_end()
         not inherited method, used in *_epoch_end methods
-        note that both `mode` and self.params.d["mode"] are used
+        note that both `mode` and self.params.d["action"] are used
 
         `outputs` similar to `l_batch_m_out`
 
@@ -773,11 +776,11 @@ class Model(L.LightningModule):
             scores_epoch_end_d
 
         """
-        # if self.params.mode == 'test':
+        # if self.params.action == 'test':
         #     for batch_m_out in self.l_batch_m_out:
         #         batch_m_out.move_to_cpu()
 
-        if 'predict' in self.params.mode:
+        if 'predict' in self.params.action:
             score_d = self.metric.get_zero_score_d()
         else:
             for k, batch_m_out in enumerate(self.l_batch_m_out):
@@ -847,9 +850,12 @@ class Model(L.LightningModule):
         #     epoch_end_d["progress_bar"] = self.scores_epoch_end_d
 
         epoch_acc = scores_epoch_end_d["epoch_acc"]
-        self.log("epoch_acc", epoch_acc, prog_bar=True)
+        self.log("epoch_acc", epoch_acc,
+                 prog_bar=True,
+                 logger=True,
+                 on_epoch=True)
 
-        self.l_batch_m_out.empty_base_dir()
+        self.l_batch_m_out.restart()
         # self.l_batch_m_out.clear()  # free memory
         # return epoch_end_d
 

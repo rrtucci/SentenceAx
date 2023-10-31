@@ -97,7 +97,7 @@ class SaxDataLoaderTool:
         # tags_tune_fp = self.params.d["tags_tune_fp"]
         # tags_test_fp = self.params.d["tags_test_fp"]
 
-        # if 'predict' not in params.mode, use caching
+        # if 'predict' not in params.action, use caching
         assert self.tags_train_fp, self.tags_train_fp
         assert self.tags_tune_fp, self.tags_tune_fp
         assert self.tags_test_fp, self.tags_test_fp
@@ -156,7 +156,7 @@ class SaxDataLoaderTool:
 
         """
         self.get_dataset_common()
-        # no caching used if predict in mode
+        # no caching used if predict in action
         # if not pred_in_sents:  # predict
         #     # if self.params.d["in_fp"] :
         #     #     predict_fp = self.params.d["in_fp"]

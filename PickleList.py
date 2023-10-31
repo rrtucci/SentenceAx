@@ -11,9 +11,10 @@ class PickleList:
             shutil.rmtree(base_dir)
         os.makedirs(base_dir)
 
-    def empty_base_dir(self):
+    def restart(self):
         shutil.rmtree(self.base_dir)
         os.makedirs(self.base_dir)
+        self.index = 0
 
     def __len__(self):
         return self.index

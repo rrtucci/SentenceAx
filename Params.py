@@ -24,11 +24,11 @@ class Params:
         I use "ex" instead of "oie" for self.task
         I use "cc" instead of "conj" for self.task
 
-        choose self.task and self.mode before starting
+        choose self.task and self.action before starting
         self.task in "ex", "cc"
         choose "ex" self.task if doing both "ex" and "cc". Choose "cc" self.task only
         when doing "cc" only
-        self.mode in ("train_test", "resume", "test", "predict", "splitpredict")
+        self.action in ("train_test", "resume", "test", "predict", "splitpredict")
 
 
         hparams = hyperparameters,
@@ -40,7 +40,7 @@ class Params:
     ----------
     d: dict[str, Any]
     pid: int
-    mode: str
+    action: str
     task: str
 
     """
@@ -63,7 +63,7 @@ class Params:
             6: ("ex", "splitpredict")
         }
 
-        self.task, self.mode = pid_to_pair[pid]
+        self.task, self.action = pid_to_pair[pid]
         self.d = self.get_d()
         self.describe_self()
 
@@ -77,7 +77,7 @@ class Params:
         """
         print("***************** new params")
         print(f"new params: "
-              f"pid={str(self.pid)}, task='{self.task}', mode='{self.mode}'")
+              f"pid={str(self.pid)}, task='{self.task}', action='{self.action}'")
         print("params=")
         pprint(self.d)
 
@@ -102,21 +102,21 @@ class Params:
         else:
             assert self.task in ["ex", "cc"]
 
-        if not self.mode:
-            print("****self.mode is empty")
+        if not self.action:
+            print("****self.action is empty")
         else:
-            assert self.mode in ["predict", "train_test", "splitpredict",
+            assert self.action in ["predict", "train_test", "splitpredict",
                                  "resume", "test"]
 
         ## Running self.model
         # this is repeated at begin and end.
-        # elif self.task == "ex" and self.mode == "splitpredict":
+        # elif self.task == "ex" and self.action == "splitpredict":
         #     self.d = {
         #         "cc_weights_fp": WEIGHTS_DIR +
         #                     "/cc_epoch=28_eval_acc=0.854.ckpt",
         #         "gpus": 1,
         #         # "inp": "sentences.txt",
-        #         "mode": "splitpredict",
+        #         "action": "splitpredict",
         #         "num_extractions": 5,
         #         "ex_weights_fp": WEIGHTS_DIR +
         #                     "/ex_epoch=14_eval_acc=0.551_v0.ckpt",
@@ -130,14 +130,14 @@ class Params:
 
         ### Warmup self.model
         # Training:
-        if self.task == "ex" and self.mode == "train_test":
+        if self.task == "ex" and self.action == "train_test":
             self.d = {
                 "batch_size": 24,
                 "epochs": 30,
                 "gpus": 1,
                 "iterative_layers": 2,
                 "lr": 2E-5,
-                "mode": "train_test",
+                "action": "train_test",
                 "optimizer": "adamW",
                 # "save": WEIGHTS_DIR + "/warmup_ex_model",
                 "task": "ex"
@@ -146,11 +146,11 @@ class Params:
         # Testing:
         # this ex/test pair is a repeat. First one only differs
         # in save directory and batch size (16 before, 24 now)
-        # elif self.task == "ex" and self.mode == "test":
+        # elif self.task == "ex" and self.action == "test":
         #     self.d = {
         #         "batch_size": 24,
         #         "gpus": 1,
-        #         "mode": "test",
+        #         "action": "test",
         #         "model_str": "bert-base-cased",
         #         # "save": WEIGHTS_DIR + "/warmup_ex_model",
         #         "task": "ex"
@@ -159,11 +159,11 @@ class Params:
         # Predicting
         # this ex/predict pair is a repeat. First one only differs
         # in save directory
-        # elif self.task == "ex" and self.mode == "predict":
+        # elif self.task == "ex" and self.action == "predict":
         #     self.d = {
         #         "gpus": 1,
         #         # "inp": "sentences.txt",
-        #         "mode": "predict",
+        #         "action": "predict",
         #         "model_str": "bert-base-cased",
         #         #"out": "predictions.txt",
         #         # "save": WEIGHTS_DIR + "/warmup_ex_model",
@@ -172,7 +172,7 @@ class Params:
 
         ### Constrained self.model
         # Training
-        elif self.task == "ex" and self.mode == "resume":
+        elif self.task == "ex" and self.action == "resume":
             # error in openie6 paper
             #         "lr": 5e-6, and "lr: 2e-5
 
@@ -188,7 +188,7 @@ class Params:
                 "gradient_clip_val": 1,
                 "iterative_layers": 2,
                 "lr": 2E-5,
-                "mode": "resume",
+                "action": "resume",
                 "model_str": "bert-base-cased",
                 "multi_opt": True,
                 "optimizer": "adam",
@@ -199,22 +199,22 @@ class Params:
                 "wreg": 1
             }
         # Testing
-        elif self.task == "ex" and self.mode == "test":
+        elif self.task == "ex" and self.action == "test":
             self.d = {
                 "batch_size": 16,
                 "gpus": 1,
-                "mode": "test",
+                "action": "test",
                 "model_str": "bert-base-cased",
                 # "save": WEIGHTS_DIR + "/ex_model",
                 "task": "ex"
             }
 
         # Predicting
-        elif self.task == "ex" and self.mode == "predict":
+        elif self.task == "ex" and self.action == "predict":
             self.d = {
                 "gpus": 1,
                 # "inp": "sentences.txt",
-                "mode": "predict",
+                "action": "predict",
                 "model_str": "bert-base-cased",
                 # "out": "predictions.txt",
                 # "save": WEIGHTS_DIR + "/ex_model",
@@ -222,14 +222,14 @@ class Params:
             }
 
         ### Running CCNode Analysis
-        elif self.task == "cc" and self.mode == "train_test":
+        elif self.task == "cc" and self.action == "train_test":
             self.d = {
                 "batch_size": 32,
                 "epochs": 40,
                 "gpus": 1,
                 "iterative_layers": 2,
                 "lr": 2E-5,
-                "mode": "train_test",
+                "action": "train_test",
                 "model_str": "bert-large-cased",
                 "optimizer": "adamW",
                 # "save": WEIGHTS_DIR + "/cc",
@@ -239,15 +239,15 @@ class Params:
         ### Final self.model
 
         # Running
-        # The splitpredict self.mode was stated already at the beginning.
+        # The splitpredict self.action was stated already at the beginning.
         # It is a repeat.
-        elif self.task == "ex" and self.mode == "splitpredict":
+        elif self.task == "ex" and self.action == "splitpredict":
             self.d = {
                 "cc_weights_fp":
                     WEIGHTS_DIR + "/cc_epoch=28_eval_acc=0.854.ckpt",
                 "gpus": 1,
                 # "inp": "carb_subset/data/carb_sentences.txt",
-                "mode": "splitpredict",
+                "action": "splitpredict",
                 "num_extractions": EX_NUM_DEPTHS,
                 "ex_weights_fp":
                     WEIGHTS_DIR + "/ex_epoch=14_eval_acc=0.551_v0.ckpt",

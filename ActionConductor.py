@@ -550,14 +550,14 @@ class ActionConductor:
 
         # Does same thing as Openie6's run.get_labels()
         if self.params.d["write_extags_file"]:
-            self.write_extags_file_from_preds(l_osentL,
-                                              l_ccsentL,
-                                              pred_out_fp,
-                                              model)
+            ActionConductor.write_extags_file_from_preds(l_osentL,
+                                                         l_ccsentL,
+                                                         pred_out_fp,
+                                                         model)
         return model
 
+    @staticmethod
     def write_extags_file_from_preds(
-            self,
             l_osentL,  # orig_sentences
             l_ccsentL,  # sentences
             pred_out_fp,
@@ -575,6 +575,7 @@ class ActionConductor:
         l_osentL: list[str]
         l_ccsentL: list[str]
         pred_out_fp: str
+        model: Model
 
 
         Returns
@@ -762,8 +763,8 @@ class ActionConductor:
         self.params.d["task"] = self.params.task = "ex"
         pred_out_fp = pred_in_fp.strip(".txt") + "_extags_out.txt"
         model = self.splitpredict_for_ex(l_osentL,
-                                 l_ccsentL,
-                                 pred_out_fp)
+                                         l_ccsentL,
+                                         pred_out_fp)
 
         if self.params.d["do_rescoring"]:
             self.splitpredict_for_rescore(model)

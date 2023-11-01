@@ -1015,11 +1015,11 @@ class Model(L.LightningModule):
             l_pred_allen_str.append(allen_str.strip("/n"))
 
         fmode = "w" if batch_idx == 0 else "a"
-        out_fp = PRED_IN_FP.replace(".txt", "") + "_ex_out_.txt"
+        out_fp = VAL_OUT_DIR + "/ex_out_.txt"
         with open(out_fp, "a") as pred_f:
             pred_f.write('\n'.join(l_pred_str) + '\n')
         if self.params.d["write_allen_file"]:
-            al_out_fp = PRED_IN_FP.replace(".txt", "") + "_ex_out_allen.txt"
+            al_out_fp = VAL_OUT_DIR + "/ex_out_allen.txt"
             with open(al_out_fp, fmode) as allen_f:
                 allen_f.write('\n'.join(l_pred_allen_str) + '\n')
 
@@ -1092,7 +1092,7 @@ class Model(L.LightningModule):
         lll_cc_spanned_loc += lll_spanned_loc
 
         fmode = "w" if batch_idx == 0 else "a"
-        out_fp = PRED_IN_FP.replace(".txt", "") + "_cc_out.txt"
+        out_fp = VAL_OUT_DIR + "/cc_out.txt"
         with open(out_fp, fmode) as pred_f:
             pred_f.write('\n'.join(l_pred_str) + '\n')
 

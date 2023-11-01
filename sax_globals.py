@@ -33,7 +33,7 @@ CC_METRIC_SAVE = True
 INPUT_DIR = "input_data"
 CACHE_DIR = 'cache'
 WEIGHTS_DIR = "weights"
-PRED_DIR = "predictions"
+PREDICTING_DIR = "predicting"
 LOGS_DIR = "logs"
 CC_METRIC_STORAGE_DIR = "cc_metric_storage"
 
@@ -47,7 +47,7 @@ EXTAGS_TUNE_FP = INPUT_DIR + '/carb-data/dev.txt'
 EXTAGS_TEST_FP = INPUT_DIR + '/carb-data/test.txt'
 EX_FIN_WEIGHTS_FP = WEIGHTS_DIR + '/ex.txt'
 
-PRED_IN_FP = PRED_DIR + "/carb_sentences"
+PRED_IN_FP = PREDICTING_DIR + "/carb_sentences"
 
 QUOTES = "\"\'"  # 2
 BRACKETS = "(){}[]<>"  # 8
@@ -58,8 +58,6 @@ PUNCT_MARKS = QUOTES + BRACKETS + SEPARATORS + ARITHMETICAL + ENDING
 
 UNUSED_TOKENS = ["[unused1]", "[unused2]", "[unused3]"]
 UNUSED_TOKENS_STR = " " + " ".join(UNUSED_TOKENS)
-
-TTT_LIST = ["train", "tune", "test", "pred"]
 
 DROPOUT = 0.0
 EX_NUM_DEPTHS = 5

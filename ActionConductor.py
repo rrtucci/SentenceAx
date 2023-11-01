@@ -132,6 +132,7 @@ class ActionConductor:
 
         """
         # epoch and epoch_acc known by ModelCheckPoint instance
+        #  str "epoch_acc"  entered via monitor=
         return ModelCheckpoint(
             dirpath=f"{WEIGHTS_DIR}/{self.params.task}_model",
             filename='{epoch:02d}_{epoch_acc:.3f}',
@@ -685,7 +686,7 @@ class ActionConductor:
         # # testing rescoring
         # rescored_allen_file = rescore(
         #     self.re_allen_in_fp,  # f'{self.hparams.out}.allennlp'
-        #     model_dir=PRED_DIR,  #
+        #     model_dir=,
         #     batch_size=256)
         #
         # l_rs_sent = []

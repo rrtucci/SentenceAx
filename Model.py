@@ -735,9 +735,9 @@ class Model(L.LightningModule):
 
         batch_m_out = self.forward(batch, batch_idx, ttt)
 
-        if ttt != ["train"]:
+        if ttt not in ["train", "resume"]:
             # only collect batch_m_out if going to score it.
-            # only ttt!="train" are scored
+            # only ttt not in ["train", "resume"] are scored
             self.l_batch_m_out.append(batch_m_out)
 
         if ttt == "tune":
@@ -745,7 +745,7 @@ class Model(L.LightningModule):
 
         loss = batch_m_out.loss
 
-        self.log('loss', loss,
+        self.log('train_step_loss', loss,
                  prog_bar=True,
                  logger=True,
                  on_step=True)
@@ -908,7 +908,7 @@ class Model(L.LightningModule):
 
         self.l_batch_m_out.restart()
         # self.l_batch_m_out.clear()  # free memory
-        # return epoch_end_d
+        return epoch_acc
 
     def on_validation_epoch_end(self):
         """
@@ -1015,12 +1015,12 @@ class Model(L.LightningModule):
             l_pred_allen_str.append(allen_str.strip("/n"))
 
         fmode = "w" if batch_idx == 0 else "a"
-        fpath = self.params.task + ".txt"
-        with open(fpath, "a") as pred_f:
+        out_fp = PRED_IN_FP.replace(".txt", "") + "_ex_out_.txt"
+        with open(out_fp, "a") as pred_f:
             pred_f.write('\n'.join(l_pred_str) + '\n')
         if self.params.d["write_allen_file"]:
-            out_fp = PRED_IN_FP.replace(".txt", "") + "_ex_out_allen.txt"
-            with open(out_fp, fmode) as allen_f:
+            al_out_fp = PRED_IN_FP.replace(".txt", "") + "_ex_out_allen.txt"
+            with open(al_out_fp, fmode) as allen_f:
                 allen_f.write('\n'.join(l_pred_allen_str) + '\n')
 
         self.l_ex_pred_str = l_pred_str

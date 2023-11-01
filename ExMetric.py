@@ -157,7 +157,7 @@ class ExMetric:
                                'last_F1': 0.0})
         return score_d
 
-    def reset_osents(self):
+    def reset_exs_dict(self):
         """
         similar to Openie6.metric.Carb.reset()
 
@@ -177,7 +177,6 @@ class ExMetric:
         None
 
         """
-        self.osentL_to_exs = {}
         for name in self.score_d.keys():
             self.score_d[name] = 0.0
 
@@ -241,7 +240,7 @@ class ExMetric:
              'F1': optimal_f1_point[2],
              'last_F1': last_f1_point[2]})
         if do_reset:
-            self.reset_osents()
+            self.reset_exs_dict()
         return self.score_d
 
 

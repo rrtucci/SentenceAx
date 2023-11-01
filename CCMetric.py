@@ -76,7 +76,7 @@ class CCMetric:
         None
 
         """
-        print("Entering CCMetric.__call__() method.")
+        if DEBUG: print("Entering CCMetric.__call__() method.")
         num_samples = len(lll_ilabel)
         print("CCMetric entering (and saving if save=True) "
               "samples via its __call__() method.")
@@ -168,7 +168,7 @@ class CCMetric:
         dict[str, float]
 
         """
-        print("Entering CCMetric.get_score_d method.")
+        if DEBUG: print("Entering CCMetric.get_score_d method.")
         score_d = OrderedDict({
             'F1_whole': self.report_whole.overall_scorer.f1_score(),
             'F1_outer': self.report_outer.overall_scorer.f1_score(),

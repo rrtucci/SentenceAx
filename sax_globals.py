@@ -30,6 +30,8 @@ USE_SPACY_MODEL = True
 REMERGE_TOKENS = False
 CC_METRIC_SAVE = True
 
+DEBUG = False
+
 INPUT_DIR = "input_data"
 CACHE_DIR = 'cache'
 WEIGHTS_DIR = "weights"
@@ -43,7 +45,9 @@ CCTAGS_TUNE_FP = 'input_data/openie-data/ptb-dev.labels'
 CCTAGS_TEST_FP = 'input_data/openie-data/ptb-test.labels'
 CC_FIN_WEIGHTS_FP = WEIGHTS_DIR + '/cc.txt'
 
-EXTAGS_TRAIN_FP = INPUT_DIR + '/openie-data/openie4_labels'
+# EXTAGS_TRAIN_FP = INPUT_DIR + '/openie-data/openie4_labels'
+# use smaller file for debugging
+EXTAGS_TRAIN_FP = INPUT_DIR + '/carb-data/test.txt'
 EXTAGS_TUNE_FP = INPUT_DIR + '/carb-data/dev.txt'
 EXTAGS_TEST_FP = INPUT_DIR + '/carb-data/test.txt'
 EX_FIN_WEIGHTS_FP = WEIGHTS_DIR + '/ex.txt'

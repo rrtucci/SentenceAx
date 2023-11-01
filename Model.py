@@ -63,21 +63,21 @@ class Model(L.LightningModule):
     This class has an abstract class as its parent. Uninherited methods
     start with `sax_`.
 
-    
+
         batch_d={
         "lll_label": np.array of ints, shape:(batch_size, depth, labels_length)
-    
+
         "meta_data": any
-    
+
         "pos_locs": int
-    
+
         "text": str
-    
+
         "verb_bools": list[int],
             a list of 0, 1, 1 if word in text is a verb and 0 if not
-    
+
         "verb_locs": list[int], locations of verbs  in text
-    
+
         "word_starts":
     }
 
@@ -176,14 +176,14 @@ class Model(L.LightningModule):
         embedding(a) has shape (2, 4, 3)
         num_embeddings (int) – vocab size, num icodes
         embedding_dim (int) – 3 = len(lll[0][0])
-        
+
         Embedding is a layer that takes a tensor of icodes to another tensor 
         of icodes with one more index. An encoder takes each word and 
         replaces it by an icode.
-        
+
         output = nn.Linear(na, nb)(input)
         If input has shape (10, 20, na), then output has shape (10, 20, nb)
-            
+
         """
         self.embedding = nn.Embedding(
             100,  # vocab size
@@ -372,7 +372,7 @@ class Model(L.LightningModule):
     @staticmethod
     def sax_get_batch_in_dicts(batch):
         """
-        
+
         Parameters
         ----------
         batch: tuple[torch.Tensor, torch.Tensor, list[str]]
@@ -398,13 +398,13 @@ class Model(L.LightningModule):
         """
         inherited method
         signature of parent method:  def forward(self, *args, **kwargs)
-        
+
         wreg = weight regulator (default =0)
         loss_fun = loss_fun + wreg*weight_diff
-        
+
         The following methods invoke forward() once:
         training_step(), validation_step(), test_step()
-        
+
         Parameter
         ----------
         batch: tuple[torch.Tensor, torch.Tensor, list[str]]
@@ -603,12 +603,12 @@ class Model(L.LightningModule):
             #                                  lll in llll_word_score], dim=1)
             #     # this fills tensor with 0's
             #     llll_word_score.fill_(0)
-            # 
+            #
             #     # for checking test set
             #     # lll_ilabel = copy(lll_pred_ilabel)
             #     # ll_ilabel[lll_ilabel == -100] = 0
             #     lll_pred_ilabel = copy(lll_pred_ilabel)
-            # 
+            #
             #     llll_ilabel = lll_pred_ilabel.unsqueeze(-1)
             #     number_depths = llll_ilabel.shape[1]
             #     llll_word_score = llll_word_score[:, :number_depths, :, :]
@@ -730,7 +730,7 @@ class Model(L.LightningModule):
                 str0 = "test_step"
             else:
                 assert False
-            print("Entering Model." + str0 + " method, batch_idx=" + str(
+            if DEBUG: print("Entering Model." + str0 + " method, batch_idx=" + str(
                 batch_idx))
 
         batch_m_out = self.forward(batch, batch_idx, ttt)
@@ -745,10 +745,11 @@ class Model(L.LightningModule):
 
         loss = batch_m_out.loss
 
-        self.log('train_step_loss', loss,
-                 prog_bar=True,
-                 logger=True,
-                 on_step=True)
+        if ttt == "train":
+            self.log('train_step_loss', loss,
+                     prog_bar=True,
+                     logger=True,
+                     on_step=True)
 
         return loss
 
@@ -835,7 +836,7 @@ class Model(L.LightningModule):
             score_d = self.metric.get_zero_score_d()
         else:
             for k, batch_m_out in enumerate(self.l_batch_m_out):
-                print("batch id", k)
+                if DEBUG: print("batch id", k)
                 if self.params.task == "cc":
                     self.metric(
                         batch_m_out.l_orig_sent,  # meta data
@@ -891,7 +892,7 @@ class Model(L.LightningModule):
                 str0 = "on_test_epoch_end"
             else:
                 assert False
-            print("Entering Model." + str0 + " method")
+            if DEBUG: print("Entering Model." + str0 + " method")
 
         scores_epoch_end_d = \
             self.sax_get_scores_at_epoch_end(ttt)

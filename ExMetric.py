@@ -130,10 +130,10 @@ class ExMetric:
         None
 
         """
-        print("Entering ExMetric.__call__() method.")
+        if DEBUG: print("Entering ExMetric.__call__() method.")
         assert not self.use_carb_ex
-        print("ll_confi", ll_confi)
-        print("len(self.osentL_to_exs)", len(self.osentL_to_exs))
+        if DEBUG: print("ll_confi", ll_confi)
+        if DEBUG: print("len(self.osentL_to_exs)", len(self.osentL_to_exs))
         dominant_d = \
             ExMetric.get_osent2_to_exs_from_lll_ilabel(
                 l_osentL,
@@ -141,7 +141,9 @@ class ExMetric:
                 ll_confi,
                 self.sent_to_sent)
         self.osentL_to_exs = merge_dicts(dominant_d, self.osentL_to_exs)
-        print("len(self.osentL_to_exs) after merge", len(self.osentL_to_exs))
+        if DEBUG:
+            print("len(self.osentL_to_exs) after merge",
+                  len(self.osentL_to_exs))
 
     @staticmethod
     def get_zero_score_d():
@@ -194,7 +196,7 @@ class ExMetric:
         dict[str, float]
 
         """
-        print("Entering ExMetric.get_score_d() method.")
+        if DEBUG: print("Entering ExMetric.get_score_d() method.")
 
         def fun(x):
             # if x is sax extraction
@@ -206,7 +208,7 @@ class ExMetric:
 
         for osentL, exs in self.osentL_to_exs.items():
             # print("confi", [fun(ex) for ex in exs])
-            print("len(exs)", len(exs))
+            if DEBUG: print("len(exs)", len(exs))
             self.osentL_to_exs[osentL] = \
                 sorted(exs,
                        key=fun,

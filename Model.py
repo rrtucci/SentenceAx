@@ -533,7 +533,7 @@ class Model(L.LightningModule):
                 loss += self.loss_fun(ll_loss_input, l_loss_target)
                 # print_tensor("l_loss_target", l_loss_target)
                 # print("loss", loss)
-            else:
+            else: # ttt != "train
                 lll_soft_word_score = \
                     torch.log_softmax(lll_word_score7, dim=2)
                 ll_max_log_prob, ll_pred_ilabel = \
@@ -577,8 +577,14 @@ class Model(L.LightningModule):
 
         # llll_pred_ilabel: list[tensor]
         # lll_pred_confi: list[tensor]
-        lll_pred_ilabel0 = torch.cat(llll_pred_ilabel, dim=1)
-        ll_pred_confi0 = torch.cat(lll_pred_confi, dim=1)
+        if ttt != "train":
+            lll_pred_ilabel0 = torch.cat(llll_pred_ilabel, dim=1)
+            ll_pred_confi0 = torch.cat(lll_pred_confi, dim=1)
+        else:
+            lll_pred_ilabel0 = None
+            ll_pred_confi0 =None
+
+
 
         # never used
         # self.con_to_l_loss = self.sax_get_con_to_l_loss(

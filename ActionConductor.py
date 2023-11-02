@@ -171,7 +171,7 @@ class ActionConductor:
         assert len(all_paths) == 1
         return all_paths[0]
 
-    def get_logger(self, ttt):
+    def get_logger(self, name):
         """
         similar to Openie6.run.get_logger()
 
@@ -180,7 +180,7 @@ class ActionConductor:
 
         Parameters
         ----------
-        ttt: str
+        name: str
 
         Returns
         -------
@@ -190,18 +190,18 @@ class ActionConductor:
 
         # the current log file will have no number prefix,
         # stored ones will.
-        if os.path.exists(get_task_logs_dir(self.params.task) + "/" + ttt):
+        if os.path.exists(get_task_logs_dir(self.params.task) + "/" + name):
             num_numbered_logs = len(
-                list(glob(get_task_logs_dir(self.params.task) + f'/{ttt}_*')))
+                list(glob(get_task_logs_dir(self.params.task) + f'/{name}_*')))
             new_id = num_numbered_logs + 1
             print('Retiring current log file by changing its name')
             print(shutil.move(
-                get_task_logs_dir(self.params.task) + f'/{ttt}',
-                get_task_logs_dir(self.params.task) + f'/{ttt}_{new_id}'))
+                get_task_logs_dir(self.params.task) + f'/{name}',
+                get_task_logs_dir(self.params.task) + f'/{name}_{new_id}'))
         logger = TensorBoardLogger(
             save_dir=LOGS_DIR,
             name=self.params.task,
-            version=ttt + '.part')
+            version=name + '.part')
         return logger
 
     def get_trainer(self, logger, use_minimal):
@@ -238,21 +238,24 @@ class ActionConductor:
         if use_minimal:
             trainer = Trainer(
                 # gpus=self.params.d["gpus"],
-                logger=logger)
+                logger=logger,
+                reload_dataloaders_every_n_epochs=0
+            )
         else:
             trainer = Trainer(
-                accumulate_grad_batches=
-                self.params.d["accumulate_grad_batches"],
+                accumulate_grad_batches=self.params.d[
+                    "accumulate_grad_batches"],
                 callbacks=self.checkpoint_callback,
                 enable_progress_bar=True,
                 # gradient_clip_value=,
                 logger=logger,
                 max_epochs=self.params.d["epochs"],
                 min_epochs=self.params.d["epochs"],
-                # num_sanity_val_steps=self.params.d["num_sanity_val_steps"],
-                # use_tpu=,
-                # train_percent_check=,
-                # track_grad_norm=
+                #num_sanity_val_steps=self.params.d["num_sanity_val_steps"],
+                # use_tpu=deprecated,
+                #train_percent_check=,
+                # track_grad_norm= deprecated
+                reload_dataloaders_every_n_epochs=0
             )
         return trainer
 
@@ -327,7 +330,7 @@ class ActionConductor:
                       self.auto_tokenizer,
                       self.verbose_model,
                       "resume")
-        trainer = self.get_trainer(self.get_logger("tune"),
+        trainer = self.get_trainer(self.get_logger("resume"),
                                    use_minimal=False)
         trainer.fit(
             model,
@@ -422,8 +425,7 @@ class ActionConductor:
         # model.metric.sent_to_sent = self.ex_sent_to_sent
         # model.metric.sent_to_words = self.cc_sent_to_words
 
-        logger = None
-        trainer = self.get_trainer(logger,
+        trainer = self.get_trainer(logger=None,
                                    use_minimal=True)
         start_time = time()
         # model.all_sentences = all_sentences # never used
@@ -808,10 +810,11 @@ if __name__ == "__main__":
 
     def main(pid):
         params = Params(pid)
+        params.d["refresh_cache"] = True
         params.d["gpus"] = 0
-        conductor = ActionConductor(params)
+        conductor = ActionConductor(params, verbose_model=True)
         conductor.run()
 
 
-    # main(1)
-    main(5)
+    main(1)
+    # main(5)

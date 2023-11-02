@@ -391,10 +391,7 @@ class Model(L.LightningModule):
         x_d = SaxDataSet.invert_cat(x, xname_to_dim1)
         return x_d, y_d, meta_d
 
-    def forward(self,
-                batch,
-                batch_idx,
-                ttt='train'):
+    def forward(self, batch, batch_idx, ttt):
         """
         inherited method
         signature of parent method:  def forward(self, *args, **kwargs)
@@ -518,18 +515,18 @@ class Model(L.LightningModule):
         # print("vvbg", "len(llll_word_score)", len(llll_word_score))
         # print_tensor("llll_word_score[0]", llll_word_score[0])
         loss = 0
-        llll_pred_ilabel = []  # all_depth_predictions
-        lll_pred_ilabel0 = []  # all_depth_predictions after cat dim=1
-        lll_pred_confi = []  # all_depth_confidences
-        ll_pred_confi0 = []  # all_depth_confidences after cat dim=1
+        llll_pred_ilabel = []  # = all_depth_predictions
+        # lll_pred_ilabel0 = all_depth_predictions after cat dim=1
+        lll_pred_confi = []  # = all_depth_confidences
+        # ll_pred_confi0 = all_depth_confidences after cat dim=1
         batch_size, num_words, _ = lll_word_score.shape
         # y_d["lll_ilabel"] = \
         #     y_d["lll_ilabel"].long()
-        for depth, lll_word_score0 in enumerate(llll_word_score):
+        for depth, lll_word_score7 in enumerate(llll_word_score):
             if ttt == 'train':
                 ll_loss_input = \
-                    lll_word_score0.reshape(batch_size * num_words, -1)
-                # print_tensor("lll_word_score0", lll_word_score0)
+                    lll_word_score7.reshape(batch_size * num_words, -1)
+                # print_tensor("lll_word_score7", lll_word_score7)
                 # print_tensor("ll_loss_input", ll_loss_input)
                 l_loss_target = \
                     y_d["lll_ilabel"][:, depth, :].reshape(-1)
@@ -538,7 +535,7 @@ class Model(L.LightningModule):
                 # print("loss", loss)
             else:
                 lll_soft_word_score = \
-                    torch.log_softmax(lll_word_score0, dim=2)
+                    torch.log_softmax(lll_word_score7, dim=2)
                 ll_max_log_prob, ll_pred_ilabel = \
                     torch.max(lll_soft_word_score, dim=2)
                 # print_tensor("ll_max_log_prob", ll_max_log_prob)
@@ -567,65 +564,27 @@ class Model(L.LightningModule):
                 # this unsqueezes depth dim=1
                 llll_pred_ilabel.append(ll_pred_ilabel.unsqueeze(1))
                 lll_pred_confi.append(l_confi.unsqueeze(1))
-        # } on of for depth, lll_word_score0
+        # } on of for depth, lll_word_score7
         if ttt == 'train':
-            if self.con_to_weight:
-                # dim=1 is depth. This cats along depth dimension
-                llll_word_score = torch.cat(
-                    [lll.unsqueeze(1) for lll in llll_word_score], dim=1)
-                llll_word_score = torch.softmax(llll_word_score, dim=-1)
+            loss = self.sax_increment_loss(
+                loss,
+                x_d,
+                llll_word_score,
+                batch_size)
+        # if A and B are of shape (3, 4):
+        # torch.cat([A, B], dim=0) will be of shape (6, 4)
+        # torch.stack([A, B], dim=0) will be of shape (2, 3, 4)
 
-                con_loss = Model.sax_constrained_loss(
-                    x_d,
-                    llll_word_score,
-                    self.con_to_weight) / batch_size
-                loss = con_loss
+        # llll_pred_ilabel: list[tensor]
+        # lll_pred_confi: list[tensor]
+        lll_pred_ilabel0 = torch.cat(llll_pred_ilabel, dim=1)
+        ll_pred_confi0 = torch.cat(lll_pred_confi, dim=1)
 
-            if "wreg" in self.params.d:
-                weight_diff = 0
-                name_to_param = dict(self.named_parameters())
-                for name in self.init_name_to_param:
-                    weight_diff += torch.norm(name_to_param[name]
-                                              - self.init_name_to_param[name])
-                loss += self.params.d["wreg"] * weight_diff
-        else:  # not training
-            # if A and B are of shape (3, 4):
-            # torch.cat([A, B], dim=0) will be of shape (6, 4)
-            # torch.stack([A, B], dim=0) will be of shape (2, 3, 4)
-            lll_pred_ilabel0 = torch.cat(llll_pred_ilabel, dim=1)
-            ll_pred_confi0 = torch.cat(lll_pred_confi, dim=1)
-
-            # not used
-            # if self.constraint_str and \
-            #         'predict' not in self.params.d["action"] and \
-            #         self.params.d["batch_size"] != 1:
-            #     llll_word_score = torch.cat([lll.unsqueeze(1) for
-            #                                  lll in llll_word_score], dim=1)
-            #     # this fills tensor with 0's
-            #     llll_word_score.fill_(0)
-            #
-            #     # for checking test set
-            #     # lll_ilabel = copy(lll_pred_ilabel)
-            #     # ll_ilabel[lll_ilabel == -100] = 0
-            #     lll_pred_ilabel = copy(lll_pred_ilabel)
-            #
-            #     llll_ilabel = lll_pred_ilabel.unsqueeze(-1)
-            #     number_depths = llll_ilabel.shape[1]
-            #     llll_word_score = llll_word_score[:, :number_depths, :, :]
-            #     llll_word_score.scatter_(
-            #         dim=3,
-            #         index=llll_ilabel.long(),
-            #         src=1)
-
-            # not used
-            # for constraint, con_weight in self.con_to_weight.items():
-            #     con_loss = Model.sax_constrained_loss(
-            #         self.batch_m_in,
-            #         llll_word_score,
-            #         {constraint: con_weight})
-            #     if constraint not in self.con_to_l_loss:
-            #         self.con_to_l_loss[constraint] = []
-            #     self.con_to_l_loss[constraint].append(con_loss)
+        # never used
+        # self.con_to_l_loss = self.sax_get_con_to_l_loss(
+        #     x_d,
+        #     llll_word_scoreT,
+        #     lll_pred_ilabel0)
 
         batch_m_out = MOutput(meta_d["l_orig_sent"],
                               y_d["lll_ilabel"],
@@ -635,9 +594,104 @@ class Model(L.LightningModule):
 
         return batch_m_out
 
+    def sax_increment_loss(self,
+                           loss,
+                           x_d,
+                           llll_word_score,
+                           batch_size):
+        """
+
+        Parameters
+        ----------
+        loss: float
+        llll_word_score: list[torch.Tensor]
+        x_d: OrderedDict
+        batch_size: int
+
+        Returns
+        -------
+
+        """
+        if self.con_to_weight:
+            # dim=1 is depth. This cats along depth dimension
+            llll_word_scoreT = torch.cat(
+                [lll.unsqueeze(1) for lll in llll_word_score], dim=1)
+            llll_word_scoreT = torch.softmax(llll_word_scoreT, dim=-1)
+
+            con_loss = Model.sax_constrained_loss(
+                x_d,
+                llll_word_scoreT,
+                self.con_to_weight) / batch_size
+            loss = con_loss
+
+        if "wreg" in self.params.d:
+            weight_diff = 0
+            name_to_param = dict(self.named_parameters())
+            for name in self.init_name_to_param:
+                weight_diff += torch.norm(name_to_param[name]
+                                          - self.init_name_to_param[name])
+            loss += self.params.d["wreg"] * weight_diff
+        return loss
+
+    def sax_get_con_to_l_loss(self,
+                              x_d,
+                              llll_word_score,
+                              lll_pred_ilabel0):
+        """
+        This method is never used. Never checked
+
+        self.con_to_l_loss similar to self.self._constD in Openie6
+
+        Parameters
+        ----------
+        x_d: OrderedDict
+        llll_word_score: list[torch.Tensor]
+        lll_pred_ilabel0: torch.Tensor
+
+        Returns
+        -------
+        dict[str, list[float]]
+
+        """
+        con_to_l_loss = {}
+        # this calculates llll_word_score
+        if self.constraint_str and \
+                'predict' not in self.params.d["action"] and \
+                self.params.d["batch_size"] != 1:
+            # reshape llll_word_score
+            llll_word_scoreT = torch.cat([lll.unsqueeze(1) for
+                                          lll in llll_word_score], dim=1)
+            # this fills tensor with 0's
+            llll_word_scoreT.fill_(0)
+
+            # for checking test set
+            # lll_ilabel = copy(lll_pred_ilabel)
+            # ll_ilabel[lll_ilabel == -100] = 0
+            lll_ilabel = copy(lll_pred_ilabel0)
+
+            llll_ilabel = lll_ilabel.unsqueeze(-1)
+            number_depths = llll_ilabel.shape[1]
+            llll_word_scoreT = llll_word_scoreT[:, :number_depths, :, :]
+            llll_word_scoreT.scatter_(
+                dim=3,
+                index=llll_ilabel.long(),
+                src=1)
+
+            # this uses llll_word_score that was calculated previously
+            # to calculate con_to_l_loss
+            for constraint, con_weight in self.con_to_weight.items():
+                con_loss = Model.sax_constrained_loss(
+                    x_d,
+                    llll_word_scoreT,
+                    {constraint: con_weight})
+                if constraint not in con_to_l_loss:
+                    con_to_l_loss[constraint] = []
+                con_to_l_loss[constraint].append(con_loss)
+        return con_to_l_loss
+
     @staticmethod
     def sax_constrained_loss(x_d,
-                             llll_word_score,
+                             llll_word_scoreT,
                              con_to_weight):
         """
         similar to Openie6.model.constrained_loss()
@@ -647,7 +701,7 @@ class Model(L.LightningModule):
         Parameters
         ----------
         x_d: OrderedDict
-        llll_word_score: torch.Tensor
+        llll_word_scoreT: torch.Tensor
         con_to_weight: dict[str, float]
 
         Returns
@@ -656,12 +710,12 @@ class Model(L.LightningModule):
             hinge_loss
 
         """
-        batch_size, num_depths, num_words, icode_dim = llll_word_score.shape
+        batch_size, num_depths, num_words, icode_dim = llll_word_scoreT.shape
         hinge_loss = 0
         llll_index = x_d["ll_osent_verb_loc"].unsqueeze(1).unsqueeze(3). \
             repeat(1, num_depths, 1, icode_dim)
         llll_verb_confi = torch.gather(
-            input=llll_word_score,
+            input=llll_word_scoreT,
             dim=2,
             index=llll_index)
         lll_verb_rel_confi = llll_verb_confi[:, :, :, 2]
@@ -694,7 +748,7 @@ class Model(L.LightningModule):
             llll_index = x_d["ll_osent_pos_loc"]. \
                 unsqueeze(1).unsqueeze(3).repeat(1, num_depths, 1, icode_dim)
             llll_pred_confi = torch.gather(
-                input=llll_word_score,
+                input=llll_word_scoreT,
                 dim=2,
                 index=llll_index)
             lll_pos_not_none_confi = \
@@ -730,8 +784,9 @@ class Model(L.LightningModule):
                 str0 = "test_step"
             else:
                 assert False
-            if DEBUG: print("Entering Model." + str0 + " method, batch_idx=" + str(
-                batch_idx))
+            if VERBOSE:
+                print("Entering Model." + str0 +
+                      " method, batch_idx=" + str(batch_idx))
 
         batch_m_out = self.forward(batch, batch_idx, ttt)
 
@@ -836,7 +891,7 @@ class Model(L.LightningModule):
             score_d = self.metric.get_zero_score_d()
         else:
             for k, batch_m_out in enumerate(self.l_batch_m_out):
-                if DEBUG: print("batch id", k)
+                if VERBOSE: print("batch id", k)
                 if self.params.task == "cc":
                     self.metric(
                         batch_m_out.l_orig_sent,  # meta data
@@ -892,7 +947,7 @@ class Model(L.LightningModule):
                 str0 = "on_test_epoch_end"
             else:
                 assert False
-            if DEBUG: print("Entering Model." + str0 + " method")
+            if VERBOSE: print("Entering Model." + str0 + " method")
 
         scores_epoch_end_d = \
             self.sax_get_scores_at_epoch_end(ttt)
@@ -909,6 +964,7 @@ class Model(L.LightningModule):
 
         self.l_batch_m_out.restart()
         # self.l_batch_m_out.clear()  # free memory
+
         return epoch_acc
 
     def on_validation_epoch_end(self):

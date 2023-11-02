@@ -30,7 +30,7 @@ USE_SPACY_MODEL = True
 REMERGE_TOKENS = False
 CC_METRIC_SAVE = True
 
-DEBUG = False
+VERBOSE = False
 
 INPUT_DIR = "input_data"
 CACHE_DIR = 'cache'

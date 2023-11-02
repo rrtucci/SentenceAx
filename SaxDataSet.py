@@ -138,6 +138,7 @@ if __name__ == "__main__":
               dset.x.shape, np.product(dset.x.shape))
         print("y.shape, y.shape_product=",
               dset.y.shape, np.product(dset.y.shape))
+        print_tensor("y", dset.y)
         xname_to_xtensor = SaxDataSet.invert_cat(dset.x, dset.xname_to_dim1)
         for xname in xname_to_xtensor.keys():
             assert xname_to_xtensor[xname].shape == \

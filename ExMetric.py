@@ -52,6 +52,26 @@ class ExMetric:
         self.use_carb_ex = use_carb_ex
 
     @staticmethod
+    def print_osent2_to_exs(osent2_to_exs, start_id, end_id):
+        """
+
+        Parameters
+        ----------
+        osent2_to_exs: dict[str, list[SaxExtraction]]
+        start_id: int
+        end_id: int
+
+        Returns
+        -------
+        None
+
+        """
+        for sent in list(osent2_to_exs.keys())[start_id: end_id]:
+            print(sent)
+            for ex in osent2_to_exs[sent]:
+                print("(part) " + ex.get_simple_sent())
+
+    @staticmethod
     def get_osent2_to_exs_from_lll_ilabel(l_osent2,
                                           lll_ilabel,
                                           ll_confi,
@@ -130,10 +150,10 @@ class ExMetric:
         None
 
         """
-        if DEBUG: print("Entering ExMetric.__call__() method.")
+        if VERBOSE: print("Entering ExMetric.__call__() method.")
         assert not self.use_carb_ex
-        if DEBUG: print("ll_confi", ll_confi)
-        if DEBUG: print("len(self.osentL_to_exs)", len(self.osentL_to_exs))
+        if VERBOSE: print("ll_confi", ll_confi)
+        if VERBOSE: print("len(self.osentL_to_exs)", len(self.osentL_to_exs))
         dominant_d = \
             ExMetric.get_osent2_to_exs_from_lll_ilabel(
                 l_osentL,
@@ -141,7 +161,7 @@ class ExMetric:
                 ll_confi,
                 self.sent_to_sent)
         self.osentL_to_exs = merge_dicts(dominant_d, self.osentL_to_exs)
-        if DEBUG:
+        if VERBOSE:
             print("len(self.osentL_to_exs) after merge",
                   len(self.osentL_to_exs))
 
@@ -196,7 +216,7 @@ class ExMetric:
         dict[str, float]
 
         """
-        if DEBUG: print("Entering ExMetric.get_score_d() method.")
+        if VERBOSE: print("Entering ExMetric.get_score_d() method.")
 
         def fun(x):
             # if x is sax extraction
@@ -206,9 +226,10 @@ class ExMetric:
             elif hasattr(x, "confidence"):
                 return x.confidence
 
+        assert self.osentL_to_exs
         for osentL, exs in self.osentL_to_exs.items():
             # print("confi", [fun(ex) for ex in exs])
-            if DEBUG: print("len(exs)", len(exs))
+            if VERBOSE: print("len(exs)", len(exs))
             self.osentL_to_exs[osentL] = \
                 sorted(exs,
                        key=fun,

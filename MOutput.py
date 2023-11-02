@@ -34,7 +34,7 @@ class MOutput:
         lll_ilabel: torch.Tensor
         lll_pred_ilabel: torch.Tensor
         ll_pred_confi: torch.Tensor
-        loss: torch.Tensor
+        loss: float
         auto_tokenizer: AutoTokenizer
         
         """

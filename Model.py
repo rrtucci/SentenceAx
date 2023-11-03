@@ -661,6 +661,8 @@ class Model(L.LightningModule):
 
         """
         x_d, y_d, meta_d = Model.sax_get_batch_in_dicts(batch)
+        # print_tensor("y_d['lll_ilabel']", y_d['lll_ilabel'])
+        # print_list("y_d['lll_ilabel'][0][0]", y_d['lll_ilabel'][0][0])
         if "wreg" in self.params.d:
             self.init_name_to_param = deepcopy(
                 dict(self.named_parameters()))
@@ -922,7 +924,8 @@ class Model(L.LightningModule):
         scores_epoch_end_d = copy(score_d)
         scores_epoch_end_d["epoch_acc"] = epoch_acc
 
-        print('\nEpoch End Results:')
+        print('\nScores at end of epoch ' +
+              str(self.trainer.current_epoch) + ":")
         pprint(dict(scores_epoch_end_d))
         # For computing the constraint violations
         # if hasattr(self, 'con_to_l_loss') and \

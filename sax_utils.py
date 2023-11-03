@@ -493,7 +493,7 @@ def print_list(list_name, li):
     None
 
     """
-    print(list_name + " " + str(len(li)) + "\n" + str(li))
+    print(list_name + ", len=" + str(len(li)) + "\n" + str(li))
 
 
 def print_tensor(tensor_name, ten):
@@ -509,7 +509,7 @@ def print_tensor(tensor_name, ten):
     None
 
     """
-    print(tensor_name + " " + str(ten.shape) + "\n" + str(ten))
+    print(tensor_name + ", shape=" + str(ten.shape) + "\n" + str(ten))
 
 
 def check_module_version(module_name, lub_version):

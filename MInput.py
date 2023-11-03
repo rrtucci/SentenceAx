@@ -399,14 +399,16 @@ class MInput:
                 # some tag lines have too many or too few NONE at the end
 
                 # print("lmklo", k, str_list(osent_wstart_locs))
-                line_words = get_words(line)
-                # print("lmklo", k, str_list(line_words))
+                line_words = get_words(line, "ss")
+                # print("lmklo", k, line_words)
                 line_words += ["NONE"]*10
                 line_words = line_words[:len(osent_wstart_locs)]
 
 
                 ilabels = [get_tag_to_ilabel(self.params.task)[tag]
                            for tag in line_words]
+                # print("mmklo", line_words)
+                # print_list("ilabels", ilabels)
                 # print("nnmk-line number= " + str(k))
 
                 # print("xxcv", str_list(get_words(sentL)))
@@ -502,7 +504,7 @@ class MInput:
 
 if __name__ == "__main__":
     def main1(tags_in_fp, verbose=False):
-        params = Params(1)  # 1, task="ex", mode="train_test"
+        params = Params(1)  # 1, task="ex", action="train_test"
         model_str = "bert-base-uncased"
         auto_tokenizer = AutoTokenizer.from_pretrained(
             model_str,
@@ -560,11 +562,9 @@ if __name__ == "__main__":
         pprint(l_sent2)
 
 
-    # main1(tags_in_fp="tests/extags_test.txt",
-    #       verbose=False)
+    main1(tags_in_fp="tests/extags_test.txt",
+          verbose=False)
     # main2()
     # main1(tags_in_fp="predictions/small_pred.txt",
     #     verbose=True)
     #
-    # main1(tags_in_fp='input_data/carb-data/test.txt')
-    main1(tags_in_fp='input_data/carb-data/dev.txt')

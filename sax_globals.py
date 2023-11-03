@@ -46,10 +46,12 @@ CCTAGS_TEST_FP = 'input_data/openie-data/ptb-test.labels'
 CC_FIN_WEIGHTS_FP = WEIGHTS_DIR + '/cc.txt'
 
 # EXTAGS_TRAIN_FP = INPUT_DIR + '/openie-data/openie4_labels'
-# use smaller file for debugging
-EXTAGS_TRAIN_FP = INPUT_DIR + '/carb-data/test.txt'
-EXTAGS_TUNE_FP = INPUT_DIR + '/carb-data/dev.txt'
-EXTAGS_TEST_FP = INPUT_DIR + '/carb-data/test.txt'
+# use smaller file for debugging/warmup
+# IMPORTANT: input_data/carb-data/dev.txt and test.txt have as extags a
+# single line of only NONE's
+EXTAGS_TRAIN_FP = "tests/extags_train.txt"
+EXTAGS_TUNE_FP = "tests/extags_tune.txt"
+EXTAGS_TEST_FP = "tests/extags_test.txt"
 EX_FIN_WEIGHTS_FP = WEIGHTS_DIR + '/ex.txt'
 
 PRED_IN_FP = PREDICTING_DIR + "/carb_sentences"

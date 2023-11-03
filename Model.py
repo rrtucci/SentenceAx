@@ -391,34 +391,21 @@ class Model(L.LightningModule):
         x_d = SaxDataSet.invert_cat(x, xname_to_dim1)
         return x_d, y_d, meta_d
 
-    def forward(self, batch, batch_idx, ttt):
+    def sax_get_llll_word_score(self, x_d, y_d, ttt):
         """
-        inherited method
-        signature of parent method:  def forward(self, *args, **kwargs)
-
-        wreg = weight regulator (default =0)
-        loss_fun = loss_fun + wreg*weight_diff
-
-        The following methods invoke forward() once:
-        training_step(), validation_step(), test_step()
-
-        Parameter
+        used inside self.forward()
+        
+        Parameters
         ----------
-        batch: tuple[torch.Tensor, torch.Tensor, list[str]]
-        batch_idx: int
+        x_d: OrderedDict
+        y_d: dict[str, torch.Tensor]
         ttt: str
 
         Returns
         -------
-        MOutput
-            batch_m_out
+        list[torch.Tensor]
 
         """
-        x_d, y_d, meta_d = Model.sax_get_batch_in_dicts(batch)
-        if "wreg" in self.params.d:
-            self.init_name_to_param = deepcopy(
-                dict(self.named_parameters()))
-
         # lll_label is similar to openie6 labels
         # first (outer) list over batch/sample of events
         # second list over extractions
@@ -435,6 +422,7 @@ class Model(L.LightningModule):
 
         lll_hidden_state, _ = self.base_model(x_d["ll_osent_icode"])
 
+        lll_word_score = Ten([0])  # this statement is unecessary
         llll_word_score = []  # similar to all_depth_scores
         depth = 0
         while True:
@@ -480,144 +468,27 @@ class Model(L.LightningModule):
                         break
                 if not valid_extraction:
                     break
-        # outsource everything after do loop to a new function
-        return self.sax_calc_forward_output(
-            x_d, y_d, meta_d,
-            ttt,
-            lll_word_score,
-            llll_word_score)
-
-    def sax_calc_forward_output(self,
-                                x_d, y_d, meta_d,
-                                ttt,
-                                lll_word_score,
-                                llll_word_score):
-        """
-        not inherited method. used in forward() method
-
-        Parameters
-        ----------
-        x_d: OrderedDict
-        y_d: dict[str, torch.Tensor]
-        meta_d: dict[str, list[str]]
-        ttt: str
-        lll_word_score: torch.Tensor
-        llll_word_score: list[torch.Tensor]
-
-        Returns
-        -------
-        MOutput
-            batch_m_out
-
-
-        """
-        # print_tensor("lll_word_score", lll_word_score)
-        # print("vvbg", "len(llll_word_score)", len(llll_word_score))
-        # print_tensor("llll_word_score[0]", llll_word_score[0])
-        loss = 0
-        llll_pred_ilabel = []  # = all_depth_predictions
-        # lll_pred_ilabel0 = all_depth_predictions after cat dim=1
-        lll_pred_confi = []  # = all_depth_confidences
-        # ll_pred_confi0 = all_depth_confidences after cat dim=1
-        batch_size, num_words, _ = lll_word_score.shape
-        # y_d["lll_ilabel"] = \
-        #     y_d["lll_ilabel"].long()
-        for depth, lll_word_score7 in enumerate(llll_word_score):
-            if ttt == 'train':
-                ll_loss_input = \
-                    lll_word_score7.reshape(batch_size * num_words, -1)
-                # print_tensor("lll_word_score7", lll_word_score7)
-                # print_tensor("ll_loss_input", ll_loss_input)
-                l_loss_target = \
-                    y_d["lll_ilabel"][:, depth, :].reshape(-1)
-                loss += self.loss_fun(ll_loss_input, l_loss_target)
-                # print_tensor("l_loss_target", l_loss_target)
-                # print("loss", loss)
-            else: # ttt != "train
-                lll_soft_word_score = \
-                    torch.log_softmax(lll_word_score7, dim=2)
-                ll_max_log_prob, ll_pred_ilabel = \
-                    torch.max(lll_soft_word_score, dim=2)
-                # print_tensor("ll_max_log_prob", ll_max_log_prob)
-                # print_tensor("ll_pred_ilabel", ll_pred_ilabel)
-                # remember: lll_ilabel was similar to labels
-                # first (outer) list over batch events
-                # second list over extractions
-                # third (inner) list over number of ilabels in a line
-                # print("ttt, action", ttt, self.params.action)
-                # print_tensor("lll_ilabel", y_d["lll_ilabel"])
-                ll_nonpad_bool = \
-                    (y_d["lll_ilabel"][:, 0, :] != -100).float()
-                # print("dfrt", {name: x_d[name].shape for name in x_d.keys()})
-                # print_tensor("ll_nonpad_bool", ll_nonpad_bool)
-                # print_tensor("(ll_pred_ilabel != 0)",
-                #              (ll_pred_ilabel != 0).float())
-                # * is element-wise multiplication of tensors
-                ll_nonpad_bool = \
-                    (ll_pred_ilabel != 0).float() * ll_nonpad_bool
-                ll_norm_log_prob = \
-                    (ll_max_log_prob * ll_nonpad_bool) \
-                    / (1 + ll_nonpad_bool.sum(dim=0))
-                l_confi = torch.exp(
-                    torch.sum(ll_norm_log_prob, dim=1))
-
-                # this unsqueezes depth dim=1
-                llll_pred_ilabel.append(ll_pred_ilabel.unsqueeze(1))
-                lll_pred_confi.append(l_confi.unsqueeze(1))
-        # } on of for depth, lll_word_score7
-        if ttt == 'train':
-            loss = self.sax_increment_loss(
-                loss,
-                x_d,
-                llll_word_score,
-                batch_size)
-        # if A and B are of shape (3, 4):
-        # torch.cat([A, B], dim=0) will be of shape (6, 4)
-        # torch.stack([A, B], dim=0) will be of shape (2, 3, 4)
-
-        # llll_pred_ilabel: list[tensor]
-        # lll_pred_confi: list[tensor]
-        if ttt != "train":
-            lll_pred_ilabel0 = torch.cat(llll_pred_ilabel, dim=1)
-            ll_pred_confi0 = torch.cat(lll_pred_confi, dim=1)
-        else:
-            lll_pred_ilabel0 = None
-            ll_pred_confi0 =None
-
-
-
-        # never used
-        # self.con_to_l_loss = self.sax_get_con_to_l_loss(
-        #     x_d,
-        #     llll_word_scoreT,
-        #     lll_pred_ilabel0)
-
-        batch_m_out = MOutput(meta_d["l_orig_sent"],
-                              y_d["lll_ilabel"],
-                              lll_pred_ilabel0,
-                              ll_pred_confi0,
-                              loss)
-
-        return batch_m_out
+        return llll_word_score
 
     def sax_increment_loss(self,
                            loss,
                            x_d,
-                           llll_word_score,
-                           batch_size):
+                           llll_word_score):
         """
+        used inside self.forward()
 
         Parameters
         ----------
         loss: float
         llll_word_score: list[torch.Tensor]
         x_d: OrderedDict
-        batch_size: int
 
         Returns
         -------
+        float
 
         """
+        batch_size, _, _ = llll_word_score[0].shape
         if self.con_to_weight:
             # dim=1 is depth. This cats along depth dimension
             llll_word_scoreT = torch.cat(
@@ -644,6 +515,7 @@ class Model(L.LightningModule):
                               llll_word_score,
                               lll_pred_ilabel0):
         """
+        used inside self.forward()
         This method is never used. Never checked
 
         self.con_to_l_loss similar to self.self._constD in Openie6
@@ -701,8 +573,7 @@ class Model(L.LightningModule):
                              con_to_weight):
         """
         similar to Openie6.model.constrained_loss()
-        not inherited method
-        called by forward()
+        used inside self.forward()
 
         Parameters
         ----------
@@ -765,6 +636,135 @@ class Model(L.LightningModule):
             hinge_loss += con_to_weight['posm'] * ll_column_loss.sum()
 
         return hinge_loss
+
+    def forward(self, batch, batch_idx, ttt):
+        """
+        inherited method
+        signature of parent method:  def forward(self, *args, **kwargs)
+
+        wreg = weight regulator (default =0)
+        loss_fun = loss_fun + wreg*weight_diff
+
+        The following methods invoke forward() once:
+        training_step(), validation_step(), test_step()
+
+        Parameter
+        ----------
+        batch: tuple[torch.Tensor, torch.Tensor, list[str]]
+        batch_idx: int
+        ttt: str
+
+        Returns
+        -------
+        MOutput
+            batch_m_out
+
+        """
+        x_d, y_d, meta_d = Model.sax_get_batch_in_dicts(batch)
+        if "wreg" in self.params.d:
+            self.init_name_to_param = deepcopy(
+                dict(self.named_parameters()))
+
+        # lll_label is similar to openie6 labels
+        # first (outer) list over batch/sample of events
+        # second list over extractions
+        # third (inner) list over number of labels in a line
+        # after padding and adding the 3 unused tokens
+        batch_size, num_depths, num_words = y_d["lll_ilabel"].shape
+
+        # `loss_fun` is not used in this function anymore
+        # loss_fun, lstm_loss = 0, 0
+
+        # batch_text = " ".join(redoL(meta_d["l_orig_sent"]))
+        # base_model_input = \
+        #     torch.Tensor(self.auto_tokenizer.encode(batch_text))
+
+        llll_word_score = self.sax_get_llll_word_score(x_d, y_d, ttt)
+
+        # print_tensor("lll_word_score", lll_word_score)
+        # print("vvbg", "len(llll_word_score)", len(llll_word_score))
+        # print_tensor("llll_word_score[0]", llll_word_score[0])
+        loss = 0
+        llll_pred_ilabel = []  # = all_depth_predictions
+        # lll_pred_ilabel0 = all_depth_predictions after cat dim=1
+        lll_pred_confi = []  # = all_depth_confidences
+        # ll_pred_confi0 = all_depth_confidences after cat dim=1
+        # batch_size, num_words, _ = llll_word_score[0].shape
+        # y_d["lll_ilabel"] = \
+        #     y_d["lll_ilabel"].long()
+        for depth, lll_word_score in enumerate(llll_word_score):
+            if ttt == 'train':
+                ll_loss_input = \
+                    lll_word_score.reshape(batch_size * num_words, -1)
+                # print_tensor("lll_word_score", lll_word_score)
+                # print_tensor("ll_loss_input", ll_loss_input)
+                l_loss_target = \
+                    y_d["lll_ilabel"][:, depth, :].reshape(-1)
+                loss += self.loss_fun(ll_loss_input, l_loss_target)
+                # print_tensor("l_loss_target", l_loss_target)
+                # print("loss", loss)
+            else:  # ttt != "train
+                lll_soft_word_score = \
+                    torch.log_softmax(lll_word_score, dim=2)
+                ll_max_log_prob, ll_pred_ilabel = \
+                    torch.max(lll_soft_word_score, dim=2)
+                # print_tensor("ll_max_log_prob", ll_max_log_prob)
+                # print_tensor("ll_pred_ilabel", ll_pred_ilabel)
+                # remember: lll_ilabel was similar to labels
+                # first (outer) list over batch events
+                # second list over extractions
+                # third (inner) list over number of ilabels in a line
+                # print("ttt, action", ttt, self.params.action)
+                # print_tensor("lll_ilabel", y_d["lll_ilabel"])
+                ll_nonpad_bool = \
+                    (y_d["lll_ilabel"][:, 0, :] != -100).float()
+                # print("dfrt", {name: x_d[name].shape for name in x_d.keys()})
+                # print_tensor("ll_nonpad_bool", ll_nonpad_bool)
+                # print_tensor("(ll_pred_ilabel != 0)",
+                #              (ll_pred_ilabel != 0).float())
+                # * is element-wise multiplication of tensors
+                ll_nonpad_bool = \
+                    (ll_pred_ilabel != 0).float() * ll_nonpad_bool
+                ll_norm_log_prob = \
+                    (ll_max_log_prob * ll_nonpad_bool) \
+                    / (1 + ll_nonpad_bool.sum(dim=0))
+                l_confi = torch.exp(
+                    torch.sum(ll_norm_log_prob, dim=1))
+
+                # this unsqueezes depth dim=1
+                llll_pred_ilabel.append(ll_pred_ilabel.unsqueeze(1))
+                lll_pred_confi.append(l_confi.unsqueeze(1))
+        # } on of for depth, lll_word_score
+        if ttt == 'train':
+            loss = self.sax_increment_loss(
+                loss,
+                x_d,
+                llll_word_score)
+        # if A and B are of shape (3, 4):
+        # torch.cat([A, B], dim=0) will be of shape (6, 4)
+        # torch.stack([A, B], dim=0) will be of shape (2, 3, 4)
+
+        # llll_pred_ilabel: list[tensor]
+        # lll_pred_confi: list[tensor]
+        if ttt != "train":
+            lll_pred_ilabel0 = torch.cat(llll_pred_ilabel, dim=1)
+            ll_pred_confi0 = torch.cat(lll_pred_confi, dim=1)
+        else:
+            lll_pred_ilabel0 = Ten([0])
+            ll_pred_confi0 = Ten([0])
+
+        # never used
+        # self.con_to_l_loss = self.sax_get_con_to_l_loss(
+        #     x_d,
+        #     llll_word_scoreT,
+        #     lll_pred_ilabel0)
+
+        batch_m_out = MOutput(meta_d["l_orig_sent"],
+                              y_d["lll_ilabel"],
+                              lll_pred_ilabel0,
+                              ll_pred_confi0,
+                              loss)
+        return batch_m_out
 
     def sax_ttt_step(self, batch, batch_idx, ttt):
         """
@@ -873,7 +873,9 @@ class Model(L.LightningModule):
     def sax_get_scores_at_epoch_end(self, ttt):
         """
         similar to Openie6.model.evaluation_end()
-        not inherited method, used in *_epoch_end methods
+        
+        used inside self.sax_on_ttt_epoch_end()
+        
         note that both `mode` and self.params.d["action"] are used
 
         `outputs` similar to `l_batch_m_out`

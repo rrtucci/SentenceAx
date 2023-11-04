@@ -97,7 +97,7 @@ class SaxDataSet(Dataset):
         torch.Tensor, torch.Tensor
 
         self.l_orig_sent[isample]   is what is called metadata.
-        It is broken into batches along dim=0, just like self.x and self.y are
+        It is split into batches along dim=0, just like self.x and self.y are
         """
         return self.x[isample], self.y[isample], \
             self.l_orig_sent[isample], self.xname_to_dim1

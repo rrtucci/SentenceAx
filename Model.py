@@ -912,8 +912,7 @@ class Model(L.LightningModule):
                         batch_m_out.l_orig_sent,  # meta data
                         batch_m_out.lll_pred_ilabel,  # predictions
                         batch_m_out.ll_pred_confi)  # scores
-            score_d = self.metric.get_score_d(ttt,
-                                              do_reset=True)
+            score_d = self.metric.get_score_d(ttt)
 
         if self.params.task == "cc":
             epoch_acc = score_d["F1_exact"]
@@ -921,7 +920,7 @@ class Model(L.LightningModule):
             epoch_acc = score_d["F1"]
         else:
             assert False
-        scores_epoch_end_d = copy(score_d)
+        scores_epoch_end_d = OrderedDict(score_d)
         scores_epoch_end_d["epoch_acc"] = epoch_acc
 
         print('\nScores at end of epoch ' +

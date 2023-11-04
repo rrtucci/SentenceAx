@@ -21,21 +21,21 @@ class ExMetric:
     osentL_to_exs: dict[str, listt[SaxExtraction]]
     score_d: dict[str, float]
     test_benchmark: Benchmark
-    use_carb_ex: bool
+    input_carb_exs: bool
     
     """
 
     def __init__(self,
                  osentL_to_exs=None,
                  sent_to_sent=None,
-                 use_carb_ex=False):
+                 input_carb_exs=False):
         """
         
         Parameters
         ----------
         osentL_to_exs: dict[str, list[SaxExtraction]]
         sent_to_sent: dict[str, str]
-        use_carb_ex: bool
+        input_carb_exs: bool
         """
         self.tune_benchmark = Benchmark('carb_subset/data/gold/dev.tsv')
         self.test_benchmark = Benchmark('carb_subset/data/gold/test.tsv')
@@ -49,7 +49,7 @@ class ExMetric:
         # self.ll_osent_verb_bool = [] # not used
         self.score_d = ExMetric.get_zero_score_d()
         self.sent_to_sent = sent_to_sent
-        self.use_carb_ex = use_carb_ex
+        self.input_carb_exs = input_carb_exs
 
     @staticmethod
     def print_osent2_to_exs(osent2_to_exs, start_id, end_id):
@@ -151,7 +151,7 @@ class ExMetric:
 
         """
         if VERBOSE: print("Entering ExMetric.__call__() method.")
-        assert not self.use_carb_ex
+        assert not self.input_carb_exs
         if VERBOSE: print("ll_confi", ll_confi)
         if VERBOSE: print("len(self.osentL_to_exs)", len(self.osentL_to_exs))
         dominant_d = \
@@ -234,19 +234,24 @@ class ExMetric:
                 sorted(exs,
                        key=fun,
                        reverse=True)[:EX_NUM_DEPTHS]
-        if not self.use_carb_ex:
+        if not self.input_carb_exs:
             osent_to_exs = undoL(self.osentL_to_exs)
             carb_osent_to_exs = \
                 SaxExtraction.get_carb_osent2_to_exs(osent_to_exs)
         else:
-            carb_osent_to_exs = self.osentL_to_exs
+            carb_osent_to_exs = undoL(self.osentL_to_exs)
 
         # no /dev/null in Windows
         # out_fp = "/dev/null"
         out_fp = "dev_null.txt"
+
+        # this means that the exs of
+        # EXTAGS_TEST_FP and EXTAGS_TUNE_FP
+        # are ignored. In the actual files, they are
+        # just a single extraction with only NONE extags
         if ttt == "tune":
             bmark = self.tune_benchmark
-        elif ttt == 'test':
+        elif ttt == "test":
             bmark = self.test_benchmark
         else:
             assert False
@@ -262,6 +267,8 @@ class ExMetric:
             {'AUC': auc,
              'F1': optimal_f1_point[2],
              'last_F1': last_f1_point[2]})
+        # necessary because __call__ only
+        # appends to self.osentL_to_exs
         if do_reset:
             self.reset_exs_dict()
         return self.score_d
@@ -302,7 +309,7 @@ if __name__ == "__main__":
     def main3():
         bm = Benchmark('carb_subset/data/gold/test.tsv')
         carb_osent_to_exs = bm.gold
-        ex_met = ExMetric(carb_osent_to_exs, use_carb_ex=True)
+        ex_met = ExMetric(carb_osent_to_exs, input_carb_exs=True)
         # unnecessary
         # ex_met()
         score_d = ex_met.get_score_d(ttt="test", do_reset=True)

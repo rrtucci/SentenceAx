@@ -138,8 +138,7 @@ class MInput:
         """
         similar to Openie6.data.remerge_sent()
 
-        remerge is only necessary if use get_words() with algo="ss" instead
-        of algo="nltk"
+        apparently, spacy separates `` into ` `, etc.
 
         Parameters
         ----------
@@ -327,6 +326,7 @@ class MInput:
         sentL = ""  # similar to `sentence`
 
         print("\nMInput started reading '" + self.tags_in_fp + "'")
+        print("...")
         with open(self.tags_in_fp, "r", encoding="utf-8") as f:
             lines = f.readlines()
 
@@ -401,7 +401,7 @@ class MInput:
                 # print("lmklo", k, str_list(osent_wstart_locs))
                 line_words = get_words(line, "ss")
                 # print("lmklo", k, line_words)
-                line_words += ["NONE"]*10
+                line_words += ["NONE"]*15
                 line_words = line_words[:len(osent_wstart_locs)]
 
 
@@ -458,11 +458,11 @@ class MInput:
             prev_line = line
         #} line loop
         num_samples = len(l_orig_sent)
-        print()
         print("MInput finished reading '" + self.tags_in_fp + "'")
         print("number of lines= " + str(len(lines))) # exclude empty line
         print("number of used samples= ", num_samples)
         print("number of omitted samples= ", num_omitted_sents)
+        print()
 
         self.l_orig_sent = l_orig_sent
         # ll_osent_icode add extra term [0] at beginning

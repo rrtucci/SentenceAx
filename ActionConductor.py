@@ -238,8 +238,11 @@ class ActionConductor:
         if use_minimal:
             trainer = Trainer(
                 # gpus=self.params.d["gpus"],
-                logger=logger,
-                reload_dataloaders_every_n_epochs=0
+                logger=logger
+                # num_sanity_val_steps=0,
+                # limit_train_batches=2,
+                # limit_val_batches=2,
+                # limit_test_batches=2
             )
         else:
             trainer = Trainer(
@@ -247,7 +250,7 @@ class ActionConductor:
                     "accumulate_grad_batches"],
                 callbacks=self.checkpoint_callback,
                 enable_progress_bar=True,
-                # gradient_clip_value=,
+                gradient_clip_val= self.params.d["gradient_clip_val"],
                 logger=logger,
                 max_epochs=self.params.d["epochs"],
                 min_epochs=self.params.d["epochs"],
@@ -255,7 +258,10 @@ class ActionConductor:
                 # use_tpu=deprecated,
                 #train_percent_check=,
                 # track_grad_norm= deprecated
-                reload_dataloaders_every_n_epochs=0
+                # num_sanity_val_steps=0,
+                # limit_train_batches=2,
+                # limit_val_batches=2,
+                # limit_test_batches=2
             )
         return trainer
 

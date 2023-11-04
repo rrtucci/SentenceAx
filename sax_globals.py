@@ -27,7 +27,7 @@ params_d = parameters dictionary
 # EXTAGS_TEST_FP = "input_data/extags_test.txt"
 
 USE_SPACY_MODEL = True
-REMERGE_TOKENS = False
+REMERGE_TOKENS = True
 CC_METRIC_SAVE = True
 
 VERBOSE = False
@@ -43,15 +43,21 @@ VAL_OUT_DIR = "val_outputs"
 CCTAGS_TRAIN_FP = 'input_data/openie-data/ptb-train.labels'
 CCTAGS_TUNE_FP = 'input_data/openie-data/ptb-dev.labels'
 CCTAGS_TEST_FP = 'input_data/openie-data/ptb-test.labels'
+
 CC_FIN_WEIGHTS_FP = WEIGHTS_DIR + '/cc.txt'
 
 # EXTAGS_TRAIN_FP = INPUT_DIR + '/openie-data/openie4_labels'
 # use smaller file for debugging/warmup
-# IMPORTANT: input_data/carb-data/dev.txt and test.txt have as extags a
-# single line of only NONE's
+
 EXTAGS_TRAIN_FP = "tests/extags_train.txt"
-EXTAGS_TUNE_FP = "tests/extags_tune.txt"
-EXTAGS_TEST_FP = "tests/extags_test.txt"
+# IMPORTANT: dev.txt and test.txt have extag files with
+# single line ex, with only NONE extags. The actual extags
+# are obtained by ExMetric from benchmark files.
+# So don't change the dev.txt or test.txt files to something else
+# because ExMetric is expecting them.
+EXTAGS_TUNE_FP = INPUT_DIR + "/carb-data/dev.txt"
+EXTAGS_TEST_FP = INPUT_DIR + "/carb-data/test.txt"
+
 EX_FIN_WEIGHTS_FP = WEIGHTS_DIR + '/ex.txt'
 
 PRED_IN_FP = PREDICTING_DIR + "/carb_sentences"

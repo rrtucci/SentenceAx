@@ -1,7 +1,6 @@
 from Params import *
 from AllenTool import *
 from transformers import AutoTokenizer
-import spacy
 import torch
 from torch.utils.data import DataLoader
 

@@ -2,7 +2,6 @@ from collections import defaultdict
 import random
 import numpy as np
 import torch
-import spacy
 import nltk
 from Params import *
 from math import floor
@@ -174,15 +173,15 @@ def get_words(sent, algo="nltk"):
             return li0
         else:
             return []
-    elif algo == "spacy":
-        # slow for just tokenizing
-        nlp = spacy.load("en_core_web_sm")
-        if "[unused" in sent:
-            doc = nlp(undoL(sent))
-            return [tok.text for tok in doc] + UNUSED_TOKENS
-        else:
-            doc = nlp(sent)
-            return [tok.text for tok in doc]
+    # elif algo == "spacy":
+    #     # slow for just tokenizing
+    #     nlp = spacy.load("en_core_web_sm")
+    #     if "[unused" in sent:
+    #         doc = nlp(undoL(sent))
+    #         return [tok.text for tok in doc] + UNUSED_TOKENS
+    #     else:
+    #         doc = nlp(sent)
+    #         return [tok.text for tok in doc]
 
     elif algo == "nltk":
         if "[unused" in sent:

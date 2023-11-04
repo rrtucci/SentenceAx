@@ -27,7 +27,6 @@ params_d = parameters dictionary
 # EXTAGS_TEST_FP = "input_data/extags_test.txt"
 
 USE_SPACY_MODEL = True
-REMERGE_TOKENS = True
 CC_METRIC_SAVE = True
 
 VERBOSE = False

@@ -1,5 +1,7 @@
 from Params import *
-import spacy
+# import spacy
+from nltk.tag import pos_tag
+
 from sax_utils import *
 from transformers import AutoTokenizer
 from copy import deepcopy
@@ -35,7 +37,7 @@ class MInput:
     verbose: bool
 
     """
-
+    REMERGE_TOKENS = True  # no longer used. Used only with Spacy POS
     def __init__(self,
                  params,
                  tags_in_fp,
@@ -74,8 +76,8 @@ class MInput:
         self.ll_osent_wstart_loc = []  # shape=(num_samples, encoding len)
         self.ll_osent_icode = []  # shape=(num_samples, encoding len
 
-        if USE_SPACY_MODEL:
-            self.spacy_model = spacy.load("en_core_web_sm")
+        # if USE_SPACY_MODEL:
+        #     self.spacy_model = spacy.load("en_core_web_sm")
         # spacy usage:
         # doc = spacy_model("This is a text")
         # spacy_model.pipe()
@@ -134,63 +136,164 @@ class MInput:
             l_sent.append(sent)
         return l_sent
 
-    def remerge_tokens(self, tokens):
-        """
-        similar to Openie6.data.remerge_sent()
+    # def remerge_tokens(self, tokens):
+    #     """
+    #     similar to Openie6.data.remerge_sent()
+    #
+    #     apparently, spacy separates `` into ` `, etc.
+    #
+    #     Parameters
+    #     ----------
+    #     tokens: spacy.Doc
+    #         spacy.Doc is a list of Tokens
+    #
+    #     Returns
+    #     -------
+    #     spacy.Doc
+    #
+    #     """
+    #     # merges spacy tokens which are not separated by white-space
+    #     # does this recursively until no further changes
+    #
+    #     changed = True
+    #     while changed:
+    #         changed = False
+    #         i = 0
+    #         while i < len(tokens) - 1:
+    #             # print("sdfrt", i)
+    #             tok = tokens[i]
+    #             if not tok.whitespace_:
+    #                 next_tok = tokens[i + 1]
+    #                 # in-place operation.
+    #                 a = tok.i
+    #                 b = a + 2
+    #                 # b = next_tok.idx + len(next_tok)
+    #                 # old
+    #                 # tokens[a:b].merge()
+    #                 # new
+    #                 # print("dfgty***********", a, b, tokens[0:2], len(tokens))
+    #
+    #                 if a < b <= len(tokens):
+    #                     if self.verbose:
+    #                         print('\nremerging ', tok, next_tok)
+    #                         print(tokens)
+    #                     with tokens.retokenize() as retokenizer:
+    #                         retokenizer.merge(tokens[a:b])
+    #                     if self.verbose:
+    #                         print(tokens)
+    #                 changed = True
+    #             i += 1
+    #     return tokens
 
-        apparently, spacy separates `` into ` `, etc.
+    # @staticmethod
+    # def pos_info(tokens):
+    #     """
+    #     similar to Openie6.data.pos_tags()
+    #
+    #     Parameters
+    #     ----------
+    #     tokens: spacy.Doc
+    #
+    #     Returns
+    #     -------
+    #     list[int], list[int], list[str]
+    #
+    #     """
+    #     pos_locs = []
+    #     pos_bools = []
+    #     pos_words = []
+    #     for token_index, token in enumerate(tokens):
+    #         if token.pos_ in ['ADJ', 'ADV', 'NOUN', 'PROPN', 'VERB']:
+    #             pos_bools.append(1)
+    #             pos_locs.append(token_index)
+    #             pos_words.append(token.lower_)
+    #         else:
+    #             pos_bools.append(0)
+    #     pos_bools.append(0)
+    #     pos_bools.append(0)
+    #     pos_bools.append(0)
+    #     return pos_locs, pos_bools, pos_words
+    #
+    # @staticmethod
+    # def verb_info(tokens):
+    #     """
+    #     similar to Openie6.data.verb_tags()
+    #
+    #     Parameters
+    #     ----------
+    #     tokens: spacy.Doc
+    #
+    #     Returns
+    #     -------
+    #     list[int], list[int], list[str]
+    #
+    #     """
+    #     verb_locs = []
+    #     verb_bools = []
+    #     verb_words = []
+    #     for token_index, token in enumerate(tokens):
+    #         if token.pos_ in ['VERB'] and \
+    #                 token.lower_ not in LIGHT_VERBS:
+    #             verb_bools.append(1)
+    #             verb_locs.append(token_index)
+    #             verb_words.append(token.lower_)
+    #         else:
+    #             verb_bools.append(0)
+    #     verb_bools.append(0)
+    #     verb_bools.append(0)
+    #     verb_bools.append(0)
+    #     return verb_locs, verb_bools, verb_words
 
-        Parameters
-        ----------
-        tokens: spacy.Doc
-            spacy.Doc is a list of Tokens
-
-        Returns
-        -------
-        spacy.Doc
-
-        """
-        # merges spacy tokens which are not separated by white-space
-        # does this recursively until no further changes
-
-        changed = True
-        while changed:
-            changed = False
-            i = 0
-            while i < len(tokens) - 1:
-                # print("sdfrt", i)
-                tok = tokens[i]
-                if not tok.whitespace_:
-                    next_tok = tokens[i + 1]
-                    # in-place operation.
-                    a = tok.i
-                    b = a + 2
-                    # b = next_tok.idx + len(next_tok)
-                    # old
-                    # tokens[a:b].merge()
-                    # new
-                    # print("dfgty***********", a, b, tokens[0:2], len(tokens))
-
-                    if a < b <= len(tokens):
-                        if self.verbose:
-                            print('\nremerging ', tok, next_tok)
-                            print(tokens)
-                        with tokens.retokenize() as retokenizer:
-                            retokenizer.merge(tokens[a:b])
-                        if self.verbose:
-                            print(tokens)
-                    changed = True
-                i += 1
-        return tokens
+    # def fill_pos_and_verb_info(self):
+    #     """
+    #
+    #     Returns
+    #     -------
+    #     None
+    #
+    #     """
+    #     self.ll_osent_pos_bool = []
+    #     self.ll_osent_pos_loc = []
+    #     self.ll_osent_verb_bool = []
+    #     self.ll_osent_verb_loc = []
+    #     if not USE_SPACY_MODEL or "predict" in self.params.action:
+    #         self.ll_osent_pos_bool = [[]]
+    #         self.ll_osent_pos_loc = [[]]
+    #         self.ll_osent_verb_bool = [[]]
+    #         self.ll_osent_verb_loc = [[]]
+    #         return
+    #     # print("bbght", self.l_orig_sent)
+    #     for sent_id, spacy_tokens in enumerate(
+    #             self.spacy_model.pipe(self.l_orig_sent,
+    #                                   batch_size=10000)):
+    #         if REMERGE_TOKENS:
+    #             spacy_tokens = self.remerge_tokens(spacy_tokens)
+    #
+    #             # assert len(self.l_orig_sent[sent_id].split()) == len(
+    #             #      spacy_tokens)
+    #
+    #         pos_locs, pos_bools, pos_words = \
+    #             MInput.pos_info(spacy_tokens)
+    #         self.ll_osent_pos_bool.append(pos_bools)
+    #         self.ll_osent_pos_loc.append(pos_locs)
+    #
+    #         verb_locs, verb_bools, verb_words = \
+    #             MInput.verb_info(spacy_tokens)
+    #         self.ll_osent_verb_bool.append(verb_bools)
+    #         if verb_locs:
+    #             self.ll_osent_verb_loc.append(verb_locs)
+    #         else:
+    #             self.ll_osent_verb_loc.append([0])
 
     @staticmethod
-    def pos_info(tokens):
+    def pos_info(pos_tags):
         """
         similar to Openie6.data.pos_tags()
 
         Parameters
         ----------
-        tokens: spacy.Doc
+        pos_tags: list[tuple(str, str)]
+            example (("John", "NOUN"), ("eats", "VERB"))
 
         Returns
         -------
@@ -200,11 +303,11 @@ class MInput:
         pos_locs = []
         pos_bools = []
         pos_words = []
-        for token_index, token in enumerate(tokens):
-            if token.pos_ in ['ADJ', 'ADV', 'NOUN', 'PROPN', 'VERB']:
+        for pos_tag_index, pos_tag in enumerate(pos_tags):
+            if pos_tag[1] in ['ADJ', 'ADV', 'NOUN', 'PROPN', 'VERB']:
                 pos_bools.append(1)
-                pos_locs.append(token_index)
-                pos_words.append(token.lower_)
+                pos_locs.append(pos_tag_index)
+                pos_words.append(pos_tag[0].lower())
             else:
                 pos_bools.append(0)
         pos_bools.append(0)
@@ -213,13 +316,14 @@ class MInput:
         return pos_locs, pos_bools, pos_words
 
     @staticmethod
-    def verb_info(tokens):
+    def verb_info(pos_tags):
         """
         similar to Openie6.data.verb_tags()
 
         Parameters
         ----------
-        tokens: spacy.Doc
+        pos_tags: list[tuple(str, str)]
+            example (("John", "NOUN"), ("eats", "VERB"))
 
         Returns
         -------
@@ -229,12 +333,12 @@ class MInput:
         verb_locs = []
         verb_bools = []
         verb_words = []
-        for token_index, token in enumerate(tokens):
-            if token.pos_ in ['VERB'] and \
-                    token.lower_ not in LIGHT_VERBS:
+        for pos_tag_index, pos_tag in enumerate(pos_tags):
+            if pos_tag[1] in ['VERB'] and \
+                    pos_tag[0].lower() not in LIGHT_VERBS:
                 verb_bools.append(1)
-                verb_locs.append(token_index)
-                verb_words.append(token.lower_)
+                verb_locs.append(pos_tag_index)
+                verb_words.append(pos_tag[0].lower())
             else:
                 verb_bools.append(0)
         verb_bools.append(0)
@@ -261,27 +365,22 @@ class MInput:
             self.ll_osent_verb_loc = [[]]
             return
         # print("bbght", self.l_orig_sent)
-        for sent_id, spacy_tokens in enumerate(
-                self.spacy_model.pipe(self.l_orig_sent,
-                                      batch_size=10000)):
-            if REMERGE_TOKENS:
-                spacy_tokens = self.remerge_tokens(spacy_tokens)
-
-                # assert len(self.l_orig_sent[sent_id].split()) == len(
-                #      spacy_tokens)
+        for sent_id, sent in enumerate(self.l_orig_sent):
+            pos_tags = pos_tag(get_words(sent, algo="nltk"))
 
             pos_locs, pos_bools, pos_words = \
-                MInput.pos_info(spacy_tokens)
+                MInput.pos_info(pos_tags)
             self.ll_osent_pos_bool.append(pos_bools)
             self.ll_osent_pos_loc.append(pos_locs)
 
             verb_locs, verb_bools, verb_words = \
-                MInput.verb_info(spacy_tokens)
+                MInput.verb_info(pos_tags)
             self.ll_osent_verb_bool.append(verb_bools)
             if verb_locs:
                 self.ll_osent_verb_loc.append(verb_locs)
             else:
                 self.ll_osent_verb_loc.append([0])
+
 
     def read_input_tags_file(self):
         """
@@ -564,7 +663,7 @@ if __name__ == "__main__":
 
     main1(tags_in_fp="tests/extags_test.txt",
           verbose=False)
-    # main2()
-    # main1(tags_in_fp="predictions/small_pred.txt",
-    #     verbose=True)
-    #
+    main2()
+    main1(tags_in_fp="predicting/small_pred.txt",
+        verbose=True)
+

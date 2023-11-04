@@ -32,7 +32,7 @@ class MInput:
     ll_osent_wstart_loc: list[list[int]]
     lll_ilabel: list[list[list[int]]]
     params: Params
-    spacy_model: spacy.Language
+    # spacy_model: spacy.Language
     tags_in_fp: str
     verbose: bool
 

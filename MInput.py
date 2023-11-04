@@ -2,6 +2,7 @@ from Params import *
 # import spacy
 
 import nltk
+nltk.download('popular')
 nltk.download('averaged_perceptron_tagger')
 from nltk.tag import pos_tag
 

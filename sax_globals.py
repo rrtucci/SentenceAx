@@ -46,10 +46,10 @@ CCTAGS_TEST_FP = 'input_data/openie-data/ptb-test.labels'
 
 CC_FIN_WEIGHTS_FP = WEIGHTS_DIR + '/cc.txt'
 
-# EXTAGS_TRAIN_FP = INPUT_DIR + '/openie-data/openie4_labels'
+EXTAGS_TRAIN_FP = INPUT_DIR + '/openie-data/openie4_labels'
 # use smaller file for debugging/warmup
 
-EXTAGS_TRAIN_FP = "tests/extags_train.txt"
+# EXTAGS_TRAIN_FP = "tests/extags_train.txt"
 # IMPORTANT: dev.txt and test.txt have extag files with
 # single line ex, with only NONE extags. The actual extags
 # are obtained by ExMetric from benchmark files.

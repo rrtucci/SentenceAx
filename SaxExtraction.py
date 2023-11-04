@@ -871,13 +871,13 @@ class SaxExtraction:
             else:
                 assert False, ex_ilabels[i]
 
-        rel = ' '.join(rel_words)
+        rel_clause = ' '.join(rel_words)
         if rel_case == 1:
-            rel = 'is ' + rel
+            rel_clause = 'is ' + rel_clause
         elif rel_case == 2:
-            rel = 'is ' + rel + ' of'
+            rel_clause = 'is ' + rel_clause + ' of'
         elif rel_case == 3:
-            rel = 'is ' + rel + ' from'
+            rel_clause = 'is ' + rel_clause + ' from'
 
         arg1 = ' '.join(arg1_words)
         arg2 = ' '.join(arg2_words)
@@ -889,7 +889,7 @@ class SaxExtraction:
 
         extraction = SaxExtraction(orig_sentL,
                                    arg1,
-                                   rel,
+                                   rel_clause,
                                    arg2,
                                    confi=confi)
 

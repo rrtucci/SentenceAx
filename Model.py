@@ -412,6 +412,9 @@ class Model(L.LightningModule):
         # third (inner) list over number of labels in a line
         # after padding and adding the 3 unused tokens
         batch_size, num_depths, num_words = y_d["lll_ilabel"].shape
+        # sometimes num_depths will exceed max
+        if ttt != 'train':
+            num_depths = get_num_depths(self.params.task)
 
         # `loss_fun` is not used in this function anymore
         # loss_fun, lstm_loss = 0, 0
@@ -444,9 +447,9 @@ class Model(L.LightningModule):
                 index=lll_loc)
 
             if depth != 0:
-                ll_word_score = torch.argmax(lll_word_score, dim=-1)
+                ll_greedy_ilabel = torch.argmax(lll_word_score, dim=-1)
                 # not an integer code/embedding
-                lll_pred_code = self.embedding(ll_word_score)
+                lll_pred_code = self.embedding(ll_greedy_ilabel)
                 lll_word_hidden_state += lll_pred_code
 
             lll_word_hidden_state = self.merge_layer(lll_word_hidden_state)
@@ -458,12 +461,12 @@ class Model(L.LightningModule):
                 break
             # this means task="ex"
             if ttt != 'train':
-                ll_prob_ilabel = torch.max(lll_word_score, dim=2)[1]
+                ll_pred_ilabel = torch.max(lll_word_score, dim=2)[1]
                 valid_extraction = False
                 assert self.params.task == "ex"
-                for l_prob_ilabel in ll_prob_ilabel:
+                for l_pred_ilabel in ll_pred_ilabel:
                     # 'ARG1': 1, 'REL': 2
-                    if 1 in l_prob_ilabel and 2 in l_prob_ilabel:
+                    if 1 in l_pred_ilabel and 2 in l_pred_ilabel:
                         valid_extraction = True
                         break
                 if not valid_extraction:
@@ -672,7 +675,7 @@ class Model(L.LightningModule):
         # second list over extractions
         # third (inner) list over number of labels in a line
         # after padding and adding the 3 unused tokens
-        batch_size, num_depths, num_words = y_d["lll_ilabel"].shape
+        # batch_size, num_depths, num_words = y_d["lll_ilabel"].shape
 
         # `loss_fun` is not used in this function anymore
         # loss_fun, lstm_loss = 0, 0
@@ -691,18 +694,27 @@ class Model(L.LightningModule):
         # lll_pred_ilabel0 = all_depth_predictions after cat dim=1
         lll_pred_confi = []  # = all_depth_confidences
         # ll_pred_confi0 = all_depth_confidences after cat dim=1
-        # batch_size, num_words, _ = llll_word_score[0].shape
+        batch_size, num_words, xxx = llll_word_score[0].shape
         # y_d["lll_ilabel"] = \
         #     y_d["lll_ilabel"].long()
         for depth, lll_word_score in enumerate(llll_word_score):
             if ttt == 'train':
+                # here -1 will be the depth
                 ll_loss_input = \
                     lll_word_score.reshape(batch_size * num_words, -1)
                 # print_tensor("lll_word_score", lll_word_score)
                 # print_tensor("ll_loss_input", ll_loss_input)
+
+                # ll_loss_input.shape(batch_size * num_words, depth)
+                # l_loss_target.shape = (batch_size * num_words, )
+                # loss is scalar
+
                 l_loss_target = \
-                    y_d["lll_ilabel"][:, depth, :].reshape(-1)
-                loss += self.loss_fun(ll_loss_input, l_loss_target)
+                    y_d["lll_ilabel"][:, depth, :].reshape(-1).float()
+                loss += self.loss_fun(ll_loss_input[:, depth],
+                                            l_loss_target)
+
+                # print("loss shape", loss.shape)
                 # print_tensor("l_loss_target", l_loss_target)
                 # print("loss", loss)
             else:  # ttt != "train

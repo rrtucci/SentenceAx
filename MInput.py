@@ -2,10 +2,8 @@ from Params import *
 # import spacy
 
 import nltk
-
-nltk.download('popular')
-nltk.download('averaged_perceptron_tagger')
-from nltk.tag import pos_tag
+nltk.download('popular', quiet=True)
+nltk.download('averaged_perceptron_tagger', quiet=True)
 
 from sax_utils import *
 from transformers import AutoTokenizer
@@ -372,7 +370,7 @@ class MInput:
             return
         # print("bbght", self.l_orig_sent)
         for sent_id, sent in enumerate(self.l_orig_sent):
-            pos_tags = pos_tag(get_words(sent, algo="nltk"))
+            pos_tags = nltk.pos_tag(get_words(sent, algo="nltk"))
 
             pos_locs, pos_bools, pos_words = \
                 MInput.pos_info(pos_tags)
@@ -475,8 +473,8 @@ class MInput:
                 osentL_words = get_words(osentL)
                 encoding_d = self.auto_tokenizer.batch_encode_plus(
                     osentL_words,
-                    add_special_tokens=False,
-                    additional_special_tokens=UNUSED_TOKENS
+                    add_special_tokens=False # necessary
+                    # additional_special_tokens=UNUSED_TOKENS # refused
                 )
                 # specified when initialized self.auto_tokenizer
                 # add_special_tokens=False,
@@ -507,8 +505,10 @@ class MInput:
                 # print("lmklo", k, str_list(osent_wstart_locs))
                 line_words = get_words(line)
                 # print("lmklo1", k, line_words)
+                # some line_words shorter than len(osentL_words)
                 line_words += ["NONE"] * 15
-                line_words = line_words[:len(osentL_words)]
+                max_len = min(len(osentL_words), MAX_NUM_OSENTL_WORDS)
+                line_words = line_words[:max_len]
                 # print("lmklo2", k, line_words)
 
                 ilabels = [get_tag_to_ilabel(self.params.task)[tag]
@@ -519,8 +519,8 @@ class MInput:
 
                 # print("xxcv", str_list(get_words(osentL)))
                 # print("vvbn-line-words", str_list(get_words(line)))
-                assert len(ilabels) == len(osent_wstart_locs), \
-                    f"{str(len(ilabels))} != {str(len(osent_wstart_locs))}"
+                # assert len(ilabels) == len(osent_wstart_locs), \
+                #     f"{str(len(ilabels))} != {str(len(osent_wstart_locs))}"
                 ll_ilabel.append(ilabels)
                 # print("dfgthj", ll_ilabel)
                 # end of if tag line

@@ -2,6 +2,7 @@ from Params import *
 # import spacy
 
 import nltk
+
 nltk.download('popular')
 nltk.download('averaged_perceptron_tagger')
 from nltk.tag import pos_tag
@@ -42,6 +43,7 @@ class MInput:
 
     """
     REMERGE_TOKENS = True  # no longer used. Used only with Spacy POS
+
     def __init__(self,
                  params,
                  tags_in_fp,
@@ -385,7 +387,6 @@ class MInput:
             else:
                 self.ll_osent_verb_loc.append([0])
 
-
     def read_input_tags_file(self):
         """
         similar to Openie6.data._process_data()
@@ -460,9 +461,9 @@ class MInput:
         for line in lines + [""]:
             k += 1
             line = line.strip()
-            # if line == "":
-            #     # this skips blank lines
-            #     continue  # skip to next line
+            if line == "":
+                # this skips blank lines
+                continue  # skip to next line
             # print("kklop", line)
             if is_osent_line_of_sample(line):
                 # print("kklop-1st", k, line)
@@ -502,11 +503,11 @@ class MInput:
                 # some tag lines have too many or too few NONE at the end
 
                 # print("lmklo", k, str_list(osent_wstart_locs))
-                line_words = get_words(line, "ss")
-                # print("lmklo", k, line_words)
-                line_words += ["NONE"]*15
+                line_words = get_words(line)
+                # print("lmklo1", k, line_words)
+                line_words += ["NONE"] * 15
                 line_words = line_words[:len(osent_wstart_locs)]
-
+                # print("lmklo2", k, line_words)
 
                 ilabels = [get_tag_to_ilabel(self.params.task)[tag]
                            for tag in line_words]
@@ -517,25 +518,25 @@ class MInput:
                 # print("xxcv", str_list(get_words(sentL)))
                 # print("vvbn-line-words", str_list(get_words(line)))
                 assert len(ilabels) == len(osent_wstart_locs), \
-                    "\n" + str(ilabels) + \
-                    str(len(ilabels)) + \
-                    ",\n" + str(osent_wstart_locs) + \
-                    str(len(osent_wstart_locs))
-                ll_ilabel.append(ilabels)
+                    f"{str(len(ilabels))} != {str(len(osent_wstart_locs))}"
+                ll_ilabel.append(ilabels[0:MAX_NUM_ILABELS])
                 # print("dfgthj", ll_ilabel)
                 # end of if tag line
             else:
                 pass
-            #} if osent line or tag line
+            # } if osent line or tag line
             if is_finalization_of_sample(prev_line, line):
                 # print("ddft-end", k)
                 if len(ll_osent_icode) == 0:
                     ll_osent_icode = [[0]]  # 0 = PAD
-                if sentL and len(sentL_words) > 100:
+                if len(sentL_words) > MAX_NUM_ILABELS or \
+                        len(sentL_words) <= 4:
                     num_omitted_sents += 1
-                    print(str(num_omitted_sents) +
-                          f". The {k}'th line has more than 100 words."
-                          f" length={len(sentL_words)}\n[" + sentL[0:60] + "]")
+                    print(
+                        f"{str(num_omitted_sents)}. The {k}'th line has > "
+                        f"{MAX_NUM_ILABELS} words."
+                        f" length={len(sentL_words)}\n[" +
+                        sentL[0:60] + "]")
                     # print("prev_line_rrt", prev_line)
                     # print("line_rrt", line)
                     # print(is_osent_line_of_sample(line))
@@ -555,14 +556,15 @@ class MInput:
                         ll_ilabel = [[0]]
                     lll_ilabel.append(deepcopy(ll_ilabel))
                     ll_osent_wstart_loc.append(deepcopy(osent_wstart_locs))
-                #} if > 100 words or else
                     ll_ilabel = []
-            #} if is_finalization
+                    # osent_wstart_locs = [] set when visit osent line
+                # } if > MAX_NUM_ILABELS words or else
+            # } if is_finalization
             prev_line = line
-        #} line loop
+        # } line loop
         num_samples = len(l_orig_sent)
         print("MInput finished reading '" + self.tags_in_fp + "'")
-        print("number of lines= " + str(len(lines))) # exclude empty line
+        print("number of lines= " + str(len(lines)))  # exclude empty line
         print("number of used samples= ", num_samples)
         print("number of omitted samples= ", num_omitted_sents)
         print()
@@ -623,12 +625,12 @@ if __name__ == "__main__":
         num_samples = len(m_in.l_orig_sent)
         # print(to_dict(m_in).keys())
         print("num_samples=", num_samples)
-        for isam in [0, num_samples-1]:
+        for isam in [0, num_samples - 1]:
             print("************** isam=", isam)
             print_list("get_words(l_osentL[isam])",
-                  get_words(redoL(m_in.l_orig_sent[isam])))
+                       get_words(redoL(m_in.l_orig_sent[isam])))
             print_list("ll_osent_icode[isam]",
-                  m_in.ll_osent_icode[isam])
+                       m_in.ll_osent_icode[isam])
             print_list("ll_osent_pos_loc[isam]",
                        m_in.ll_osent_pos_loc[isam])
             print_list("ll_osent_pos_bool[isam]",
@@ -636,9 +638,9 @@ if __name__ == "__main__":
             print_list("ll_osent_verb_loc[isam]",
                        m_in.ll_osent_verb_loc[isam])
             print_list("ll_osent_verb_bool[isam]",
-                  m_in.ll_osent_verb_bool[isam])
+                       m_in.ll_osent_verb_bool[isam])
             print_list("ll_osent_wstart_loc[isam]",
-                  m_in.ll_osent_wstart_loc[isam])
+                       m_in.ll_osent_wstart_loc[isam])
             if verbose:
                 print_list("lll_ilabel", m_in.lll_ilabel)
 
@@ -669,5 +671,4 @@ if __name__ == "__main__":
           verbose=False)
     main2()
     main1(tags_in_fp="predicting/small_pred.txt",
-        verbose=True)
-
+          verbose=True)

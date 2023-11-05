@@ -705,7 +705,7 @@ class Model(L.LightningModule):
                 # print_tensor("lll_word_score", lll_word_score)
                 # print_tensor("ll_loss_input", ll_loss_input)
 
-                # ll_loss_input.shape(batch_size * num_words, depth)
+                # ll_loss_input.shape = (batch_size * num_words, depth)
                 # l_loss_target.shape = (batch_size * num_words, )
                 # loss is scalar
 

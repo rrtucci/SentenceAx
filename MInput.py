@@ -467,15 +467,17 @@ class MInput:
             # print("kklop", line)
             if is_osent_line_of_sample(line):
                 # print("kklop-1st", k, line)
-                sentL = line
-                if "[unused" not in sentL:
+                osentL = line
+                if "[unused" not in osentL:
                     # this is useful for predict files, which contain no
                     # extag lines or unused tokens
-                    sentL = redoL(sentL)
-                sentL_words = get_words(sentL)
+                    osentL = redoL(osentL)
+                osentL_words = get_words(osentL)
                 encoding_d = self.auto_tokenizer.batch_encode_plus(
-                    sentL_words,
-                    add_special_tokens=False)
+                    osentL_words,
+                    add_special_tokens=False,
+                    additional_special_tokens=UNUSED_TOKENS
+                )
                 # specified when initialized self.auto_tokenizer
                 # add_special_tokens=False,
                 # additional_special_tokens=UNUSED_TOKENS
@@ -506,7 +508,7 @@ class MInput:
                 line_words = get_words(line)
                 # print("lmklo1", k, line_words)
                 line_words += ["NONE"] * 15
-                line_words = line_words[:len(osent_wstart_locs)]
+                line_words = line_words[:len(osentL_words)]
                 # print("lmklo2", k, line_words)
 
                 ilabels = [get_tag_to_ilabel(self.params.task)[tag]
@@ -515,11 +517,11 @@ class MInput:
                 # print_list("ilabels", ilabels)
                 # print("nnmk-line number= " + str(k))
 
-                # print("xxcv", str_list(get_words(sentL)))
+                # print("xxcv", str_list(get_words(osentL)))
                 # print("vvbn-line-words", str_list(get_words(line)))
                 assert len(ilabels) == len(osent_wstart_locs), \
                     f"{str(len(ilabels))} != {str(len(osent_wstart_locs))}"
-                ll_ilabel.append(ilabels[0:MAX_NUM_ILABELS])
+                ll_ilabel.append(ilabels)
                 # print("dfgthj", ll_ilabel)
                 # end of if tag line
             else:
@@ -529,14 +531,14 @@ class MInput:
                 # print("ddft-end", k)
                 if len(ll_osent_icode) == 0:
                     ll_osent_icode = [[0]]  # 0 = PAD
-                if len(sentL_words) > MAX_NUM_ILABELS or \
-                        len(sentL_words) <= 4:
+                if len(osentL_words) > MAX_NUM_OSENTL_WORDS or \
+                        len(osentL_words) <= 4:
                     num_omitted_sents += 1
                     print(
                         f"{str(num_omitted_sents)}. The {k}'th line has > "
-                        f"{MAX_NUM_ILABELS} words."
-                        f" length={len(sentL_words)}\n[" +
-                        sentL[0:60] + "]")
+                        f"{MAX_NUM_OSENTL_WORDS} words."
+                        f" length={len(osentL_words)}\n[" +
+                        osentL[0:60] + "]")
                     # print("prev_line_rrt", prev_line)
                     # print("line_rrt", line)
                     # print(is_osent_line_of_sample(line))
@@ -544,7 +546,7 @@ class MInput:
                     #                      ignored_chs="_",
                     #                      verbose=True))
                 else:
-                    orig_sent = undoL(sentL)
+                    orig_sent = undoL(osentL)
                     l_orig_sent.append(orig_sent)
                     ll_osent_icode.append(deepcopy(osent_icodes))
                     # print("dfeg", ll_osent_icode)
@@ -558,7 +560,7 @@ class MInput:
                     ll_osent_wstart_loc.append(deepcopy(osent_wstart_locs))
                     ll_ilabel = []
                     # osent_wstart_locs = [] set when visit osent line
-                # } if > MAX_NUM_ILABELS words or else
+                # } if > MAX_NUM_OSENTL_WORDS words or else
             # } if is_finalization
             prev_line = line
         # } line loop

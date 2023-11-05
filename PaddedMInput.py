@@ -145,8 +145,8 @@ class PaddedMInput(MInput):
                 # must delete last extraction first
                 for depth in reversed(rg):
                     del lll_ilabel[sam][depth]
-                print("PaddedMInput omitting extractions: sample= " + str(
-                    sam) + ", depths=" + str(list(rg)))
+                print("PaddedMInput omitting these extractions: sample= " +
+                      str(sam) + ", depths=" + str(list(rg)))
 
         max_num_words = -1
 

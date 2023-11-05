@@ -60,7 +60,7 @@ class PaddedMInput(MInput):
             "ll_osent_icode": self.ll_osent_icode,
             "ll_osent_wstart_loc": self.ll_osent_wstart_loc,
         })
-        if USE_SPACY_MODEL:
+        if USE_POS_INFO:
             self.x_d["ll_osent_pos_bool"] = self.ll_osent_pos_bool
             self.x_d["ll_osent_pos_loc"] = self.ll_osent_pos_loc
             self.x_d["ll_osent_verb_bool"] = self.ll_osent_verb_bool
@@ -208,7 +208,7 @@ class PaddedMInput(MInput):
         #     'll_label': labels_for_each_ex[:EX_NUM_DEPTHS],
         #     'word_starts': word_starts,
         #     'orig_sent': orig_sent,
-        #     # if USE_SPACY_MODEL:
+        #     # if USE_POS_INFO:
         #     'pos_bools': pos_bools,
         #     'pos_locs': pos_locs,
         #     'verb_bools': verb_bools,
@@ -224,7 +224,7 @@ class PaddedMInput(MInput):
         self.ll_osent_wstart_loc = PaddedMInput. \
             get_padded_ll_x(self.m_in.ll_osent_wstart_loc)
 
-        if USE_SPACY_MODEL:
+        if USE_POS_INFO:
             self.ll_osent_pos_bool = PaddedMInput. \
                 get_padded_ll_x(self.m_in.ll_osent_pos_bool)
             self.ll_osent_pos_loc = PaddedMInput. \

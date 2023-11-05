@@ -80,7 +80,7 @@ class MInput:
         self.ll_osent_wstart_loc = []  # shape=(num_samples, encoding len)
         self.ll_osent_icode = []  # shape=(num_samples, encoding len
 
-        # if USE_SPACY_MODEL:
+        # if USE_POS_INFO:
         #     self.spacy_model = spacy.load("en_core_web_sm")
         # spacy usage:
         # doc = spacy_model("This is a text")
@@ -260,7 +260,7 @@ class MInput:
     #     self.ll_osent_pos_loc = []
     #     self.ll_osent_verb_bool = []
     #     self.ll_osent_verb_loc = []
-    #     if not USE_SPACY_MODEL or "predict" in self.params.action:
+    #     if not USE_POS_INFO or "predict" in self.params.action:
     #         self.ll_osent_pos_bool = [[]]
     #         self.ll_osent_pos_loc = [[]]
     #         self.ll_osent_verb_bool = [[]]
@@ -362,7 +362,7 @@ class MInput:
         self.ll_osent_pos_loc = []
         self.ll_osent_verb_bool = []
         self.ll_osent_verb_loc = []
-        if not USE_SPACY_MODEL or "predict" in self.params.action:
+        if not USE_POS_INFO or "predict" in self.params.action:
             self.ll_osent_pos_bool = [[]]
             self.ll_osent_pos_loc = [[]]
             self.ll_osent_verb_bool = [[]]
@@ -583,7 +583,7 @@ class MInput:
 
         # so far, we haven't assumed any spacy derived data nanalysis
         # if spacy is allowed, the example_d can carry more info.
-        if USE_SPACY_MODEL:
+        if USE_POS_INFO:
             self.fill_pos_and_verb_info()
 
         # example_d = {

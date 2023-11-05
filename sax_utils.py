@@ -46,6 +46,25 @@ def merge_dicts(dominant_d, default_d):
         new_dict[key] = dominant_d[key]
     return new_dict
 
+def get_best_checkpoint_path(task):
+    """
+
+    Parameters
+    ----------
+    task: str
+
+    Returns
+    -------
+    str
+
+    """
+    if task == "ex":
+        return EX_BEST_WEIGHTS_FP
+    elif task == "cc":
+        return CC_BEST_WEIGHTS_FP
+    else:
+        assert False
+
 
 def get_tag_to_ilabel(task):
     """

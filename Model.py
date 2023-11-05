@@ -987,6 +987,8 @@ class Model(L.LightningModule):
         self.l_batch_m_out.restart()
         # self.l_batch_m_out.clear()  # free memory
 
+
+
         return epoch_acc
 
     def on_validation_epoch_end(self):

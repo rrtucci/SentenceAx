@@ -30,6 +30,9 @@ USE_POS_INFO = True
 CC_METRIC_SAVE = True
 
 VERBOSE = False
+# set this to NONE to have Trainer decide
+# NUM_STEPS_PER_EPOCH = 3
+NUM_STEPS_PER_EPOCH = None
 
 INPUT_DIR = "input_data"
 CACHE_DIR = 'cache'
@@ -43,7 +46,8 @@ CCTAGS_TRAIN_FP = 'input_data/openie-data/ptb-train.labels'
 CCTAGS_TUNE_FP = 'input_data/openie-data/ptb-dev.labels'
 CCTAGS_TEST_FP = 'input_data/openie-data/ptb-test.labels'
 
-CC_FIN_WEIGHTS_FP = WEIGHTS_DIR + '/cc.txt'
+# for Openie6, this is "models/conj_model/epoch=28_eval_acc=0.854.ckpt"
+CC_BEST_WEIGHTS_FP = WEIGHTS_DIR + '/cc.txt'
 
 EXTAGS_TRAIN_FP = INPUT_DIR + '/openie-data/openie4_labels'
 # use smaller file for debugging/warmup
@@ -57,7 +61,8 @@ EXTAGS_TRAIN_FP = INPUT_DIR + '/openie-data/openie4_labels'
 EXTAGS_TUNE_FP = INPUT_DIR + "/carb-data/dev.txt"
 EXTAGS_TEST_FP = INPUT_DIR + "/carb-data/test.txt"
 
-EX_FIN_WEIGHTS_FP = WEIGHTS_DIR + '/ex.txt'
+# for Openie6, this is "models/warmup_oie_model/epoch=13_eval_acc=0.544.ckpt"
+EX_BEST_WEIGHTS_FP = WEIGHTS_DIR + '/ex.txt'
 
 PRED_IN_FP = PREDICTING_DIR + "/carb_sentences"
 

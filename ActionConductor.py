@@ -6,7 +6,7 @@ import warnings
 import os
 import math
 import shutil
-from glob import glob
+from glob import iglob
 from time import time
 from Model import *
 from SaxDataLoaderTool import *
@@ -143,23 +143,24 @@ class ActionConductor:
 
     def get_all_checkpoint_fp(self):
         """
-        similar to Openie6.run.get_checkpoint_fp()
+        similar to Openie6.run.get_latest_checkpoint_fp()
 
         more than one checkpoint only used by self.test()
         and those who call it.
+        There might be more than one checkpoint if saved best 2, 3, ...
+        epochs, instead of just the best one only. See params.d["save_k"].
 
         Returns
         -------
         list[str]
 
         """
-        if "suggested_checkpoint_fp" in self.params.d:
-            return [self.params.d["suggested_checkpoint_fp"]]
+        paths = iglob(WEIGHTS_DIR + "/" +
+            self.params.task + "_model/*.ckpt")
+        # latest first in list
+        return sorted(paths, key=os.path.getctime, reverse=True)
 
-        else:
-            return glob(WEIGHTS_DIR + '/*.ckpt')
-
-    def get_checkpoint_fp(self):
+    def get_latest_checkpoint_fp(self):
         """
 
         Returns
@@ -167,9 +168,7 @@ class ActionConductor:
         str
 
         """
-        all_paths = self.get_all_checkpoint_fp()
-        assert len(all_paths) == 1
-        return all_paths[0]
+        return  self.get_all_checkpoint_fp()[0]
 
     def get_logger(self, name):
         """
@@ -238,11 +237,11 @@ class ActionConductor:
         if use_minimal:
             trainer = Trainer(
                 # gpus=self.params.d["gpus"],
-                logger=logger
+                logger=logger,
                 # num_sanity_val_steps=0,
-                # limit_train_batches=2,
-                # limit_val_batches=2,
-                # limit_test_batches=2
+                limit_train_batches=NUM_STEPS_PER_EPOCH,
+                limit_val_batches=NUM_STEPS_PER_EPOCH,
+                limit_test_batches=NUM_STEPS_PER_EPOCH
             )
         else:
             trainer = Trainer(
@@ -259,9 +258,9 @@ class ActionConductor:
                 #train_percent_check=,
                 # track_grad_norm= deprecated
                 # num_sanity_val_steps=0,
-                # limit_train_batches=2,
-                # limit_val_batches=2,
-                # limit_test_batches=2
+                limit_train_batches=NUM_STEPS_PER_EPOCH,
+                limit_val_batches=NUM_STEPS_PER_EPOCH,
+                limit_test_batches=NUM_STEPS_PER_EPOCH
             )
         return trainer
 
@@ -328,7 +327,7 @@ class ActionConductor:
         None
 
         """
-        checkpoint_fp = self.get_checkpoint_fp()
+        checkpoint_fp = self.get_latest_checkpoint_fp()
         # train is the only action that doesn't require
         # update_params() because it is called first
         self.update_params(checkpoint_fp)
@@ -342,7 +341,7 @@ class ActionConductor:
             model,
             train_dataloaders=self.dloader_tool.train_dloader,
             val_dataloaders=self.dloader_tool.tune_dloader,
-            ckpt_path=self.get_checkpoint_fp())  # only if resuming
+            ckpt_path=checkpoint_fp)  # only if resuming
         tdir = get_task_logs_dir(self.params.task)
         shutil.move(tdir + '/resume.part',
                     tdir + '/resume')
@@ -350,7 +349,8 @@ class ActionConductor:
     def test(self):
         """
         similar to Openie6.run.test()
-        trainer.test()
+
+        calls trainer.test()
 
         Returns
         -------
@@ -361,7 +361,7 @@ class ActionConductor:
         if 'train' not in self.params.action:
             # train is the only action that doesn't require
             # update_params() because it is called first
-            self.update_params(checkpoint_paths[0])
+            self.update_params(self.get_latest_checkpoint_fp())
 
         model = Model(self.params,
                       self.auto_tokenizer,
@@ -375,7 +375,7 @@ class ActionConductor:
         tdir = get_task_logs_dir(self.params.task)
         with open(tdir + '/test.txt', "w") as test_f:
             logger = self.get_logger("test")
-            # one checkpoint at end of each epoch
+            # might be more than one checkpoint if keep best 2, 3 etc epochs
             for checkpoint_fp in checkpoint_paths:
                 trainer = self.get_trainer(logger,
                                            use_minimal=True)
@@ -413,12 +413,9 @@ class ActionConductor:
         #             val_dataloader, test_dataloader, all_sentences,
         #             mapping=None,
         #             conj_word_mapping=None):
-        if self.params.task == 'cc':
-            self.params.d["suggested_checkpoint_fp"] = CC_FIN_WEIGHTS_FP
-        if self.params.task == 'ex':
-            self.params.d["suggested_checkpoint_fp"] = EX_FIN_WEIGHTS_FP
+        checkpoint_fp = get_best_checkpoint_path(self.params.task)
 
-        checkpoint_fp = self.get_checkpoint_fp()
+        assert list(self.get_all_checkpoint_fp()) == [checkpoint_fp]
         self.update_params(checkpoint_fp)
         self.dloader_tool.set_predict_dataloader(pred_in_fp)
         # always set dataloader before constructing a Model instance
@@ -481,7 +478,7 @@ class ActionConductor:
             else:
                 assert False
 
-        self.params.d["suggested_checkpoint_fp"] = CC_FIN_WEIGHTS_FP
+        self.params.d["suggested_checkpoint_fp"] = CC_BEST_WEIGHTS_FP
         self.params.d["model_str"] = 'bert-base-cased'
         self.params.d["action"] = self.params.action = 'predict'
 
@@ -545,7 +542,7 @@ class ActionConductor:
         Model
 
         """
-        self.params.d["suggested_checkpoint_fp"] = EX_FIN_WEIGHTS_FP
+        self.params.d["suggested_checkpoint_fp"] = EX_BEST_WEIGHTS_FP
         self.params.d["model_str"] = 'bert-base-cased'
 
         in_fp = pred_out_fp.strip(".txt") + "_ccsents.txt"

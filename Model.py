@@ -695,6 +695,7 @@ class Model(L.LightningModule):
         lll_pred_confi = []  # = all_depth_confidences
         # ll_pred_confi0 = all_depth_confidences after cat dim=1
         batch_size, num_words, xxx = llll_word_score[0].shape
+        #xxx = 6, the number of different ilabels (classes)
         # y_d["lll_ilabel"] = \
         #     y_d["lll_ilabel"].long()
         for depth, lll_word_score in enumerate(llll_word_score):
@@ -705,8 +706,9 @@ class Model(L.LightningModule):
                 # print_tensor("lll_word_score", lll_word_score)
                 # print_tensor("ll_loss_input", ll_loss_input)
 
-                # ll_loss_input.shape = (batch_size * num_words, depth)
+                # ll_loss_input.shape = (batch_size * num_words, num_classes=6)
                 # l_loss_target.shape = (batch_size * num_words, )
+                # l_loss_target[i] \in range(6)
                 # loss is scalar
 
                 l_loss_target = \

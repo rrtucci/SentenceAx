@@ -65,7 +65,6 @@ class Params:
 
         self.task, self.action = pid_to_pair[pid]
         self.d = self.get_d()
-        self.describe_self()
 
     def describe_self(self):
         """

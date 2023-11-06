@@ -10,10 +10,10 @@ import torch.nn as nn
 input_tensor = torch.randn(5, 4)
 
 # Sample target tensor with shape (5, ) containing class labels
-target_tensor = torch.tensor([2, 0, 1, 3, 0])
+target_tensor = torch.tensor([2, 0, 1, 3, -100])
 
 # Create the CrossEntropy loss criterion
-loss_fun = nn.CrossEntropyLoss()
+loss_fun = nn.CrossEntropyLoss(ignore_index=-100)
 
 # Calculate the loss
 loss = loss_fun(input_tensor, target_tensor)

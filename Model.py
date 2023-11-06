@@ -193,7 +193,9 @@ class Model(L.LightningModule):
         self.ilabelling_layer = nn.Linear(ILABELLING_DIM,  # 300
                                           NUM_ILABELS)  # 6
 
-        self.loss_fun = nn.CrossEntropyLoss()
+        # ignore_index=-100 is the default, but including it
+        # explicitly for clarity
+        self.loss_fun = nn.CrossEntropyLoss(ignore_index=-100)
 
         if self.params.task == "ex":
             self.metric = ExMetric()

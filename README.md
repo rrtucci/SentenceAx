@@ -30,8 +30,8 @@ www.ar-tiste.xyz
 
 ## Input Dataset and Weights
 
-Due to a < 50MB per file limitation at Github, the  
-input datasets and weights will be located at HuggingFace.
+Due to a < 50MB per file limitation at Github, the input datasets and 
+weights will be located at HuggingFace.
 
 * input dataset. Unzip [this file](https://huggingface.co/datasets/rrtucci/SentenceAx-input-data) and use it to replace the 
 directory `input_data` of this github repo. 

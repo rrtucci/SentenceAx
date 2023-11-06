@@ -190,8 +190,9 @@ class ActionConductor:
         # the current log file will have no number prefix,
         # stored ones will.
         if os.path.exists(get_task_logs_dir(self.params.task) + "/" + name):
-            num_numbered_logs = len(
-                list(glob(get_task_logs_dir(self.params.task) + f'/{name}_*')))
+            fps = iglob(
+                get_task_logs_dir(self.params.task) + f'/{name}_*')
+            num_numbered_logs = len(list(fps))
             new_id = num_numbered_logs + 1
             print('Retiring current log file by changing its name')
             print(shutil.move(
@@ -384,8 +385,8 @@ class ActionConductor:
                 trainer.test(model=model,
                              dataloaders=test_dloader,
                              ckpt_path=checkpoint_fp)
-                eval_epoch_end_d = model.eval_epoch_end_d
-                test_f.write(f'{checkpoint_fp}\t{eval_epoch_end_d}\n')
+                scores_d = model.scores_epoch_end_d
+                test_f.write(f'{checkpoint_fp}\t{scores_d}\n')
                 # note test_f created outside loop.
                 # refresh/clear/flush test_f after each write
                 test_f.flush()

@@ -710,9 +710,9 @@ class Model(L.LightningModule):
                 # loss is scalar
 
                 l_loss_target = \
-                    y_d["lll_ilabel"][:, depth, :].reshape(-1).float()
-                loss += self.loss_fun(ll_loss_input[:, depth],
-                                            l_loss_target)
+                    y_d["lll_ilabel"][:, depth, :].reshape(-1)
+                loss += self.loss_fun(ll_loss_input,
+                                      l_loss_target)
 
                 # print("loss shape", loss.shape)
                 # print_tensor("l_loss_target", l_loss_target)
@@ -937,7 +937,7 @@ class Model(L.LightningModule):
 
         print('\nScores at end of epoch ' +
               str(self.trainer.current_epoch) + ":")
-        pprint(dict(scores_epoch_end_d))
+        print(scores_epoch_end_d)
         # For computing the constraint violations
         # if hasattr(self, 'con_to_l_loss') and \
         # self.params.d["constraint_str"] != '':
@@ -971,14 +971,14 @@ class Model(L.LightningModule):
                 assert False
             if VERBOSE: print("Entering Model." + str0 + " method")
 
-        scores_epoch_end_d = \
+        self.scores_epoch_end_d = \
             self.sax_get_scores_at_epoch_end(ttt)
         # epoch_end_d = {"log": scores_epoch_end_d,
         #                "epoch_acc": scores_epoch_end_d["epoch_acc"]}
         # if ttt == "test":
         #     epoch_end_d["progress_bar"] = self.scores_epoch_end_d
 
-        epoch_acc = scores_epoch_end_d["epoch_acc"]
+        epoch_acc = self.scores_epoch_end_d["epoch_acc"]
         self.log("epoch_acc", epoch_acc,
                  prog_bar=True,
                  logger=True,
@@ -986,8 +986,6 @@ class Model(L.LightningModule):
 
         self.l_batch_m_out.restart()
         # self.l_batch_m_out.clear()  # free memory
-
-
 
         return epoch_acc
 

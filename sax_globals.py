@@ -12,20 +12,6 @@ params_d = parameters dictionary
 
 """
 
-# global paths
-
-# # file paths for training, tuning and testing cctags (cc=conjunction)
-# CCTAGS_TRAIN_FP = "input_data/cctags_train.txt"
-# # dev=development=validation=tuning
-# CCTAGS_TUNE_FP = "input_data/cctags_tune.txt"
-# CCTAGS_TEST_FP = "input_data/cctags_test.txt"
-
-# # file paths for training, tuning and testing extags (ex=extraction)
-# EXTAGS_TRAIN_FP = "input_data/extags_train.txt"
-# # dev=development=validation=tuning
-# EXTAGS_TUNE_FP = "input_data/extags_tune.txt"
-# EXTAGS_TEST_FP = "input_data/extags_test.txt"
-
 USE_POS_INFO = True
 CC_METRIC_SAVE = True
 

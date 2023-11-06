@@ -1,9 +1,11 @@
 """
+SentenceAx global variables
+
 IMPORTANT:
 Must import this file with star
-from sax_globals import *
+`from sax_globals import *`
 This will not do:
-import sax_globals
+`import sax_globals`
 
 hparams = hyperparameters,
 fp = file path
@@ -16,7 +18,7 @@ USE_POS_INFO = True
 CC_METRIC_SAVE = True
 
 VERBOSE = False
-# set this to NONE to have Trainer decide
+# set NUM_STEPS_PER_EPOCH to None to have Trainer decide
 # NUM_STEPS_PER_EPOCH = 3
 NUM_STEPS_PER_EPOCH = None
 
@@ -33,22 +35,22 @@ CCTAGS_TUNE_FP = 'input_data/openie-data/ptb-dev.labels'
 CCTAGS_TEST_FP = 'input_data/openie-data/ptb-test.labels'
 
 # for Openie6, this is "models/conj_model/epoch=28_eval_acc=0.854.ckpt"
-CC_BEST_WEIGHTS_FP = WEIGHTS_DIR + '/cc.txt'
+CC_BEST_WEIGHTS_FP = WEIGHTS_DIR + '/cc.txt' # to be changed 
 
 EXTAGS_TRAIN_FP = INPUT_DIR + '/openie-data/openie4_labels'
 # use smaller file for debugging/warmup
 
 # EXTAGS_TRAIN_FP = "tests/extags_train.txt"
-# IMPORTANT: dev.txt and test.txt have extag files with
-# single line ex, with only NONE extags. The actual extags
+# IMPORTANT: dev.txt and test.txt are extag files with
+# single ex that only contains NONE extags. The actual extags
 # are obtained by ExMetric from benchmark files.
-# So don't change the dev.txt or test.txt files to something else
-# because ExMetric is expecting them.
+# don't change the dev.txt or test.txt files to something else
+# because ExMetric is hard wired to expect them.
 EXTAGS_TUNE_FP = INPUT_DIR + "/carb-data/dev.txt"
 EXTAGS_TEST_FP = INPUT_DIR + "/carb-data/test.txt"
 
 # for Openie6, this is "models/warmup_oie_model/epoch=13_eval_acc=0.544.ckpt"
-EX_BEST_WEIGHTS_FP = WEIGHTS_DIR + '/ex.txt'
+EX_BEST_WEIGHTS_FP = WEIGHTS_DIR + '/ex.txt' # to be changed
 
 PRED_IN_FP = PREDICTING_DIR + "/carb_sentences"
 
@@ -100,7 +102,8 @@ ILABEL_TO_CCTAG = {0: 'NONE', 1: 'CP', 2: 'CP_START',
 #     "begin", "starts", "said", "stop", "begin",
 #     "start", "continue", "say"]
 
-# in alphabetical order, eliminated repeats begin(2), do(2), say(2), start(2)
+# in alphabetical order, eliminated repeats begin(2X->1X), 
+# do(2X->1X), say(2X->1X), start(2X->1X)
 LIGHT_VERBS = [
     "am", "are", "be", "became", "becomes", "begin",
     "began", "begins", "being", "continue",

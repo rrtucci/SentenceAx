@@ -132,7 +132,7 @@ class Params:
         if self.task == "ex" and self.action == "train_test":
             self.d = {
                 "batch_size": 24,
-                "epochs": 30,
+                "num_epochs": 30,
                 "gpus": 1,
                 "iterative_layers": 2,
                 "lr": 2E-5,
@@ -182,7 +182,7 @@ class Params:
                     WEIGHTS_DIR + "/warmup_ex_model-epoch=13_eval_acc=0.544.ckpt",
                 "constraint_str": "posm_hvc_hvr_hve",
                 "con_weight_str": "3_3_3_3",
-                "epochs": 16,
+                "num_epochs": 16,
                 "gpus": 1,
                 "gradient_clip_val": 1,
                 "iterative_layers": 2,
@@ -224,7 +224,7 @@ class Params:
         elif self.task == "cc" and self.action == "train_test":
             self.d = {
                 "batch_size": 32,
-                "epochs": 40,
+                "num_epochs": 40,
                 "gpus": 1,
                 "iterative_layers": 2,
                 "lr": 2E-5,

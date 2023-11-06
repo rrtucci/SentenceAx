@@ -10,7 +10,6 @@ import os
 # use of tt.data.Field, Field.build_vocab, tt.data.Example are deprecated
 # and tt.data.Dataset signature has changed
 
-import torchtext as tt
 
 import nltk
 from copy import deepcopy

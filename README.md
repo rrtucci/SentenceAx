@@ -11,13 +11,22 @@ Sentence Ax decomposes a compound or complex sentence
 into a set of simple sentences (extractions). It does this using 
 a fine-tuned BERT model.
 
-Sentence Ax is a stand-alone app, but 
+Sentence Ax is a stand-alone app, but, just like the
+SCuMpy app,
 it's also 
 a key component of the 
-Mappa Mundi Project.
-Both Sentence Ax and Mappa Mundi were
+Mappa Mundi Project which started with the
+MappaMundi app.
+The SentenceAx app, SCuMpy app and Mappa Mundi app were
 written by
 www.ar-tiste.xyz
+
+* [Mappa Mundi Project](https://qbnets.wordpress.com/2023/07/31/searching-for-causal-pathways-for-diseases-using-an-individuals-fitbit-and-social-media-records-part-2/)
+    * [MappaMundi app](https://github.com/rrtucci/mappa_mundi)
+    * [SCuMpy app](https://github.com/rrtucci/scumpy)
+    * SentenceAx (this repo)
+    * Causal Fitbit (coming soon)
+
 
 ## Input Dataset and Weights
 

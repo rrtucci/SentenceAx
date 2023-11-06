@@ -28,10 +28,9 @@ www.ar-tiste.xyz
     * Causal Fitbit (coming soon)
 
 
-## Input Dataset and Weights
+## Weights and Input Dataset
 
-Due to a < 50MB per file limitation at Github, the input datasets and 
-weights will be located at HuggingFace.
+Due to a < 50MB per file limitation at Github, the weights and input datasets will be located at HuggingFace.
 
 * input dataset. Unzip [this file](https://huggingface.co/datasets/rrtucci/SentenceAx-input-data) and use it to replace the 
 directory `input_data` of this github repo. 

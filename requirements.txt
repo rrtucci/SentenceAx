@@ -1,7 +1,7 @@
 transformers
 regex
 torch
-lightning
+lightning # version larger than 2.0.1 required
 numpy
 treelib
 nltk

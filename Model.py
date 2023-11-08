@@ -461,16 +461,23 @@ class Model(L.LightningModule):
             depth += 1
             if depth >= num_depths:
                 break
-            # this means task="ex"
+
             if ttt != 'train':
                 ll_pred_ilabel = torch.max(lll_word_score, dim=2)[1]
                 valid_extraction = False
-                assert self.params.task == "ex"
                 for l_pred_ilabel in ll_pred_ilabel:
-                    # 'ARG1': 1, 'REL': 2
-                    if 1 in l_pred_ilabel and 2 in l_pred_ilabel:
-                        valid_extraction = True
-                        break
+                    if self.params.task == "ex":
+                        # 'ARG1': 1, 'REL': 2
+                        if 1 in l_pred_ilabel and 2 in l_pred_ilabel:
+                            valid_extraction = True
+                            break
+                    elif self.params.task == "cc":
+                        # 'CC': 3
+                        if 3 in l_pred_ilabel:
+                            valid_extraction = True
+                            break
+                    else:
+                        assert False
                 if not valid_extraction:
                     break
         return llll_word_score
@@ -741,6 +748,8 @@ class Model(L.LightningModule):
                 # print_tensor("(ll_pred_ilabel != 0)",
                 #              (ll_pred_ilabel != 0).float())
                 # * is element-wise multiplication of tensors
+
+                ll_nonpad_bool = ll_nonpad_bool[:, :ll_pred_ilabel.shape[1]]
                 ll_nonpad_bool = \
                     (ll_pred_ilabel != 0).float() * ll_nonpad_bool
                 ll_norm_log_prob = \

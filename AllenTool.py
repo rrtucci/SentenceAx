@@ -262,7 +262,7 @@ class AllenTool:
                         sample_id > last_sample_id:
                     continue
                 if numbered:
-                    f.write(str(sample_id) + ".\n")
+                    f.write(LINE_SEPARATOR + str(sample_id) + "\n")
                 num_sams += 1
                 f.write(osentL + "\n")
                 for ex in l_ex:
@@ -334,19 +334,23 @@ class AllenTool:
 
 
 if __name__ == "__main__":
-    def main1(ftype):
+    def main1(ftype, numbered):
+        str0 = "N"
+        if not numbered:
+            str0 = ""
+
         allen_fp = "tests/small_allen.tsv"
         if ftype == "ex":
-            out_fp = "tests/small_extags.txt"
+            out_fp = "tests/small_extags" + str0 + ".txt"
         elif ftype == "ss":
-            out_fp = "tests/small_simple_sents.txt"
+            out_fp = "tests/small_simple_sents" + str0 + ".txt"
         else:
             assert False
         at = AllenTool(allen_fp)
         at.write_allen_alternative_file(out_fp,
                                         first_last_sample_id=(1, -1),
                                         ftype=ftype,
-                                        numbered=True)
+                                        numbered=numbered)
 
 
     def main2():
@@ -356,6 +360,7 @@ if __name__ == "__main__":
         at.write_extags_ttt_files(out_dir)
 
 
-    main1("ss")
-    main1("ex")
+    main1("ss", numbered=True)
+    main1("ex", numbered=True)
+    main1("ex", numbered=False)
     main2()

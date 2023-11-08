@@ -4,6 +4,7 @@ from Params import *
 import nltk
 nltk.download('popular', quiet=True)
 nltk.download('averaged_perceptron_tagger', quiet=True)
+nltk.download('universal_tagset', quiet=True)
 
 from sax_utils import *
 from transformers import AutoTokenizer
@@ -370,7 +371,8 @@ class MInput:
             return
         # print("bbght", self.l_orig_sent)
         for sent_id, sent in enumerate(self.l_orig_sent):
-            pos_tags = nltk.pos_tag(get_words(sent, algo="nltk"))
+            pos_tags = nltk.pos_tag(get_words(sent, algo="nltk"),
+                                    tagset='universal')
 
             pos_locs, pos_bools, pos_words = \
                 MInput.pos_info(pos_tags)
@@ -432,22 +434,32 @@ class MInput:
         with open(self.tags_in_fp, "r", encoding="utf-8") as f:
             lines = f.readlines()
 
+        def is_empty_line_of_sample(line0):
+            return not line0 or LINE_SEPARATOR in line0
+
         def is_osent_line_of_sample(line0):
-            return line0 and (not line0.isupper()
-                              or has_puntuation(line0, ignored_chs="_"))
+            if is_empty_line_of_sample(line0):
+                return False
+            return (not line0.isupper()
+                    or has_puntuation(line0, ignored_chs="_"))
+
 
         def is_tag_line_of_sample(line0):
+            if is_empty_line_of_sample(line0):
+                return False
             # ignoring "_" because of CP_START
-            return line0 and line0.isupper() \
-                and not has_puntuation(line0, ignored_chs="_")
+            return line0.isupper() and \
+                not has_puntuation(line0, ignored_chs="_")
 
         def is_finalization_of_sample(prev_line0, line0):
-            if not line0:
+            if is_empty_line_of_sample(line0) and\
+                    not is_empty_line_of_sample(prev_line0):
                 return True
-            if prev_line0 and is_osent_line_of_sample(line0):
+            if is_osent_line_of_sample(line0) and \
+                    not is_empty_line_of_sample(prev_line0):
                 return True
-
             return False
+
 
         prev_line = None
         osent_icodes = []
@@ -456,13 +468,49 @@ class MInput:
         num_omitted_sents = 0
         k = 0
         # add empty last sentence so last sentence of file is considered
-        for line in lines + [""]:
+        for line in lines + [LINE_SEPARATOR]:
             k += 1
             line = line.strip()
-            if line == "":
-                # this skips blank lines
-                continue  # skip to next line
-            # print("kklop", line)
+            # if line == "":
+            #     # this skips blank lines
+            #     continue  # skip to next line
+            # # print("kklop", line)
+            if is_finalization_of_sample(prev_line, line):
+                # print("ddft-end", k)
+                if len(ll_osent_icode) == 0:
+                    ll_osent_icode = [[0]]  # 0 = PAD
+                if len(osentL_words) > MAX_NUM_OSENTL_WORDS or \
+                        len(osentL_words) <= 4:
+                    num_omitted_sents += 1
+                    print(
+                        f"{str(num_omitted_sents)}. The {k}'th line has > "
+                        f"{MAX_NUM_OSENTL_WORDS} words."
+                        f" length={len(osentL_words)}\n[" +
+                        osentL[0:60] + "]")
+                    # print("prev_line_rrt", prev_line)
+                    # print("line_rrt", line)
+                    # print(is_osent_line_of_sample(line))
+                    # print(has_puntuation(line,
+                    #                      ignored_chs="_",
+                    #                      verbose=True))
+                else:
+                    orig_sent = undoL(osentL)
+                    l_orig_sent.append(orig_sent)
+                    ll_osent_icode.append(deepcopy(osent_icodes))
+                    # print("dfeg", ll_osent_icode)
+
+                    # note that if li=[2,3]
+                    # then li[:100] = [2,3]
+                    # print("sdftty", ll_ilabel)
+                    if not ll_ilabel:
+                        ll_ilabel = [[0]]
+                    lll_ilabel.append(deepcopy(ll_ilabel))
+                    ll_osent_wstart_loc.append(deepcopy(osent_wstart_locs))
+                    ll_ilabel = []
+                    osent_wstart_locs = []
+                # } if > MAX_NUM_OSENTL_WORDS words or else
+            # } if is_finalization
+
             if is_osent_line_of_sample(line):
                 # print("kklop-1st", k, line)
                 osentL = line
@@ -497,8 +545,9 @@ class MInput:
                 osent_icodes.append(EOS_ICODE)
                 # print("lmklo", k, str_list(osent_wstart_locs))
                 # end of if osent line
+                prev_osentL = osentL
 
-            elif is_tag_line_of_sample(line):
+            if is_tag_line_of_sample(line):
                 # print("sdfrg-tag", k)
                 # some tag lines have too many or too few NONE at the end
 
@@ -524,44 +573,7 @@ class MInput:
                 ll_ilabel.append(ilabels)
                 # print("dfgthj", ll_ilabel)
                 # end of if tag line
-            else:
-                pass
             # } if osent line or tag line
-            if is_finalization_of_sample(prev_line, line):
-                # print("ddft-end", k)
-                if len(ll_osent_icode) == 0:
-                    ll_osent_icode = [[0]]  # 0 = PAD
-                if len(osentL_words) > MAX_NUM_OSENTL_WORDS or \
-                        len(osentL_words) <= 4:
-                    num_omitted_sents += 1
-                    print(
-                        f"{str(num_omitted_sents)}. The {k}'th line has > "
-                        f"{MAX_NUM_OSENTL_WORDS} words."
-                        f" length={len(osentL_words)}\n[" +
-                        osentL[0:60] + "]")
-                    # print("prev_line_rrt", prev_line)
-                    # print("line_rrt", line)
-                    # print(is_osent_line_of_sample(line))
-                    # print(has_puntuation(line,
-                    #                      ignored_chs="_",
-                    #                      verbose=True))
-                else:
-                    orig_sent = undoL(osentL)
-                    l_orig_sent.append(orig_sent)
-                    ll_osent_icode.append(deepcopy(osent_icodes))
-                    # print("dfeg", ll_osent_icode)
-
-                    # note that if li=[2,3]
-                    # then li[:100] = [2,3]
-                    # print("sdftty", ll_ilabel)
-                    if not ll_ilabel:
-                        ll_ilabel = [[0]]
-                    lll_ilabel.append(deepcopy(ll_ilabel))
-                    ll_osent_wstart_loc.append(deepcopy(osent_wstart_locs))
-                    ll_ilabel = []
-                    # osent_wstart_locs = [] set when visit osent line
-                # } if > MAX_NUM_OSENTL_WORDS words or else
-            # } if is_finalization
             prev_line = line
         # } line loop
         num_samples = len(l_orig_sent)
@@ -627,7 +639,7 @@ if __name__ == "__main__":
         num_samples = len(m_in.l_orig_sent)
         # print(to_dict(m_in).keys())
         print("num_samples=", num_samples)
-        for isam in [0, num_samples - 1]:
+        for isam in [0, 1, -2, - 1]:
             print("************** isam=", isam)
             print_list("get_words(l_osentL[isam])",
                        get_words(redoL(m_in.l_orig_sent[isam])))
@@ -644,7 +656,7 @@ if __name__ == "__main__":
             print_list("ll_osent_wstart_loc[isam]",
                        m_in.ll_osent_wstart_loc[isam])
             if verbose:
-                print_list("lll_ilabel", m_in.lll_ilabel)
+                print("lll_ilabel", m_in.lll_ilabel)
 
 
     def main2():
@@ -669,8 +681,10 @@ if __name__ == "__main__":
         pprint(l_sent2)
 
 
-    main1(tags_in_fp="tests/extags_test.txt",
-          verbose=False)
-    main2()
+    # main1(tags_in_fp="tests/small_extags.txt",
+    #       verbose=False)
+    # main1(tags_in_fp="tests/small_extagsN.txt",
+    #       verbose=False)
+    # main2()
     main1(tags_in_fp="predicting/small_pred.txt",
-          verbose=True)
+          verbose=False)

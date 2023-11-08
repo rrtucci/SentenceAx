@@ -14,6 +14,8 @@ params_d = parameters dictionary
 
 """
 
+LINE_SEPARATOR = "[%@!]"
+
 USE_POS_INFO = True
 CC_METRIC_SAVE = True
 

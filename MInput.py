@@ -681,10 +681,10 @@ if __name__ == "__main__":
         pprint(l_sent2)
 
 
-    # main1(tags_in_fp="tests/small_extags.txt",
-    #       verbose=False)
-    # main1(tags_in_fp="tests/small_extagsN.txt",
-    #       verbose=False)
-    # main2()
+    main1(tags_in_fp="tests/small_extags.txt",
+          verbose=False)
+    main1(tags_in_fp="tests/small_extagsN.txt",
+          verbose=False)
+    main2()
     main1(tags_in_fp="predicting/small_pred.txt",
           verbose=False)

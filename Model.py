@@ -466,18 +466,10 @@ class Model(L.LightningModule):
                 ll_pred_ilabel = torch.max(lll_word_score, dim=2)[1]
                 valid_extraction = False
                 for l_pred_ilabel in ll_pred_ilabel:
-                    if self.params.task == "ex":
-                        # 'ARG1': 1, 'REL': 2
-                        if 1 in l_pred_ilabel and 2 in l_pred_ilabel:
-                            valid_extraction = True
-                            break
-                    elif self.params.task == "cc":
-                        # 'CC': 3
-                        if 3 in l_pred_ilabel:
-                            valid_extraction = True
-                            break
-                    else:
-                        assert False
+                    if is_valid_label_list(
+                            l_pred_ilabel, self.params.task, "ilabels"):
+                        valid_extraction = True
+                        break
                 if not valid_extraction:
                     break
         return llll_word_score

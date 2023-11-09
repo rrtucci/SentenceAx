@@ -46,6 +46,7 @@ def merge_dicts(dominant_d, default_d):
         new_dict[key] = dominant_d[key]
     return new_dict
 
+
 def get_best_checkpoint_path(task):
     """
 
@@ -290,7 +291,7 @@ def undoL(x):
     elif type(x) == list:
         return [a.split("[unused")[0].strip() for a in x]
     elif type(x) == dict:
-        return {key.split("[unused")[0].strip():value
+        return {key.split("[unused")[0].strip(): value
                 for key, value in x.items()}
     else:
         assert False
@@ -555,6 +556,39 @@ def check_module_version(module_name, lub_version):
             assert False
     except pkg.DistributionNotFound:
         print(f"{module_name} is not installed.")
+
+
+def is_valid_label_list(labels, task, label_type):
+    """
+
+    Parameters
+    ----------
+    labels: list[str]|list[int]
+    task: str
+    label_type: str
+
+    Returns
+    -------
+    bool
+
+    """
+    assert task in ["ex", "cc"]
+    assert label_type in ["ilabels", "tags"]
+    valid = False
+    if task == "ex":
+        if label_type == "ilabels":
+            # 'ARG1': 1, 'REL': 2
+            valid = (1 in labels and 2 in labels)
+        elif label_type == "tags":
+            valid = ("ARG1" in labels and "REL" in labels)
+    elif task == "cc":
+        if label_type == "ilabels":
+            # 'CC': 3
+            valid = (3 in labels)
+        elif label_type == "tags":
+            valid = ("CC" in labels)
+
+    return valid
 
 
 if __name__ == "__main__":

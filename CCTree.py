@@ -86,18 +86,19 @@ class CCTree:
 
         """
         unique_k = -1
-        one_hot = []
+        l_hot_k = []
         for k, ccnode in enumerate(ccnodes):
             if ccnode.ccloc == ccloc:
-                one_hot.append(1)
+                l_hot_k.append(k)
                 unique_k = k
-            else:
-                one_hot.append(0)
-        if sum(one_hot) == 0:
+        if not l_hot_k:
             return None
-        elif sum(one_hot) > 1:
-            print(one_hot)
+        elif len(l_hot_k) > 1:
             print("more than one ccnode with cc at " + str(ccloc))
+            print("culprit sent:\n" + str(ccnodes[0].osent_words))
+            print("ccnodes[k].spanned_locs:")
+            for k in l_hot_k:
+                print("k=" + str(k) + ", " + str(ccnodes[k].spanned_locs))
             assert False
         else:
             return ccnodes[unique_k]

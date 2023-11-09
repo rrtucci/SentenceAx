@@ -187,7 +187,8 @@ class CCNode:
         spanned_locs = []
         for span in self.spans:
             for i in range(span[0], span[1]):
-                spanned_locs.append(i)
+                if i < len(self.osent_words):
+                    spanned_locs.append(i)
         min0 = self.spans[0][0]
         max0 = self.spans[-1][1] - 1
         if fat:

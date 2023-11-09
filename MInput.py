@@ -387,7 +387,7 @@ class MInput:
             else:
                 self.ll_osent_verb_loc.append([0])
 
-    def read_input_tags_file(self):
+    def read_input_tags_file(self, omit_no_ex_samples=True):
         """
         similar to Openie6.data._process_data()
 
@@ -467,6 +467,8 @@ class MInput:
         osent_wstart_locs = []
         num_omitted_sents = 0
         k = 0
+        k_osent = 0
+        no_exs = False
         # add empty last sentence so last sentence of file is considered
         for line in lines + [LINE_SEPARATOR]:
             k += 1
@@ -477,13 +479,14 @@ class MInput:
             # # print("kklop", line)
             if is_finalization_of_sample(prev_line, line):
                 # print("ddft-end", k)
-                if len(ll_osent_icode) == 0:
+                if not ll_osent_icode:
                     ll_osent_icode = [[0]]  # 0 = PAD
                 if len(osentL_words) > MAX_NUM_OSENTL_WORDS or \
                         len(osentL_words) <= 4:
                     num_omitted_sents += 1
                     print(
-                        f"{str(num_omitted_sents)}. The {k}'th line has > "
+                        f"{str(num_omitted_sents)}. The {k_osent}'th line "
+                        f"has > "
                         f"{MAX_NUM_OSENTL_WORDS} words."
                         f" length={len(osentL_words)}\n[" +
                         osentL[0:60] + "]")
@@ -493,6 +496,12 @@ class MInput:
                     # print(has_puntuation(line,
                     #                      ignored_chs="_",
                     #                      verbose=True))
+
+                elif not ll_ilabel and omit_no_ex_samples:
+                    num_omitted_sents += 1
+                    print(
+                        f"{str(num_omitted_sents)}. The {k_osent}'th line "
+                        "has no valid extractions.")
                 else:
                     orig_sent = undoL(osentL)
                     l_orig_sent.append(orig_sent)
@@ -503,6 +512,7 @@ class MInput:
                     # then li[:100] = [2,3]
                     # print("sdftty", ll_ilabel)
                     if not ll_ilabel:
+                        # no extractions
                         ll_ilabel = [[0]]
                     lll_ilabel.append(deepcopy(ll_ilabel))
                     ll_osent_wstart_loc.append(deepcopy(osent_wstart_locs))
@@ -512,6 +522,7 @@ class MInput:
             # } if is_finalization
 
             if is_osent_line_of_sample(line):
+                k_osent = k
                 # print("kklop-1st", k, line)
                 osentL = line
                 if "[unused" not in osentL:
@@ -570,7 +581,8 @@ class MInput:
                 # print("vvbn-line-words", str_list(get_words(line)))
                 # assert len(ilabels) == len(osent_wstart_locs), \
                 #     f"{str(len(ilabels))} != {str(len(osent_wstart_locs))}"
-                ll_ilabel.append(ilabels)
+                if is_valid_label_list(ilabels, self.params.task, "ilabels"):
+                    ll_ilabel.append(ilabels)
                 # print("dfgthj", ll_ilabel)
                 # end of if tag line
             # } if osent line or tag line
@@ -622,8 +634,10 @@ class MInput:
 
 
 if __name__ == "__main__":
-    def main1(tags_in_fp, verbose=False):
-        params = Params(1)  # 1, task="ex", action="train_test"
+    def main1(tags_in_fp, pid=1, verbose=False):
+        # pid=1, task="ex", action="train_test"
+        # pid=5, task="cc", action="train_test"
+        params = Params(pid)
         model_str = "bert-base-uncased"
         auto_tokenizer = AutoTokenizer.from_pretrained(
             model_str,
@@ -639,7 +653,7 @@ if __name__ == "__main__":
         num_samples = len(m_in.l_orig_sent)
         # print(to_dict(m_in).keys())
         print("num_samples=", num_samples)
-        for isam in [0, 1, -2, - 1]:
+        for isam in [0, 1, 2, 3, -2, - 1]:
             print("************** isam=", isam)
             print_list("get_words(l_osentL[isam])",
                        get_words(redoL(m_in.l_orig_sent[isam])))
@@ -656,7 +670,7 @@ if __name__ == "__main__":
             print_list("ll_osent_wstart_loc[isam]",
                        m_in.ll_osent_wstart_loc[isam])
             if verbose:
-                print("lll_ilabel", m_in.lll_ilabel)
+                print("lll_ilabel[isam]", m_in.lll_ilabel[isam])
 
 
     def main2():
@@ -681,10 +695,14 @@ if __name__ == "__main__":
         pprint(l_sent2)
 
 
-    main1(tags_in_fp="tests/small_extags.txt",
-          verbose=False)
-    main1(tags_in_fp="tests/small_extagsN.txt",
-          verbose=False)
-    main2()
-    main1(tags_in_fp="predicting/small_pred.txt",
-          verbose=False)
+    # main1(tags_in_fp="tests/small_extags.txt",
+    #       verbose=False)
+    # main1(tags_in_fp="tests/small_extagsN.txt",
+    #       verbose=False)
+    # main2()
+    # main1(tags_in_fp="predicting/small_pred.txt",
+    #       verbose=False)
+
+    main1(tags_in_fp="input_data/openie-data/ptb-dev.labels",
+          pid=5,
+          verbose=True)

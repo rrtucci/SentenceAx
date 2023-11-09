@@ -124,9 +124,15 @@ class SaxDataLoaderTool:
                 m_in = pickle.load(open(cached_fp, 'rb'))
             return m_in
 
-        train_m_in = find_m_in(cached_train_m_in_fp, self.tags_train_fp)
-        tune_m_in = find_m_in(cached_tune_m_in_fp, self.tags_tune_fp)
-        test_m_in = find_m_in(cached_test_m_in_fp, self.tags_test_fp)
+        train_m_in = find_m_in(cached_train_m_in_fp,
+                               self.tags_train_fp,
+                               "train")
+        tune_m_in = find_m_in(cached_tune_m_in_fp,
+                              self.tags_tune_fp,
+                              "tune")
+        test_m_in = find_m_in(cached_test_m_in_fp,
+                              self.tags_test_fp,
+                              "test")
 
         # vocab = self.build_vocab(
         #     train_m_in + tune_m_in + test_m_in)

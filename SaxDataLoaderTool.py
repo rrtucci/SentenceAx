@@ -111,10 +111,14 @@ class SaxDataLoaderTool:
             CACHE_DIR + "/" + task + "_test_m_in_" + \
             self.tags_test_fp.replace("/", "_").split(".")[0] + ".pkl"
 
-        def find_m_in(cached_fp, tags_fp):
+        def find_m_in(cached_fp, tags_fp, ttt):
             if not os.path.exists(cached_fp) or \
                     self.params.d["refresh_cache"]:
-                m_in = MInput(self.params, tags_fp, self.auto_tokenizer)
+                m_in = MInput(
+                    self.params,
+                    tags_fp,
+                    self.auto_tokenizer,
+                    omit_exless=get_omit_exless_flag(task, ttt))
                 pickle.dump(m_in, open(cached_fp, 'wb'))
             else:
                 m_in = pickle.load(open(cached_fp, 'rb'))
@@ -135,7 +139,6 @@ class SaxDataLoaderTool:
 
         # to simulate bucket sort (along with pad_data)
         # train_dataset.sort()
-
 
         return train_dataset, tune_dataset, test_dataset
         # , vocab, orig_sents
@@ -186,7 +189,8 @@ class SaxDataLoaderTool:
 
         predict_m_in = MInput(self.params,
                               predict_in_fp,
-                              self.auto_tokenizer)
+                              self.auto_tokenizer,
+                              omit_exless=False)
         # vocab = build_vocab(predict_m_in)
 
         predict_dataset = SaxDataSet(predict_m_in)

@@ -591,6 +591,25 @@ def is_valid_label_list(labels, task, label_type):
     return valid
 
 
+def get_omit_exless_flag(task, ttt):
+    """
+
+    Parameters
+    ----------
+    task: str
+    ttt: str
+
+    Returns
+    -------
+
+    """
+    assert task in ["ex", "cc"]
+    assert ttt in ["train", "tune", "test"]
+    if task == "ex" and ttt in ["tune", "test"]:
+        return False
+    return True
+
+
 if __name__ == "__main__":
     def main1():
         h = {"x": 5, "y": 3}

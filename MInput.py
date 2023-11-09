@@ -35,6 +35,7 @@ class MInput:
     ll_osent_verb_loc: list[list[int]]
     ll_osent_wstart_loc: list[list[int]]
     lll_ilabel: list[list[list[int]]]
+    omit_exless: bool
     params: Params
     # spacy_model: spacy.Language
     tags_in_fp: str
@@ -48,7 +49,7 @@ class MInput:
                  tags_in_fp,
                  auto_tokenizer,
                  read=True,
-                 omit_no_ex_samples = False,
+                 omit_exless = True,
                  verbose=False):
         """
         tags_in_fp is an extags or a cctags file.
@@ -67,7 +68,7 @@ class MInput:
         self.params = params
         self.tags_in_fp = tags_in_fp
         self.auto_tokenizer = auto_tokenizer
-        self.omit_no_ex_samples = omit_no_ex_samples
+        self.omit_exless = omit_exless
         self.verbose = verbose
 
         # shape=(num_samples,)
@@ -499,7 +500,7 @@ class MInput:
                     #                      ignored_chs="_",
                     #                      verbose=True))
 
-                elif not ll_ilabel and self.omit_no_ex_samples:
+                elif not ll_ilabel and self.omit_exless:
                     num_omitted_sents += 1
                     print(
                         f"{str(num_omitted_sents)}. The {k_osent}'th line "
@@ -636,7 +637,10 @@ class MInput:
 
 
 if __name__ == "__main__":
-    def main1(tags_in_fp, pid=1, verbose=False):
+    def main1(tags_in_fp,
+              pid=1,
+              omit_exless = True,
+              verbose=False):
         # pid=1, task="ex", action="train_test"
         # pid=5, task="cc", action="train_test"
         params = Params(pid)
@@ -651,6 +655,7 @@ if __name__ == "__main__":
         m_in = MInput(params,
                       tags_in_fp,
                       auto_tokenizer,
+                      omit_exless=omit_exless,
                       verbose=verbose)
         num_samples = len(m_in.l_orig_sent)
         # print(to_dict(m_in).keys())
@@ -702,7 +707,9 @@ if __name__ == "__main__":
     main1(tags_in_fp="tests/small_extagsN.txt",
           verbose=False)
     main2()
+    # preds file has no valid exs
     main1(tags_in_fp="predicting/small_pred.txt",
+          omit_exless=False,
           verbose=False)
 
     main1(tags_in_fp="input_data/openie-data/ptb-dev.labels",

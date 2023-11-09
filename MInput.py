@@ -48,6 +48,7 @@ class MInput:
                  tags_in_fp,
                  auto_tokenizer,
                  read=True,
+                 omit_no_ex_samples = False,
                  verbose=False):
         """
         tags_in_fp is an extags or a cctags file.
@@ -66,6 +67,7 @@ class MInput:
         self.params = params
         self.tags_in_fp = tags_in_fp
         self.auto_tokenizer = auto_tokenizer
+        self.omit_no_ex_samples = omit_no_ex_samples
         self.verbose = verbose
 
         # shape=(num_samples,)
@@ -387,7 +389,7 @@ class MInput:
             else:
                 self.ll_osent_verb_loc.append([0])
 
-    def read_input_tags_file(self, omit_no_ex_samples=True):
+    def read_input_tags_file(self):
         """
         similar to Openie6.data._process_data()
 
@@ -497,7 +499,7 @@ class MInput:
                     #                      ignored_chs="_",
                     #                      verbose=True))
 
-                elif not ll_ilabel and omit_no_ex_samples:
+                elif not ll_ilabel and self.omit_no_ex_samples:
                     num_omitted_sents += 1
                     print(
                         f"{str(num_omitted_sents)}. The {k_osent}'th line "
@@ -695,13 +697,13 @@ if __name__ == "__main__":
         pprint(l_sent2)
 
 
-    # main1(tags_in_fp="tests/small_extags.txt",
-    #       verbose=False)
-    # main1(tags_in_fp="tests/small_extagsN.txt",
-    #       verbose=False)
-    # main2()
-    # main1(tags_in_fp="predicting/small_pred.txt",
-    #       verbose=False)
+    main1(tags_in_fp="tests/small_extags.txt",
+          verbose=False)
+    main1(tags_in_fp="tests/small_extagsN.txt",
+          verbose=False)
+    main2()
+    main1(tags_in_fp="predicting/small_pred.txt",
+          verbose=False)
 
     main1(tags_in_fp="input_data/openie-data/ptb-dev.labels",
           pid=5,

@@ -33,6 +33,8 @@ CC_METRIC_STORAGE_DIR = "cc_metric_storage"
 VAL_OUT_DIR = "val_outputs"
 
 CCTAGS_TRAIN_FP = 'input_data/openie-data/ptb-train.labels'
+# CCTAGS_TRAIN_FP = 'tests/small_cctags.txt' # small file for debugging
+
 CCTAGS_TUNE_FP = 'input_data/openie-data/ptb-dev.labels'
 CCTAGS_TEST_FP = 'input_data/openie-data/ptb-test.labels'
 
@@ -40,14 +42,12 @@ CCTAGS_TEST_FP = 'input_data/openie-data/ptb-test.labels'
 CC_BEST_WEIGHTS_FP = WEIGHTS_DIR + '/cc.txt' # to be changed 
 
 EXTAGS_TRAIN_FP = INPUT_DIR + '/openie-data/openie4_labels'
-# use smaller file for debugging/warmup
+# EXTAGS_TRAIN_FP = "tests/extags_train.txt" # small file for debugging
 
-# EXTAGS_TRAIN_FP = "tests/extags_train.txt"
-# IMPORTANT: dev.txt and test.txt are extag files with
-# single ex that only contains NONE extags. The actual extags
-# are obtained by ExMetric from benchmark files.
-# don't change the dev.txt or test.txt files to something else
-# because ExMetric is hard wired to expect them.
+# IMPORTANT: dev.txt and test.txt are extag files with single ex that only
+# contains NONE extags. The actual extags are obtained by ExMetric from
+# benchmark files. Don't change the dev.txt or test.txt files to something
+# else because ExMetric is hard wired to expect them.
 EXTAGS_TUNE_FP = INPUT_DIR + "/carb-data/dev.txt"
 EXTAGS_TEST_FP = INPUT_DIR + "/carb-data/test.txt"
 

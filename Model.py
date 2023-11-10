@@ -203,6 +203,11 @@ class Model(L.LightningModule):
             self.metric = CCMetric()
 
         self._ex_sent_to_sent = None  # property
+        # self.cc_sent_to_words is similar to Openie6 conj_word_mapping
+        #  Note that self.cc_sent_to_words is never used;
+        # It is filled in ActionConductor but never used.
+        # We include it in SentenceAx to follow Openie6.
+
         self.cc_sent_to_words = None
 
         self.scores_epoch_end_d = {}  # filled in test_epoch_end()

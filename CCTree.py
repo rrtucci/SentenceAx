@@ -51,7 +51,7 @@ class CCTree:
 
         self.ccnodes = None
         # This must be called before calling self.set_tree_structure()
-        self.set_ccnodes(fix_it=True)
+        self.set_ccnodes()
 
         self.root_cclocs = None
         self.par_ccloc_to_child_cclocs = None
@@ -82,11 +82,12 @@ class CCTree:
 
         Returns
         -------
-        CCNode
+        CCNode|None, list[CCNode]
 
         """
         unique_k = -1
         l_hot_k = []
+        bad_ccnodes = []
         for k, ccnode in enumerate(ccnodes):
             if ccnode.ccloc == ccloc:
                 l_hot_k.append(k)
@@ -94,6 +95,8 @@ class CCTree:
         if not l_hot_k:
             return None
         elif len(l_hot_k) > 1:
+            # this normally doesn't happen with training extractions
+            # but it can happen with predicted extractions
             print("more than one ccnode with cc at " + str(ccloc))
             print("culprit sent:\n" + str(ccnodes[0].osent_words))
             print("ccnodes[k].spanned_locs:")
@@ -103,7 +106,8 @@ class CCTree:
         else:
             return ccnodes[unique_k]
 
-    def fix_ccnodes(self):
+
+    def remove_bad_ccnodes(self):
         """
         similar to Openie6.data.coords_to_sentences
 
@@ -113,25 +117,33 @@ class CCTree:
 
         """
         if self.verbose:
-            print("nodes before fixing: ", [str(ccnode) for ccnode in
+            print("nodes before removals: ", [str(ccnode) for ccnode in
                                             self.ccnodes])
+        # one to one mapping between ccnodes and cclocs
+        ccloc_to_ccnode = {}
+        for ccnode in self.ccnodes:
+            if not ccloc_to_ccnode[ccnode.ccloc]:
+                ccloc_to_ccnode[ccnode.ccloc] = []
+            ccloc_to_ccnode[ccnode.ccloc].append(ccnode)
+        for ccloc in ccloc_to_ccnode.keys():
+            if len(ccloc_to_ccnode[ccloc]) > 1:
+                for k, ccnode in enumerate(ccloc_to_ccnode[ccloc]):
+                    if k >=1:
+                        if self.verbose:
+                            print("node " + str(ccnode) + " removed")
+                        self.ccnodes.remove(ccnode)
+
         for ccnode in self.ccnodes:
             if not self.osent_words[ccnode.ccloc] or \
                     self.osent_words[ccnode.ccloc] in ['nor', '&'] or \
                     ccnode.an_unbreakable_word_is_not_spanned():
-                k = self.ccnodes.index(ccnode)
                 if self.verbose:
-                    print("node " + str(self.ccnodes[k]) +
-                          " thrown away in fixing ccnodes")
-                self.ccnodes.pop(k)
+                    print("node " + str(ccnode) + " removed")
+                self.ccnodes.remove(ccnode)
 
-    def set_ccnodes(self, fix_it=True):
+    def set_ccnodes(self):
         """
         similar to Openie6.metric.get_coords()
-
-        Parameters
-        ----------
-        fix_it: bool
 
         Returns
         -------
@@ -148,7 +160,7 @@ class CCTree:
             seplocs = []
             spans = []
 
-            # cctag_to_int = {
+            # CCTAG_TO_ILABEL = {
             #   'NONE': 0
             #   'CP': 1,
             #   'CP_START': 2,
@@ -164,7 +176,7 @@ class CCTree:
                     if started_CP:
                         started_CP = False
                         spans.append((start_loc, i))
-                if ilabel == 0 or ilabel == 2:  # NONE or CP_START
+                if ilabel in [0, 2]:  # NONE or CP_START
                     # ccnode phrase can end
                     # two spans at least, split by CC
                     if spans and len(spans) >= 2 and \
@@ -182,22 +194,23 @@ class CCTree:
                         spans = []
                 if ilabel == 0:  # NONE
                     pass
-                if ilabel == 1:  # CP
+                elif ilabel == 1:  # CP
                     if not started_CP:
                         started_CP = True
                         start_loc = i
-                if ilabel == 2:  # CP_START
+                elif ilabel == 2:  # CP_START
                     # print("hjuk", "was here")
                     started_CP = True
                     start_loc = i
-                if ilabel == 3:  # CC
+                elif ilabel == 3:  # CC
                     ccloc = i
-                if ilabel == 4:  # SEP
+                elif ilabel == 4:  # SEP
                     seplocs.append(i)
-                if ilabel == 5:  # OTHERS
+                elif ilabel == 5:  # OTHERS
                     pass
-        if fix_it:
-            self.fix_ccnodes()
+                else:
+                    assert False
+        self.remove_bad_ccnodes()
         # print("llm", len(self.ccnodes))
         for ccnode in self.ccnodes:
             ccnode.check_all()
@@ -279,7 +292,7 @@ class CCTree:
             for child_ccloc, par_cclocs in \
                     self.child_ccloc_to_par_cclocs.items():
                 # print("lmkp", str(child_ccloc), str(par_cclocs))
-                child_ccnode = self.get_ccnode_from_ccloc(child_ccloc,
+                child_ccnode = CCTree.get_ccnode_from_ccloc(child_ccloc,
                                                           self.ccnodes)
                 if child_ccnode:
                     child_name = str(child_ccnode)
@@ -287,7 +300,7 @@ class CCTree:
                         tree.create_node(child_name, child_name)
                     else:
                         for par_ccloc in par_cclocs:
-                            par_ccnode = self.get_ccnode_from_ccloc(
+                            par_ccnode = CCTree.get_ccnode_from_ccloc(
                                 par_ccloc,
                                 self.ccnodes)
                             # print("hgfd", str(par_ccloc))
@@ -381,7 +394,7 @@ class CCTree:
         None
 
         """
-        # self.fix_ccnodes()  was called at the end of get_ccnodes()
+        # self.remove_bad_ccnodes()  was called at the end of get_ccnodes()
 
         l_spanned_word = []
         for ccnode in self.ccnodes:
@@ -411,14 +424,14 @@ class CCTree:
                 print("level_ccnodes", [str(x) for x in level_ccnodes])
 
             rooty_ccloc = rooty_cclocs.pop(0)
-            rooty_ccnode = CCTree.get_ccnode_from_ccloc(rooty_ccloc,
+            rooty_ccnode  = CCTree.get_ccnode_from_ccloc(rooty_ccloc,
                                                         self.ccnodes)
 
             # nd=node
             level_nd_count -= 1
             level_ccnodes.append(rooty_ccnode)
             ll_spanned_loc = [ccnode.spanned_locs
-                              for ccnode in level_ccnodes]
+                              for ccnode in level_ccnodes if ccnode]
             if self.verbose:
                 print("level_ccnodes", [str(x) for x in level_ccnodes])
                 print("ll_spanned_loc", ll_spanned_loc)

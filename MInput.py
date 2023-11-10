@@ -488,8 +488,7 @@ class MInput:
                         len(osentL_words) <= 4:
                     num_omitted_sents += 1
                     print(
-                        f"{str(num_omitted_sents)}. The {k_osent}'th line "
-                        f"has > "
+                        f"{str(num_omitted_sents)}. Line {k_osent} has > "
                         f"{MAX_NUM_OSENTL_WORDS} words."
                         f" length={len(osentL_words)}\n[" +
                         osentL[0:60] + "]")
@@ -503,7 +502,7 @@ class MInput:
                 elif not ll_ilabel and self.omit_exless:
                     num_omitted_sents += 1
                     print(
-                        f"{str(num_omitted_sents)}. The {k_osent}'th line "
+                        f"{str(num_omitted_sents)}. Line {k_osent} "
                         "has no valid extractions.")
                 else:
                     orig_sent = undoL(osentL)
@@ -702,16 +701,16 @@ if __name__ == "__main__":
         pprint(l_sent2)
 
 
-    main1(tags_in_fp="tests/small_extags.txt",
-          verbose=False)
-    main1(tags_in_fp="tests/small_extagsN.txt",
-          verbose=False)
-    main2()
-    # preds file has no valid exs
-    main1(tags_in_fp="predicting/small_pred.txt",
-          omit_exless=False,
-          verbose=False)
+    # main1(tags_in_fp="tests/small_extags.txt",
+    #       verbose=False)
+    # main1(tags_in_fp="tests/small_extagsN.txt",
+    #       verbose=False)
+    # main2()
+    # # preds file has no valid exs
+    # main1(tags_in_fp="predicting/small_pred.txt",
+    #       omit_exless=False,
+    #       verbose=False)
 
-    main1(tags_in_fp="input_data/openie-data/ptb-dev.labels",
+    main1(tags_in_fp="tests/small_cctags.txt",
           pid=5,
           verbose=True)

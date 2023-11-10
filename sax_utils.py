@@ -593,6 +593,11 @@ def is_valid_label_list(labels, task, label_type):
 
 def get_omit_exless_flag(task, ttt):
     """
+    For task="ex", the dev.txt and test.txt are extag files with single ex
+    that only contains NONE extags, so do not omit exless samples for those,
+    or will omit entire file. The input files for predicting have no exs at
+    all, so don't omit exless samples for those either. In all other cases,
+    do omit the exless samples.
 
     Parameters
     ----------

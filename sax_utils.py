@@ -433,49 +433,49 @@ def Li(tensor):
     return tensor.tolist()
 
 
-def add_key_to_target_d(key, fix_d, target_d):
+def add_key_to_this_d(key, transform_d, this_d):
     """
 
     Parameters
     ----------
     key: Any
-    fix_d: dict[Any, Any]
-    target_d: dict[Any, Any]
+    transform_d: dict[Any, Any]
+    this_d: dict[Any, Any]
 
     Returns
     -------
     dict[Any, Any]
 
     """
-    if fix_d:
-        if fix_d[key] not in target_d:
-            target_d[fix_d[key]] = []
+    if transform_d:
+        if transform_d[key] not in this_d:
+            this_d[transform_d[key]] = []
     else:
-        if key not in target_d:
-            target_d[key] = []
+        if key not in this_d:
+            this_d[key] = []
 
 
-def add_key_value_pair_to_target_d(key, value, fix_d, target_d):
+def add_key_value_pair_to_this_d(key, value, transform_d, this_d):
     """
 
     Parameters
     ----------
     key: Any
     value: Any
-    fix_d: dict[Any, Any]
-    target_d: dict[Any, Any]
+    transform_d: dict[Any, Any]
+    this_d: dict[Any, Any]
 
     Returns
     -------
     dict[Any, Any]
 
     """
-    if fix_d:
-        if value not in target_d[fix_d[key]]:
-            target_d[fix_d[key]].append(value)
+    if transform_d:
+        if value not in this_d[transform_d[key]]:
+            this_d[transform_d[key]].append(value)
     else:
-        if value not in target_d[key]:
-            target_d[key].append(value)
+        if value not in this_d[key]:
+            this_d[key].append(value)
 
 
 def to_dict(class_obj):

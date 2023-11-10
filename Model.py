@@ -1067,9 +1067,9 @@ class Model(L.LightningModule):
         osent_to_l_pred_ex = {}
         for sample_id, orig_sent in enumerate(l_orig_sent):
             orig_sentL = redoL(orig_sent)
-            add_key_to_target_d(key=orig_sent,
-                                fix_d=self.ex_sent_to_sent,
-                                target_d=osent_to_l_pred_ex)
+            add_key_to_this_d(key=orig_sent,
+                                transform_d=self.ex_sent_to_sent,
+                                this_d=osent_to_l_pred_ex)
             for depth in range(num_depths):
                 num_words = len(get_words(orig_sentL))
                 ex_ilabels = lll_ilabel[sample_id][depth][:num_words]
@@ -1078,11 +1078,11 @@ class Model(L.LightningModule):
                 ex = SaxExtraction.get_ex_from_ilabels(
                     ex_ilabels, orig_sentL, ll_confi[sample_id][depth])
                 if ex.arg1 and ex.rel:
-                    add_key_value_pair_to_target_d(
+                    add_key_value_pair_to_this_d(
                         key=orig_sent,
                         value=ex,
-                        fix_d=self.ex_sent_to_sent,
-                        target_d=osent_to_l_pred_ex)
+                        transform_d=self.ex_sent_to_sent,
+                        this_d=osent_to_l_pred_ex)
         l_pred_str = []  # similar to `all_pred`
         l_pred_allen_str = []  # similar to `all_pred_allen_nlp`
         for osent, l_pred_ex in osent_to_l_pred_ex.items():

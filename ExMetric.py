@@ -107,9 +107,9 @@ class ExMetric:
 
         osent2_to_exs = {}
         for sam_id, osent2 in enumerate(l_osent2):
-            add_key_to_target_d(key=osent2,
-                                fix_d=sent_to_sent,
-                                target_d=osent2_to_exs)
+            add_key_to_this_d(key=osent2,
+                                transform_d=sent_to_sent,
+                                this_d=osent2_to_exs)
 
             num_exs = len(ll_confi[sam_id])
             for depth in range(num_exs):
@@ -122,11 +122,11 @@ class ExMetric:
                     osent2,
                     ll_confi[sam_id][depth])
                 if ex0.arg1 and ex0.rel:
-                    add_key_value_pair_to_target_d(
+                    add_key_value_pair_to_this_d(
                         key=osent2,
                         value=ex0,
-                        fix_d=sent_to_sent,
-                        target_d=osent2_to_exs)
+                        transform_d=sent_to_sent,
+                        this_d=osent2_to_exs)
         return osent2_to_exs
 
     def __call__(self,

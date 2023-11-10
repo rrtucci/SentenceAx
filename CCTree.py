@@ -134,7 +134,8 @@ class CCTree:
                         self.ccnodes.remove(ccnode)
 
         for ccnode in self.ccnodes:
-            if not self.osent_words[ccnode.ccloc] or \
+            if ccnode.ccloc >= len(self.osent_words) or \
+                    not self.osent_words[ccnode.ccloc] or \
                     self.osent_words[ccnode.ccloc] in ['nor', '&'] or \
                     ccnode.an_unbreakable_word_is_not_spanned():
                 if self.verbose:

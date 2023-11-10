@@ -820,9 +820,9 @@ class Model(L.LightningModule):
 
         batch_m_out = self.forward(batch, batch_idx, ttt)
 
-        if ttt not in ["train", "resume"]:
+        if ttt != "train":
             # only collect batch_m_out if going to score it.
-            # only ttt not in ["train", "resume"] are scored
+            # only ttt != "train" are scored
             self.l_batch_m_out.append(batch_m_out)
 
         if ttt == "tune":

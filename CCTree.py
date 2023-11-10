@@ -122,7 +122,7 @@ class CCTree:
         # one to one mapping between ccnodes and cclocs
         ccloc_to_ccnode = {}
         for ccnode in self.ccnodes:
-            if not ccloc_to_ccnode[ccnode.ccloc]:
+            if ccnode.ccloc not in ccloc_to_ccnode.keys():
                 ccloc_to_ccnode[ccnode.ccloc] = []
             ccloc_to_ccnode[ccnode.ccloc].append(ccnode)
         for ccloc in ccloc_to_ccnode.keys():
@@ -208,8 +208,10 @@ class CCTree:
                     seplocs.append(i)
                 elif ilabel == 5:  # OTHERS
                     pass
+                elif ilabel == -100:
+                    pass
                 else:
-                    assert False
+                    assert False, f"{str(ilabel)} out of range 0:6"
         self.remove_bad_ccnodes()
         # print("llm", len(self.ccnodes))
         for ccnode in self.ccnodes:

@@ -78,7 +78,7 @@ class CCMetric:
         """
         if VERBOSE: print("Entering CCMetric.__call__() method.")
         num_samples = len(lll_ilabel)
-        print("CCMetric entering (and saving if save=True) "
+        print("CCMetric absorbing (and saving as pkl file if save=True) "
               "samples via its __call__() method.")
         print("number of samples=", num_samples)
         for k in range(num_samples):

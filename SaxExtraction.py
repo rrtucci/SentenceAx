@@ -10,9 +10,9 @@ class SaxExtraction:
     
     Important: carb has its own extraction class called `Extraction` at
     carb_subset.oie_readers.extraction. We call ours `SaxExtraction`. sax =
-    sentence ax.
-    extag = extraction tag
-    pred=predicate same as rel=relation
+    Sentence Ax.
+    extag= extraction tag
+    pred= predicate same as rel=relation
     
     
     assume only one of: `arg1, rel, arg2, time_arg, loc_arg`

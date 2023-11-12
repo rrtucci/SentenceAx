@@ -17,9 +17,10 @@ class AllenTool:
     This class is for extracting info from an "AllenNLP" file, or "Allen"
     file, for short. Above are 5 lines of an Allen file. They have the same
     original sentences (the first sentence of each line). Hence, they all
-    refer to the same "sample". The five lines differ in what comes after
-    the original sentence ("osent"). What comes after the osent in each line
-    is an "extraction". In Allen files, an extraction is composed of 3 parts:
+    refer to the same "sample". The five lines
+    differ in what comes after the original sentence ("osent"). What comes
+    after the osent in each line is an "extraction (ex)". In Allen files,
+    an extraction is composed of 3 parts:
 
     argument1, demarcated by `<arg1></arg1>`
     relationship, demarcated by `<rel></rel>`
@@ -38,14 +39,14 @@ class AllenTool:
     num_sents: int
         number of sentences
     osentL_to_exs: dict[str,list[SaxExtraction]]
-        sentenceLong to extraction list mapping
-    
+        sentenceLong to extraction list mapping.
+
     """
 
     def __init__(self, allen_fp):
         """
         Constructor. Note that it automatically reads the Allen file with
-        path `allen_fp` and stores its information in the attribute
+        path `allen_fp` and stores the file's information in the attribute
         `self.osentL_to_exs`.
 
         Parameters
@@ -53,7 +54,6 @@ class AllenTool:
         allen_fp: str
         """
         self.allen_fp = allen_fp
-        # ex =extraction sent=sentence
         self.osentL_to_exs = self.read_allen_file()
         # print("mklop", self.osentL_to_exs)
         self.num_sents = len(self.osentL_to_exs)
@@ -70,9 +70,9 @@ class AllenTool:
         osent = original sentence
         osentL = osent + UNUSED_TOKEN_STR
         
-        This method does not care internally whether we are using `osentL, 
-        lll_ilabels` or `osent, lll_ilabels`. that is why we are introducing 
-        the symbol `osent2`, which can stand for `osent` or `osentL`
+        This method does not care internally whether we are using `osentL,
+        lll_ilabels` or `osent, lll_ilabels`. That is why we use the symbol
+        `osent2`, which can stand for either `osent` or `osentL`
 
         Parameters
         ----------
@@ -100,8 +100,7 @@ class AllenTool:
     def get_ex_from_allen_line(line):
         """
         This method takes as input a single line `line` from an Allen file
-        and returns an object of the class SaxExtraction. (Sax stands for
-        Sentence Ax, the name of this app).
+        and returns an object of the class SaxExtraction.
 
         Parameters
         ----------
@@ -146,7 +145,7 @@ class AllenTool:
     @staticmethod
     def get_allen_line_from_ex(ex):
         """
-        Thiis method takes as input an object `ex` of the class
+        This method takes as input an object `ex` of the class
         `SaxExtraction` and it returns a string formatted as a line of an
         Allen file. Hence, this method is the inverse of the method
         `get_ex_from_allen_line()`.
@@ -183,17 +182,17 @@ class AllenTool:
         lines = [unidecode(line) for line in lines]
         osentL_to_exs = OrderedDict()
         exs = []
-        prev_in_sentL = ''
+        prev_osentL = ''
         for line in lines:
             # print("bnhk", line)
             ex = AllenTool.get_ex_from_allen_line(line)
-            if prev_in_sentL and ex.orig_sentL != prev_in_sentL:
-                osentL_to_exs[prev_in_sentL] = exs
-                exs = []
+            if prev_osentL and ex.orig_sentL != prev_osentL:
+                osentL_to_exs[prev_osentL] = exs
+                exs = []  # start exs afresh
             exs.append(ex)
-            prev_in_sentL = ex.orig_sentL
+            prev_osentL = ex.orig_sentL
         # last sample
-        osentL_to_exs[prev_in_sentL] = exs
+        osentL_to_exs[prev_osentL] = exs
         # print("zlpd", osentL_to_exs)
         return osentL_to_exs
 
@@ -209,8 +208,8 @@ class AllenTool:
         NONE NONE NONE ARG1 ARG1 ARG1 ARG1 NONE REL ARG2 ARG2 ARG2 NONE NONE NONE NONE
 
         Above 3 lines come from an "extags file". Extags are extraction tags
-        from the set set('NONE', 'ARG1', 'REL', 'ARG2', 'LOC', 'TIME',
-        'TYPE', 'ARGS'). These 3 lines represent a single "sample". The
+        from the set {'NONE', 'ARG1', 'REL', 'ARG2', 'LOC', 'TIME',
+        'TYPE', 'ARGS'}. These 3 lines represent a single "sample". The
         first line is osentL, the next 2 lines give the extags of
         extractions from that osent. The osent line and the 2 extraction
         lines have the same number of words. (You can get the words of a
@@ -224,7 +223,9 @@ class AllenTool:
 
         If `numbered` is set to False, the output file will have no blank
         lines separating samples. If it is set to True, it will have a line
-        with a number and period at the beginning of each sample.
+        with the string (LINE_SEPARATOR + 1-based sample number) at the
+        beginning of
+        each sample.
 
 
         Parameters
@@ -239,8 +240,8 @@ class AllenTool:
             written. If ftype=="ss", a simple sentences file is written
             instead.
         numbered:
-            True iff a 1-based number label will be written as the first
-            line of each sample.
+            True iff the string (LINE_SEPARATOR + 1-based sample number)
+            will be written as the first line of each sample.
 
         Returns
         -------
@@ -281,15 +282,13 @@ class AllenTool:
                                out_dir,
                                ttt_fractions=(.6, .2, .2)):
         """
-        ttt = train, dev, test
+        ttt = train, tune, test
         tuning=dev=development=validation
 
         This method uses as input the samples loaded by the constructor from
         an Allen file. The method outputs 3 files into the directory
-        `out_dir`. Those 3 files will be used for training, development and
-        testing, respectively.
-
-
+        `out_dir`. Those 3 files will be used for training, tuning (
+        validation) and testing, respectively.
 
         Parameters
         ----------
@@ -302,6 +301,7 @@ class AllenTool:
 
         Returns
         -------
+        None
 
         """
         num_train_sents, num_tune_sents, num_test_sents = \
@@ -335,9 +335,12 @@ class AllenTool:
 
 if __name__ == "__main__":
     def main1(ftype, numbered):
-        str0 = "N"
+
         if not numbered:
             str0 = ""
+        else:
+            str0 = "N"
+            print("'N' suffix to file name means file samples are numbered")
 
         allen_fp = "tests/small_allen.tsv"
         if ftype == "ex":

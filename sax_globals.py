@@ -11,8 +11,16 @@ hparams = hyperparameters,
 fp = file path
 params_d = parameters dictionary
 
+osent = original sentence
+osentL = osent + UNUSED_TOKEN_STR
+L = Long
+osent2 = either osent or osentL
+
+ttt = train, tune, test
+tuning=dev=development=validation
 
 """
+
 
 LINE_SEPARATOR = "[%@!]"
 

@@ -8,15 +8,15 @@ class Params:
         0. "", ""
         1. ex, train_test
            Conductor.train() followed by Conductor.test()
-        2. ex, test  (appears twice)
+        2. ex, test  (appears twice in Openie6 readme)
             Conductor.test()
-        3. ex, predict (appears twice)
+        3. ex, predict (appears twice in Openie6 readme)
             Conductor.predict()
         4. ex, resume
             Conductor.resume()
         5. cc, train_test
            Conductor.train() followed by Conductor.test()
-        6. ex, splitpredict (appears twice)
+        6. ex, splitpredict (appears twice in Openie6 readme)
            Conductor.splitpredict()
 
 

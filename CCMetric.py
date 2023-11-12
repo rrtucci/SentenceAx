@@ -23,14 +23,16 @@ class CCMetric:
 
     def __init__(self):
         """
+        Constructor
 
-        Parameters
-        ----------
-        save: bool
+        This class stores scores of model weights. There are 4 types of
+        scoring reports, called CCReport's: "report_whole", "report_outer",
+        "report_inner" and "report_exact". Each of these uses a different
+        scoring procedure.
 
-        Returns
-        -------
-        CCMetric
+        Setting the parameter `save` to True makes this class store the
+        scores for the current set of weights.
+
         """
         self.save = CC_METRIC_SAVE
         self.report_whole = CCReport("whole")
@@ -52,28 +54,28 @@ class CCMetric:
         self.score_d = CCMetric.get_zero_score_d()
 
     def __call__(self,
-                 l_osent,  # meta data
-                 lll_pred_ilabel,  # predicted
-                 lll_ilabel):  # ground truth
+                 l_osent,  # Openie6.meta_data
+                 lll_pred_ilabel,  # Openie6.predictions
+                 lll_ilabel):  # Openie6.ground_truth
         """
         similar to Openie6.metric.Conjunction.__call__
 
-        ccnodes  when we give it the complete ccnodes
-        happens when we want to evaluate on the original system outputs
-        meta_data same as osent
+        A __call__() method is a new chance to load attributes into the 
+        class after the __init__() has been called.
 
-        This method can be called multiple times for the same class
-        instance. Each time, the scores in the reports grow.
+        Whereas __init__() is called only once, __call__() can be called
+        multiple times for the same class instance. For CCMetric,
+        this __call__() method is called for each batch of an epoch. Each
+        time, the scores in the reports grow. At the end of an epoch,
+        the cumulative scores are averaged, saved and zeroed, before
+        commencing a new epoch.
+
 
         Parameters
         ----------
         l_osent: list[str]
         lll_pred_ilabel: list[list[list[[int]]]
         lll_ilabel: list[list[list[[int]]]
-
-        Returns
-        -------
-        None
 
         """
         if VERBOSE: print("Entering CCMetric.__call__() method.")
@@ -93,7 +95,7 @@ class CCMetric:
             self.report_exact.absorb_new_sample(pred_ccnodes, true_ccnodes)
 
             if self.save:
-                # this happens for each sample
+                # we append to pickle files for each sample.
                 # print("Storing new cc metric pkl files.")
                 di = CC_METRIC_STORAGE_DIR
                 pickle.dump(l_osent[k], open(
@@ -106,6 +108,8 @@ class CCMetric:
     @staticmethod
     def get_zero_score_d():
         """
+        This method returns a new copy of the `score_d` dictionary with all 
+        values zero.
 
         Returns
         -------
@@ -124,6 +128,9 @@ class CCMetric:
 
     def reset_score_d(self):
         """
+        Unlike the method get_zero_score_d(), this method does not create a 
+        new `score_d` dictionary. Instead, it sets to zero all values of the 
+        existing `self.score_d`.
 
         Returns
         -------
@@ -136,6 +143,11 @@ class CCMetric:
     def reset_reports(self):
         """
         similar to Openie6.metric.Conjunction.reset()
+        
+        This method sets to zero (resets) the 4 reports.
+
+        Note that reset_reports() and reset_score_d() are separate methods.
+        Openie6 lumps them together.
 
         Returns
         -------
@@ -152,7 +164,9 @@ class CCMetric:
     def get_score_d(self, ttt, do_reset=True):
         """
         similar to Openie6.metric.Conjunction.get_metric()
-
+        
+        This method returns the current `score_d`. It resets the reports iff
+        do_reset=True.
 
         Parameters
         ----------
@@ -180,37 +194,40 @@ class CCMetric:
             self.reset_score_d()
         return score_d
 
-    def get_overall_score(self, report_category='exact'):
+    def get_overall_score(self, report_kind='exact'):
         """
         Similar to Openie6.metric.Conjunction.get_overall_score().
+        
+        There are 4 kinds of reports produced by this class, and each kind
+        has an overall_scorer. This method returns the F1 score of the
+        overall_scorer.
 
         Parameters
         ----------
-        report_category: str
+        report_kind: str
 
         Returns
         -------
         int
 
         """
-        if report_category == 'whole':
+        if report_kind == 'whole':
             report = self.report_whole
-        elif report_category == 'outer':
+        elif report_kind == 'outer':
             report = self.report_outer
-        elif report_category == 'inner':
+        elif report_kind == 'inner':
             report = self.report_inner
-        elif report_category == 'exact':
+        elif report_kind == 'exact':
             report = self.report_exact
         else:
             raise ValueError(
-                'invalid report_category: {}'.format(report_category))
+                'invalid report_kind: {}'.format(report_kind))
         # print("mkcd", report, self.report_inner.overall_scorer)
         return report.overall_scorer.f1_score()
 
 
 if __name__ == "__main__":
     def main():
-        # dump file just saves all pred_ccnodes and true_ccnodes
         cc_met = CCMetric()
         in_fp = "tests/cc_ilabels.txt"
         with open(in_fp, "r", encoding="utf-8") as f:

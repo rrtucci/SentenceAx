@@ -851,11 +851,11 @@ if __name__ == "__main__":
         pid, task, action   
         0. "", ""
         1. ex, train_test
-        2. ex, test  (appears twice)
-        3. ex, predict (appears twice)
+        2. ex, test  (appears twice in Openie6 readme)
+        3. ex, predict (appears twice in Openie6 readme)
         4. ex, resume
         5. cc, train_test
-        6. ex, splitpredict (appears twice)
+        6. ex, splitpredict (appears twice in Openie6 readme)
 
     """
 

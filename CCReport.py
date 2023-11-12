@@ -105,26 +105,27 @@ class CCReport:
 
     CCScorer similar to Openie6.metric.Record
     CCReport similar to Openie6.metric.Counter
-    `category` similar to `criteria` in ["whole", "outer", "inner", "exact"]
+    `kind` similar to `Openie6.criteria`, both in ["whole", "outer", "inner",
+    "exact"]
 
     Attributes
     ----------
-    category: str
+    kind: str
     depth_scorer: CCScorer
     overall_scorer: CCScorer
 
 
     """
 
-    def __init__(self, category):
+    def __init__(self, kind):
         """
 
         Parameters
         ----------
-        category: str
+        kind: str
         """
-        assert category in ["whole", "outer", "inner", "exact"]
-        self.category = category
+        assert kind in ["whole", "outer", "inner", "exact"]
+        self.kind = kind
         self.overall_scorer = CCScorer()
         self.depth_scorer = CCScorer()
         # print("vbgn", self.overall_scorer, self.depth_scorer)
@@ -161,19 +162,19 @@ class CCReport:
                 pred_spans = pred_ccnode.spans
                 true_spans = true_ccnode.spans
                 # depth = true_ccnode.depth
-                if self.category == "whole":
+                if self.kind == "whole":
                     is_correct = (pred_spans[0][0] == true_spans[0][0]
                                   and pred_spans[-1][1] == true_spans[-1][1])
-                elif self.category == "outer":
+                elif self.kind == "outer":
                     is_correct = (pred_spans[0] == true_spans[0]
                                   and pred_spans[-1] == true_spans[-1])
-                elif self.category == "inner":
+                elif self.kind == "inner":
                     pred_pair = pred_ccnode.get_span_pair(
                         ccloc, check_answer=True)
                     true_pair = true_ccnode.get_span_pair(
                         ccloc, check_answer=True)
                     is_correct = (pred_pair == true_pair)
-                elif self.category == "exact":
+                elif self.kind == "exact":
                     is_correct = (pred_spans == true_spans)
                 else:
                     assert False

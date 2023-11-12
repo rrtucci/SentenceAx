@@ -106,7 +106,7 @@ class CCNode:
         """
         similar to Openie6.metric.Coordination.get_pair()
 
-        used in CCReport.grow()
+        used in CCScoreManager.grow()
         
         Parameters
         ----------

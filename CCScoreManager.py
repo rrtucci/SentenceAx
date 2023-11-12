@@ -122,16 +122,16 @@ class CCScores:
         return np.nan
 
 
-class CCReport:
+class CCScoreManager:
     """
     similar to Openie6.metric.Counter
 
     CCScores similar to Openie6.metric.Record
-    CCReport similar to Openie6.metric.Counter
+    CCScoreManager similar to Openie6.metric.Counter
     `kind` similar to `Openie6.criteria`, both in ["whole", "outer", "inner",
     "exact"]
     
-    This class
+    This class increments and resets the scores keep by class CCScores.
 
     Attributes
     ----------
@@ -144,6 +144,7 @@ class CCReport:
 
     def __init__(self, kind):
         """
+        Constructor
 
         Parameters
         ----------
@@ -157,6 +158,7 @@ class CCReport:
 
     def reset(self):
         """
+        This method resets overall and depth scores to zero.
 
         Returns
         -------
@@ -169,6 +171,12 @@ class CCReport:
     def absorb_new_sample(self, pred_ccnodes, true_ccnodes):
         """
         similar to Openie6.metric.Counter.append()
+
+        This method takes as input `pred_ccnodes` (predicted CCNodes) and
+        `true_ccnodes` (true CCNodes). Then it changes the scores
+        `self.overall_scores` and `self.depth_scores` to reflect the
+        proximity of the predictions to the truth.
+
 
         Parameters
         ----------

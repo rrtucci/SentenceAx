@@ -1,4 +1,4 @@
-from CCReport import *
+from CCScoreManager import *
 import os
 import pickle
 from sax_utils import *
@@ -13,8 +13,8 @@ class CCMetric:
     task="ex".
     
     This class stores scores of model weights. There are 4 types of scoring 
-    reports, called CCReport's: "report_whole", "report_outer", 
-    "report_inner" and "report_exact". Each of these uses a different 
+    managers, called CCScoreManager's: "manager_whole", "manager_outer", 
+    "manager_inner" and "manager_exact". Each of these uses a different 
     scoring procedure.
 
     Setting the parameter `save` to True makes this class store the scores 
@@ -22,10 +22,10 @@ class CCMetric:
 
     Attributes
     ----------
-    report_exact: CCReport
-    report_inner: CCReport
-    report_outer: CCReport
-    report_whole: CCReport
+    manager_exact: CCScoreManager
+    manager_inner: CCScoreManager
+    manager_outer: CCScoreManager
+    manager_whole: CCScoreManager
     score_d: dict[str, float]
     save: bool
 
@@ -38,10 +38,10 @@ class CCMetric:
 
         """
         self.save = CC_METRIC_SAVE
-        self.report_whole = CCReport("whole")
-        self.report_outer = CCReport("outer")
-        self.report_inner = CCReport("inner")
-        self.report_exact = CCReport("exact")
+        self.manager_whole = CCScoreManager("whole")
+        self.manager_outer = CCScoreManager("outer")
+        self.manager_inner = CCScoreManager("inner")
+        self.manager_exact = CCScoreManager("exact")
         # self.n_complete = 0 # not used
         # self.n_sentence = 0 # not used
         if self.save:
@@ -69,7 +69,7 @@ class CCMetric:
         Whereas __init__() is called only once, __call__() can be called
         multiple times for the same class instance. For CCMetric,
         this __call__() method is called for each batch of an epoch. Each
-        time, the scores in the reports grow. At the end of an epoch,
+        time, the scores in the managers grow. At the end of an epoch,
         the cumulative scores are averaged, saved and zeroed, before
         commencing a new epoch.
 
@@ -92,10 +92,10 @@ class CCMetric:
                                   lll_ilabel[k],
                                   calc_tree_struc=True).ccnodes
 
-            self.report_whole.absorb_new_sample(pred_ccnodes, true_ccnodes)
-            self.report_outer.absorb_new_sample(pred_ccnodes, true_ccnodes)
-            self.report_inner.absorb_new_sample(pred_ccnodes, true_ccnodes)
-            self.report_exact.absorb_new_sample(pred_ccnodes, true_ccnodes)
+            self.manager_whole.absorb_new_sample(pred_ccnodes, true_ccnodes)
+            self.manager_outer.absorb_new_sample(pred_ccnodes, true_ccnodes)
+            self.manager_inner.absorb_new_sample(pred_ccnodes, true_ccnodes)
+            self.manager_exact.absorb_new_sample(pred_ccnodes, true_ccnodes)
 
             if self.save:
                 # we append to pickle files for each sample.
@@ -143,13 +143,13 @@ class CCMetric:
         for name in self.score_d.keys():
             self.score_d[name] = 0.0
 
-    def reset_reports(self):
+    def reset_managers(self):
         """
         similar to Openie6.metric.Conjunction.reset()
         
-        This method sets to zero (resets) the 4 reports.
+        This method sets to zero (resets) the 4 managers.
 
-        Note that reset_reports() and reset_score_d() are separate methods.
+        Note that reset_managers() and reset_score_d() are separate methods.
         Openie6 lumps them together.
 
         Returns
@@ -157,10 +157,10 @@ class CCMetric:
         None
 
         """
-        self.report_whole.reset()
-        self.report_outer.reset()
-        self.report_inner.reset()
-        self.report_exact.reset()
+        self.manager_whole.reset()
+        self.manager_outer.reset()
+        self.manager_inner.reset()
+        self.manager_exact.reset()
         # self.n_complete = 0
         # self.n_sentence = 0
 
@@ -168,7 +168,7 @@ class CCMetric:
         """
         similar to Openie6.metric.Conjunction.get_metric()
         
-        This method returns the current `score_d`. It resets the reports iff
+        This method returns the current `score_d`. It resets the managers iff
         do_reset=True.
 
         Parameters
@@ -185,48 +185,48 @@ class CCMetric:
         """
         if VERBOSE: print("Entering CCMetric.get_score_d method.")
         score_d = OrderedDict({
-            'F1_whole': self.report_whole.overall_scores.f1_score(),
-            'F1_outer': self.report_outer.overall_scores.f1_score(),
-            'F1_inner': self.report_inner.overall_scores.f1_score(),
-            'F1_exact': self.report_exact.overall_scores.f1_score(),
-            'P_exact': self.report_exact.overall_scores.precision(),
-            'R_exact': self.report_exact.overall_scores.recall()
+            'F1_whole': self.manager_whole.overall_scores.f1_score(),
+            'F1_outer': self.manager_outer.overall_scores.f1_score(),
+            'F1_inner': self.manager_inner.overall_scores.f1_score(),
+            'F1_exact': self.manager_exact.overall_scores.f1_score(),
+            'P_exact': self.manager_exact.overall_scores.precision(),
+            'R_exact': self.manager_exact.overall_scores.recall()
         })
         self.score_d = copy(score_d)
         if do_reset:
             self.reset_score_d()
         return score_d
 
-    def get_overall_score(self, report_kind='exact'):
+    def get_overall_score(self, manager_kind='exact'):
         """
         Similar to Openie6.metric.Conjunction.get_overall_score().
         
-        There are 4 kinds of reports produced by this class, and each kind
+        There are 4 kinds of managers produced by this class, and each kind
         has an overall_scores. This method returns the F1 score of the
         overall_scores.
 
         Parameters
         ----------
-        report_kind: str
+        manager_kind: str
 
         Returns
         -------
         int
 
         """
-        if report_kind == 'whole':
-            report = self.report_whole
-        elif report_kind == 'outer':
-            report = self.report_outer
-        elif report_kind == 'inner':
-            report = self.report_inner
-        elif report_kind == 'exact':
-            report = self.report_exact
+        if manager_kind == 'whole':
+            manager = self.manager_whole
+        elif manager_kind == 'outer':
+            manager = self.manager_outer
+        elif manager_kind == 'inner':
+            manager = self.manager_inner
+        elif manager_kind == 'exact':
+            manager = self.manager_exact
         else:
             raise ValueError(
-                'invalid report_kind: {}'.format(report_kind))
-        # print("mkcd", report, self.report_inner.overall_scores)
-        return report.overall_scores.f1_score()
+                'invalid manager_kind: {}'.format(manager_kind))
+        # print("mkcd", manager, self.manager_inner.overall_scores)
+        return manager.overall_scores.f1_score()
 
 
 if __name__ == "__main__":

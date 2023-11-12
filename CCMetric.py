@@ -8,6 +8,17 @@ from AllenTool import *
 class CCMetric:
     """
     similar to Openie6.metric.Conjunction
+    
+    This class does scoring for task="cc". Class ExMetric does scoring for 
+    task="ex".
+    
+    This class stores scores of model weights. There are 4 types of scoring 
+    reports, called CCReport's: "report_whole", "report_outer", 
+    "report_inner" and "report_exact". Each of these uses a different 
+    scoring procedure.
+
+    Setting the parameter `save` to True makes this class store the scores 
+    for the current set of weights.
 
     Attributes
     ----------
@@ -24,14 +35,6 @@ class CCMetric:
     def __init__(self):
         """
         Constructor
-
-        This class stores scores of model weights. There are 4 types of
-        scoring reports, called CCReport's: "report_whole", "report_outer",
-        "report_inner" and "report_exact". Each of these uses a different
-        scoring procedure.
-
-        Setting the parameter `save` to True makes this class store the
-        scores for the current set of weights.
 
         """
         self.save = CC_METRIC_SAVE
@@ -182,12 +185,12 @@ class CCMetric:
         """
         if VERBOSE: print("Entering CCMetric.get_score_d method.")
         score_d = OrderedDict({
-            'F1_whole': self.report_whole.overall_scorer.f1_score(),
-            'F1_outer': self.report_outer.overall_scorer.f1_score(),
-            'F1_inner': self.report_inner.overall_scorer.f1_score(),
-            'F1_exact': self.report_exact.overall_scorer.f1_score(),
-            'P_exact': self.report_exact.overall_scorer.precision(),
-            'R_exact': self.report_exact.overall_scorer.recall()
+            'F1_whole': self.report_whole.overall_scores.f1_score(),
+            'F1_outer': self.report_outer.overall_scores.f1_score(),
+            'F1_inner': self.report_inner.overall_scores.f1_score(),
+            'F1_exact': self.report_exact.overall_scores.f1_score(),
+            'P_exact': self.report_exact.overall_scores.precision(),
+            'R_exact': self.report_exact.overall_scores.recall()
         })
         self.score_d = copy(score_d)
         if do_reset:
@@ -199,8 +202,8 @@ class CCMetric:
         Similar to Openie6.metric.Conjunction.get_overall_score().
         
         There are 4 kinds of reports produced by this class, and each kind
-        has an overall_scorer. This method returns the F1 score of the
-        overall_scorer.
+        has an overall_scores. This method returns the F1 score of the
+        overall_scores.
 
         Parameters
         ----------
@@ -222,8 +225,8 @@ class CCMetric:
         else:
             raise ValueError(
                 'invalid report_kind: {}'.format(report_kind))
-        # print("mkcd", report, self.report_inner.overall_scorer)
-        return report.overall_scorer.f1_score()
+        # print("mkcd", report, self.report_inner.overall_scores)
+        return report.overall_scores.f1_score()
 
 
 if __name__ == "__main__":

@@ -30,6 +30,8 @@ class ActionConductor:
     called internally by those 5 action methods. Actions can be combined.
     For example, action train_test calls train() first and test() second.
 
+    Note that 4 different Model instances are created by this class: for
+    ttt= train, tune, test, and for predict.
 
     Attributes
     ----------
@@ -67,9 +69,6 @@ class ActionConductor:
         """
         This constructor creates new instances of the following classes:
         ModelCheckpoint, AutoTokenizer, SaxDataLoaderTool.
-
-        Note that 4 different Model instances are created by this class: for
-        ttt= train, tune, test, and for predict.
 
         Parameters
         ----------

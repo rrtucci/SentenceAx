@@ -12,6 +12,9 @@ from AllenTool import *
 class ExMetric:
     """
     similar to Openie6.metric.Carb
+
+    This class does scoring for task="ex". Class CCMetric does scoring for
+    task="cc".
     
     Attributes 
     ----------

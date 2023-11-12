@@ -2,19 +2,26 @@ import numpy as np
 from CCTree import *
 
 
-class CCScorer:
+class CCScores:
     """
     similar to Openie6.metric.Record
+
+    This method stores scores N_{x|a} where x\in{0,1} is the measurement and
+    a\in{ 0,1} is the actual value.
+
     Refs:
-    See my book Bayesuvius, chapter "ROC curves"
+    See chapter entitled "ROC curves" in my book Bayesuvius,
 
     a=actual value \in {0,1}
     x=predicted value \in {0,1}
 
-    sometimes  people use 0 = F = N and 1 = T = P
+    sometimes  people use 0 = False(F) = Negative(N) and 1 = True(T) =
+    Positive(P)
 
-    true positive (TP): N_1|1, hit
-    true negative (TN): N_0|0, is_correct rejection
+    N_{x|a} for x,a in {0,1}
+
+    true positive (TP): N_1|1, correctly predicted hit
+    true negative (TN): N_0|0, correctly predicted miss
     false positive (FP): N_1|0, false alarm, type I error or overestimation
     false negative (FN): N_0|1, miss, type II error or underestimation
 
@@ -31,6 +38,11 @@ class CCScorer:
     """
 
     def __init__(self):
+        """
+        Constructor
+
+
+        """
         self.N1L1 = 0  # True Positive (TP)
         self.N0L0 = 0  # True Negative (TN)
         self.N1L0 = 0  # False Positive (FP)
@@ -39,6 +51,14 @@ class CCScorer:
         self.N1L1_f = 0
 
     def reset(self):
+        """
+        This method sets to zero all N_{x|a}.
+
+        Returns
+        -------
+        None
+
+        """
         self.N1L1 = 0  # True Positive (TP)
         self.N0L0 = 0  # True Negative (TN)
         self.N1L0 = 0  # False Positive (FP)
@@ -48,6 +68,7 @@ class CCScorer:
 
     def accuracy(self):
         """
+        This method returns a function of the N_{x|a}.
 
         Returns
         -------
@@ -60,6 +81,7 @@ class CCScorer:
 
     def precision(self):
         """
+        This method returns a function of the N_{x|a}.
 
         Returns
         -------
@@ -71,6 +93,7 @@ class CCScorer:
 
     def recall(self):
         """
+        This method returns a function of the N_{x|a}.
 
         Returns
         -------
@@ -82,6 +105,7 @@ class CCScorer:
 
     def f1_score(self):
         """
+        This method returns a function of the N_{x|a}.
 
         Returns
         -------
@@ -102,17 +126,18 @@ class CCReport:
     """
     similar to Openie6.metric.Counter
 
-
-    CCScorer similar to Openie6.metric.Record
+    CCScores similar to Openie6.metric.Record
     CCReport similar to Openie6.metric.Counter
     `kind` similar to `Openie6.criteria`, both in ["whole", "outer", "inner",
     "exact"]
+    
+    This class
 
     Attributes
     ----------
     kind: str
-    depth_scorer: CCScorer
-    overall_scorer: CCScorer
+    depth_scores: CCScores
+    overall_scores: CCScores
 
 
     """
@@ -126,9 +151,9 @@ class CCReport:
         """
         assert kind in ["whole", "outer", "inner", "exact"]
         self.kind = kind
-        self.overall_scorer = CCScorer()
-        self.depth_scorer = CCScorer()
-        # print("vbgn", self.overall_scorer, self.depth_scorer)
+        self.overall_scores = CCScores()
+        self.depth_scores = CCScores()
+        # print("vbgn", self.overall_scores, self.depth_scores)
 
     def reset(self):
         """
@@ -138,8 +163,8 @@ class CCReport:
         None
 
         """
-        self.overall_scorer.reset()
-        self.depth_scorer.reset()
+        self.overall_scores.reset()
+        self.depth_scores.reset()
 
     def absorb_new_sample(self, pred_ccnodes, true_ccnodes):
         """
@@ -178,19 +203,19 @@ class CCReport:
                     is_correct = (pred_spans == true_spans)
                 else:
                     assert False
-                self.overall_scorer.N1L1 += 1
-                self.depth_scorer.N1L1 += 1
+                self.overall_scores.N1L1 += 1
+                self.depth_scores.N1L1 += 1
                 if is_correct:
-                    self.overall_scorer.N1L1_t += 1
-                    self.depth_scorer.N1L1_t += 1
+                    self.overall_scores.N1L1_t += 1
+                    self.depth_scores.N1L1_t += 1
                 else:
-                    self.overall_scorer.N1L1_f += 1
-                    self.depth_scorer.N1L1_f += 1
+                    self.overall_scores.N1L1_f += 1
+                    self.depth_scores.N1L1_f += 1
             if pred_ccnode and not true_ccnode:
-                self.overall_scorer.N1L0 += 1
+                self.overall_scores.N1L0 += 1
             if not pred_ccnode and true_ccnode:
                 # depth = true_ccnode.ilabel
-                self.overall_scorer.N0L1 += 1
-                self.depth_scorer.N0L1 += 1
+                self.overall_scores.N0L1 += 1
+                self.depth_scores.N0L1 += 1
             if not pred_ccnode and not true_ccnode:
-                self.overall_scorer.N0L0 += 1
+                self.overall_scores.N0L0 += 1

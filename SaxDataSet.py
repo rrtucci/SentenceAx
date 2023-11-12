@@ -6,6 +6,11 @@ from PaddedMInput import *
 
 class SaxDataSet(Dataset):
     """
+    Dataset stores the samples and their corresponding labels, and DataLoader
+    wraps an iterable around the Dataset to enable easy access to the samples.
+
+    Dataset and DataLoader are located in torch.utils.data
+
     data processing chain
     (optional allen_fp->)tags_in_fp->MInput->PaddedMInput->SaxDataSet
     ->SaxDataLoaderTool

@@ -21,59 +21,63 @@ import io
 
 class ActionConductor:
     """
-    similar to Openie6.run.py
-    
-    
-    Torch lightning
-    
-    Dataset stores the samples and their corresponding labels, and DataLoader
-    wraps an iterable around the Dataset to enable easy access to the samples.
-    
-    DataLoader is located in torch.utils.data
+    Similar to Openie6.run.py
+    NOTE Openie6.run.prepare_test_dataset() never used
 
-    # NOTE
-    # run.prepare_test_dataset() never used
+    This method executes various actions when you call its method run().
+    run() calls the action methods: 1. train(), 2. resume( ), 3. test(),
+    4. predict(), 5. splitpredict(). All other methods in this class are
+    called internally by those 5 action methods. Actions can be combined.
+    For example, action train_test calls train() first and test() second.
 
-    Refs:
-    https://spacy.io/usage/spacy-101/
 
     Attributes
     ----------
     auto_tokenizer: AutoTokenizer
     checkpoint_callback: ModelCheckpoint
     decode: function
+        this is just a method of the AutoTokenizer class. It transforms a
+        list of icode integers into text.
     dloader_tool: SaxDataLoaderTool
     encode: function
+        this is just a method of the AutoTokenizer class. It transforms text
+        into a list of icode integers.
     has_cuda: bool
     pad_icode: int
+        For BERT models, this is 0
     params: Param
+        class containing parameters
     tags_test_fp: str
+        this is the file path to either a cctaggs or an exctags file,
+        depending on whether params.task equals "cc" or "ex". These
+        samples are used for testing.
     tags_train_fp: str
+        this is the file path to either a cctaggs or an exctags file,
+        depending on whether params.task equals "cc" or "ex". These
+        samples are used for training.
     tags_tune_fp: str
+        this is the file path to either a cctaggs or an exctags file,
+        depending on whether params.task equals "cc" or "ex". These
+        samples are used for tuning (== validation).
     verbose_model: bool
 
     """
 
     def __init__(self, params, save=True, verbose_model=False):
         """
-        A new
-        ModelCheckpoint,
-        AutoTokenizer,
-        SaxDataLoaderTool,
-        TensorBoardLogger
+        This constructor creates new instances of the following classes:
+        ModelCheckpoint, AutoTokenizer, SaxDataLoaderTool.
 
-        is created everytime this constructor is called.
-
-        Note that a different Model instance is created for each action,
-        but only one model is considered at a time??
+        Note that 4 different Model instances are created by this class: for
+        ttt= train, tune, test, and for predict.
 
         Parameters
         ----------
         params: Params
         save: bool
+            save= True iff checkpoints (i.e., weights) will be saved after
+            training. This is almost always True.
         verbose_model: bool
-
-
 
         """
         self.params = params
@@ -91,7 +95,7 @@ class ActionConductor:
             self.tags_test_fp = EXTAGS_TEST_FP
 
         if save:
-            self.checkpoint_callback = self.get_checkpoint_callback()
+            self.checkpoint_callback = self.get_new_checkpoint_callback()
         else:
             self.checkpoint_callback = None
 
@@ -123,8 +127,12 @@ class ActionConductor:
             self.dloader_tool.set_all_ttt_dataloaders()
             # always set dataloader before constructing a Model instance
 
-    def get_checkpoint_callback(self):
+    def get_new_checkpoint_callback(self):
         """
+        This method returns an instance of class ModelCheckpoint. That class
+        saves checkpoint files (weights) at the end of each epoch.
+        `save_top_k=N` means it will keep the N checkpoints with the highest
+        `epoch_acc` (epoch accuracy) and delete the rest.
 
         Returns
         -------
@@ -132,7 +140,7 @@ class ActionConductor:
 
         """
         # epoch and epoch_acc known by ModelCheckPoint instance
-        #  str "epoch_acc"  entered via monitor=
+        # str "epoch_acc"  entered via `monitor` variable.
         return ModelCheckpoint(
             dirpath=f"{WEIGHTS_DIR}/{self.params.task}_model",
             filename='{epoch:02d}_{epoch_acc:.3f}',
@@ -143,12 +151,14 @@ class ActionConductor:
 
     def get_all_checkpoint_fp(self):
         """
-        similar to Openie6.run.get_latest_checkpoint_fp()
+        similar to Openie6.run.get_checkpoint_path().
 
-        more than one checkpoint only used by self.test()
-        and those who call it.
-        There might be more than one checkpoint if saved best 2, 3, ...
-        epochs, instead of just the best one only. See params.d["save_k"].
+        This method returns a list of all the checkpoint file paths,
+        in inverse chronological order (latest, most recent first).
+
+        There might be more than one checkpoint (see params.d["save_k"]).
+        More than one checkpoint only used by self.test() and those who call
+        it. resume() uses the latest checkpoint only.
 
         Returns
         -------
@@ -156,26 +166,28 @@ class ActionConductor:
 
         """
         paths = iglob(WEIGHTS_DIR + "/" +
-            self.params.task + "_model/*.ckpt")
+                      self.params.task + "_model/*.ckpt")
         # latest first in list
         return sorted(paths, key=os.path.getctime, reverse=True)
 
     def get_latest_checkpoint_fp(self):
         """
+        This method returns the latest (most recent) checkpoint file path.
 
         Returns
         -------
         str
 
         """
-        return  self.get_all_checkpoint_fp()[0]
+        return self.get_all_checkpoint_fp()[0]
 
-    def get_logger(self, name):
+    def get_new_TB_logger(self, name):
         """
         similar to Openie6.run.get_logger()
 
-        Logger depends on params.task and params.action.
-        Start new logger everytime start a new trainer.
+        This method returns a TB (TensorBoard) logger. We start a new logger
+        everytime we start a new Trainer. The current log file will have no
+        number suffix. Retired ones will.
 
         Parameters
         ----------
@@ -186,58 +198,36 @@ class ActionConductor:
         TensorBoardLogger
 
         """
-
-        # the current log file will have no number prefix,
-        # stored ones will.
-        if os.path.exists(get_task_logs_dir(self.params.task) + "/" + name):
-            fps = iglob(
-                get_task_logs_dir(self.params.task) + f'/{name}_*')
+        prefix = get_task_logs_dir(self.params.task) + f'/{name}'
+        if os.path.exists(prefix):
+            fps = iglob(prefix + '_*')
             num_numbered_logs = len(list(fps))
             new_id = num_numbered_logs + 1
             print('Retiring current log file by changing its name')
-            print(shutil.move(
-                get_task_logs_dir(self.params.task) + f'/{name}',
-                get_task_logs_dir(self.params.task) + f'/{name}_{new_id}'))
+            print(shutil.move(prefix, prefix + f'_{new_id}'))
         logger = TensorBoardLogger(
             save_dir=LOGS_DIR,
             name=self.params.task,
             version=name + '.part')
         return logger
 
-    def get_trainer(self, logger, use_minimal):
+    def get_new_trainer(self, logger, use_minimal):
         """
+        This method return a Trainer object.
 
         Parameters
         ----------
         logger: TensorBoardLogger | None
         use_minimal: bool
+            use_minimal=True gives a trainer more default behavior.
 
         Returns
         -------
         Trainer
 
         """
-        # trainer = Trainer(
-        #     accumulate_grad_batches = int(params_d.accumulate_grad_batches),
-        #     checkpoint_callback = self.checkpoint_callback,
-        #     gpus = params_d.gpus,
-        #     gradient_clip_val = params_d.gradient_clip_val,
-        #     logger = logger,
-        #     max_epochs = params_d.epochs,
-        #     min_epochs = params_d.epochs,
-        #     num_sanity_val_steps = params_d.num_sanity_val_steps,
-        #     num_tpu_cores = params_d.num_tpu_cores,
-        #     resume_from_checkpoint = checkpoint_fp,
-        #     show_progress_bar = True,
-        #     track_grad_norm = params_d.track_grad_norm,
-        #     train_percent_check = params_d.train_percent_check,
-        #     use_tpu = params_d.use_tpu,
-        #     val_check_interval = params_d.val_check_interval)
-
-        # num_sanity_val_steps=0 to avoid validation vanity check bug
         if use_minimal:
             trainer = Trainer(
-                # gpus=self.params.d["gpus"],
                 logger=logger,
                 # num_sanity_val_steps=0,
                 limit_train_batches=NUM_STEPS_PER_EPOCH,
@@ -250,15 +240,15 @@ class ActionConductor:
                     "accumulate_grad_batches"],
                 callbacks=self.checkpoint_callback,
                 enable_progress_bar=True,
-                gradient_clip_val= self.params.d["gradient_clip_val"],
+                gradient_clip_val=self.params.d["gradient_clip_val"],
                 logger=logger,
                 max_epochs=self.params.d["num_epochs"],
                 min_epochs=self.params.d["num_epochs"],
-                #num_sanity_val_steps=self.params.d["num_sanity_val_steps"],
-                # use_tpu=deprecated,
-                #train_percent_check=,
-                # track_grad_norm= deprecated
-                # num_sanity_val_steps=0,
+                # num_sanity_val_steps=self.params.d["num_sanity_val_steps"],
+                # gpus=no longer used
+                # use_tpu=no longer used,
+                # train_percent_check=,
+                # track_grad_norm= no longer used
                 limit_train_batches=NUM_STEPS_PER_EPOCH,
                 limit_val_batches=NUM_STEPS_PER_EPOCH,
                 limit_test_batches=NUM_STEPS_PER_EPOCH
@@ -267,8 +257,10 @@ class ActionConductor:
 
     def update_params(self, checkpoint_fp):
         """
-        similar to Openie6.run.test() and data.override_args()
+        similar to Openie6.run.test() and data.override_args().
 
+        This method loads parameters from the checkpoint file and inserts
+        them into the Params object self.params.
 
         Parameters
         ----------
@@ -293,7 +285,13 @@ class ActionConductor:
         """
         similar to Openie6.run.train()
 
-        trainer.fit()
+        This method does the training. It creates instances of Model and a
+        Trainer. Then it asks the trainer to fit the model. Finally,
+        it creates log file and stores it in either the logs/ex/train or
+        logs/cc/train directories.
+
+        train() and resume() are the only action methods that call fit()
+
 
         Returns
         -------
@@ -306,8 +304,8 @@ class ActionConductor:
                       self.auto_tokenizer,
                       self.verbose_model,
                       "train")
-        trainer = self.get_trainer(self.get_logger("train"),
-                                   use_minimal=False)
+        trainer = self.get_new_trainer(self.get_new_TB_logger("train"),
+                                       use_minimal=False)
         trainer.fit(
             model,
             train_dataloaders=self.dloader_tool.train_dloader,
@@ -320,7 +318,12 @@ class ActionConductor:
         """
         similar to Openie6.run.resume()
 
-        trainer.fit()
+        This method resumes the training after an interruption. It uses the
+        latest checkpoint to retrieve the weights and other params close to
+        the ones when it was halted. It creates instances of Model and a
+        Trainer. Then it asks the trainer to fit the model. Finally,
+        it creates log file and stores it in either the logs/ex/resume or
+        logs/cc/resume directories.
 
 
         Returns
@@ -336,8 +339,8 @@ class ActionConductor:
                       self.auto_tokenizer,
                       self.verbose_model,
                       "resume")
-        trainer = self.get_trainer(self.get_logger("resume"),
-                                   use_minimal=False)
+        trainer = self.get_new_trainer(self.get_new_TB_logger("resume"),
+                                       use_minimal=False)
         trainer.fit(
             model,
             train_dataloaders=self.dloader_tool.train_dloader,
@@ -351,7 +354,17 @@ class ActionConductor:
         """
         similar to Openie6.run.test()
 
-        calls trainer.test()
+        Note: this method self.test() is different from
+        Trainer.test() which is called inside this method.
+
+        This method does testing. It creates an instance of Model. It then
+        goes down the list of checkpoints and creates a Trainer for each
+        one. This trainer is used to call trainer.test(), instead of
+        trainer.fit( ) as done in self.train(). trainer.test( )
+        scores the test data with the weights of that checkpoint file. test
+        accuracies for each checkpoint are saved in a file logs/ex/test.txt
+        or logs/cc/test.txt.
+
 
         Returns
         -------
@@ -360,14 +373,17 @@ class ActionConductor:
         """
         checkpoint_paths = self.get_all_checkpoint_fp()
         if 'train' not in self.params.action:
-            # train is the only action that doesn't require
-            # update_params() because it is called first
+            # here parameters are updated from the latest checkpoint. If
+            # train() was called first, then update_params() is unnecessary
+            # because no checkpoints exists yet.
             self.update_params(self.get_latest_checkpoint_fp())
 
         model = Model(self.params,
                       self.auto_tokenizer,
                       self.verbose_model,
                       "test")
+
+        # ex_sent_to_sent and cc_sent_to_word only stored in one place
         # if self.params.task == "ex" and self.ex_sent_to_sent:
         #     model.metric.sent_to_sent = self.ex_sent_to_sent
         # if self.params.task == "cc" and self.cc_sent_to_words:
@@ -375,11 +391,11 @@ class ActionConductor:
 
         tdir = get_task_logs_dir(self.params.task)
         with open(tdir + '/test.txt', "w") as test_f:
-            logger = self.get_logger("test")
+            logger = self.get_new_TB_logger("test")
             # might be more than one checkpoint if keep best 2, 3 etc epochs
             for checkpoint_fp in checkpoint_paths:
-                trainer = self.get_trainer(logger,
-                                           use_minimal=True)
+                trainer = self.get_new_trainer(logger,
+                                               use_minimal=True)
                 # trainer.fit() and trainer.test() are different
                 test_dloader = self.dloader_tool.test_dloader
                 trainer.test(model=model,
@@ -397,7 +413,19 @@ class ActionConductor:
         """
         similar to Openie6.run.predict()
 
-        trainer.test()
+        This method does prediction. It creates instances of Model and
+        Trainer. The trainer is used to call trainer.test() instead of
+        trainer.fit( ) as done in self.train(). trainer.test() is
+        used with the test data in self.test(). But here it is
+        used with the data at `pred_in_fp` (a file of sentences, one per
+        line). This method times how long it takes to predict.
+
+        This method does not write a prediction file! It stores the
+        predictions in the `model.l_batch_m_out` variable, but that info is
+        not written into a file unless you run self.splitpredict(
+        ). Hence, running this action alone, instead of within splitpredict(
+        ), is not very useful, except for timing.
+
 
         Parameters
         ----------
@@ -408,15 +436,10 @@ class ActionConductor:
         Model
 
         """
-
-        # def predict(checkpoint_callback,
-        #             train_dataloader,
-        #             val_dataloader, test_dataloader, all_sentences,
-        #             mapping=None,
-        #             conj_word_mapping=None):
         checkpoint_fp = get_best_checkpoint_path(self.params.task)
 
-        assert list(self.get_all_checkpoint_fp()) == [checkpoint_fp]
+        # assert list(self.get_all_checkpoint_fp()) == [checkpoint_fp]
+
         self.update_params(checkpoint_fp)
         self.dloader_tool.set_predict_dataloader(pred_in_fp)
         # always set dataloader before constructing a Model instance
@@ -429,8 +452,8 @@ class ActionConductor:
         # model.metric.sent_to_sent = self.ex_sent_to_sent
         # model.metric.sent_to_words = self.cc_sent_to_words
 
-        trainer = self.get_trainer(logger=None,
-                                   use_minimal=True)
+        trainer = self.get_new_trainer(logger=None,
+                                       use_minimal=True)
         start_time = time()
         # model.all_sentences = all_sentences # never used
         trainer.test(
@@ -444,9 +467,13 @@ class ActionConductor:
 
     def splitpredict_for_cc(self, pred_in_fp):
         """
-        no trainer
+        The method self.splitpredict() calls the methods:
+        self.splitpredict_for_cc(), self.splitpredict_for_ex(),
+        and self.splitpredict_for_rescore() in that order. So this is a
+        private method for self.splitpredict().
 
-        reads pred_in_fp
+        This method reads a file at `pred_in_fp` with the sentences (one
+        sentence per line) that one wants to split.
 
         Parameters
         ----------
@@ -467,19 +494,25 @@ class ActionConductor:
                     l_pred_sent[0]
 
                 l_ccsentL.append(redoL(l_pred_sent[0]))
-                # added
+                # added to Openie6. Makes no difference because
+                # model.cc_sent_to_words is never used
                 model.cc_sent_to_words[l_pred_sent[0]] = cc_words
             elif len(l_pred_sent) > 1:
                 l_osentL.append(redoL(l_pred_sent[0]))
                 for sent in l_pred_sent[1:]:
                     model.ex_sent_to_sent[sent] = l_pred_sent[0]
                     l_ccsentL.append(redoL(sent))
-                # added
+                # added to Openie6. Makes no difference because
+                # model.cc_sent_to_words is never used
                 model.cc_sent_to_words[l_pred_sent[0]] = cc_words
             else:
                 assert False
 
-        self.params.d["suggested_checkpoint_fp"] = CC_BEST_WEIGHTS_FP
+        self.params.d["best_checkpoint_fp"] = CC_BEST_WEIGHTS_FP
+        # For task="cc", Openie6 uses large-cased for train_test() and
+        # base-cased for splitpredict(). Both are cased, but larger-cased is
+        # larger than base-cased. For task="ex", Openie6 uses based-cased
+        # throughout
         self.params.d["model_str"] = 'bert-base-cased'
         self.params.d["action"] = self.params.action = 'predict'
 
@@ -492,12 +525,12 @@ class ActionConductor:
         assert len(l_cc_pred_str) == len(lll_cc_spanned_loc)
         ll_cc_spanned_word = model.ll_cc_spanned_word
 
-        l_ccsentL = []  # sentences
-        l_osentL = []  # orig_sentences
+        l_ccsentL = []  # Openie6.sentences
+        l_osentL = []  # Openie6.orig_sentences
 
         if not pred_in_fp:
             for sample_id, pred_str in enumerate(l_cc_pred_str):
-                # example_sentences
+                # similar to Openie6.example_sentences
                 l_pred_sent = pred_str.strip('\n').split('\n')
                 repeated_splitpredict_for_cc()
             # l_ccsentL.append("\n")
@@ -515,7 +548,7 @@ class ActionConductor:
             lines = content.split('\n\n')
             for line in lines:
                 if len(line) > 0:
-                    # example_sentences
+                    # similar to Openie6.example_sentences
                     l_pred_sent = line.strip().split("\n")
                     repeated_splitpredict_for_cc()
 
@@ -527,9 +560,13 @@ class ActionConductor:
                             pred_out_fp,
                             delete_ccsents_file=False):
         """
-        no trainer
+        The method self.splitpredict() calls the methods:
+        self.splitpredict_for_cc(), self.splitpredict_for_ex(),
+        and self.splitpredict_for_rescore() in that order. So this is a
+        private method for self.splitpredict().
 
-        writes pred_out_fp
+        If self.params.d["write_extags_file"]=True, this method writes an
+        extags file at `pred_out_fp` with the predicted extractions.
 
         Parameters
         ----------
@@ -543,11 +580,14 @@ class ActionConductor:
         Model
 
         """
-        self.params.d["suggested_checkpoint_fp"] = EX_BEST_WEIGHTS_FP
+        self.params.d["best_checkpoint_fp"] = EX_BEST_WEIGHTS_FP
         self.params.d["model_str"] = 'bert-base-cased'
 
-        in_fp = pred_out_fp.strip(".txt") + "_ccsents.txt"
-        with open(in_fp, "r", encoding="utf-8") as f:
+        # temporary file, to be deleted after it is used by predict(). This
+        # file is not used in Openie6, but is needed in SentenceAx, so as to
+        # get the appropriate input for self.predict()
+        in_fp = pred_out_fp.replace(".txt", "") + "_ccsents.txt"
+        with open(in_fp, "w", encoding="utf-8") as f:
             f.write("\n".join(l_ccsentL))
 
         model = self.predict(in_fp)
@@ -555,7 +595,7 @@ class ActionConductor:
         if delete_ccsents_file:
             os.remove(in_fp)
 
-        # Does same thing as Openie6's run.get_labels()
+        # Does same thing as Openie6.run.get_labels()
         if self.params.d["write_extags_file"]:
             ActionConductor.write_extags_file_from_preds(l_osentL,
                                                          l_ccsentL,
@@ -565,16 +605,16 @@ class ActionConductor:
 
     @staticmethod
     def write_extags_file_from_preds(
-            l_osentL,  # orig_sentences
-            l_ccsentL,  # sentences
+            l_osentL,  # Openi6.orig_sentences
+            l_ccsentL,  # Openie6.sentences
             pred_out_fp,
             model):
         """
         similar to Openie6.run.get_labels()
-        ILABEL_TO_EXTAG={0: 'NONE', 1: 'ARG1', 2: 'REL', 3: 'ARG2',
-                 4: 'ARG2', 5: 'NONE'}
 
-        called by `splitpredict_for_ex()`
+        This method is called by `self.splitpredict_for_ex()`.
+        As its name suggests, it writes an extags file to `pred_out_fp`
+        based on the predictions stored inside `model.l_batch_m_out`.
 
 
         Parameters
@@ -634,7 +674,7 @@ class ActionConductor:
 
                     assert len(l_ilabel) == len(osentL_words)
                     l_ilabel = l_ilabel[:-3]
-                    # 1: arg1, 2: rel
+                    # 1: ARG1, 2: REL
                     if 1 not in l_pred_ilabel and 2 not in l_pred_ilabel:
                         continue  # not a pass
 
@@ -746,7 +786,9 @@ class ActionConductor:
         """
         similar to Openie6.run.splitpredict()
 
-        calls self.predict() and self.rescore()
+        This method calls the 3 private methods: self.splitpredict_for_cc(),
+        self.splitpredict_for_ex(), and self.splitpredict_for_rescore() in
+        that order.
 
         Parameters
         ----------
@@ -780,6 +822,12 @@ class ActionConductor:
 
     def run(self, pred_in_fp=None):
         """
+        This method is the only non-private method for the entire class.
+        Users should never have to invoke any method of this class other
+        than this one. The method can run a combination of actions joined by
+        an underscore. For example, if params.task = "ex" and params.action
+        = "train_test", then self.run() will run self.train() first and
+        self.test() second.
 
         Parameters
         ----------
@@ -819,6 +867,8 @@ if __name__ == "__main__":
         conductor = ActionConductor(params, verbose_model=True)
         conductor.run()
 
+    # Don't run this here. Run it in a jupyter notebook and in a computer
+    # with a GPU card.
 
-    main(1)
+    # main(1)
     # main(5)

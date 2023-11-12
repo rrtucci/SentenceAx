@@ -26,6 +26,7 @@ class MInput:
 
     Attributes
     ----------
+    REMERGE_TOKENS: bool
     auto_tokenizer: AutoTokenizer
     l_orig_sent: list[str]
     ll_osent_icode: list[list[int]]

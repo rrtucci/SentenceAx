@@ -178,7 +178,7 @@ class Params:
             self.d = {
                 "accumulate_grad_batches": 2,
                 "batch_size": 16,
-                "suggested_checkpoint_fp":
+                "best_checkpoint_fp":
                     WEIGHTS_DIR + "/warmup_ex_model-epoch=13_eval_acc=0.544.ckpt",
                 "constraint_str": "posm_hvc_hvr_hve",
                 "con_weight_str": "3_3_3_3",
@@ -275,7 +275,7 @@ class Params:
                 "optimizer": "adamW",
                 "refresh_cache": False,
                 "save_k": 1,
-                "suggested_checkpoint_fp": "",
+                "best_checkpoint_fp": "",
                 "val_check_interval": 1.0,
                 "wreg": 0,
                 "write_allen_file": True,

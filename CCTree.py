@@ -216,7 +216,7 @@ class CCTree:
         self.remove_bad_ccnodes()
         # print("llm", len(self.ccnodes))
         for ccnode in self.ccnodes:
-            ccnode.check_all()
+            ccnode.check_self()
 
     def set_tree_structure(self):
         """

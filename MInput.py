@@ -1,69 +1,103 @@
 from Params import *
-# import spacy
-
-import nltk
-nltk.download('popular', quiet=True)
-nltk.download('averaged_perceptron_tagger', quiet=True)
-nltk.download('universal_tagset', quiet=True)
 
 from sax_utils import *
 from transformers import AutoTokenizer
 from copy import deepcopy
 from pprint import pprint
 
+# import spacy
+import nltk
+
+nltk.download('popular', quiet=True)
+nltk.download('averaged_perceptron_tagger', quiet=True)
+nltk.download('universal_tagset', quiet=True)
+
 
 class MInput:
     """
+    The main method and work horse of this class is read_input_tags_file().
+    That method reads the input data from an extags or a cctags or a
+    prediction file (prediction files have one sentence per line, with no
+    extractions). It works in all 3 cases!
+
     data processing chain
     (optional allen_fp->)tags_in_fp->MInput->PaddedMInput->SaxDataSet
     ->SaxDataLoaderTool
 
     In Openie6, Openie6.data.process_data() calls
     Openie6.data._process_data() internally. In SentenceAx, class MInput
-    does the job of Openie6.data._process_data() and classes PaddedMInput,
+    does the job of Openie6.data._process_data(). Classes PaddedMInput,
     SaxDataSet and SaxDataLoaderTools do the job of
     Openie6.data.process_data().
 
     Attributes
     ----------
     REMERGE_TOKENS: bool
+        no longer used. Used only with Spacy POS
     auto_tokenizer: AutoTokenizer
     l_orig_sent: list[str]
+        list of original (before splitting) sentences
     ll_osent_icode: list[list[int]]
+        for each sentence in l_orig_sent, this variable gives a list of
+        icodes (i.e., integer codes provided by auto_tokenizer.encode())
     ll_osent_pos_bool: list[list[int]]
+        for each sentence in l_orig_sent, this variable gives a list of
+        booleans (0,1) which indicate POS (part of speech) presence in the
+        words in osent (original sentence). Only filled if USE_POS_INFO=True
     ll_osent_pos_loc: list[list[int]]
+        for each sentence in l_orig_sent, this variable gives a list of 
+        integers which indicate POS (part of speech) location relative to 
+        the words in osent (original sentence). Only filled if 
+        USE_POS_INFO=True     
     ll_osent_verb_bool: list[list[int]]
+        for each sentence in l_orig_sent, this variable gives a list of
+        booleans (0,1) which indicate a verb presence in the words in osent
+        (original sentence). Only filled if USE_POS_INFO=True
     ll_osent_verb_loc: list[list[int]]
+        for each sentence in l_orig_sent, this variable gives a list of
+        integers which indicate verb location relative to the words in osent
+        (original sentence). Only filled if USE_POS_INFO=True
     ll_osent_wstart_loc: list[list[int]]
+        for each sentence in l_orig_sent, this variable gives a list of
+        integers for word start locations relative to the list ll_osent_icode
     lll_ilabel: list[list[list[int]]]
+        If x is the feature vector and y is the classification, this is
+        y. If turned into a tensor, its shape is (num of samples, num of
+        extractions (depths), number of words in osentL or osent). The
+        entries of this tensor are integers from 0 to 5 (ilabels).
     omit_exless: bool
+        set to True iff want osents with no extractions to be skipped
     params: Params
+        parameters
     # spacy_model: spacy.Language
+    #   No longer used. Openie6 uses both NLTK and Spacy. SentenceAx uses only
+    #   NLTK
     tags_in_fp: str
+        file path for input file. tags_in_fp is the file path to an extags 
+        or a cctags file or a predictions file. If an extags file has no
+        extags, only original sentences, then we call it a predictions file.
     verbose: bool
 
     """
-    REMERGE_TOKENS = True  # no longer used. Used only with Spacy POS
+    REMERGE_TOKENS = True
 
     def __init__(self,
                  params,
                  tags_in_fp,
                  auto_tokenizer,
                  read=True,
-                 omit_exless = True,
+                 omit_exless=True,
                  verbose=False):
         """
-        tags_in_fp is an extags or a cctags file.
-
-        if the extags file has no extags, only original sentences, then
-        we can use tags_in_fp as for prediction.
-
+        Constructor
+        
         Parameters
         ----------
         params: Params
         tags_in_fp: str
         auto_tokenizer: AutoTokenizer
         read: bool
+            Set this to False iff you don't want it to read tags_in_fp
         verbose: bool
         """
         self.params = params
@@ -102,14 +136,18 @@ class MInput:
 
     @staticmethod
     def encode_l_sent(l_sent,
-                      auto_tokenizer,
-                      add=True):
+                      auto_tokenizer):
         """
+        This static method returns ll_icode. For each sent in l_sent,
+        ll_icode gives a list of icodes (i.e., integer codes) obtained via
+        auto_tokenizer.encode().
+
+        Note that this method is the inverse of decode_ll_icode()
+
         Parameters
         ----------
         l_sent: list[sent]
         auto_tokenizer: AutoTokenizer
-        add: bool
 
         Returns
         -------
@@ -127,6 +165,11 @@ class MInput:
     def decode_ll_icode(ll_icode,
                         auto_tokenizer):
         """
+        This static method returns l_sent. For each sent in l_sent, ll_icode
+        gives a list of icodes (i.e., integer codes) obtained via
+        auto_tokenizer.encode().
+
+        Note that this method is the inverse of encode_l_sent()
 
         Parameters
         ----------
@@ -144,6 +187,10 @@ class MInput:
             sent = decode(l_icode)
             l_sent.append(sent)
         return l_sent
+
+    # The following commented code is no longer used. It uses Spacy to do
+    # POS. It has been replaced by code that uses NLTK instead of Spacy to
+    # do POS.
 
     # def remerge_tokens(self, tokens):
     #     """
@@ -298,6 +345,12 @@ class MInput:
     def pos_info(pos_tags):
         """
         similar to Openie6.data.pos_tags()
+        
+        This method is called by fill_pos_and_verb_info(). It returns the
+        variables pos_locs (list of locs of POS words), pos_bools (list of
+        bools 0,1 indicating words that are POS), pos_words (list of words
+        that are POS). All word locations relative to osent. POS=part of
+        speech.
 
         Parameters
         ----------
@@ -328,6 +381,11 @@ class MInput:
     def verb_info(pos_tags):
         """
         similar to Openie6.data.verb_tags()
+        
+        This method is called by fill_pos_and_verb_info(). It returns the
+        variables verb_locs (list of verb locs), verb_bools (list of bools
+        0,1 related to verbs), verb_words (list of verbs). All word
+        locations relative to osent.
 
         Parameters
         ----------
@@ -357,6 +415,11 @@ class MInput:
 
     def fill_pos_and_verb_info(self):
         """
+        This method fills the variables: self.ll_osent_pos_bool,
+        self.ll_osent_pos_loc, self.ll_osent_verb_bool, self.ll_osent_verb_loc
+
+        It does this by calling pos_info() and verb_info() for each sentence
+        in l_orig_sent.
 
         Returns
         -------
@@ -395,9 +458,7 @@ class MInput:
         """
         similar to Openie6.data._process_data()
 
-
-
-        this reads a file of the form
+        This method reads a file of the form
 
         Hercule Poirot is a fictional Belgian detective , created by Agatha Christie . [unused1] [unused2] [unused3]
         ARG1 ARG1 REL ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 NONE NONE NONE NONE
@@ -411,16 +472,12 @@ class MInput:
         ARG1 ARG1 REL ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 NONE NONE NONE NONE
         NONE NONE NONE ARG1 ARG1 ARG1 ARG1 NONE REL ARG2 ARG2 ARG2 NONE NONE NONE NONE
 
-        the tags may be extags or cctags
+        The tags may be extags or cctags (or no tag lines)
 
-        each original sentence and its tag sequences constitute a new example
+        Each original sentence and its tag sequences constitute a new sample.
 
         The file may have no tag lines, only original sentences, in which
         case it can be used for prediction.
-
-        Parameters
-        ----------
-        tags_in_fp: str
 
         Returns
         -------
@@ -447,7 +504,6 @@ class MInput:
             return (not line0.isupper()
                     or has_puntuation(line0, ignored_chs="_"))
 
-
         def is_tag_line_of_sample(line0):
             if is_empty_line_of_sample(line0):
                 return False
@@ -456,14 +512,13 @@ class MInput:
                 not has_puntuation(line0, ignored_chs="_")
 
         def is_finalization_of_sample(prev_line0, line0):
-            if is_empty_line_of_sample(line0) and\
+            if is_empty_line_of_sample(line0) and \
                     not is_empty_line_of_sample(prev_line0):
                 return True
             if is_osent_line_of_sample(line0) and \
                     not is_empty_line_of_sample(prev_line0):
                 return True
             return False
-
 
         prev_line = None
         osent_icodes = []
@@ -472,7 +527,6 @@ class MInput:
         num_omitted_sents = 0
         k = 0
         k_osent = 0
-        no_exs = False
         # add empty last sentence so last sentence of file is considered
         for line in lines + [LINE_SEPARATOR]:
             k += 1
@@ -535,7 +589,7 @@ class MInput:
                 osentL_words = get_words(osentL)
                 encoding_d = self.auto_tokenizer.batch_encode_plus(
                     osentL_words,
-                    add_special_tokens=False # necessary
+                    add_special_tokens=False  # necessary
                     # additional_special_tokens=UNUSED_TOKENS # refused
                 )
                 # specified when initialized self.auto_tokenizer
@@ -559,7 +613,6 @@ class MInput:
                 osent_icodes.append(EOS_ICODE)
                 # print("lmklo", k, str_list(osent_wstart_locs))
                 # end of if osent line
-                prev_osentL = osentL
 
             if is_tag_line_of_sample(line):
                 # print("sdfrg-tag", k)
@@ -639,7 +692,7 @@ class MInput:
 if __name__ == "__main__":
     def main1(tags_in_fp,
               pid=1,
-              omit_exless = True,
+              omit_exless=True,
               verbose=False):
         # pid=1, task="ex", action="train_test"
         # pid=5, task="cc", action="train_test"

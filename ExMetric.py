@@ -55,87 +55,6 @@ class ExMetric:
         self.sent_to_sent = sent_to_sent
         self.input_carb_exs = input_carb_exs
 
-    @staticmethod
-    def print_osent2_to_exs(osent2_to_exs, start_id, end_id):
-        """
-        This method prints `osent2_to_exs` from sample `start_d` to sample
-        `end_id`.
-
-        Parameters
-        ----------
-        osent2_to_exs: dict[str, list[SaxExtraction]]
-        start_id: int
-        end_id: int
-
-        Returns
-        -------
-        None
-
-        """
-        for sent in list(osent2_to_exs.keys())[start_id: end_id]:
-            print(sent)
-            for ex in osent2_to_exs[sent]:
-                print("(part) " + ex.get_simple_sent())
-
-    @staticmethod
-    def get_osent2_to_exs_from_lll_ilabel(l_osent2,
-                                          lll_ilabel,
-                                          ll_confi,
-                                          sent_to_sent):
-        """
-        similar to Openie6.metric.Carb.__call__()
-
-        This method takes as input `lll_ilabel` and other variables and returns
-
-        `osent2_to_exs`
-
-        osent = original sentence
-        osentL = osent + UNUSED_TOKEN_STR  #L=long
-        osent2 = either osent or osentL
-
-        This method does not care internally whether we are using `osentL,
-        lll_ilabels` or `osent, lll_ilabels`. that is why we are introducing
-        the symbol `osent2`, which can stand for `osent` or `osentL`
-
-
-        Parameters
-        ----------
-        l_osent2: list[str]
-        lll_ilabel: list[list[list[int]]]
-        ll_confi: list[list[float]]
-        sent_to_sent: dict[str, str]
-            a dictionary that makes small fixes on osent2
-
-        Returns
-        -------
-        dict[str, list[SaxExtraction]]
-
-        """
-
-        osent2_to_exs = {}
-        for sam_id, osent2 in enumerate(l_osent2):
-            add_key_to_this_d(key=osent2,
-                              transform_d=sent_to_sent,
-                              this_d=osent2_to_exs)
-
-            num_exs = len(ll_confi[sam_id])
-            for depth in range(num_exs):
-                ilabels = lll_ilabel[sam_id][depth]
-                # all ilabels=0 once no more extractions
-                if sum(ilabels) == 0:
-                    break
-                ex0 = SaxExtraction.get_ex_from_ilabels(
-                    ilabels,
-                    osent2,
-                    ll_confi[sam_id][depth])
-                if ex0.arg1 and ex0.rel:
-                    add_key_value_pair_to_this_d(
-                        key=osent2,
-                        value=ex0,
-                        transform_d=sent_to_sent,
-                        this_d=osent2_to_exs)
-        return osent2_to_exs
-
     def __call__(self,
                  l_osentL,  # meta data
                  lll_ilabel,  # predictions
@@ -170,7 +89,7 @@ class ExMetric:
         if VERBOSE: print("ll_confi", ll_confi)
         if VERBOSE: print("len(self.osentL_to_exs)", len(self.osentL_to_exs))
         dominant_d = \
-            ExMetric.get_osent2_to_exs_from_lll_ilabel(
+            AllenTool.get_osent2_to_exs_from_lll_ilabel(
                 l_osentL,
                 lll_ilabel,
                 ll_confi,

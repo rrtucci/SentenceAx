@@ -33,6 +33,7 @@ class ExMetric:
                  sent_to_sent=None,
                  input_carb_exs=False):
         """
+        Constructor
         
         Parameters
         ----------
@@ -57,6 +58,8 @@ class ExMetric:
     @staticmethod
     def print_osent2_to_exs(osent2_to_exs, start_id, end_id):
         """
+        This method prints `osent2_to_exs` from sample `start_d` to sample
+        `end_id`.
 
         Parameters
         ----------
@@ -82,12 +85,13 @@ class ExMetric:
         """
         similar to Openie6.metric.Carb.__call__()
 
-        This method takes as `lll_ilabel` and other variables and returns
+        This method takes as input `lll_ilabel` and other variables and returns
 
         `osent2_to_exs`
 
         osent = original sentence
-        osentL = osent + UNUSED_TOKEN_STR
+        osentL = osent + UNUSED_TOKEN_STR  #L=long
+        osent2 = either osent or osentL
 
         This method does not care internally whether we are using `osentL,
         lll_ilabels` or `osent, lll_ilabels`. that is why we are introducing
@@ -111,8 +115,8 @@ class ExMetric:
         osent2_to_exs = {}
         for sam_id, osent2 in enumerate(l_osent2):
             add_key_to_this_d(key=osent2,
-                                transform_d=sent_to_sent,
-                                this_d=osent2_to_exs)
+                              transform_d=sent_to_sent,
+                              this_d=osent2_to_exs)
 
             num_exs = len(ll_confi[sam_id])
             for depth in range(num_exs):
@@ -139,8 +143,16 @@ class ExMetric:
         """
         similar to Openie6.metric.Carb.__call__
 
-        This method  can be called multiple times for the same class instance.
-        Each time, self.osentL_to_exs grows.
+        A __call__() method is a new chance to load attributes into the
+        class after the __init__() has been called.
+
+        Whereas __init__() is called only once, __call__() can be called
+        multiple times for the same class instance. For ExMetric,
+        this __call__() method is called for each batch of an epoch. Each
+        time, self.osentL_to_exs grows.  At the end of an epoch,
+        get_score_d() is called. That method averages, saves and resets the
+        cummulative scores, before commencing a new epoch.
+
 
         Parameters
         ----------
@@ -171,6 +183,8 @@ class ExMetric:
     @staticmethod
     def get_zero_score_d():
         """
+        This method returns a new copy of the `score_d` dictionary with all
+        values zero.
 
         Returns
         -------
@@ -182,21 +196,14 @@ class ExMetric:
                                'last_F1': 0.0})
         return score_d
 
-    def reset_exs_dict(self):
-        """
-        similar to Openie6.metric.Carb.reset()
-
-        Returns
-        -------
-        None
-
-        """
-        self.osentL_to_exs = {}
-
     def reset_score_d(self):
         """
         similar to Openie6.metric.Carb.reset()
-        
+
+        Unlike the method get_zero_score_d(), this method does not create a
+        new `score_d` dictionary. Instead, it sets to zero all values of the
+        existing `self.score_d`.
+
         Returns
         -------
         None
@@ -205,9 +212,28 @@ class ExMetric:
         for name in self.score_d.keys():
             self.score_d[name] = 0.0
 
+    def reset_exs_dict(self):
+        """
+        similar to Openie6.metric.Carb.reset()
+
+        This method sets to {} (resets) self.osentL_to_exs.
+
+        Note that reset_exs_dict() and reset_score_d() are separate methods.
+        Openie6 lumps them together.
+
+        Returns
+        -------
+        None
+
+        """
+        self.osentL_to_exs = {}
+
     def get_score_d(self, ttt, do_reset=True):
         """
         similar to Openie6.metric.Carb.get_metric()
+
+        This method returns the current `score_d`. It calls reset_exs_dict()
+        iff do_reset=True.
         
         Parameters
         ----------

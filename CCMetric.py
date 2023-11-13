@@ -70,8 +70,8 @@ class CCMetric:
         multiple times for the same class instance. For CCMetric,
         this __call__() method is called for each batch of an epoch. Each
         time, the scores in the managers grow. At the end of an epoch,
-        the cumulative scores are averaged, saved and zeroed, before
-        commencing a new epoch.
+        get_score_d() is called. That method averages, saves and resets the
+        cummulative scores, before commencing a new epoch.
 
 
         Parameters

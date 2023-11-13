@@ -632,11 +632,11 @@ class ActionConductor:
         l_m_out = model.l_batch_m_out
 
         lines = []
-        batch_id0 = 0  # similar to idx1
-        sam_id0 = 0  # similar to idx2
-        cum_sam_id0 = 0  # similar to idx3
-        # isam similar to i
-        # jccsent similar to j
+        batch_id0 = 0  # similar to Openie6.idx1
+        sam_id0 = 0  # similar to Openie6.idx2
+        cum_sam_id0 = 0  # similar to Openie6.idx3
+        # isam similar to Openie6.i
+        # jccsent similar to Openie6.j
 
         # lll_cc_spanned_loc is similar to
         # sentence_indices_list, model.all_sentence_indices_conj
@@ -655,7 +655,7 @@ class ActionConductor:
                 assert len(lll_cc_spanned_loc[isam][jccsent]) == \
                        len(osentL_words)
                 assert osentL == l_ccsentL[cum_sam_id0]
-                # similar to predictions
+                # similar to Openie6.predictions
                 ll_pred_ilabel = \
                     l_m_out[batch_id0].lll_pred_ilabel[sam_id0]
                 for l_pred_ilabel in ll_pred_ilabel:

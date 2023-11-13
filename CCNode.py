@@ -3,14 +3,10 @@ from sax_utils import *
 
 class CCNode:
     """
-    similar to Openie6.metric.Coordination
-
-    loc = location of a word in orig_sent
-    cc = coordinating conjunction.
-    cc are FANBOYS = for , and, nor, but, or, yet, so
-
     CCNode is similar to Openie6.metric.Coordination
-    span is similar to a conjunct
+
+    span is similar to a Openie6.conjunct
+    loc= location of a word in orig_sent
 
     Attributes
     ----------

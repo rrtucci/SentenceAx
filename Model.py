@@ -413,7 +413,7 @@ class Model(L.LightningModule):
         list[torch.Tensor]
 
         """
-        # lll_label is similar to openie6 labels
+        # lll_label is similar to Openie6.labels
         # first (outer) list over batch/sample of events
         # second list over extractions
         # third (inner) list over number of labels in a line
@@ -433,7 +433,7 @@ class Model(L.LightningModule):
         lll_hidden_state, _ = self.base_model(x_d["ll_osent_icode"])
 
         lll_word_score = Ten([0])  # this statement is unecessary
-        llll_word_score = []  # similar to all_depth_scores
+        llll_word_score = []  # similar to Openie6.all_depth_scores
         depth = 0
         while True:
             for layer in self.iterative_transformer:
@@ -527,7 +527,7 @@ class Model(L.LightningModule):
         used inside self.forward()
         This method is never used. Never checked
 
-        self.con_to_l_loss similar to self.self._constD in Openie6
+        self.con_to_l_loss similar to Openie6._constD in Openie6
 
         Parameters
         ----------
@@ -676,7 +676,7 @@ class Model(L.LightningModule):
             self.init_name_to_param = deepcopy(
                 dict(self.named_parameters()))
 
-        # lll_label is similar to openie6 labels
+        # lll_label is similar to Openie6.labels
         # first (outer) list over batch/sample of events
         # second list over extractions
         # third (inner) list over number of labels in a line
@@ -732,7 +732,7 @@ class Model(L.LightningModule):
                     torch.max(lll_soft_word_score, dim=2)
                 # print_tensor("ll_max_log_prob", ll_max_log_prob)
                 # print_tensor("ll_pred_ilabel", ll_pred_ilabel)
-                # remember: lll_ilabel was similar to labels
+                # remember: lll_ilabel was similar to Openie6.labels
                 # first (outer) list over batch events
                 # second list over extractions
                 # third (inner) list over number of ilabels in a line
@@ -902,7 +902,7 @@ class Model(L.LightningModule):
         
         note that both `mode` and self.params.d["action"] are used
 
-        `outputs` similar to `l_batch_m_out`
+        `outputs` similar to Openie6.l_batch_m_out
 
         Parameters
         ----------
@@ -1083,8 +1083,8 @@ class Model(L.LightningModule):
                         value=ex,
                         transform_d=self.ex_sent_to_sent,
                         this_d=osent_to_l_pred_ex)
-        l_pred_str = []  # similar to `all_pred`
-        l_pred_allen_str = []  # similar to `all_pred_allen_nlp`
+        l_pred_str = []  # similar to Openie6.all_pred
+        l_pred_allen_str = []  # similar to Openie6.all_pred_allen_nlp
         for osent, l_pred_ex in osent_to_l_pred_ex.items():
             orig_sentL = redoL(osent)
             str0 = ""

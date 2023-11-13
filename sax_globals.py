@@ -21,8 +21,14 @@ tuning=dev=development=validation
 
 """
 
-
 LINE_SEPARATOR = "[%@!]"
+
+#"ex" stands for extraction
+# "cc" stands for coordinating  conjunction
+# There are only 7 cc's. They are called the "fanboys",
+# because they start with the words f-a-n-b-o-y-s
+FANBOYS = ["for" , "and" , "nor", "but", "or", "yet", "so"]
+
 
 USE_POS_INFO = True
 CC_METRIC_SAVE = True

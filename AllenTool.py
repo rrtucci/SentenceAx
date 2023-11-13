@@ -146,8 +146,8 @@ class AllenTool:
     def get_lll_ilabel_from_osent2_to_exs(osent2_to_exs):
         """
         This static method takes as input `osent2_to_exs` (one of the
-        attributes of class AllenTool). It returns as output `l_osent2,
-        lll_ilabel, ll_confi`
+        attributes of class AllenTool). It returns as output `l_osent2`,
+        `lll_ilabel`, `ll_confi`
 
         Note this is the inverse of get_osent2_to_exs_from_lll_ilabel()
 

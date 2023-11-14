@@ -3,15 +3,14 @@ from subprocess import Popen, PIPE, call
 
 ''' 
 
-This script tries to run all files, in all folders, that end in .py and have 
-a main() at the end.
+This script tries to run all files, in all white-listed folders, that end in 
+.py and have a main() after an 'if __name__ == "__main__":'
 
 '''
 
-
 dir_whitelist = [
     "./"
-    ]
+]
 file_blacklist = [
     '__init__.py',
     'run_all_nb.py',

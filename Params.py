@@ -4,42 +4,47 @@ from pprint import pprint
 
 class Params:
     """
-        Possible choices for self.d
-        0. "", ""
-        1. ex, train_test
-           Conductor.train() followed by Conductor.test()
-        2. ex, test  (appears twice in Openie6 readme)
-            Conductor.test()
-        3. ex, predict (appears twice in Openie6 readme)
-            Conductor.predict()
-        4. ex, resume
-            Conductor.resume()
-        5. cc, train_test
-           Conductor.train() followed by Conductor.test()
-        6. ex, splitpredict (appears twice in Openie6 readme)
-           Conductor.splitpredict()
+
+    The purpose of this class is to carry a dictionary self.d of parameters
+    for SentenceAx. In SentenceAx, globals that are expected to change only
+    once in a blue mooon, are capitalized and declared in the file
+    sax_globals.py. Although self.d carries some globals, it also carries
+    some params that might be changed in the middle of a run. Do not define
+    a capitalized global and a self.d key for the same parameter. Define one
+    or the other but not both.
+
+    Instead of this Params class, Openie6 stores all its parameters in a
+    dictionary called `hparams` that is an attribute of the Model class.
 
 
+    Possible choices for self.d:
+    pid, task, action
+    0. "", ""
+    1. ex, train_test
+       Conductor.train() followed by Conductor.test()
+    2. ex, test  (appears twice in Openie6 readme)
+        Conductor.test()
+    3. ex, predict (appears twice in Openie6 readme)
+        Conductor.predict()
+    4. ex, resume
+        Conductor.resume()
+    5. cc, train_test
+       Conductor.train() followed by Conductor.test()
+    6. ex, splitpredict (appears twice in Openie6 readme)
+       Conductor.splitpredict()
 
-        I use "ex" instead of "oie" for self.task
-        I use "cc" instead of "conj" for self.task
+    self.task in ("ex", "cc"). SentenceAx uses ("ex", "cc") whereas Openie6
+    uses ("oie", "conj") for self.task
 
-        choose self.task and self.action before starting
-        self.task in "ex", "cc"
-        choose "ex" self.task if doing both "ex" and "cc". Choose "cc" self.task only
-        when doing "cc" only
-        self.action in ("train_test", "resume", "test", "predict", "splitpredict")
-
-
-        hparams = hyperparameters,
-        fp = file path
-        self.d = parameters dictionary
+    `action` is similar to Openie6.mode. self.action in ("train_test",
+    "resume", "test", "predict", "splitpredict")
 
 
     Attributes
     ----------
     d: dict[str, Any]
     pid: int
+        process ID, in {0, 1, ..., 6}
     action: str
     task: str
 
@@ -68,6 +73,7 @@ class Params:
 
     def describe_self(self):
         """
+        This method pprints the dictionary self.d.
 
         Returns
         -------
@@ -76,20 +82,23 @@ class Params:
         """
         print("***************** new params")
         print(f"new params: "
-              f"pid={str(self.pid)}, task='{self.task}', action='{self.action}'")
+            f"pid={str(self.pid)}, task='{self.task}', action='{self.action}'")
         print("params=")
         pprint(self.d)
 
     def get_d(self):
         """
-        Do not define capitalized global and self.d key for the same
-        parameter. Define one or the other but not both
+        This is an internal method to be called only by __init__. The user
+        should access the dictionary d as params.d, where params is the name
+        of the Params instance.
 
+        Note that at the end of this method, we define a default d
+        dictionary, and then we merge the dominant d dictionary with the
+        default one.
 
-        define `self.d` in jupyter notebook before running any subroutines
-        that use it. The file `custom_self.d.txt` gives some pointers on how
-        to define a custom self.d.
-
+        The parameter values in this function come directly from the Openie6
+        readme page. Note that that readme page repeats some (task, action)
+        cases. In the case of repeats, we comment out all repeats except one.
 
         Returns
         -------
@@ -105,10 +114,10 @@ class Params:
             print("****self.action is empty")
         else:
             assert self.action in ["predict", "train_test", "splitpredict",
-                                 "resume", "test"]
+                                   "resume", "test"]
 
         ## Running self.model
-        # this is repeated at begin and end.
+        # this is repeated at begin and end of Openie6.readme.
         # elif self.task == "ex" and self.action == "splitpredict":
         #     self.d = {
         #         "cc_weights_fp": WEIGHTS_DIR +
@@ -261,7 +270,7 @@ class Params:
 
         default_d = \
             {
-                "accumulate_grad_batches": 1, # torch default is 1
+                "accumulate_grad_batches": 1,  # torch default is 1
                 "batch_size": 32,
                 "con_weight_str": "1",  # for multiple constraints "1_1_1"
                 "do_rescoring": False,

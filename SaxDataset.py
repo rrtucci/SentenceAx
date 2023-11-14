@@ -3,27 +3,44 @@ import numpy as np
 from torch.utils.data import Dataset
 from PaddedMInput import *
 
+"""
 
-class SaxDataSet(Dataset):
+import torchtext as tt 
+
+Classes tt.data.Example and tt.data.Field were used in the Openie6 code, 
+but they are now deprecated, so they are not used by SentenceAx. Here is 
+link explaining a migration route out of them.
+
+Note also that Openie6 uses ttt.data.Dataset, which understands 
+ttt.data.Field and ttt.data.Example. SentenceAx uses 
+torch.utils.data.Dataset which has a different signature than the now 
+deprecated ttt.data.Dataset
+
+Refs:
+https://colab.research.google.com/github/pytorch/text/blob/master/examples/legacy_tutorial/migration_tutorial.ipynb#scrollTo=kBV-Wvlo07ye
+https://stackoverflow.com/questions/63539809/torchtext-0-7-shows-field-is-being-deprecated-what-is-the-alternative
+https://machinelearningmastery.com/using-dataset-classes-in-pytorch/
+
+
+"""
+
+
+class SaxDataset(Dataset):
     """
-    Dataset stores the samples and their corresponding labels, and DataLoader
-    wraps an iterable around the Dataset to enable easy access to the samples.
+    This class has torch's Dataset class as parent. Basically, all this 
+    class does is to override the basic methods of the parent class.
+    
+    Dataset stores the samples, and DataLoader wraps an iterable around the 
+    Dataset to enable access to batches of samples in a for loop.
 
     Dataset and DataLoader are located in torch.utils.data
 
     data processing chain
-    (optional allen_fp->)tags_in_fp->MInput->PaddedMInput->SaxDataSet
+    (optional allen_fp->)tags_in_fp->MInput->PaddedMInput->SaxDataset
     ->SaxDataLoaderTool
+    
+    Note from this chain that SaxDataset
 
-    Openie6 uses torchtext classes data.Example and data.Field to create its
-    Dataset  instances. Those classes are now deprecated.
-    https://stackoverflow.com/questions/63539809/torchtext-0-7-shows-field
-    -is-being-deprecated-what-is-the-alternative
-
-    In Openie6, the `torchtext.data.Dataset` class is a normal class
-    `Dataset(examples, fields)` is abstract class but in newer versions it
-    is an abstract class. Ref:
-    https://machinelearningmastery.com/using-dataset-classes-in-pytorch/
 
     Attributes
     ----------
@@ -137,14 +154,14 @@ if __name__ == "__main__":
         # full encoding is [101, 0, 102], 101=BOS_ICODE, 102=EOS_ICODE
         pad_icode = auto.encode(auto.pad_token)[1]
         print("pad_token, pad_icode=", auto.pad_token, pad_icode)
-        dset = SaxDataSet(m_in)
+        dset = SaxDataset(m_in)
         print("xname_to_dim1=", dset.xname_to_dim1)
         print("x.shape, x.shape_product=",
               dset.x.shape, np.product(dset.x.shape))
         print("y.shape, y.shape_product=",
               dset.y.shape, np.product(dset.y.shape))
         print_tensor("y", dset.y)
-        xname_to_xtensor = SaxDataSet.invert_cat(dset.x, dset.xname_to_dim1)
+        xname_to_xtensor = SaxDataset.invert_cat(dset.x, dset.xname_to_dim1)
         for xname in xname_to_xtensor.keys():
             assert xname_to_xtensor[xname].shape == \
                    dset.padded_m_in.x_d[xname].shape

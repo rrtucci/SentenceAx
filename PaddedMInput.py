@@ -16,7 +16,7 @@ class PaddedMInput(MInput):
     MInput).
 
     data processing chain
-    (optional allen_fp->)tags_in_fp->MInput->PaddedMInput->SaxDataSet
+    (optional allen_fp->)tags_in_fp->MInput->PaddedMInput->SaxDataset
     ->SaxDataLoaderTool
 
     Attributes

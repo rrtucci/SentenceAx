@@ -21,13 +21,13 @@ class MInput:
     extractions). It works in all 3 cases!
 
     data processing chain
-    (optional allen_fp->)tags_in_fp->MInput->PaddedMInput->SaxDataSet
+    (optional allen_fp->)tags_in_fp->MInput->PaddedMInput->SaxDataset
     ->SaxDataLoaderTool
 
     In Openie6, Openie6.data.process_data() calls
     Openie6.data._process_data() internally. In SentenceAx, class MInput
     does the job of Openie6.data._process_data(). Classes PaddedMInput,
-    SaxDataSet and SaxDataLoaderTools do the job of
+    SaxDataset and SaxDataLoaderTools do the job of
     Openie6.data.process_data().
 
     Attributes

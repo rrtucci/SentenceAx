@@ -7,13 +7,9 @@ from torch.utils.data import DataLoader
 import pickle
 import os
 
-# use of tt.data.Field, Field.build_vocab, tt.data.Example are deprecated
-# and tt.data.Dataset signature has changed
-
-
 import nltk
 from copy import deepcopy
-from SaxDataSet import *
+from SaxDataset import *
 from MInput import *
 from Params import *
 
@@ -21,15 +17,10 @@ from Params import *
 class SaxDataLoaderTool:
     """
     data processing chain
-    (optional allen_fp->)tags_in_fp->MInput->PaddedMInput->SaxDataSet
+    (optional allen_fp->)tags_in_fp->MInput->PaddedMInput->SaxDataset
     ->SaxDataLoaderTool
     
-    Classes Example and Field from tt were used in the Openie6 code,
-    but they are now deprecated, so they are not used Mappa Mundi. Here is
-    link explaining a migration route ot of them.
 
-    https://colab.research.google.com/github/pytorch/text/blob/master/examples/legacy_tutorial/migration_tutorial.ipynb#scrollTo=kBV-Wvlo07ye
-    
     Attributes
     ----------
     auto_tokenizer: AutoTokenizer
@@ -86,7 +77,7 @@ class SaxDataLoaderTool:
 
         Returns
         -------
-        SaxDataSet, SaxDataSet, SaxDataSet
+        SaxDataset, SaxDataset, SaxDataset
 
         """
         self.get_dataset_common()
@@ -137,11 +128,11 @@ class SaxDataLoaderTool:
         # vocab = self.build_vocab(
         #     train_m_in + tune_m_in + test_m_in)
 
-        train_dataset = SaxDataSet(train_m_in)
+        train_dataset = SaxDataset(train_m_in)
 
-        tune_dataset = SaxDataSet(tune_m_in)
+        tune_dataset = SaxDataset(tune_m_in)
 
-        test_dataset = SaxDataSet(test_m_in)
+        test_dataset = SaxDataset(test_m_in)
 
         # to simulate bucket sort (along with pad_data)
         # train_dataset.sort()
@@ -159,7 +150,7 @@ class SaxDataLoaderTool:
 
         Returns
         -------
-        SaxDataSet
+        SaxDataset
 
         """
         self.get_dataset_common()
@@ -199,7 +190,7 @@ class SaxDataLoaderTool:
                               omit_exless=False)
         # vocab = build_vocab(predict_m_in)
 
-        predict_dataset = SaxDataSet(predict_m_in)
+        predict_dataset = SaxDataset(predict_m_in)
 
         return predict_dataset
 

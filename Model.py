@@ -4,7 +4,7 @@ from CCMetric import *
 from CCTree import *
 from MOutput import *
 from PaddedMInput import *
-from SaxDataSet import *
+from SaxDataset import *
 from PickleList import *
 
 import os
@@ -393,7 +393,7 @@ class Model(L.LightningModule):
         xname_to_dim1 = OrderedDict(
             {xname: int(l_dim1[0]) for xname, l_dim1 in
              xname_to_l_dim1.items()})
-        x_d = SaxDataSet.invert_cat(x, xname_to_dim1)
+        x_d = SaxDataset.invert_cat(x, xname_to_dim1)
         return x_d, y_d, meta_d
 
     def sax_get_llll_word_score(self, x_d, y_d, ttt):

@@ -203,9 +203,9 @@ class PaddedMInput(MInput):
         similar to Openie6.data.pad_data()
 
         This method calls get_padded_ll_x() and get_padded_lll_ilabel()
-        multiple times in order to create a padded copy of self.m_in. The
-        method then inserts that padded copy into self. ( Remember, self is
-        an MInput).
+        multiple times in order to create a padded copy of self.m_in:
+        MInput. The method then inserts that padded copy into self. (
+        Remember, self is an MInput).
 
         This method changes the type of the m_in attributes but not their
         names. For example, lll_ilabel goes from type list[list[list[int]]]

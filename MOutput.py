@@ -5,14 +5,23 @@ from MInput import *
 
 class MOutput:
     """
+    This class stores the outputs of Model, usually for one batch.
 
     Attributes
     ----------
-    auto_tokenizer: AutoTokenizer
-    lll_pred_confi: torch.Tensor
-    lll_osent_icode: torch.Tensor
-    llll_pred_ilabel: torch.Tensor]
-    loss: torch.Tensor
+        l_orig_sent: list[str]
+            list of original (before splitting) sentences, usually for a batch.
+        ll_pred_confi: torch.Tensor
+            predicted confidence for each extraction of each batch sample
+        lll_ilabel: torch.Tensor
+            if x is the feature vector and y is the classification, this is
+            the y. Use this variable to store the ground truth y. (This
+            variable is only filled for supervised training, ttt="train")
+        lll_pred_ilabel: torch.Tensor
+            if x is the feature vector and y is the classification, this is
+            the y. Use this variable to store the predicted y.
+        loss: float
+            batch loss
     """
 
     def __init__(self,
@@ -22,11 +31,8 @@ class MOutput:
                  ll_pred_confi,
                  loss):
         """
-        The inputs to the constractor are torch.Tensor and in gpu. They get
-        converted to lists and cpu before being stored as attributes of the
-        class.
+        Constructor
 
-         stands for ten-sor
 
         Parameters
         ----------
@@ -35,7 +41,6 @@ class MOutput:
         lll_pred_ilabel: torch.Tensor
         ll_pred_confi: torch.Tensor
         loss: float
-        auto_tokenizer: AutoTokenizer
         
         """
         self.l_orig_sent = l_orig_sent
@@ -46,6 +51,7 @@ class MOutput:
 
     def move_to_cpu(self):
         """
+        Moves data from gpu to cpu.
 
         Returns
         -------

@@ -64,7 +64,8 @@ class MInput:
         If x is the feature vector and y is the classification, this is
         y. If turned into a tensor, its shape is (num of samples, num of
         extractions (depths), number of words in osentL or osent). The
-        entries of this tensor are integers from 0 to 5 (ilabels).
+        entries of this tensor are integers from 0 to 5 (ilabels). This
+        variable is only filled for supervised training, ttt="train".
     omit_exless: bool
         set to True iff want osents with no extractions to be skipped
     params: Params

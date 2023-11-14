@@ -11,8 +11,9 @@ from MInput import *
 class PaddedMInput(MInput):
     """
     This class has MInput as parent. The constructor takes as input,
-    unpadded data stored in m_in:MInput. It then pads the m_in data,
-    and uses that padded data to fill self (self is an MInput).
+    unpadded data stored in m_in:MInput. It then creates a padded copy of
+    m_in, and inserts that padded copy into self. ( Remember, self is an
+    MInput).
 
     data processing chain
     (optional allen_fp->)tags_in_fp->MInput->PaddedMInput->SaxDataSet
@@ -116,13 +117,13 @@ class PaddedMInput(MInput):
     def get_padded_lll_ilabel(unpadded_lll_ilabel,
                               ipad1=0, ipad2=-100):
         """
-        This method returns a Tensor lll_ilabel, a padded version of
-        `unpadded_lll_ilabel`.
+        This method returns a Tensor lll_ilabel. `lll_ilabel` is a padded
+        version of `unpadded_lll_ilabel`.
 
         The dimensions of lll_ilabel are called 0, 1, 2 (2 is the innermost
         one). The number suffix in`ipad1` and `ipad2` refers to the
         dimension. Openie6 (and SentenceAx) uses ipad1=0, ipad2=-100 to
-        distinguish between dim1 and dim2 padding. 0 and -100 are both
+        distinguish between dim=1 and dim=2 padding. 0 and -100 are both
         ignored by loss functions such as cross entropy.
 
         Parameters
@@ -202,13 +203,13 @@ class PaddedMInput(MInput):
         similar to Openie6.data.pad_data()
 
         This method calls get_padded_ll_x() and get_padded_lll_ilabel()
-        multiple times in order to pad all the data in self.m_in. The method
-        then inserts that padded data into various self attributes. (
-        Remember, self is an MInput).
+        multiple times in order to create a padded copy of self.m_in. The
+        method then inserts that padded copy into self. ( Remember, self is
+        an MInput).
 
-        This method changes the type of some m_in attributes but not their
-        names. For example, lll_ilabel goes from type list[list[list[int]]] to
-        type torch.tensor.
+        This method changes the type of the m_in attributes but not their
+        names. For example, lll_ilabel goes from type list[list[list[int]]]
+        to type torch.tensor.
 
         Returns
         -------

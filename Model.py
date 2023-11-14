@@ -28,72 +28,71 @@ logging.getLogger(
     'transformers.modeling_utils').setLevel(logging.ERROR)
 logging.getLogger().setLevel(logging.ERROR)
 
-"""on_test_epoch_end() and on_validation_epoch_end() have only been 
-available in `lightining` since version 2.0.1 (released Feb 2023)
+"""
+
+Note that `pytorch_lightning`, used by Openie6, is now deprecated; it has 
+been superceeded by the new package called simply `lightning`. I've been 
+using lightning 2.1.0. 
+
+on_test_epoch_end() and on_validation_epoch_end(), which SentenceAx uses, 
+have only been available in `lightining` since version 2.0.1 (released Feb 
+2023).
+
+Refs.:
 https://github.com/Lightning-AI/lightning/releases
-https://stackoverflow.com/questions/70790473/pytorch-lightning-epoch-end 
--validation-epoch-end.
-In addition, note that `pytorch_lightning` has been superceeded by 
-`lightning`. 'pytorch_lightning` is now deprecated"""
+https://stackoverflow.com/questions/70790473/pytorch-lightning-epoch-end-validation-epoch-end.
+
+"""
 check_module_version("lightning", "2.0.1")
 
 
 class Model(L.LightningModule):
     """
-    import lightning.pytorch as pl
-    import torch.nn as nn
-    import torch.nn.functional as F
-    class LitModel(pl.LightningModule):
-        def __init__(self):
-            super().__init__()
-            self.l1 = nn.Linear(28 * 28, 10)
+    
+    The class inherits from L.LightningModule some powerful methods that 
+    loop through the batches of an epoch, calling forward(), and calculating 
+    the loss for each batch. The class sets loops over batches for the 3 
+    actions ttt=train, tune (a.k.a. validation) and test
 
-        def forward(self, x):
-            return torch.relu(self.l1(x.view(x.size(0), -1)))
+    This class has an abstract class as its parent. To distinguish between 
+    inherited and uninherited methods, we add a prefix "sax_" to the name of 
+    all uninherited methods.
 
-        def training_step(self, batch, batch_idx):
-            x, y = batch
-            y_hat = self(x)
-            loss_fun = F.cross_entropy(y_hat, y)
-            return loss_fun
-
-        def configure_optimizers(self):
-            return torch.optim.Adam(self.parameters(), lr=0.02)
-
-    This class has an abstract class as its parent. Uninherited methods
-    start with `sax_`.
-
-
-        batch_d={
-        "lll_label": np.array of ints, shape:(batch_size, depth, labels_length)
-
-        "meta_data": any
-
-        "pos_locs": int
-
-        "text": str
-
-        "verb_bools": list[int],
-            a list of 0, 1, 1 if word in text is a verb and 0 if not
-
-        "verb_locs": list[int], locations of verbs  in text
-
+    Note that `batch` has a different meaning in Openie6 and SentenceAx. In 
+    Openie6, it's a dictionary with the fallowing keys:
+    
+    batch={
+        "lll_label":
+        "meta_data":
+        "pos_locs":
+        "text":
+        "verb_bools":
+        "verb_locs":
         "word_starts":
     }
 
-    BERT has a volume L * H * HL
-    L = encoding length
+    In SentenceAx, (see sax_get_batch_in_dicts()
+
+    x, y, l_orig_sent, xname_to_l_dim1 = batch
+    
+    SentenceAX is a fine-tuning of bert-base-cased and bert-large-cased. 
+    Both of these weights/models are cased, but large > base. 
+    
+    Some stats about BERT
+
+    Think of BERT as outputting a tensor of shape (AH, HL, L) where
     AH = number of attention heads
     HL = number of hidden layers
+    L = encoding length
 
-    BERTBASE (L=12, HL=768, AH=12, Total Parameters=110M)
-    BERTLARGE (L=24, HL=1024, AH=16, Total Parameters=340M).
+    BERT BASE (AH=12, HL=768, L=12) Total Parameters=110M
+    BERT LARGE (AH=16, HL=1024, L=24) Total Parameters=340M
 
 
     Attributes
     ----------
     auto_tokenizer: AutoTokenizer
-    base_model: BertModel
+    start_model: BertModel
     cc_sent_to_words: dict[str, list[str]]
     con_to_weight: dict[str, float]
     dropout_fun: Dropout
@@ -131,6 +130,7 @@ class Model(L.LightningModule):
                  model_name):
         """
         lightning/src/lightning/pytorch/core/module.py
+
         Parameters
         ----------
         params: Params
@@ -145,20 +145,20 @@ class Model(L.LightningModule):
         self.model_name = model_name
 
         # return_dict=False avoids error message from Dropout
-        self.base_model = AutoModel.from_pretrained(
+        self.start_model = AutoModel.from_pretrained(
             self.params.d["model_str"],
             cache_dir=CACHE_DIR,
             return_dict=False)
-        self.hidden_size = self.base_model.config.hidden_size
+        self.hidden_size = self.start_model.config.hidden_size
 
         if self.params.d["iterative_layers"] > 0:
-            num_layers = len(self.base_model.encoder.layer)
+            num_layers = len(self.start_model.encoder.layer)
             num_encoder_layers = \
                 num_layers - self.params.d["iterative_layers"]
-            self.base_model.encoder.layer = \
-                self.base_model.encoder.layer[0:num_encoder_layers]
+            self.start_model.encoder.layer = \
+                self.start_model.encoder.layer[0:num_encoder_layers]
             self.iterative_transformer = \
-                self.base_model.encoder.layer[num_encoder_layers:num_layers]
+                self.start_model.encoder.layer[num_encoder_layers:num_layers]
 
         else:
             self.iterative_transformer = []
@@ -272,7 +272,6 @@ class Model(L.LightningModule):
 
     def configure_optimizers(self):
         """
-        inherited method
 
         The optimizer can be Adam or AdamW. If there are multiple
         constraints `multi_con = True`, then an Adam or AdamW optimzer will
@@ -290,11 +289,11 @@ class Model(L.LightningModule):
         # x = parameter
         # pair = (xname, x)
 
-        def base_model_pairs():
-            return [pair for pair in all_pairs if "base_model" in pair[0]]
+        def start_model_pairs():
+            return [pair for pair in all_pairs if "start_model" in pair[0]]
 
-        def non_base_model_pairs():
-            return [pair for pair in all_pairs if "base_model" not in pair[0]]
+        def non_start_model_pairs():
+            return [pair for pair in all_pairs if "start_model" not in pair[0]]
 
         xnames = ["bias", "gamma", "beta"]
 
@@ -302,15 +301,15 @@ class Model(L.LightningModule):
             return any((pair[0] in xname) for xname in xnames)
 
         opt_param_d = [
-            {"params": [pair[1] for pair in base_model_pairs() if
+            {"params": [pair[1] for pair in start_model_pairs() if
                         not pair_in_xnames(pair)],
              "weight_decay_rate": 0.01,
              'lr': self.params.d["lr"]},
-            {"params": [pair[1] for pair in base_model_pairs() if
+            {"params": [pair[1] for pair in start_model_pairs() if
                         pair_in_xnames(pair)],
              "weight_decay_rate": 0.0,
              'lr': self.params.d["lr"]},
-            {"params": [pair[1] for pair in non_base_model_pairs()],
+            {"params": [pair[1] for pair in non_start_model_pairs()],
              'lr': self.params.d["lr"]}
         ]
 
@@ -329,7 +328,6 @@ class Model(L.LightningModule):
 
     def get_progress_bar_dict(self):
         """
-        inherited method
 
         Additional items to be displayed in the progress bar.
 
@@ -427,10 +425,10 @@ class Model(L.LightningModule):
         # loss_fun, lstm_loss = 0, 0
 
         # batch_text = " ".join(redoL(meta_d["l_orig_sent"]))
-        # base_model_input = \
+        # start_model_input = \
         #     torch.Tensor(self.auto_tokenizer.encode(batch_text))
 
-        lll_hidden_state, _ = self.base_model(x_d["ll_osent_icode"])
+        lll_hidden_state, _ = self.start_model(x_d["ll_osent_icode"])
 
         lll_word_score = Ten([0])  # this statement is unecessary
         llll_word_score = []  # similar to Openie6.all_depth_scores
@@ -648,7 +646,9 @@ class Model(L.LightningModule):
 
     def forward(self, batch, batch_idx, ttt):
         """
-        inherited method
+        This method returns batch_m_out: MOutput, the result of one batch
+        passing through the NN.
+
         signature of parent method:  def forward(self, *args, **kwargs)
 
         wreg = weight regulator (default =0)
@@ -687,7 +687,7 @@ class Model(L.LightningModule):
         # loss_fun, lstm_loss = 0, 0
 
         # batch_text = " ".join(redoL(meta_d["l_orig_sent"]))
-        # base_model_input = \
+        # start_model_input = \
         #     torch.Tensor(self.auto_tokenizer.encode(batch_text))
 
         llll_word_score = self.sax_get_llll_word_score(x_d, y_d, ttt)
@@ -792,6 +792,18 @@ class Model(L.LightningModule):
 
     def sax_ttt_step(self, batch, batch_idx, ttt):
         """
+        This method returns the `loss` for one step (i.e., batch pass). It
+        calls forward() once. forward() returns batch_m_out and loss =
+        batch_m_out.loss. This loss variable is only filled with something
+        useful if ttt="train"
+
+        The method writes to a file if ttt="tune".
+
+        The method stores a list of batch_m_out if ttt!="train".
+        l_batch_m_out is similar to Openie6.outputs
+
+        The method logs the loss if ttt="train".
+
 
         Parameters
         ----------
@@ -819,19 +831,19 @@ class Model(L.LightningModule):
                       " method, batch_idx=" + str(batch_idx))
 
         batch_m_out = self.forward(batch, batch_idx, ttt)
-
-        if ttt != "train":
-            # only collect batch_m_out if going to score it.
-            # only ttt != "train" are scored
-            self.l_batch_m_out.append(batch_m_out)
+        loss = batch_m_out.loss
 
         if ttt == "tune":
             self.sax_write_batch_sents_out(batch_idx, batch_m_out)
 
-        loss = batch_m_out.loss
-
-        if ttt == "train":
-            self.log('train_step_loss', loss,
+        if ttt != "train":
+            # only remember batch_m_out if going to score it
+            # at end of epoch. This only happens if ttt != "train".
+            self.l_batch_m_out.append(batch_m_out)
+        else:
+            # loss only calculated during training
+            self.log('train_step_loss',
+                     loss,
                      prog_bar=True,
                      logger=True,
                      on_step=True)
@@ -840,7 +852,7 @@ class Model(L.LightningModule):
 
     def training_step(self, batch, batch_idx):
         """
-        inherited method
+        This method returns self.sax_ttt_step() so go there for an explanation.
 
         Parameters
         ----------
@@ -857,9 +869,8 @@ class Model(L.LightningModule):
 
     def validation_step(self, batch, batch_idx):
         """
-        inherited method
+        This method returns self.sax_ttt_step() so go there for an explanation.
 
-        called by `validation_step()`
 
         Parameters
         ----------
@@ -876,10 +887,7 @@ class Model(L.LightningModule):
 
     def test_step(self, batch, batch_idx):
         """
-        inherited method
-        test_step() and validation_step() are identical. They invoke
-        forward() once. The following methods invoke forward() once:
-        training_step(), validation_step(), test_step()
+        This method returns self.sax_ttt_step() so go there for an explanation.
 
         Parameters
         ----------
@@ -897,17 +905,18 @@ class Model(L.LightningModule):
     def sax_get_scores_at_epoch_end(self, ttt):
         """
         similar to Openie6.model.evaluation_end()
-        
-        used inside self.sax_on_ttt_epoch_end()
-        
-        note that both `mode` and self.params.d["action"] are used
 
-        `outputs` similar to Openie6.l_batch_m_out
+        This method prints and returns scores_epoch_end_d. That dictionary
+        includes `epoch_acc` among its keys. The method is called inside
+        self.sax_on_ttt_epoch_end()
+        
+        Note that both `mode` and self.params.d["action"] are used in this
+        method.
 
         Parameters
         ----------
         ttt: str
-            either "train", "tune", "test", "pred"
+            either "train", "tune", "test"
 
         Returns
         -------
@@ -959,6 +968,11 @@ class Model(L.LightningModule):
 
     def sax_on_ttt_epoch_end(self, ttt):
         """
+        This method calculates the score called `epoch_acc` (i.e.,
+        the accuracy at epoch's end), and logs it. It also resets
+        l_batch_m_out to []. Scores are only relevant for ttt!="train",
+        so this method is called by on_validation_epoch_end() and
+        on_test_epoch_end() but not by on_train_epoch_end().
 
         Parameters
         ----------
@@ -1001,6 +1015,8 @@ class Model(L.LightningModule):
 
     def on_validation_epoch_end(self):
         """
+        This method returns self.sax_on_ttt_epoch_end() so go there for an
+        explanation.
 
         Returns
         -------
@@ -1012,7 +1028,8 @@ class Model(L.LightningModule):
 
     def on_test_epoch_end(self):
         """
-        inherited method
+        This method returns self.sax_on_ttt_epoch_end() so go there for an
+        explanation.
 
         Returns
         -------
@@ -1024,7 +1041,7 @@ class Model(L.LightningModule):
 
     def train_dataloader(self):
         """
-        inherited abstract method
+        This method does nothing. It's here to override the parent method.
 
         Returns
         -------
@@ -1035,7 +1052,7 @@ class Model(L.LightningModule):
 
     def val_dataloader(self):
         """
-        inherited abstract method
+        This method does nothing. It's here to override the parent method.
 
         Returns
         -------

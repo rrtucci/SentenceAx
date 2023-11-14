@@ -1,4 +1,12 @@
+"""
+
+The purpose of this file is to bring together various static methods that
+are used by SentenceAx for reading and writing various types of files.
+
+"""
+
 from Params import *
+from sax_utils import *
 
 
 def write_tags_file(path,
@@ -7,6 +15,8 @@ def write_tags_file(path,
                     with_unused_tokens,
                     ll_confi=None):
     """
+    This method writes an extags or a cctags file. It works for both. It is
+    called internally by both write_extags_file() and write_cctags_file().
 
     Parameters
     ----------
@@ -43,6 +53,7 @@ def write_extags_file(path,
                       ll_tags,
                       ll_confi=None):
     """
+    This method writes an extags file.
 
     Parameters
     ----------
@@ -68,6 +79,7 @@ def write_cctags_file(path,
                       ll_tags,
                       ll_confi=None):
     """
+    This method writes a cctags file.
 
     Parameters
     ----------
@@ -88,12 +100,23 @@ def write_cctags_file(path,
                     ll_confi=ll_confi)
 
 
-def load_sent_to_sent(in_fp):
+def load_sent_to_sent(in_fp, word_tokenize=False):
     """
-    similar to Openie6.data_processing.load_conj_mapping() Our
-    sent_to_sent is similar to Openie6 mapping and conj_mapping. This
-    method works equally well for ExMetric.sent_to_sent and
-    CCMetric.sent_to_words
+    similar to Openie6.data_processing.load_conj_mapping()
+
+    This method is never used by SentenceAx or Openie6.
+
+    This method returns:
+        if word_tokenize==False
+            sent_to_sent, similar to Openie6.mapping.
+        if word_tokenize==True
+            sent_to_words, similar to Openie6.conj_mapping.
+
+    Parameters
+    ----------
+    in_fp: str
+    word_tokenize: bool
+
 
     Returns
     -------
@@ -109,5 +132,8 @@ def load_sent_to_sent(in_fp):
                 if i == 0:
                     fixed_sent = line
                 else:
-                    sent_to_sent[line] = fixed_sent
+                    if not word_tokenize:
+                        sent_to_sent[line] = fixed_sent
+                    else:
+                        sent_to_sent[line] = get_words(fixed_sent)
     return sent_to_sent

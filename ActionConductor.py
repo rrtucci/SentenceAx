@@ -225,13 +225,16 @@ class ActionConductor:
         Trainer
 
         """
+        # num_steps_per_epoch specified only for quick testing.
+        # Set to None to let Trainer decide maximum
+        num_steps = self.params.d["num_steps_per_epoch"]
         if use_minimal:
             trainer = Trainer(
                 logger=logger,
                 # num_sanity_val_steps=0,
-                limit_train_batches=NUM_STEPS_PER_EPOCH,
-                limit_val_batches=NUM_STEPS_PER_EPOCH,
-                limit_test_batches=NUM_STEPS_PER_EPOCH
+                limit_train_batches=num_steps,
+                limit_val_batches=num_steps,
+                limit_test_batches=num_steps
             )
         else:
             trainer = Trainer(
@@ -248,9 +251,9 @@ class ActionConductor:
                 # use_tpu=no longer used,
                 # train_percent_check=,
                 # track_grad_norm= no longer used
-                limit_train_batches=NUM_STEPS_PER_EPOCH,
-                limit_val_batches=NUM_STEPS_PER_EPOCH,
-                limit_test_batches=NUM_STEPS_PER_EPOCH
+                limit_train_batches=num_steps,
+                limit_val_batches=num_steps,
+                limit_test_batches=num_steps
             )
         return trainer
 

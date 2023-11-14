@@ -272,6 +272,7 @@ class Params:
                 "lr": 2E-5,
                 "model_str": "bert-base-cased",
                 "num_extractions": EX_NUM_DEPTHS,
+                "num_steps_per_epoch": None,
                 "optimizer": "adamW",
                 "refresh_cache": False,
                 "save_k": 1,

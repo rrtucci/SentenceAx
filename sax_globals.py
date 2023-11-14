@@ -34,9 +34,6 @@ USE_POS_INFO = True
 CC_METRIC_SAVE = True
 
 VERBOSE = False
-# set NUM_STEPS_PER_EPOCH to None to have Trainer decide
-# NUM_STEPS_PER_EPOCH = 3
-NUM_STEPS_PER_EPOCH = None
 
 INPUT_DIR = "input_data"
 CACHE_DIR = 'cache'

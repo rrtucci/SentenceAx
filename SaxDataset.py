@@ -7,9 +7,8 @@ from PaddedMInput import *
 
 import torchtext as tt 
 
-Classes tt.data.Example and tt.data.Field were used in the Openie6 code, 
-but they are now deprecated, so they are not used by SentenceAx. Here is 
-link explaining a migration route out of them.
+Classes tt.data.Example and tt.data.Field are used in the Openie6 code, 
+but they are now deprecated, so they are not used in SentenceAx.
 
 Note also that Openie6 uses ttt.data.Dataset, which understands 
 ttt.data.Field and ttt.data.Example. SentenceAx uses 
@@ -27,8 +26,8 @@ https://machinelearningmastery.com/using-dataset-classes-in-pytorch/
 
 class SaxDataset(Dataset):
     """
-    This class has torch's Dataset class as parent. Basically, all this 
-    class does is to override the basic methods of the parent class.
+    This class has torch's Dataset class as parent. Basically,
+    all SaxDataset does is to override the basic methods of its parent class.
     
     Dataset stores the samples, and DataLoader wraps an iterable around the 
     Dataset to enable access to batches of samples in a for loop.
@@ -39,30 +38,47 @@ class SaxDataset(Dataset):
     (optional allen_fp->)tags_in_fp->MInput->PaddedMInput->SaxDataset
     ->SaxDataLoaderTool
     
-    Note from this chain that SaxDataset
+    Note from this chain that SaxDataset has an instance of PaddedMInput as
+    input and its output goes into an instance of DataLoaderTool.
 
 
     Attributes
     ----------
     l_orig_sent: list[str]
+        list (usually a batch) of original (i.e., before splitting) sentences
     num_depths: int
+        number of extractions (first ex has depth 0, 2nd ex has depth 1, etc.).
+        After padding, all samples have the same num_depths. (num_depths
+        = 1-based max depth)
     num_samples: int
+        number of samples, len(l_orig_sent), usually the size of a batch.
     num_words: int
+        number of words in original sentence (osent), after padding!. Same for
+        all osent after padding.
     padded_m_in: PaddedMInput
+        padded model input
     x: torch.Tensor
+        If x are the features of the dataset and y its classification,
+        this is the x.
     xname_to_dim1: OrderedDict
+        Each batch and feature is described by a tensor of shape (dim0,
+        dim1) where dim0 is the batch size, and dim1 is the dim=1 size for
+        that feature. This dictionary maps xname (i.e., the name of each
+        feature) to its dim1.
     y: torch.Tensor
+        If x are the features of the dataset and y its classification,
+        this is the y.
 
     """
 
     def __init__(self, m_in):
         """
-
-
+        Constructor
 
         Parameters
         ----------
         m_in: MInput
+            unpadded model input data. This constructor pads the m_in data.
         """
         super().__init__()
         self.padded_m_in = PaddedMInput(m_in)
@@ -84,6 +100,15 @@ class SaxDataset(Dataset):
     @staticmethod
     def invert_cat(x, xname_to_dim1):
         """
+        cat=con-cat-enation
+
+        In order to obtain self.x, we concatenate sub-tensors of shapes (
+        batch_size, xname_to_dim1[xname]) for all xname in
+        xname_to_dim1.keys(). This function does the inverse operation: it
+        finds the sub-tensors from the full tensor self.x.
+
+        The function returns a dictionary xname_to_xtensor that maps each
+        xname to its sub-tensor.
 
         Parameters
         ----------
@@ -109,6 +134,14 @@ class SaxDataset(Dataset):
 
     def __getitem__(self, isample):
         """
+        This method allows Model to access the x and y (and other "metadata"
+        ) of each sample by a sample index `isample`. All this method does
+        is to return self.x[isample], self.y[isample], self.l_orig_sent[
+        isample], self.xname_to_dim1.
+
+        self.l_orig_sent[isample] and self.xname_to_dim1 constitute what is
+        called metadata. It is split into batches along dim=0, just like
+        self.x and self.y are.
 
         Parameters
         ----------
@@ -118,14 +151,14 @@ class SaxDataset(Dataset):
         -------
         torch.Tensor, torch.Tensor
 
-        self.l_orig_sent[isample]   is what is called metadata.
-        It is split into batches along dim=0, just like self.x and self.y are
         """
         return self.x[isample], self.y[isample], \
             self.l_orig_sent[isample], self.xname_to_dim1
 
     def __len__(self):
         """
+        This method just returns the number of samples = len(l_orig_sent).
+        This is normally the batch size.
 
         Returns
         -------
@@ -137,7 +170,7 @@ class SaxDataset(Dataset):
 
 if __name__ == "__main__":
     def main():
-        params = Params(1)  # 1, task="ex", action="train_test"
+        params = Params(1)  # pid=1, task="ex", action="train_test"
         in_fp = "tests/extags_test.txt"
         model_str = "bert-base-uncased"
         do_lower_case = ('uncased' in model_str)

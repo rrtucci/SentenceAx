@@ -5,11 +5,11 @@ import shutil
 
 class PickleList:
     """
-    The purpose of this class is to define an object that has an interface
-    very similar to that of a Python list. However, instead of storing its
-    items in RAM as in a normal python list, a pickle list stores each of
-    its items as separate pickle files. This is useful when the items are
-    too big to store them all at once in RAM.
+    The purpose of this class is to define a data structure that has an
+    interface very similar to that of a Python list. However, instead of
+    storing its items in RAM as in a normal python list, a pickle list
+    stores each of its items as separate pickle files. This is useful when
+    the items are too big to store them all at once in RAM.
 
     """
 
@@ -57,7 +57,7 @@ class PickleList:
     def __getitem__(self, index):
         """
         This method allows the user to access an item in a pickle list li by
-        using li[index] where index is a 0 based int within the range 0:len(
+        using li[index] where index is a 0-based int within the range 0:len(
         li).
 
         Parameters

@@ -212,7 +212,7 @@ class ActionConductor:
 
     def get_new_trainer(self, logger, use_minimal):
         """
-        This method return a Trainer object.
+        This method returns a Trainer instance.
 
         Parameters
         ----------
@@ -262,7 +262,7 @@ class ActionConductor:
         similar to Openie6.run.test() and data.override_args().
 
         This method loads parameters from the checkpoint file and inserts
-        them into the Params object self.params.
+        them into the Params instance self.params.
 
         Parameters
         ----------
@@ -513,7 +513,7 @@ class ActionConductor:
         self.params.d["best_checkpoint_fp"] = CC_BEST_WEIGHTS_FP
         # For task="cc", Openie6 uses large-cased for train_test() and
         # base-cased for splitpredict(). Both are cased, but larger-cased is
-        # larger than base-cased. For task="ex", Openie6 uses based-cased
+        # larger than base-cased. For task="ex", Openie6 uses base-cased
         # throughout
         self.params.d["model_str"] = 'bert-base-cased'
         self.params.d["action"] = self.params.action = 'predict'

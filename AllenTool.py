@@ -184,7 +184,7 @@ class AllenTool:
     def get_ex_from_allen_line(line):
         """
         This method takes as input a single line `line` from an Allen file
-        and returns an object of the class SaxExtraction.
+        and returns an instance of the class SaxExtraction.
 
         Parameters
         ----------
@@ -229,7 +229,7 @@ class AllenTool:
     @staticmethod
     def get_allen_line_from_ex(ex):
         """
-        This method takes as input an object `ex` of the class
+        This method takes as input an `ex` instance of the class
         `SaxExtraction` and it returns a string formatted as a line of an
         Allen file. Hence, this method is the inverse of the method
         `get_ex_from_allen_line()`.

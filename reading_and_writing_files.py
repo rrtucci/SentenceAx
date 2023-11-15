@@ -9,7 +9,7 @@ from Params import *
 from sax_utils import *
 
 
-def write_tags_file(path,
+def write_tags_file(out_fp,
                     l_orig_sent,
                     ll_tags,
                     with_unused_tokens,
@@ -20,7 +20,7 @@ def write_tags_file(path,
 
     Parameters
     ----------
-    path: str
+    out_fp: str
     l_orig_sent: list[str]
     ll_tags: list[list[list[str]]]
     with_unused_tokens: bool
@@ -31,7 +31,7 @@ def write_tags_file(path,
     None
 
     """
-    with open(path, "w") as f:
+    with open(out_fp, "w") as f:
         num_samples = len(l_orig_sent)
         for sam in range(num_samples):
             f.write(str(sam + 1) + "." + "\n")
@@ -48,7 +48,7 @@ def write_tags_file(path,
                     f.write(ll_tags[sam][depth] + end_str)
 
 
-def write_extags_file(path,
+def write_extags_file(out_fp,
                       l_orig_sent,
                       ll_tags,
                       ll_confi=None):
@@ -57,7 +57,7 @@ def write_extags_file(path,
 
     Parameters
     ----------
-    path: str
+    out_fp: str
     l_orig_sent: list[str]
     ll_tags: list[list[list[str]]]
     ll_confi: list[list[float]]
@@ -67,14 +67,14 @@ def write_extags_file(path,
     None
 
     """
-    write_tags_file(path,
+    write_tags_file(out_fp,
                     l_orig_sent,
                     ll_tags,
                     with_unused_tokens=True,
                     ll_confi=ll_confi)
 
 
-def write_cctags_file(path,
+def write_cctags_file(out_fp,
                       l_orig_sent,
                       ll_tags,
                       ll_confi=None):
@@ -83,7 +83,7 @@ def write_cctags_file(path,
 
     Parameters
     ----------
-    path: str
+    out_fp: str
     l_orig_sent: list[str]
     ll_tags: list[list[list[str]]]
     ll_confi: list[list[float]]
@@ -93,7 +93,7 @@ def write_cctags_file(path,
     None
 
     """
-    write_tags_file(path,
+    write_tags_file(out_fp,
                     l_orig_sent,
                     ll_tags,
                     with_unused_tokens=False,
@@ -120,10 +120,11 @@ def load_sent_to_sent(in_fp, word_tokenize=False):
 
     Returns
     -------
-    dict[str, str]
+    dict[str, str]|dict[str, list[str]]
 
     """
     sent_to_sent = {}
+    sent_to_words = {}
     with open(in_fp, "r") as f:
         content = f.read()
         fixed_sent = ''
@@ -135,5 +136,8 @@ def load_sent_to_sent(in_fp, word_tokenize=False):
                     if not word_tokenize:
                         sent_to_sent[line] = fixed_sent
                     else:
-                        sent_to_sent[line] = get_words(fixed_sent)
-    return sent_to_sent
+                        sent_to_words[line] = get_words(fixed_sent)
+    if not word_tokenize:
+        return sent_to_sent
+    else:
+        return sent_to_words

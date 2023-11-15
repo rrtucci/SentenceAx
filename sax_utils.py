@@ -1,7 +1,8 @@
 """
 
-The purpose of this file is to gather together a bunch of global (static)
-methods that seem too general to belong to any one class.
+The purpose of this file is to gather together those global (i.e., static)
+methods used by SentenceAx that seem too general to belong to any one of
+its classes.
 
 """
 
@@ -14,12 +15,13 @@ from Params import *
 from math import floor
 from copy import copy
 import pkg_resources as pkg
+from unidecode import unidecode
 
 
 class DotDict(dict):
     """
     This class provides dot (.) instead of square bracket ([]) access to
-    dictionary attributes. Openie6 uses this but we won't.
+    dictionary attributes. Openie6 uses this but SentenceAx doesn't.
 
     This is sort of the inverse of to_dict() defined elsewhere in this file.
     DotDict() creates a class instance from a dictionary and to_dict()
@@ -105,8 +107,8 @@ def get_tag_to_ilabel(task):
 
 def get_task_logs_dir(task):
     """
-    This method returns the tags_log_directory for the task `task`,
-    where task in ["ex", "cc"].
+    This method returns the logs_directory for the task `task`, where task
+    in ["ex", "cc"].
 
 
 
@@ -184,12 +186,13 @@ def get_words(sent, algo="nltk"):
     periods and commas are considered words.)
 
     nlkt and spacy both split '[unused1]' into '[', 'unused1', ']' so first
-    remove UNUSED_TOKENS_STR, split into words, and add UNUSED_TOKENS to result.
+    remove UNUSED_TOKENS_STR, split into words, and finally add
+    UNUSED_TOKENS to result.
 
     note: get_words("") = []
 
-    Spacy slow compared to nlkt if used only for tokenizing into words.
-    Hence, will only use nlkt.
+    Spacy is slow compared to nlkt if used only for tokenizing into words.
+    Hence, SentenceAx will use only nlkt for this.
 
 
     Parameters
@@ -243,8 +246,8 @@ def set_seed(seed):
     
     This method sets a panoply of seeds to `seed`.
 
-    Be warned that even with all these seeds, complete reproducibility 
-    cannot be guaranteed.
+    Be forewarned that even with all these seeds set, complete
+    reproducibility cannot be guaranteed.
 
     Parameters
     ----------
@@ -264,10 +267,10 @@ def set_seed(seed):
 
 def get_num_ttt_sents(num_sents, ttt_fractions):
     """
-    Given an int `num_sents`, and a list `ttt_fractions` equal to [f0, f1, 
-    f2] such that f0+f1+f2=1, this method returns a triple of integers (x, 
-    y, z) such that x+y+z = num_sents, and x \approx num_sents*f_0, 
-    y \approx num_sents*f1, z \approx num_sents*f2.
+    Given an int `num_sents`, and a list of fractions `ttt_fractions` equal
+    to [f0, f1, f2] such that f0+f1+f2=1, this method returns a triple of
+    integers (x, y, z) such that x+y+z = num_sents, and x \approx
+    num_sents*f_0, y \approx num_sents*f1, z \approx num_sents*f2.
     
 
     Parameters
@@ -366,13 +369,12 @@ def convert_to_ascii(line):
     str
 
     """
-    from unidecode import unidecode
     return unidecode(line)
 
 
 def replace_in_list(l_x, x, new_x):
     """
-    This method check that `x` occurs only once in list `l_x`. It returns a
+    This method checks that `x` occurs only once in list `l_x`. It returns a
     new list wherein `x` has been replaced by `new_x`.
 
     Parameters
@@ -393,7 +395,7 @@ def replace_in_list(l_x, x, new_x):
 
 def sax_sniffer(name, osent2_to_exs, lll_ilabel):
     """
-    This method was used for debugging once.
+    This method was used for debugging.
 
     Parameters
     ----------
@@ -416,7 +418,7 @@ def sax_sniffer(name, osent2_to_exs, lll_ilabel):
 
 def carb_sniffer(name, osent2_to_exs):
     """
-    This method was used for debugging once.
+    This method was used for debugging.
 
     Parameters
     ----------
@@ -438,10 +440,10 @@ def carb_sniffer(name, osent2_to_exs):
 def Ten(lista):
     """
     This method takes as input a list (or list[list[ or list[list[list[)
-    `lista`. It converts `lista` to a torch.Tensor, which it then returns.
+    `lista`). It converts `lista` to a torch.Tensor, which it then returns.
 
-    Ten() and Li() are sort of inverses of each other, except that not all
-    list[list[ can be converted to a torch.Tensor. The list needs to be
+    Ten() and Li() are sort of inverses of each other, except that in
+    general a list[list[ cannot be converted to a torch.Tensor, unless it is
     padded first.
 
     Parameters
@@ -462,8 +464,8 @@ def Li(tensor):
     This method takes as input a torch.Tensor `tensor`. It converts `tensor`
     to a list (or list[list[ or list[list[list[) which it then returns.
 
-    Ten() and Li() are sort of inverses of each other, except that not all
-    list[list[ can be converted to a torch.Tensor. The list needs to be
+    Ten() and Li() are sort of inverses of each other, except that in
+    general a list[list[ cannot be converted to a torch.Tensor, unless it is
     padded first.
 
 
@@ -483,6 +485,8 @@ def Li(tensor):
 def add_key_to_this_d(key, transform_d, this_d):
     """
     This method returns a dictionary after adding to it a key.
+
+    This method is used in Model.
 
     Parameters
     ----------
@@ -506,6 +510,8 @@ def add_key_to_this_d(key, transform_d, this_d):
 def add_key_value_pair_to_this_d(key, value, transform_d, this_d):
     """
     This method returns a dictionary after adding to it a key-value pair.
+
+    This method is used in Model.
 
     Parameters
     ----------
@@ -592,9 +598,8 @@ def print_tensor(tensor_name, ten):
 
 def check_module_version(module_name, lub_version):
     """
-    This method checks that the version of module named `module_name` is
-    greater cor equal to `lub_version`.
-    (lub=least upper bound)
+    This method checks that the version of the module named `module_name` is
+    greater or equal to `lub_version`. (lub=least upper bound)
 
     Parameters
     ----------
@@ -622,9 +627,9 @@ def check_module_version(module_name, lub_version):
 
 def is_valid_label_list(labels, task, label_type):
     """
-    This method checks that a cctags or extags or ilabels list `labels`
-    satisfies certain minimal requirements (for example, that it have aa
-    ARG1 and a REL for extags).
+    This method checks that a cctags or extags or ilabels list named
+    `labels` satisfies certain minimal requirements (for example, that it
+    have an ARG1 and a REL for extags).
 
     task in ["ex", "cc"]
 

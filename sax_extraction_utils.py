@@ -1,8 +1,8 @@
 """
 
-The purpose of this file is to gather together some global methods that are
-used in class SaxExtraction. We could just as well have made these methods
-staticmethods inside class SaxExtraction.
+The purpose of this file is to gather together a bunch of global methods
+that are used in class SaxExtraction. We could just as well have made these
+methods staticmethods inside class SaxExtraction.
 
 """
 

@@ -32,16 +32,16 @@ Hercule Poirot is a fictional Belgian detective , created by Agatha Christie .	<
 Hercule Poirot is a fictional Belgian detective , created by Agatha Christie .	<arg1> Hercule Poirot </arg1> <rel> is </rel> <arg2> a fictional Belgian detective created by Agatha Christie </arg2>	-108.0506591796875
 
 
-* cctags (openie-data/ptb-dev.labels)
-Fidelity Investments placed new ads in newspapers yesterday , and wrote another new ad appearing today .
-NONE NONE CP_START CP CP CP CP CP OTHERS CC CP CP CP CP CP CP NONE
-NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE
-NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE
-
-
 * cctags (openie-data/ptb-train.labels)
 Bell , based in Los Angeles , makes and distributes electronic , computer and building products .
 NONE NONE NONE NONE NONE NONE NONE CP_START CC CP CP_START SEP CP CC CP NONE NONE
+NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE
+NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE
+
+
+* cctags (openie-data/ptb-dev.labels)
+Fidelity Investments placed new ads in newspapers yesterday , and wrote another new ad appearing today .
+NONE NONE CP_START CP CP CP CP CP OTHERS CC CP CP CP CP CP CP NONE
 NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE
 NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE
 
@@ -71,3 +71,12 @@ NONE ARG2 NONE REL NONE ARG1 ARG1 NONE NONE NONE NONE NONE NONE NONE NONE NONE N
 * extags (openie-data/openie4_labels)
 In Agatha Christie 's Hercule Poirot , Japp was portrayed by Philip Jackson . [unused1] [unused2] [unused3]
 LOC LOC LOC LOC LOC LOC NONE ARG1 REL REL ARG2 ARG2 ARG2 NONE NONE NONE NONE
+
+* extags (carb_subset/data/dev.txt)
+Although in Flanders , the Flemish Region assigned all of its powers to the Flemish Community , the Walloon Region remains in principle distinct from and independent from the French Community , and vice-versa . [unused1] [unused2] [unused3]
+NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE
+
+* extags (carb_subset/data/test.txt)l
+A casting director at the time told Scott that he had wished that he 'd met him a week before ; he was casting for the `` G.I. Joe '' cartoon . [unused1] [unused2] [unused3]
+NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE
+

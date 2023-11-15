@@ -1,4 +1,12 @@
 """
+
+The purpose of this file is to gather together a bunch of global methods
+that take as input an input list and return an output list, where the input
+and output lists are lists of words, tags (cctags or extags), or ilabels (in
+range(0:6)).
+
+Recall the following global variables declared in file sax_globals.py.
+
 EXTAG_TO_ILABEL = {'NONE': 0, 'ARG1': 1, 'REL': 2, 'ARG2': 3,
                    'LOC': 4, 'TIME': 4, 'TYPE': 5, 'ARGS': 3}
 BASE_EXTAGS = EXTAG_TO_ILABEL.keys()
@@ -10,6 +18,10 @@ CCTAG_TO_ILABEL = {'NONE': 0, 'CP': 1, 'CP_START': 2,
 BASE_CCTAGS = CCTAG_TO_ILABEL.keys()
 ILABEL_TO_CCTAG = {0: 'NONE', 1: 'CP', 2: 'CP_START',
                    3: 'CC', 4:'SEP', 5: 'OTHERS'}
+
+The file `misc/openie6-input-file-formats.txt` in SentenceAx contains
+examples of the various types of file entries used by Openie6. Here are some
+excerpts from that file:
 
 * extags (openie-data/openie4_labels) *.labels has no [unused1], *_labels does
 have [unused]

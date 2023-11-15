@@ -104,10 +104,10 @@ class SaxDataset(Dataset):
 
         In order to obtain self.x, we concatenate sub-tensors of shapes (
         batch_size, xname_to_dim1[xname]) for all xname in
-        xname_to_dim1.keys(). This function does the inverse operation: it
+        xname_to_dim1.keys(). This method does the inverse operation: it
         finds the sub-tensors from the full tensor self.x.
 
-        The function returns a dictionary xname_to_xtensor that maps each
+        The method returns a dictionary xname_to_xtensor that maps each
         xname to its sub-tensor.
 
         Parameters

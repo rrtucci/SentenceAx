@@ -14,7 +14,8 @@ class Params:
     or the other but not both.
 
     Instead of this Params class, Openie6 stores all its parameters in a
-    dictionary called `hparams` that is an attribute of the Model class.
+    dictionary called `hparams` (hyperparameters) that is an attribute of
+    the Model class.
 
 
     Possible choices for self.d:
@@ -96,7 +97,7 @@ class Params:
         dictionary, and then we merge the dominant d dictionary with the
         default one.
 
-        The parameter values in this function come directly from the Openie6
+        The parameter values in this method come directly from the Openie6
         readme page. Note that that readme page repeats some (task, action)
         cases. In the case of repeats, we comment out all repeats except one.
 

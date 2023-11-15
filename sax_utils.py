@@ -1,3 +1,10 @@
+"""
+
+The purpose of this file is to gather together a bunch of global (static)
+methods that seem too general to belong to any one class.
+
+"""
+
 from collections import defaultdict
 import random
 import numpy as np
@@ -11,11 +18,12 @@ import pkg_resources as pkg
 
 class DotDict(dict):
     """
-    dot instead of [] notation access to dictionary attributes.
-    Openie6 uses this but we won't.
+    This class provides dot (.) instead of square bracket ([]) access to
+    dictionary attributes. Openie6 uses this but we won't.
 
-    This is sort of the inverse of to_dict(). DotDict() creates a class from
-    a dictionary and to_dict() creates a dictionary from a class.
+    This is sort of the inverse of to_dict() defined elsewhere in this file.
+    DotDict() creates a class instance from a dictionary and to_dict()
+    creates a dictionary from a class instance.
 
     Attributes
     ----------
@@ -28,6 +36,8 @@ class DotDict(dict):
 
 def merge_dicts(dominant_d, default_d):
     """
+    This method returns a new dictionary which is the result of merging a
+    dominant dictionary `dominant_d` with a default dictionary `default_d`.
 
     Parameters
     ----------
@@ -49,6 +59,8 @@ def merge_dicts(dominant_d, default_d):
 
 def get_best_checkpoint_path(task):
     """
+    This method returns the best_checkpoint_path for the task `task`,
+    where task in ["ex", "cc"].
 
     Parameters
     ----------
@@ -69,6 +81,9 @@ def get_best_checkpoint_path(task):
 
 def get_tag_to_ilabel(task):
     """
+    This method returns the tag_to_ilabel dictionary for the task `task`,
+    where task in ["ex", "cc"].
+
 
     Parameters
     ----------
@@ -90,6 +105,11 @@ def get_tag_to_ilabel(task):
 
 def get_task_logs_dir(task):
     """
+    This method returns the tags_log_directory for the task `task`,
+    where task in ["ex", "cc"].
+
+
+
     Parameters
     ----------
     task: str
@@ -110,6 +130,9 @@ def get_task_logs_dir(task):
 
 def get_num_depths(task):
     """
+    This method returns the number_of_depths for the task `task`, where task
+    in ["ex", "cc"].
+
     Parameters
     ----------
     task: str
@@ -132,11 +155,14 @@ def has_puntuation(str0,
                    ignored_chs="",
                    verbose=False):
     """
+    This method returns True iff the string `str0` contains characters that
+    are punctuation marks (for example, an underscore "_").
 
     Parameters
     ----------
     str0: str
     ignored_chs: str
+        ignored characters, all presented as one string. e.g., "!?,"
     verbose: bool
 
     Returns
@@ -154,17 +180,16 @@ def has_puntuation(str0,
 
 def get_words(sent, algo="nltk"):
     """
+    This method splits a sentence into words (some punctuation marks like
+    periods and commas are considered words.)
+
+    nlkt and spacy both split '[unused1]' into '[', 'unused1', ']' so first
+    remove UNUSED_TOKENS_STR, split into words, and add UNUSED_TOKENS to result.
+
     note: get_words("") = []
 
-    Openie6 and SentenceAx start off from an Allen file (AF). We will
-    assume that in an AF, the sentences have punctuation marks like commas
-    and periods with blank space before and after. Hence, using `get_words(
-    )` with the "ss" algo will be sufficient for most purposes.
-
-    nlkt and spacy both split '[unused1]' into '[', 'unused1', ']' so if
-    want POS to split it also, use nlkt or spacy.
-
-    Spacy slow for tokenizing only.
+    Spacy slow compared to nlkt if used only for tokenizing into words.
+    Hence, will only use nlkt.
 
 
     Parameters
@@ -212,24 +237,14 @@ def get_words(sent, algo="nltk"):
         assert False
 
 
-def none_dd(di):
-    """
-
-    Parameters
-    ----------
-    di: dict
-
-    Returns
-    -------
-    defaultdict
-
-    """
-    # dd = default dictionary
-    return defaultdict(lambda: None, di)
-
-
 def set_seed(seed):
     """
+    similar to Openie6.model.set_seed()
+    
+    This method sets a panoply of seeds to `seed`.
+
+    Be warned that even with all these seeds, complete reproducibility 
+    cannot be guaranteed.
 
     Parameters
     ----------
@@ -240,8 +255,6 @@ def set_seed(seed):
     None
 
     """
-    # Be warned that even with all these seeds,
-    # complete reproducibility cannot be guaranteed
     random.seed(seed)
     torch.manual_seed(seed)
     torch.cuda.manual_seed(seed)
@@ -251,6 +264,11 @@ def set_seed(seed):
 
 def get_num_ttt_sents(num_sents, ttt_fractions):
     """
+    Given an int `num_sents`, and a list `ttt_fractions` equal to [f0, f1, 
+    f2] such that f0+f1+f2=1, this method returns a triple of integers (x, 
+    y, z) such that x+y+z = num_sents, and x \approx num_sents*f_0, 
+    y \approx num_sents*f1, z \approx num_sents*f2.
+    
 
     Parameters
     ----------
@@ -276,6 +294,12 @@ def get_num_ttt_sents(num_sents, ttt_fractions):
 
 def undoL(x):
     """
+    This method works if x is a str, list[str] or  dict[str, Any]. If x is a
+    str, it returns the same string, with the tail UNUSED_TOKENS_STR
+    removed, if it has this tail to begin with. If x is a list[str] (or a
+    dict[str, Any]), it applies undoL() to each list item (or dictionary key).
+    
+    undoL() and redoL() are inverse operations.
 
     Parameters
     ----------
@@ -299,6 +323,12 @@ def undoL(x):
 
 def redoL(x):
     """
+    This method works if x is a str, list[str] or  dict[str, Any]. If x is a
+    str, it returns the same string, with a tail UNUSED_TOKENS_STR added,
+    if it did not have this tail to begin with. If x is a list[str] (or a
+    dict[ str, Any]), it applies redoL() to each list item (or dictionary key).
+    
+    undoL() and redoL() are inverse operations.
 
     Parameters
     ----------
@@ -309,24 +339,23 @@ def redoL(x):
     str|list[str]|dict[str, Any]
     """
     if type(x) == str:
-        return x + UNUSED_TOKENS_STR
+        return undoL(x) + UNUSED_TOKENS_STR
     elif type(x) == list:
-        return [a + UNUSED_TOKENS_STR for a in x]
+        return [undoL(a) + UNUSED_TOKENS_STR for a in x]
     elif type(x) == dict:
-        return {key + UNUSED_TOKENS_STR: value
+        return {undoL(key) + UNUSED_TOKENS_STR: value
                 for key, value in x.items()}
     else:
         assert False
 
 
-# Don't use, even if the inner dimmension of lll_ilabel
-# does not agree with the number of words in osent2
-# def unL_lll(lll_ilabel):
-#     return [[l_ilabel[:-3] for l_ilabel in ll_ilabel]
-#             for ll_ilabel in lll_ilabel]
-
-def use_ascii_quotes(line):
+def convert_to_ascii(line):
     """
+    This method takes as input a str `line` with possibly non-ascii
+    characters (utf-8). It returns a new string which is the same as the old
+    one, except that non-ascii characters have been converted to their
+    nearest ascii counterparts. For example, curly quotes will be converted
+    to straight ones.
 
     Parameters
     ----------
@@ -337,11 +366,14 @@ def use_ascii_quotes(line):
     str
 
     """
-    return line.replace('’', '\'').replace('”', '\'\'')
+    from unidecode import unidecode
+    return unidecode(line)
 
 
 def replace_in_list(l_x, x, new_x):
     """
+    This method check that `x` occurs only once in list `l_x`. It returns a
+    new list wherein `x` has been replaced by `new_x`.
 
     Parameters
     ----------
@@ -361,6 +393,7 @@ def replace_in_list(l_x, x, new_x):
 
 def sax_sniffer(name, osent2_to_exs, lll_ilabel):
     """
+    This method was used for debugging once.
 
     Parameters
     ----------
@@ -383,6 +416,7 @@ def sax_sniffer(name, osent2_to_exs, lll_ilabel):
 
 def carb_sniffer(name, osent2_to_exs):
     """
+    This method was used for debugging once.
 
     Parameters
     ----------
@@ -403,6 +437,12 @@ def carb_sniffer(name, osent2_to_exs):
 
 def Ten(lista):
     """
+    This method takes as input a list (or list[list[ or list[list[list[)
+    `lista`. It converts `lista` to a torch.Tensor, which it then returns.
+
+    Ten() and Li() are sort of inverses of each other, except that not all
+    list[list[ can be converted to a torch.Tensor. The list needs to be
+    padded first.
 
     Parameters
     ----------
@@ -419,6 +459,13 @@ def Ten(lista):
 
 def Li(tensor):
     """
+    This method takes as input a torch.Tensor `tensor`. It converts `tensor`
+    to a list (or list[list[ or list[list[list[) which it then returns.
+
+    Ten() and Li() are sort of inverses of each other, except that not all
+    list[list[ can be converted to a torch.Tensor. The list needs to be
+    padded first.
+
 
     Parameters
     ----------
@@ -435,6 +482,7 @@ def Li(tensor):
 
 def add_key_to_this_d(key, transform_d, this_d):
     """
+    This method returns a dictionary after adding to it a key.
 
     Parameters
     ----------
@@ -457,6 +505,7 @@ def add_key_to_this_d(key, transform_d, this_d):
 
 def add_key_value_pair_to_this_d(key, value, transform_d, this_d):
     """
+    This method returns a dictionary after adding to it a key-value pair.
 
     Parameters
     ----------
@@ -480,6 +529,13 @@ def add_key_value_pair_to_this_d(key, value, transform_d, this_d):
 
 def to_dict(class_obj):
     """
+    This method takes as input an object (instance) of a class, and it
+    returns a dictionary with (key, value) = (class attribute name, value of
+    that attribute).
+
+    This is sort of the inverse of DotDict() defined elsewhere in this file.
+    DotDict() creates a class instance from a dictionary and to_dict()
+    creates a dictionary from a class instance.
 
     Parameters
     ----------
@@ -500,7 +556,8 @@ def to_dict(class_obj):
 
 def print_list(list_name, li):
     """
-    describe list
+    This method prints the name of a list, its length and, in the next line,
+    its values.
 
     Parameters
     ----------
@@ -517,6 +574,8 @@ def print_list(list_name, li):
 
 def print_tensor(tensor_name, ten):
     """
+    This method prints the name of a tensor, its shape and, in the next
+    line, its values. Only edge values are printed if the tensor is too big.
 
     Parameters
     ----------
@@ -533,6 +592,9 @@ def print_tensor(tensor_name, ten):
 
 def check_module_version(module_name, lub_version):
     """
+    This method checks that the version of module named `module_name` is
+    greater cor equal to `lub_version`.
+    (lub=least upper bound)
 
     Parameters
     ----------
@@ -560,6 +622,13 @@ def check_module_version(module_name, lub_version):
 
 def is_valid_label_list(labels, task, label_type):
     """
+    This method checks that a cctags or extags or ilabels list `labels`
+    satisfies certain minimal requirements (for example, that it have aa
+    ARG1 and a REL for extags).
+
+    task in ["ex", "cc"]
+
+    label_type in ["ilabels", "tags"]
 
     Parameters
     ----------
@@ -593,6 +662,9 @@ def is_valid_label_list(labels, task, label_type):
 
 def get_omit_exless_flag(task, ttt):
     """
+    This method returns True iff we want to omit exless samples (i.e.,
+    samples with no extractions).
+
     For task="ex", the dev.txt and test.txt are extag files with single ex
     that only contains NONE extags, so do not omit exless samples for those,
     or will omit entire file. The input files for predicting have no exs at

@@ -7,12 +7,10 @@ Must import this file with star
 This will not do:
 `import sax_globals`
 
-hparams = hyperparameters,
 fp = file path
-params_d = parameters dictionary
 
 osent = original sentence
-osentL = osent + UNUSED_TOKEN_STR
+osentL = osent + UNUSED_TOKENS_STR
 L = Long
 osent2 = either osent or osentL
 
@@ -24,9 +22,9 @@ tuning=dev=development=validation
 LINE_SEPARATOR = "[%@!]"
 
 #"ex" stands for extraction
-# "cc" stands for coordinating  conjunction
+# "cc" stands for coordinating conjunction
 # There are only 7 cc's. They are called the "fanboys",
-# because they start with the words f-a-n-b-o-y-s
+# because they start with the letters f-a-n-b-o-y-s
 FANBOYS = ["for" , "and" , "nor", "but", "or", "yet", "so"]
 
 

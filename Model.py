@@ -1170,7 +1170,7 @@ class Model(L.LightningModule):
             pred_str = orig_sent + '\n'
             # split_sentences, conj_words, sentence_indices_list = \
             #       data.coords_to_sentences(pred_coords, words)
-            # this function returns
+            # this method returns
             # return word_sentences, conj_words, sentences
             # openie6.data.coords_to_sentences()
             # is similar to

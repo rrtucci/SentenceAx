@@ -440,6 +440,8 @@ class MInput:
             return
         # print("bbght", self.l_orig_sent)
         for sent_id, sent in enumerate(self.l_orig_sent):
+            # important: note that we use pos_tag for sent, not sentL.
+            # nlkt and spacy both split "[unused1]" to "[", unused1, "]"
             pos_tags = nltk.pos_tag(get_words(sent, algo="nltk"),
                                     tagset='universal')
 

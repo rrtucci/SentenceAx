@@ -1,5 +1,14 @@
+"""
+
+The purpose of this file is to gather together some global methods that are
+used in class SaxExtraction. We could just as well have made these methods
+staticmethods inside class SaxExtraction.
+
+"""
+
+
+
 import difflib
-from carb_subset.oie_readers.extraction import Extraction
 import re
 
 
@@ -7,10 +16,13 @@ def count_sub_reps(sub, full):
     """
     similar to Openie6.data_processing.seq_in_seq()
 
+    This method counts the number of times the string `" ".join(sub)`
+    appears in the string `" ".join(full)`.
+
     Parameters
     ----------
-    sub: list
-    full: list
+    sub: list[str]
+    full: list[str]
 
     Returns
     -------
@@ -22,7 +34,7 @@ def count_sub_reps(sub, full):
     # 'dog is in dog house'.count('dog') # output 2
 
     # str(["dog", "pet"]) # output "['dog', 'pet']"
-    # the reason for the [1, -1] is to exclude '[' and ']'
+    # the reason for the [1, -1] in Openie6 is to exclude '[' and ']'
     #  return str(full)[1:-1].count(str(sub)[1:-1])
     return " ".join(full).count(" ".join(sub))
 
@@ -31,10 +43,13 @@ def sub_exists(sub, full, start_loc):
     """
     similar to Openie6.data_processing.starts_with()
 
+    This method returns True iff a " ".join(sub) is part of " ".join(full)
+    and the first word of sub is at position `start_loc` of full.
+
     Parameters
     ----------
-    sub: list[Any]
-    full: list[Any]
+    sub: list[str]
+    full: list[str]
     start_loc: int
 
     Returns

@@ -96,7 +96,7 @@ class AllenTool:
         Note this is the inverse of get_lll_ilabel_from_osent2_to_exs().
 
         osent = original sentence
-        osentL = osent + UNUSED_TOKEN_STR  #L=long
+        osentL = osent + UNUSED_TOKENS_STR  #L=long
         osent2 = either osent or osentL
 
         This method does not care internally whether we are using `osentL,
@@ -152,7 +152,7 @@ class AllenTool:
         Note this is the inverse of get_osent2_to_exs_from_lll_ilabel()
 
         osent = original sentence
-        osentL = osent + UNUSED_TOKEN_STR
+        osentL = osent + UNUSED_TOKENS_STR
         
         This method does not care internally whether we are using `osentL,
         lll_ilabels` or `osent, lll_ilabels`. That is why we use the symbol

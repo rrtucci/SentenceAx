@@ -9,10 +9,11 @@ class SaxExtraction:
     similar to Openie6.data_processing.py
     
     Important: carb has its own extraction class called `Extraction` at
-    carb_subset.oie_readers.extraction. We call ours `SaxExtraction`. sax =
-    Sentence Ax.
-    extag= extraction tag
-    pred= predicate same as rel=relation
+    carb_subset.oie_readers.extraction. To distinguish them, we call ours
+    `SaxExtraction`. sax = Sentence Ax.
+
+    ex= extraction tag pred=
+    predicate same as rel=relation
     
     
     assume only one of: `arg1, rel, arg2, time_arg, loc_arg`
@@ -21,7 +22,7 @@ class SaxExtraction:
     `orig_sent` will represent the original sentence. commas and periods 
     will be assumed to be isolated (i.e., with blank space before and after)
     
-    orig_sentL = orig_sent + UNUSED_TOKEN_STR is the long version of orig_sent
+    orig_sentL = orig_sent + UNUSED_TOKENS_STR is the long version of orig_sent
     
     `ex_sent` will represent an extracted sentence (simple sentence). It
     does not contain unused tokens but may contain "is", "of", "from". which 

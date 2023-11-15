@@ -1,9 +1,12 @@
 """
 
 The purpose of this file is to gather together a bunch of global methods
-that take as input an input list and return an output list, where the input
+that take as input a list, and return as output a new list, where the input
 and output lists are lists of words, tags (cctags or extags), or ilabels (in
 range(0:6)).
+
+The first 2 methods: translate_words_to_extags() and
+translate_words_to_cctags(), are the hardest. All the others are trivial.
 
 Recall the following global variables declared in file sax_globals.py.
 
@@ -20,42 +23,21 @@ ILABEL_TO_CCTAG = {0: 'NONE', 1: 'CP', 2: 'CP_START',
                    3: 'CC', 4:'SEP', 5: 'OTHERS'}
 
 The file `misc/openie6-input-file-formats.txt` in SentenceAx contains
-examples of the various types of file entries used by Openie6. Here are some
-excerpts from that file:
+examples of the various types of file formats used by Openie6. The lines in
+`misc/openie6-input-file-formats.txt`, when reduced to words with get_words(
+line), are typical of the input lists for the methods defined in this file.
 
-* extags (openie-data/openie4_labels) *.labels has no [unused1], *_labels does
-have [unused]
-Hercule Poirot is a fictional Belgian detective , created by Agatha Christie . [unused1] [unused2] [unused3]
-ARG1 ARG1 REL ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 ARG2 NONE NONE NONE NONE
-NONE NONE NONE ARG1 ARG1 ARG1 ARG1 NONE REL ARG2 ARG2 ARG2 NONE NONE NONE NONE
-
-
-* cctags (openie-data/ptb-train.labels)
-Bell , based in Los Angeles , makes and distributes electronic , computer and building products .
-NONE NONE NONE NONE NONE NONE NONE CP_START CC CP CP_START SEP CP CC CP NONE NONE
-NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE
-NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE NONE
-
-
-CHAIN OF CONVERSIONS
-words->extags, cctags->ilabels->extags->words
 """
 from Params import *
 from sax_utils import *
 from SaxExtraction import *
 from CCTree import *
 
-"""
-
-translate_words_to_extags and translate_words_to_cctags are the hardest. All 
-the others are trivial.
-
-
-"""
-
 
 def translate_words_to_extags(ex):
     """
+    Translate the words in a SaxExtraction to an extags list. This is hard,
+    but all the hard work is done within SaxExtraction.
 
     Parameters
     ----------
@@ -73,9 +55,10 @@ def translate_words_to_extags(ex):
 
 def translate_words_to_cctags(words):
     """
-    CCTree ilabels not same as those provided by AutoEncoder.
+    Translate all the words in a simple sentence extracted from osent,
+    to a cctags list.
 
-    Openie6 not very clear about this.
+    Openie6 not very clear about this so we leave it blank for now.
 
     Parameters
     ----------

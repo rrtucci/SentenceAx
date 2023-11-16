@@ -86,8 +86,8 @@ class ExMetric:
         """
         if VERBOSE: print("Entering ExMetric.__call__() method.")
         assert not self.input_carb_exs
-        if VERBOSE: print("ll_confi", ll_confi)
-        if VERBOSE: print("len(self.osentL_to_exs)", len(self.osentL_to_exs))
+        # print("ll_confi", ll_confi)
+        # print("len(self.osentL_to_exs)", len(self.osentL_to_exs))
         dominant_d = \
             AllenTool.get_osent2_to_exs_from_lll_ilabel(
                 l_osentL,
@@ -177,7 +177,7 @@ class ExMetric:
         assert self.osentL_to_exs
         for osentL, exs in self.osentL_to_exs.items():
             # print("confi", [fun(ex) for ex in exs])
-            if VERBOSE: print("len(exs)", len(exs))
+            # print("len(exs)", len(exs))
             self.osentL_to_exs[osentL] = \
                 sorted(exs,
                        key=fun,

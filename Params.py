@@ -288,6 +288,7 @@ class Params:
                 "save_k": 1,
                 "best_checkpoint_fp": "",
                 "val_check_interval": 1.0,
+                "verbose": False,
                 "wreg": 0,
                 "write_allen_file": True,
                 "write_extags_file": True

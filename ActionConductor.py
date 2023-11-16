@@ -15,7 +15,6 @@ from Params import *
 from transformers import AutoTokenizer
 import io
 
-
 # from rescore import rescore
 
 """
@@ -181,8 +180,7 @@ class ActionConductor:
         list[str]
 
         """
-        paths = iglob(WEIGHTS_DIR + "/" +
-                      self.params.task + "_model/*.ckpt")
+        paths = iglob(f"{WEIGHTS_DIR}/{self.params.task}_model/*.ckpt")
         # latest first in list
         return sorted(paths, key=os.path.getctime, reverse=True)
 
@@ -196,6 +194,22 @@ class ActionConductor:
 
         """
         return self.get_all_checkpoint_fp()[0]
+
+    def delete_all_check_points(self, fname_exceptions=None):
+        """
+
+        Parameters
+        ----------
+        fname_exceptions: list[str]|None
+
+        Returns
+        -------
+        None
+
+        """
+        delete_all_files(f"{WEIGHTS_DIR}/{self.params.task}_model",
+                         ending=".ckpt",
+                         fname_exceptions=fname_exceptions)
 
     def get_new_TB_logger(self, name):
         """
@@ -878,6 +892,7 @@ if __name__ == "__main__":
 
     """
 
+
     def main(pid):
         params = Params(pid)
         params.d["refresh_cache"] = False
@@ -890,6 +905,7 @@ if __name__ == "__main__":
         print("checkpoints:", conductor.get_all_checkpoint_fp())
         conductor.run()
         print("checkpoints:", conductor.get_all_checkpoint_fp())
+
 
     main(1)
     # main(5)

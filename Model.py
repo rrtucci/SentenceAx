@@ -134,19 +134,25 @@ class Model(L.LightningModule):
             return_dict=False)
         self.hidden_size = self.start_model.config.hidden_size
         if self.verbose:
+            print("****** model name= ", self.name)
             print("hidden size=", self.hidden_size)
 
         if self.params.d["num_iterative_layers"] > 0:
             num_layers = len(self.start_model.encoder.layer)
             num_encoder_layers = \
                 num_layers - self.params.d["num_iterative_layers"]
-            self.start_model.encoder.layer = \
-                self.start_model.encoder.layer[0:num_encoder_layers]
             self.iterative_transformer = \
                 self.start_model.encoder.layer[num_encoder_layers:num_layers]
+            # this truncation of self.start_model.encoder.layer must
+            # be done after, not before defining self.iterative_transformer
+            self.start_model.encoder.layer = \
+                self.start_model.encoder.layer[0:num_encoder_layers]
             if verbose:
-                print("num_iterative_layers, num_encoder_layers=",
-                      num_layers - num_encoder_layers, num_encoder_layers)
+                print("num_iterative_layers= ", num_layers - \
+                                              num_encoder_layers)
+                print("num_encoder_layers= ", num_encoder_layers)
+                print("total num layers= ", num_layers)
+                print("iterative_transformer=", self.iterative_transformer)
         else:
             self.iterative_transformer = []
 
@@ -430,19 +436,18 @@ class Model(L.LightningModule):
         while True:
             for ilay, layer in enumerate(self.iterative_transformer):
                 if verbose:
-                    print("*********** iterative layer, depth\n\t"
-                          f"{ilay}, {depth}")
+                    print(f"*********** iterative layer={ilay}")
                 # layer(lll_hidden_state)[0] returns a copy
                 # of the tensor lll_hidden_state after transforming it
                 # in some way
                 # [0] chooses first component
                 if verbose:
-                    print("before: layer, depth, lll_hidden_state.shape\n\t",
-                          f"{ilay}, {depth}, {lll_hidden_state.shape}")
+                    print("before: depth, lll_hidden_state.shape\n\t",
+                          f"{depth}, {lll_hidden_state.shape}")
                 lll_hidden_state = layer(lll_hidden_state)[0]
                 if verbose:
-                    print("after: layer, depth, lll_hidden_state.shape\n\t",
-                          f"{ilay}, {depth}, {lll_hidden_state.shape}")
+                    print("after: depth, lll_hidden_state.shape\n\t",
+                          f"{depth}, {lll_hidden_state.shape}")
 
             if verbose:
                 print("before dropout: depth, lll_hidden_state.shape\n\t",

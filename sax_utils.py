@@ -16,6 +16,7 @@ from math import floor
 from copy import copy
 import pkg_resources as pkg
 from unidecode import unidecode
+import os
 
 
 class DotDict(dict):
@@ -690,6 +691,41 @@ def get_omit_exless_flag(task, ttt):
     if task == "ex" and ttt in ["tune", "test"]:
         return False
     return True
+
+
+def delete_all_files(dir_fp,
+                     ending,
+                     fname_exceptions=""):
+    """
+    This method deletes all files in the directory with path `dir_fp` whose
+    names end in the string `ending`, except the files with the names in the
+    list `fname_exceptions`.
+
+
+    Parameters
+    ----------
+    dir_fp: str
+    ending: str
+    fname_exceptions: list[str]|None
+
+    Returns
+    -------
+    None
+
+    """
+    for fname in fname_exceptions:
+        assert fname.endswith(ending)
+    if not fname_exceptions:
+        fname_exceptions = []
+    try:
+        fnames = os.listdir(dir_fp)
+        for fname in fnames:
+            fpath = os.path.join(dir_fp, fname)
+            if fname.endswith(ending) and \
+                    fname not in fname_exceptions:
+                os.remove(fpath)
+    except Exception as e:
+        print(f"An error occurred: {e}")
 
 
 if __name__ == "__main__":

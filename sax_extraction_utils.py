@@ -184,6 +184,8 @@ if __name__ == "__main__":
 
         # output [Match(a=0, b=0, size=3), Match(a=3, b=7, size=0)]
 
+        # note that ACT appears twice in b but only first match is given.
+
         # Match(a=0, b=0, size=3): This indicates that a matching block of
         # size 3 starts at index 0 in sequence a and index 0 in sequence b.
         #

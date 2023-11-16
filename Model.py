@@ -28,23 +28,6 @@ logging.getLogger(
     'transformers.modeling_utils').setLevel(logging.ERROR)
 logging.getLogger().setLevel(logging.ERROR)
 
-"""
-
-Note that `pytorch_lightning`, used by Openie6, is now deprecated; it has 
-been superceeded by the new package called simply `lightning`. I've been 
-using lightning 2.1.0. 
-
-on_test_epoch_end() and on_validation_epoch_end(), which SentenceAx uses, 
-have only been available in `lightining` since version 2.0.1 (released Feb 
-2023).
-
-Refs.:
-https://github.com/Lightning-AI/lightning/releases
-https://stackoverflow.com/questions/70790473/pytorch-lightning-epoch-end-validation-epoch-end.
-
-"""
-check_module_version("lightning", "2.0.1")
-
 
 class Model(L.LightningModule):
     """
@@ -150,16 +133,20 @@ class Model(L.LightningModule):
             cache_dir=CACHE_DIR,
             return_dict=False)
         self.hidden_size = self.start_model.config.hidden_size
+        if self.verbose:
+            print("hidden size=", self.hidden_size)
 
-        if self.params.d["iterative_layers"] > 0:
+        if self.params.d["num_iterative_layers"] > 0:
             num_layers = len(self.start_model.encoder.layer)
             num_encoder_layers = \
-                num_layers - self.params.d["iterative_layers"]
+                num_layers - self.params.d["num_iterative_layers"]
             self.start_model.encoder.layer = \
                 self.start_model.encoder.layer[0:num_encoder_layers]
             self.iterative_transformer = \
                 self.start_model.encoder.layer[num_encoder_layers:num_layers]
-
+            if verbose:
+                print("num_iterative_layers, num_encoder_layers=",
+                      num_layers - num_encoder_layers, num_encoder_layers)
         else:
             self.iterative_transformer = []
 
@@ -430,12 +417,12 @@ class Model(L.LightningModule):
         # start_model_input = \
         #     torch.Tensor(self.auto_tokenizer.encode(batch_text))
 
-
         lll_hidden_state, _ = self.start_model(x_d["ll_osent_icode"])
         if verbose:
+            print()
             print("ll_osent_icode.shape", x_d["ll_osent_icode"].shape)
-            print("lll_hidden_state.shape", lll_hidden_state.shape)
-
+            print("after start_model, lll_hidden_state.shape",
+                  lll_hidden_state.shape)
 
         lll_word_score = Ten([0])  # this statement is unecessary
         llll_word_score = []  # similar to Openie6.all_depth_scores
@@ -443,21 +430,27 @@ class Model(L.LightningModule):
         while True:
             for ilay, layer in enumerate(self.iterative_transformer):
                 if verbose:
-                    print("*********** iterative layer, depth: "
-                        f"{ilay}, {depth}")
+                    print("*********** iterative layer, depth\n\t"
+                          f"{ilay}, {depth}")
                 # layer(lll_hidden_state)[0] returns a copy
                 # of the tensor lll_hidden_state after transforming it
                 # in some way
                 # [0] chooses first component
                 if verbose:
-                    print("before: layer, depth, lll_hidden_state.shape",
+                    print("before: layer, depth, lll_hidden_state.shape\n\t",
                           f"{ilay}, {depth}, {lll_hidden_state.shape}")
                 lll_hidden_state = layer(lll_hidden_state)[0]
                 if verbose:
-                    print("after: layer, depth, lll_hidden_state.shape",
+                    print("after: layer, depth, lll_hidden_state.shape\n\t",
                           f"{ilay}, {depth}, {lll_hidden_state.shape}")
 
+            if verbose:
+                print("before dropout: depth, lll_hidden_state.shape\n\t",
+                      f"{depth}, {lll_hidden_state.shape}")
             lll_hidden_state = self.dropout_fun(lll_hidden_state)
+            if verbose:
+                print("after dropout: depth, lll_hidden_state.shape\n\t",
+                      f"{depth}, {lll_hidden_state.shape}")
             # a chaptgpt generated explanation of this transformation
             # is given in misc/hidden_states_transformation2.txt
             lll_loc = x_d["ll_osent_wstart_loc"].unsqueeze(2). \
@@ -466,9 +459,6 @@ class Model(L.LightningModule):
                 input=lll_hidden_state,
                 dim=1,
                 index=lll_loc)
-            if verbose:
-                print("before merge layer: depth, lll_word_hidden_state.shape",
-                      f"{depth}, {lll_word_hidden_state.shape}")
 
             if depth != 0:
                 ll_greedy_ilabel = torch.argmax(lll_word_score, dim=-1)
@@ -476,12 +466,17 @@ class Model(L.LightningModule):
                 lll_pred_code = self.embedding(ll_greedy_ilabel)
                 lll_word_hidden_state += lll_pred_code
 
+            if verbose:
+                print("before merge layer: depth, "
+                      "lll_word_hidden_state.shape\n\t",
+                      f"{depth}, {lll_word_hidden_state.shape}")
             lll_word_hidden_state = self.merge_layer(lll_word_hidden_state)
             if verbose:
-                print("after merge layer: depth, lll_word_hidden_state.shape",
+                print("after merge layer: depth, "
+                      "lll_word_hidden_state.shape\n\t",
                       f"{depth}, {lll_word_hidden_state.shape}")
             lll_word_score = self.ilabelling_layer(lll_word_hidden_state)
-            print("after illabelling layer: depth, lll_word_score.shape",
+            print("after illabelling layer: depth, lll_word_score.shape\n\t",
                   f"{depth}, {lll_word_score.shape}")
             llll_word_score.append(lll_word_score)
 
@@ -726,7 +721,7 @@ class Model(L.LightningModule):
         lll_pred_confi = []  # = all_depth_confidences
         # ll_pred_confi0 = all_depth_confidences after cat dim=1
         batch_size, num_words, xxx = llll_word_score[0].shape
-        #xxx = 6, the number of different ilabels (classes)
+        # xxx = 6, the number of different ilabels (classes)
         # y_d["lll_ilabel"] = \
         #     y_d["lll_ilabel"].long()
         for depth, lll_word_score in enumerate(llll_word_score):
@@ -1110,8 +1105,8 @@ class Model(L.LightningModule):
         for sample_id, orig_sent in enumerate(l_orig_sent):
             orig_sentL = redoL(orig_sent)
             add_key_to_this_d(key=orig_sent,
-                                transform_d=self.ex_sent_to_sent,
-                                this_d=osent_to_l_pred_ex)
+                              transform_d=self.ex_sent_to_sent,
+                              this_d=osent_to_l_pred_ex)
             for depth in range(num_depths):
                 num_words = len(get_words(orig_sentL))
                 ex_ilabels = lll_ilabel[sample_id][depth][:num_words]
@@ -1256,4 +1251,3 @@ class Model(L.LightningModule):
             self.sax_write_if_task_cc(batch_idx, batch_m_out)
         else:
             assert False
-

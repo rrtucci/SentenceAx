@@ -18,6 +18,23 @@ import io
 
 # from rescore import rescore
 
+"""
+
+Note that `pytorch_lightning`, used by Openie6, is now deprecated; it has 
+been superceeded by the new package called simply `lightning`. I've been 
+using lightning 2.1.0. 
+
+on_test_epoch_end() and on_validation_epoch_end(), which SentenceAx uses, 
+have only been available in `lightining` since version 2.0.1 (released Feb 
+2023).
+
+Refs.:
+https://github.com/Lightning-AI/lightning/releases
+https://stackoverflow.com/questions/70790473/pytorch-lightning-epoch-end-validation-epoch-end.
+
+"""
+check_module_version("lightning", "2.0.1")
+
 
 class ActionConductor:
     """

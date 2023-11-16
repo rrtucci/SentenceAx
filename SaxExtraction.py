@@ -355,7 +355,7 @@ class SaxExtraction:
 
         """
         assert extag_name in BASE_EXTAGS
-        if has_2_matches(matches):
+        if has_2_diff_matches(matches):
             m0 = matches[0]
             self.extags[m0.b: m0.b + m0.size] = [extag_name] * m0.size
             self.set_the_is_extagged_flag_to_true(extag_name)
@@ -374,7 +374,7 @@ class SaxExtraction:
 
         """
         assert extag_name in BASE_EXTAGS
-        if has_gt_2_matches(matches):
+        if has_gt_2_diff_matches(matches):
             self.set_the_is_extagged_flag_to_true(extag_name)
             for m in matches:
                 self.extags[m.b: m.b + m.size] = \
@@ -409,13 +409,13 @@ class SaxExtraction:
         if len(self.arg2_words) != 0:
             for li in with_2_lists:
                 if count_sub_reps(li, self.orig_sentL_words) == 1:
-                    matches = get_matches(li, self.orig_sentL_words)
+                    matches = get_diff_matches(li, self.orig_sentL_words)
                     self.set_extags_of_2_matches(matches, "ARG2")
                     return
         else:  # len(self.arg2_words) == 0
             for li in without_2_lists:
                 if count_sub_reps(li, self.orig_sentL_words) == 1:
-                    matches = get_matches(li, self.orig_sentL_words)
+                    matches = get_diff_matches(li, self.orig_sentL_words)
                     self.set_extags_of_2_matches(matches, "ARG2")
                     return
         # if everything else fails, still
@@ -443,14 +443,14 @@ class SaxExtraction:
         else:
             assert False
         if count_sub_reps(arg_words, self.orig_sentL_words) == 1:
-            matches = get_matches(arg_words, self.orig_sentL_words)
+            matches = get_diff_matches(arg_words, self.orig_sentL_words)
             self.set_extags_of_2_matches(matches, arg_name.upper())
 
         elif count_sub_reps(arg_words, self.orig_sentL_words) == 0:
             # sub doesn't fit in one piece into full
             # but still possible it exists in fractured form
-            matches = get_matches(arg_words, self.orig_sentL_words)
-            if has_gt_2_matches(matches):
+            matches = get_diff_matches(arg_words, self.orig_sentL_words)
+            if has_gt_2_diff_matches(matches):
                 self.set_extags_of_gt_2_matches(matches, arg_name.upper())
 
     def set_extags_for_unused_num(self, unused_num):
@@ -482,7 +482,7 @@ class SaxExtraction:
         # that doesn't start with "["
         if count_sub_reps(self.rel_words[1:last_rel_loc],
                           self.orig_sentL_words) == 1:
-            matches = get_matches(
+            matches = get_diff_matches(
                 self.rel_words[1:last_rel_loc], self.orig_sentL_words)
             self.set_extags_of_2_matches(matches, "REL")
             assert self.orig_sentL_words[unused_loc] == unused_str
@@ -490,11 +490,11 @@ class SaxExtraction:
         elif len(self.rel_words) > 2 and \
                 count_sub_reps(self.rel_words[1:last_rel_loc],
                                self.orig_sentL_words) == 0:
-            matches = get_matches(
+            matches = get_diff_matches(
                 self.rel_words[1:last_rel_loc], self.orig_sentL_words)
             # sub doesn't fit in one piece into full
             # but still possible it exists in fractured form
-            if has_gt_2_matches(matches):
+            if has_gt_2_diff_matches(matches):
                 self.set_extags_of_gt_2_matches(matches, "REL")
                 assert self.orig_sentL_words[unused_loc] == unused_str
                 # if sent starts with "[is]" and ends with
@@ -669,12 +669,14 @@ class SaxExtraction:
 
         """
         if arg_name == "time":
-            matches = get_matches(self.time_arg_words, self.orig_sentL_words)
+            matches = get_diff_matches(self.time_arg_words,
+                                       self.orig_sentL_words)
         elif arg_name == "loc":
-            matches = get_matches(self.loc_arg_words, self.orig_sentL_words)
+            matches = get_diff_matches(self.loc_arg_words,
+                                       self.orig_sentL_words)
         else:
             assert False
-        if has_2_matches(matches):
+        if has_2_diff_matches(matches):
             self.set_extags_of_2_matches(matches, arg_name.upper())
 
     def set_extags(self):

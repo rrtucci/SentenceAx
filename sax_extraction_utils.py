@@ -65,7 +65,7 @@ def sub_exists(sub, full, start_loc):
     return all([sub[i] == full[start_loc + i] for i in range(len(sub))])
 
 
-def has_2_diff_matches(matches):
+def has_2_matches(matches):
     """
     This method returns True iff `matches` contains 2 matches. The second
     match is the useless one of size zero.
@@ -80,7 +80,7 @@ def has_2_diff_matches(matches):
         matches[1].size == 0
 
 
-def has_gt_2_diff_matches(matches):
+def has_gt_2_matches(matches):
     """
     This is similar to a code snippet from Openie6.data_processing.label_arg()
 
@@ -108,7 +108,7 @@ def has_gt_2_diff_matches(matches):
     return cond1 and cond2 and cond3
 
 
-def get_diff_matches(list0, list1):
+def get_matches(list0, list1):
     """
     This method finds matching blocks in two lists `list0` and `list1`.
 
@@ -126,7 +126,7 @@ def get_diff_matches(list0, list1):
         get_matching_blocks()
 
 
-def print_diff_matches(a, b):
+def print_matches(a, b):
     """
     This method prints and returns the matches obtained via
     difflib.SequenceMatcher.
@@ -144,7 +144,7 @@ def print_diff_matches(a, b):
     print()
     print("a=", a)
     print("b=", b)
-    matches = get_diff_matches(a, b)
+    matches = get_matches(a, b)
     print(matches)
     return matches
 
@@ -179,8 +179,8 @@ def find_xlist_item_that_minimizes_cost_fun(xlist, cost_fun):
 
 if __name__ == "__main__":
     def main1():
-        matches = print_diff_matches(a='ACT', b='ACTGACT')
-        print("has 2 matches?", has_2_diff_matches(matches))
+        matches = print_matches(a='ACT', b='ACTGACT')
+        print("has 2 matches?", has_2_matches(matches))
 
         # output [Match(a=0, b=0, size=3), Match(a=3, b=7, size=0)]
 
@@ -196,13 +196,13 @@ if __name__ == "__main__":
         # difflib.SequenceMatcher(None, a, b), but for sequence locations in
         # the output of get_matching_blocks()
 
-        print_diff_matches(a='abcdef', b='acdef')
+        print_matches(a='abcdef', b='acdef')
 
         matches = \
-            print_diff_matches(
+            print_matches(
                 a=['apple', 'banana', 'orange', 'kiwi'],
                 b=['apple', 'grape', 'banana', 'orange', 'kiwi'])
-        print("has > 2 matches?", has_gt_2_diff_matches(matches))
+        print("has > 2 matches?", has_gt_2_matches(matches))
 
 
     main1()

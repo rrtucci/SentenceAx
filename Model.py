@@ -126,8 +126,8 @@ class Model(L.LightningModule):
     def __init__(self,
                  params,
                  auto_tokenizer,
-                 verbose_model,
-                 model_name):
+                 verbose=False,
+                 name=""):
         """
         lightning/src/lightning/pytorch/core/module.py
 
@@ -141,8 +141,8 @@ class Model(L.LightningModule):
         self.params = params
         self.auto_tokenizer = auto_tokenizer
         self.init_name_to_param = None
-        self.verbose_model = verbose_model
-        self.model_name = model_name
+        self.verbose = verbose
+        self.name = name
 
         # return_dict=False avoids error message from Dropout
         self.start_model = AutoModel.from_pretrained(
@@ -241,7 +241,7 @@ class Model(L.LightningModule):
         self.l_ex_pred_str = []  # all_predictions_oie
 
         self.l_batch_m_out = \
-            PickleList(f"action_{model_name}_l_batch_m_out_dir")
+            PickleList(f"action_{self.name}_l_batch_m_out_dir")
 
     @property
     def ex_sent_to_sent(self):
@@ -397,7 +397,7 @@ class Model(L.LightningModule):
         x_d = SaxDataset.invert_cat(x, xname_to_dim1)
         return x_d, y_d, meta_d
 
-    def sax_get_llll_word_score(self, x_d, y_d, ttt):
+    def sax_get_llll_word_score(self, x_d, y_d, ttt, verbose=False):
         """
         used inside self.forward()
         
@@ -406,6 +406,7 @@ class Model(L.LightningModule):
         x_d: OrderedDict
         y_d: dict[str, torch.Tensor]
         ttt: str
+        verbose: bool
 
         Returns
         -------
@@ -429,18 +430,32 @@ class Model(L.LightningModule):
         # start_model_input = \
         #     torch.Tensor(self.auto_tokenizer.encode(batch_text))
 
+
         lll_hidden_state, _ = self.start_model(x_d["ll_osent_icode"])
+        if verbose:
+            print("ll_osent_icode.shape", x_d["ll_osent_icode"].shape)
+            print("lll_hidden_state.shape", lll_hidden_state.shape)
+
 
         lll_word_score = Ten([0])  # this statement is unecessary
         llll_word_score = []  # similar to Openie6.all_depth_scores
         depth = 0
         while True:
-            for layer in self.iterative_transformer:
+            for ilay, layer in enumerate(self.iterative_transformer):
+                if verbose:
+                    print("*********** iterative layer, depth: "
+                        f"{ilay}, {depth}")
                 # layer(lll_hidden_state)[0] returns a copy
                 # of the tensor lll_hidden_state after transforming it
                 # in some way
                 # [0] chooses first component
+                if verbose:
+                    print("before: layer, depth, lll_hidden_state.shape",
+                          f"{ilay}, {depth}, {lll_hidden_state.shape}")
                 lll_hidden_state = layer(lll_hidden_state)[0]
+                if verbose:
+                    print("after: layer, depth, lll_hidden_state.shape",
+                          f"{ilay}, {depth}, {lll_hidden_state.shape}")
 
             lll_hidden_state = self.dropout_fun(lll_hidden_state)
             # a chaptgpt generated explanation of this transformation
@@ -451,6 +466,9 @@ class Model(L.LightningModule):
                 input=lll_hidden_state,
                 dim=1,
                 index=lll_loc)
+            if verbose:
+                print("before merge layer: depth, lll_word_hidden_state.shape",
+                      f"{depth}, {lll_word_hidden_state.shape}")
 
             if depth != 0:
                 ll_greedy_ilabel = torch.argmax(lll_word_score, dim=-1)
@@ -459,7 +477,12 @@ class Model(L.LightningModule):
                 lll_word_hidden_state += lll_pred_code
 
             lll_word_hidden_state = self.merge_layer(lll_word_hidden_state)
+            if verbose:
+                print("after merge layer: depth, lll_word_hidden_state.shape",
+                      f"{depth}, {lll_word_hidden_state.shape}")
             lll_word_score = self.ilabelling_layer(lll_word_hidden_state)
+            print("after illabelling layer: depth, lll_word_score.shape",
+                  f"{depth}, {lll_word_score.shape}")
             llll_word_score.append(lll_word_score)
 
             depth += 1
@@ -691,7 +714,8 @@ class Model(L.LightningModule):
         # start_model_input = \
         #     torch.Tensor(self.auto_tokenizer.encode(batch_text))
 
-        llll_word_score = self.sax_get_llll_word_score(x_d, y_d, ttt)
+        llll_word_score = self.sax_get_llll_word_score(
+            x_d, y_d, ttt, self.verbose)
 
         # print_tensor("lll_word_score", lll_word_score)
         # print("vvbg", "len(llll_word_score)", len(llll_word_score))
@@ -818,7 +842,7 @@ class Model(L.LightningModule):
             loss
 
         """
-        if self.verbose_model:
+        if self.verbose:
             if ttt == "train":
                 str0 = "training_step"
             elif ttt == "tune":
@@ -985,7 +1009,7 @@ class Model(L.LightningModule):
             epoch_end_d
 
         """
-        if self.verbose_model:
+        if self.verbose:
             if ttt == "train":
                 assert False
             elif ttt == "tune":
@@ -1232,3 +1256,4 @@ class Model(L.LightningModule):
             self.sax_write_if_task_cc(batch_idx, batch_m_out)
         else:
             assert False
+

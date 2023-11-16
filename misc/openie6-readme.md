@@ -1,5 +1,5 @@
 
-# This file was obtained by copy & pasting the Openie6 README.
+### This file was obtained by copy & pasting the Openie6 README.
 
 # OpenIE6 System 
 

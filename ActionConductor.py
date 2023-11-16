@@ -304,8 +304,8 @@ class ActionConductor:
 
         model = Model(self.params,
                       self.auto_tokenizer,
-                      self.verbose_model,
-                      "train")
+                      verbose=self.verbose_model,
+                      name="train")
         trainer = self.get_new_trainer(self.get_new_TB_logger("train"),
                                        use_minimal=False)
         trainer.fit(
@@ -339,8 +339,8 @@ class ActionConductor:
         self.update_params(checkpoint_fp)
         model = Model(self.params,
                       self.auto_tokenizer,
-                      self.verbose_model,
-                      "resume")
+                      verbose=self.verbose_model,
+                      name="resume")
         trainer = self.get_new_trainer(self.get_new_TB_logger("resume"),
                                        use_minimal=False)
         trainer.fit(
@@ -382,8 +382,8 @@ class ActionConductor:
 
         model = Model(self.params,
                       self.auto_tokenizer,
-                      self.verbose_model,
-                      "test")
+                      verbose=self.verbose_model,
+                      name="test")
 
         # ex_sent_to_sent and cc_sent_to_word only stored in one place
         # if self.params.task == "ex" and self.ex_sent_to_sent:
@@ -447,8 +447,8 @@ class ActionConductor:
         # always set dataloader before constructing a Model instance
         model = Model(self.params,
                       self.auto_tokenizer,
-                      self.verbose_model,
-                      "pred")
+                      verbose=self.verbose_model,
+                      name="pred")
 
         # No
         # model.metric.sent_to_sent = self.ex_sent_to_sent
@@ -861,16 +861,18 @@ if __name__ == "__main__":
 
     """
 
-
     def main(pid):
         params = Params(pid)
-        params.d["refresh_cache"] = True
+        params.d["refresh_cache"] = False
         params.d["gpus"] = 0
+        params.d["num_epochs"] = 1
+        params.d["num_steps_per_epoch"] = 1
+        params.d["model_str"] = "bert-base-cased"
+        params.describe_self()
         conductor = ActionConductor(params, verbose_model=True)
+        print("checkpoints:", conductor.get_all_checkpoint_fp())
         conductor.run()
+        print("checkpoints:", conductor.get_all_checkpoint_fp())
 
-    # Don't run this here. Run it in a jupyter notebook and in a computer
-    # with a GPU card.
-
-    # main(1)
+    main(1)
     # main(5)

@@ -1,5 +1,8 @@
 """
-An example of
+
+This file illustrates the use of torch.nn.CrossEntropyLoss
+
+Ref:
 https://pytorch.org/docs/stable/generated/torch.nn.CrossEntropyLoss.html
 
 """

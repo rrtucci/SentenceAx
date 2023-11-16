@@ -1,3 +1,10 @@
+"""
+
+Use this script to produce a file that is a short excerpt of a huge one.
+
+"""
+
+
 def delete_lines_from_file(fp, start_line):
     try:
         # Create a temporary file to store the lines to keep

@@ -6,8 +6,6 @@ methods staticmethods inside class SaxExtraction.
 
 """
 
-
-
 import difflib
 import re
 
@@ -19,6 +17,14 @@ def count_sub_reps(sub, full):
     This method counts the number of times the string `" ".join(sub)`
     appears in the string `" ".join(full)`.
 
+    rep = repetitions
+    ["apple", "banana", "cherry"].count("cherry") # output 1
+    'dog is in dog house'.count('dog') # output 2
+
+    str(["dog", "pet"]) # output "['dog', 'pet']"
+    the reason for the [1, -1] in Openie6 is to exclude '[' and ']'
+    return str(full)[1:-1].count(str(sub)[1:-1])
+
     Parameters
     ----------
     sub: list[str]
@@ -29,13 +35,6 @@ def count_sub_reps(sub, full):
     int
 
     """
-    # rep = repetitions
-    # ["apple", "banana", "cherry"].count("cherry") # output 1
-    # 'dog is in dog house'.count('dog') # output 2
-
-    # str(["dog", "pet"]) # output "['dog', 'pet']"
-    # the reason for the [1, -1] in Openie6 is to exclude '[' and ']'
-    #  return str(full)[1:-1].count(str(sub)[1:-1])
     return " ".join(full).count(" ".join(sub))
 
 
@@ -65,9 +64,11 @@ def sub_exists(sub, full, start_loc):
 
 def has_2_matches(matches):
     """
-    > sm = difflib.SequenceMatcher(None, a='ACT', b='ACTGACT')
-    > sm.get_matching_blocks()
-    [Match(a=0, b=0, size=3), Match(a=3, b=7, size=0)]
+    This method returns True iff `matches` contains 2 matches. The second
+    match is the useless one of size zero.
+
+    See misc/SequenceMatcher-examples.py for examples of
+    difflib.SequenceMatcher usage
 
     Parameters
     ----------
@@ -81,14 +82,13 @@ def has_2_matches(matches):
 
 def has_gt_2_matches(matches):
     """
-    len(matches) > 2 and
-    matches[0].a == 0 and
-    all(matches[i].a == matches[i-1].a + matches[i-1].size
-    for i in range(1, len(matches)-1)) and
-    matches[-2].a + matches[-2].size == matches[-1].a
+    This is similar to a code snippet from Openie6.data_processing.label_arg()
 
-    # matches[-1].a - matches[-2].a == matches[-2].size
-    # is just li[i] when i=len(matches)-1
+    This method returns True iff `matches` contains > 2 matches that are
+    contiguous, with matches[0].a == 0
+
+    See misc/SequenceMatcher-examples.py for examples of
+    difflib.SequenceMatcher usage
 
     Parameters
     ----------
@@ -98,19 +98,23 @@ def has_gt_2_matches(matches):
     -------
     bool
     """
-    li = [matches[i].a - matches[i - 1].a == matches[i - 1].size
+    # matches[-1].a - matches[-2].a == matches[-2].size
+    # is just li[i] when i=len(matches)-1
+    li = [matches[i].a == matches[i - 1].a + matches[i - 1].size
           for i in range(1, len(matches))]
-    return len(matches) > 2 and \
-        matches[0].a == 0 and \
-        all(li) and \
-        matches[len(matches) - 1] == 0
+    cond1 = len(matches) > 2
+    cond2 = matches[0].a == 0
+    cond3 = all(li)
+
+    return cond1 and cond2 and cond3
 
 
 def get_matches(list0, list1):
     """
-    > sm = difflib.SequenceMatcher(None, a='ACT', b='ACTGACT')
-    > sm.get_matching_blocks()
-    [Match(a=0, b=0, size=3), Match(a=3, b=7, size=0)]
+    This method finds matching blocks in two lists `list0` and `list1`.
+
+    See misc/SequenceMatcher-examples.py for examples of
+    difflib.SequenceMatcher usage
 
     Parameters
     ----------
@@ -128,6 +132,10 @@ def get_matches(list0, list1):
 
 def find_xlist_item_that_minimizes_cost_fun(xlist, cost_fun):
     """
+    This method finds the item in the list `xlist` that minimizes the
+    function `cost_fun`. The method returns the tuple
+
+    argmin_{x \in xlist} cost_fun(x), min_{x \in xlist} cost_fun(x)
 
     Parameters
     ----------

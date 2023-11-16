@@ -195,6 +195,7 @@ class Model(L.LightningModule):
 
         # ignore_index=-100 is the default, but including it
         # explicitly for clarity
+        # see file misc/CrossEntropyLoss-examples.py for examples of usage
         self.loss_fun = nn.CrossEntropyLoss(ignore_index=-100)
 
         if self.params.task == "ex":

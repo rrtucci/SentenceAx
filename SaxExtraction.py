@@ -2,6 +2,7 @@ from Params import *
 from sax_utils import *
 from sax_extraction_utils import *
 import numpy as np
+from carb_subset.oie_readers.extraction import Extraction
 
 
 class SaxExtraction:
@@ -12,22 +13,20 @@ class SaxExtraction:
     carb_subset.oie_readers.extraction. To distinguish them, we call ours
     `SaxExtraction`. sax = Sentence Ax.
 
-    ex= extraction tag pred=
-    predicate same as rel=relation
-    
-    
-    assume only one of: `arg1, rel, arg2, time_arg, loc_arg`
-    assume `args` list is empty
-    
-    `orig_sent` will represent the original sentence. commas and periods 
-    will be assumed to be isolated (i.e., with blank space before and after)
-    
-    orig_sentL = orig_sent + UNUSED_TOKENS_STR is the long version of orig_sent
-    
-    `ex_sent` will represent an extracted sentence (simple sentence). It
-    does not contain unused tokens but may contain "is", "of", "from". which 
-    do not appear in orig_sent.
-    ex_sent = arg1 + rel + arg2
+    ex= extraction
+    pred=predicate (same as rel=relation)
+
+    strings: `arg1, rel, arg2, time_arg, loc_arg`
+    `args` is a list[str] (assume empty).
+    arg1 is the subject of a sentence.
+    rel is the verb or predict.
+    If there is any time_arg or loc_arg string, add it to arg2.
+    If `is` is added to extraction, add it to beginning of `rel`.
+    If `from` or `to` are added to extraction, add it to end of `rel`.
+
+    orig_sent = osent = original (before splitting) sentence
+    L = Long
+    osentL = osent + UNUSED_TOKENS_STR
 
     Attributes
     ----------
@@ -383,7 +382,7 @@ class SaxExtraction:
 
     def set_extags_of_arg2(self):
         """
-        similar to Openie6.data_processing.labearg2_words()
+        similar to Openie6.data_processing.label_arg2()
 
 
         Returns
@@ -658,8 +657,6 @@ class SaxExtraction:
         """
         similar to Openie6.data_processing.label_time(),
         similar to Openie6.data_processing.label_loc()
-
-
 
 
         Parameters

@@ -4,6 +4,9 @@ The purpose of this file is to gather together a bunch of global methods
 that are used in class SaxExtraction. We could just as well have made these
 methods staticmethods inside class SaxExtraction.
 
+Ref. on difflib.SequenceMatcher:
+https://stackoverflow.com/questions/35517353/how-does-pythons-sequencematcher-work
+
 """
 
 import difflib
@@ -67,9 +70,6 @@ def has_2_matches(matches):
     This method returns True iff `matches` contains 2 matches. The second
     match is the useless one of size zero.
 
-    See misc/SequenceMatcher-examples.py for examples of
-    difflib.SequenceMatcher usage
-
     Parameters
     ----------
     matches: list[Match]
@@ -85,18 +85,8 @@ def has_gt_2_matches(matches):
     This is similar to a code snippet from Openie6.data_processing.label_arg()
 
     This method returns True iff `matches` contains > 2 matches that are
-    contiguous in a, with matches[0].a == 0
-
-    example where its true:
-
-    a= ['apple', 'banana', 'orange', 'kiwi']
-    b= ['apple', 'grape', 'banana', 'orange', 'kiwi']
-    [Match(a=0, b=0, size=1),
-    Match(a=1, b=2, size=3),
-    Match(a=4, b=5, size=0)]
-
-    See misc/SequenceMatcher-examples.py for examples of
-    difflib.SequenceMatcher usage
+    contiguous in a, with matches[0].a == 0. The last match is the useless
+    one of size zero.
 
     Parameters
     ----------
@@ -113,6 +103,7 @@ def has_gt_2_matches(matches):
     cond1 = len(matches) > 2
     cond2 = matches[0].a == 0
     cond3 = all(li)
+    # print("cond1, cond2, cond3", cond1, cond2, cond3)
 
     return cond1 and cond2 and cond3
 
@@ -120,9 +111,6 @@ def has_gt_2_matches(matches):
 def get_matches(list0, list1):
     """
     This method finds matching blocks in two lists `list0` and `list1`.
-
-    See misc/SequenceMatcher-examples.py for examples of
-    difflib.SequenceMatcher usage
 
     Parameters
     ----------
@@ -136,6 +124,29 @@ def get_matches(list0, list1):
     """
     return difflib.SequenceMatcher(None, list0, list1). \
         get_matching_blocks()
+
+
+def print_matches(a, b):
+    """
+    This method prints and returns the matches obtained via
+    difflib.SequenceMatcher.
+
+    Parameters
+    ----------
+    a: Sequence
+    b: Sequence
+
+    Returns
+    -------
+    list[Match]
+
+    """
+    print()
+    print("a=", a)
+    print("b=", b)
+    matches = get_matches(a, b)
+    print(matches)
+    return matches
 
 
 def find_xlist_item_that_minimizes_cost_fun(xlist, cost_fun):
@@ -164,3 +175,34 @@ def find_xlist_item_that_minimizes_cost_fun(xlist, cost_fun):
             x0 = x
 
     return x0, y0
+
+
+if __name__ == "__main__":
+    def main1():
+        matches = print_matches(a='ACT', b='ACTGACT')
+        print("has 2 matches?", has_2_matches(matches))
+
+        # output [Match(a=0, b=0, size=3), Match(a=3, b=7, size=0)]
+
+        # Match(a=0, b=0, size=3): This indicates that a matching block of
+        # size 3 starts at index 0 in sequence a and index 0 in sequence b.
+        #
+        # Match(a=3, b=7, size=0): This indicates that there is a matching
+        # block of size 0 starting at index 3 in sequence a and index 7 in
+        # sequence b. This "useless" zero sized block at the end is always
+        # given.
+
+        # a and b stand for sequences in the constructor
+        # difflib.SequenceMatcher(None, a, b), but for sequence locations in
+        # the output of get_matching_blocks()
+
+        print_matches(a='abcdef', b='acdef')
+
+        matches = \
+            print_matches(
+                a=['apple', 'banana', 'orange', 'kiwi'],
+                b=['apple', 'grape', 'banana', 'orange', 'kiwi'])
+        print("has > 2 matches?", has_gt_2_matches(matches))
+
+
+    main1()

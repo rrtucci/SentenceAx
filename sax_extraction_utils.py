@@ -85,7 +85,15 @@ def has_gt_2_matches(matches):
     This is similar to a code snippet from Openie6.data_processing.label_arg()
 
     This method returns True iff `matches` contains > 2 matches that are
-    contiguous, with matches[0].a == 0
+    contiguous in a, with matches[0].a == 0
+
+    example where its true:
+
+    a= ['apple', 'banana', 'orange', 'kiwi']
+    b= ['apple', 'grape', 'banana', 'orange', 'kiwi']
+    [Match(a=0, b=0, size=1),
+    Match(a=1, b=2, size=3),
+    Match(a=4, b=5, size=0)]
 
     See misc/SequenceMatcher-examples.py for examples of
     difflib.SequenceMatcher usage

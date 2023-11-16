@@ -32,4 +32,4 @@ print_example(a='ACT', b='ACTGACT')
 print_example(a='abcdef', b='acdef')
 
 print_example(a=['apple', 'banana', 'orange', 'kiwi'],
-              b=['apple', 'grape', 'banana', 'kiwi'])
+              b=['apple', 'grape', 'banana', 'orange', 'kiwi'])

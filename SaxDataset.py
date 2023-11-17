@@ -29,10 +29,10 @@ class SaxDataset(Dataset):
     This class has torch's Dataset class as parent. Basically,
     all SaxDataset does is to override the basic methods of its parent class.
     
-    Dataset stores the samples, and DataLoader wraps an iterable around the 
+    Dataset and DataLoader are located in torch.utils.data. Dataset stores a
+    huge number of samples, and DataLoader wraps an iterable around the
     Dataset to enable access to batches of samples in a for loop.
 
-    Dataset and DataLoader are located in torch.utils.data
 
     data processing chain
     (optional allen_fp->)tags_in_fp->MInput->PaddedMInput->SaxDataset

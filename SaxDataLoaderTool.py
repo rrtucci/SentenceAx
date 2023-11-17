@@ -16,23 +16,46 @@ from Params import *
 
 class SaxDataLoaderTool:
     """
+    This main purpose of this class is to create torch DataLoaders for ttt
+    in ["train", "tune", "test"]. and for predicting.
+
+    Dataset and DataLoader are located in torch.utils.data. Dataset stores a
+    huge number of samples, and DataLoader wraps an iterable around the
+    Dataset to enable access to batches of samples in a for loop.
+
+    SaxDataset is a child of torch Dataset. SaxDataLoaderTool is not a child
+    of DataLoader; instead, it creates multiple instances of DataLoader.
+    That is why we call it SaxDataLoaderTool rather than just SaxDataLoader.
+
     data processing chain
     (optional allen_fp->)tags_in_fp->MInput->PaddedMInput->SaxDataset
     ->SaxDataLoaderTool
-    
+
+    Note from this chain that SaxDataLoaderTool has an instance of
+    SaxDataset as input for each DataLoader instance it creates.
 
     Attributes
     ----------
     auto_tokenizer: AutoTokenizer
     pad_icode: int
+        integer code for padding. This equals 0 for BERT
     params: Params
-    predict_dloader = []
+        parameters
+    predict_dloader: DataLoader|None
+        DataLoader for predicting.
     tags_test_fp: str
+        file path for extags or cctags file used when ttt="test"
     tags_train_fp: str
+        file path for extags or cctags file used when ttt="train"
     tags_tune_fp: str
-    test_dloader: DataLoader
-    train_dloader: DataLoader
-    tune_dloader: DataLoader
+        file path for extags or cctags file used when ttt="tune". (
+        tune=validation)
+    test_dloader: DataLoader|None
+        DataLoader for ttt="test"
+    train_dloader: DataLoader|None
+        DataLoader for ttt="train"
+    tune_dloader: DataLoader|None
+        DataLoader for ttt="tune". (tune=validation)
     
     """
 
@@ -41,6 +64,7 @@ class SaxDataLoaderTool:
                  auto_tokenizer,
                  tags_train_fp, tags_tune_fp, tags_test_fp):
         """
+        Constructor
 
         Parameters
         ----------
@@ -53,8 +77,6 @@ class SaxDataLoaderTool:
 
         self.params = params
         self.auto_tokenizer = auto_tokenizer
-        # full encoding is [101, 0, 102],
-        # where 101=BOS_ICODE, 102=EOS_ICODE
         # print("nkjg", type(auto_tokenizer))
         self.pad_icode = \
             auto_tokenizer.encode(auto_tokenizer.pad_token)[1]
@@ -63,24 +85,30 @@ class SaxDataLoaderTool:
         self.tags_tune_fp = tags_tune_fp
         self.tags_test_fp = tags_test_fp
 
-        self.train_dloader = []
-        self.tune_dloader = []
-        self.test_dloader = []
-        self.predict_dloader = []
-
-    def get_dataset_common(self):
-        return
+        self.train_dloader = None
+        self.tune_dloader = None
+        self.test_dloader = None
+        self.predict_dloader = None
 
     def get_all_ttt_datasets(self):
         """
         similar to Openie6.data.process_data()
+
+        This method returns a triple of 3 SaxDatasets, one each for ttt in [
+        "train", "tune", "test"].
+
+        Take ttt="train" as an example. If self.params.d["refresh_cache"] =
+        True or there is a file with the appropriate info previously stored
+        in the `cache` folder, this method constructs the train dataset from
+        that. Otherwise, this method reads the self.tags_train_fp file and
+        constructs the dataset from that, and stores the results, for future
+        use, as a pickle file in the `cache` folder.
 
         Returns
         -------
         SaxDataset, SaxDataset, SaxDataset
 
         """
-        self.get_dataset_common()
 
         # tags_train_fp = self.params.d["tags_train_fp"]
         # tags_tune_fp = self.params.d["tags_tune_fp"]
@@ -144,6 +172,9 @@ class SaxDataLoaderTool:
         """
         similar to Openie6.data.process_data()
 
+        This method returns a dataset for predicting. It creates that
+        dataset from the info it gleans by reading the file `predict_in_fp`.
+
         Parameters
         ----------
         predict_in_fp: str
@@ -153,7 +184,6 @@ class SaxDataLoaderTool:
         SaxDataset
 
         """
-        self.get_dataset_common()
         # no caching used if predict in action
         # if not pred_in_sents:  # predict
         #     # if self.params.d["in_fp"] :
@@ -196,7 +226,11 @@ class SaxDataLoaderTool:
 
     def set_all_ttt_dataloaders(self):
         """
-        # this method calls DataLoader
+        This method sets class attributes for 3 DataLoaders, one for each
+        ttt in [ "train", "tune", "test"].
+
+        The method does this by first calling get_all_ttt_dataset() to get 3
+        Datasets. It then constructs the 3 DataLoaders from those 3 Datasets.
 
         Returns
         -------
@@ -225,6 +259,11 @@ class SaxDataLoaderTool:
 
     def set_predict_dataloader(self, predict_in_fp):
         """
+        This method sets the class attribute for the DataLoader for predicting.
+
+        The method does this by first calling get_predict_dataset() to get a
+        predict Dataset. It then constructs the DataLoader from that Dataset.
+
 
         Parameters
         ----------
@@ -244,8 +283,8 @@ class SaxDataLoaderTool:
 
 
 if __name__ == "__main__":
-    def main(params_id):
-        params = Params(params_id)
+    def main(pid):
+        params = Params(pid)
         do_lower_case = ('uncased' in params.d["model_str"])
         auto = AutoTokenizer.from_pretrained(
             params.d["model_str"],

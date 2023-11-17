@@ -84,12 +84,8 @@ class MOutput:
     #         return l_orig_sent2
     #
     # def get_lll_word(self):
-    #     if self.task == "ex":
-    #         translator = translate_ilabels_to_words_via_extags
-    #     elif self.task == "cc":
-    #         translator = translate_ilabels_to_words_via_cctags
-    #     else:
-    #         assert False
+
+    #     translator = translate_ilabels_to_words
     #     l_orig_sentL = redoL(self.get_l_orig_sent())
     #     num_samples = len(self.llll_pred_ilabel)
     #     num_depths = len(self.llll_pred_ilabel[0])

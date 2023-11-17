@@ -5,8 +5,9 @@ that take as input a list, and return as output a new list, where the input
 and output lists are lists of words, tags (cctags or extags), or ilabels (in
 range(0:6)).
 
-The first 2 methods: translate_words_to_extags() and
-translate_words_to_cctags(), are the hardest. All the others are trivial.
+The first 2 methods: translate_words_to_extags() and 
+translate_words_to_cctags(), are the hardest. All the other methos in this 
+fiile are fairly trivial.
 
 Recall the following global variables declared in file sax_globals.py.
 
@@ -36,8 +37,9 @@ from CCTree import *
 
 def translate_words_to_extags(ex):
     """
-    Translate the words in a SaxExtraction to an extags list. This is hard,
-    but all the hard work is done within SaxExtraction.
+    Translate each of the extractions (sentences) in a SaxExtraction `ex` to 
+    an extags list. This is hard, but all the hard work is done within 
+    SaxExtraction.
 
     Parameters
     ----------
@@ -68,13 +70,12 @@ def translate_words_to_cctags(words):
     -------
     list[str]
     """
-    cctags = ["NONE"] * len(words)
-    assert False
-    return cctags
+    return words
 
 
 def translate_extags_to_ilabels(extags):
     """
+    Obvious what method does from its name.
 
     Parameters
     ----------
@@ -94,6 +95,8 @@ def translate_extags_to_ilabels(extags):
 def translate_extags_to_words(extags, orig_sentL):
     """
     inferred from Openie6 data_processing.label_is_of_relations()
+    
+    Obvious what method does from its name.
 
     Parameters
     ----------
@@ -131,6 +134,7 @@ def translate_extags_to_words(extags, orig_sentL):
 
 def translate_cctags_to_ilabels(cctags):
     """
+    Obvious what method does from its name.
 
     Parameters
     ----------
@@ -149,6 +153,7 @@ def translate_cctags_to_ilabels(cctags):
 
 def translate_cctags_to_words(cctags, orig_sentL):
     """
+    Obvious what method does from its name.
 
     Parameters
     ----------
@@ -175,6 +180,8 @@ def translate_ilabels_to_cctags(ilabels):
     Openie6 seems to use CCTree to go from l_ilabels to l_cctags (see
     metric.get_coords()). However, I believe the l_ilabels used by CCTree,
     and the ones in this function are different.
+    
+    Obvious what method does from its name.
 
     Parameters
     ----------
@@ -194,6 +201,7 @@ def translate_ilabels_to_cctags(ilabels):
 
 def translate_ilabels_to_extags(ilabels):
     """
+    Obvious what method does from its name.
 
     Parameters
     ----------
@@ -211,44 +219,44 @@ def translate_ilabels_to_extags(ilabels):
     return extags
 
 
-def translate_ilabels_to_words_via_extags(ilabels, orig_sentL):
+def translate_ilabels_to_words(ilabels, orig_sentL, route="ex"):
     """
+    This method translates ilabels->extags->words if route="ex",
+    or ilabels->cctags->words if route="cc". Both routes should give the
+    same result because 0->NONE->"" and (non-zero int)->??->word for both
+    routes.
 
     Parameters
     ----------
     ilabels: list[int]
     orig_sentL: str
+    route: str
 
     Returns
     -------
     list[str]
 
     """
-    extags = translate_ilabels_to_extags(ilabels)
-    return translate_extags_to_words(extags, orig_sentL)
-
-
-def translate_ilabels_to_words_via_cctags(ilabels, orig_sentL):
-    """
-
-    Parameters
-    ----------
-    ilabels: list[int]
-    orig_sentL: str
-
-    Returns
-    -------
-    list[str]
-
-    """
-    cctags = translate_ilabels_to_cctags(ilabels)
-    return translate_cctags_to_words(cctags, orig_sentL)
+    if route == "ex":
+        extags = translate_ilabels_to_extags(ilabels)
+        return translate_extags_to_words(extags, orig_sentL)
+    elif route == "cc":
+        cctags = translate_ilabels_to_cctags(ilabels)
+        return translate_cctags_to_words(cctags, orig_sentL)
+    else:
+        assert False
 
 
 def file_translate_tags_to_ilabels(tag_type,
                                    in_fp,
                                    out_fp):
     """
+    This method reads a tags file at `in_fp` and writes an ilabels file at 
+    `out_fp`. The tags file is an extags file (if tag_type=="ex") or a 
+    cctatgs file (if tag_type=="cc")`.
+    
+    file_translate_tags_to_ilabels() and file_translate_ilabels_to_tags() 
+    perform inverse operations.
 
     Parameters
     ----------
@@ -287,6 +295,12 @@ def file_translate_ilabels_to_tags(tag_type,
                                    in_fp,
                                    out_fp):
     """
+    This method reads an ilabels file at `in_fp` and writes a tags file at 
+    `out_fp`. The tags file is an extags file (if tag_type=="ex") or a 
+    cctatgs file (if tag_type=="cc")`.
+    
+    file_translate_tags_to_ilabels() and file_translate_ilabels_to_tags() 
+    perform inverse operations.
 
     Parameters
     ----------

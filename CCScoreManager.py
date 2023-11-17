@@ -203,9 +203,9 @@ class CCScoreManager:
                                   and pred_spans[-1] == true_spans[-1])
                 elif self.kind == "inner":
                     pred_pair = pred_ccnode.get_span_pair(
-                        ccloc, check_answer=True)
+                        ccloc, allow_None=False)
                     true_pair = true_ccnode.get_span_pair(
-                        ccloc, check_answer=True)
+                        ccloc, allow_None=False)
                     is_correct = (pred_pair == true_pair)
                 elif self.kind == "exact":
                     is_correct = (pred_spans == true_spans)

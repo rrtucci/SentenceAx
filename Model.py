@@ -96,7 +96,7 @@ class Model(L.LightningModule):
     metric: CCMetric | ExMetric
     model_name: str
     params: Params
-    verbose_model: bool
+    verbose: bool
     # some inherited attributes that won't be used
     # hparams (dictionary, Used by Openie6, not by us.
     #    We use the class Params instead.)
@@ -118,7 +118,7 @@ class Model(L.LightningModule):
         ----------
         params: Params
         auto_tokenizer: AutoTokenizer
-        verbose_model: bool
+        verbose: bool
         """
         super().__init__()
         self.params = params
@@ -192,9 +192,9 @@ class Model(L.LightningModule):
         self.loss_fun = nn.CrossEntropyLoss(ignore_index=-100)
 
         if self.params.task == "ex":
-            self.metric = ExMetric()
+            self.metric = ExMetric(verbose=self.verbose)
         elif self.params.task == "cc":
-            self.metric = CCMetric()
+            self.metric = CCMetric(verbose=self.verbose)
 
         self._ex_sent_to_sent = None  # property
         # self.cc_sent_to_words is similar to Openie6 conj_word_mapping
@@ -412,7 +412,9 @@ class Model(L.LightningModule):
         # third (inner) list over number of labels in a line
         # after padding and adding the 3 unused tokens
         batch_size, num_depths, num_words = y_d["lll_ilabel"].shape
-        # sometimes num_depths will exceed max
+        # sometimes num_depths will exceed max.
+        # This doesn't happen when training, because
+        # num_depths is specified when training.
         if ttt != 'train':
             num_depths = get_num_depths(self.params.task)
 
@@ -436,17 +438,19 @@ class Model(L.LightningModule):
         while True:
             for ilay, layer in enumerate(self.iterative_transformer):
                 if verbose:
-                    print(f"*********** iterative layer={ilay}")
+                    print(f"*********** Starting iterative layer={ilay}")
                 # layer(lll_hidden_state)[0] returns a copy
                 # of the tensor lll_hidden_state after transforming it
                 # in some way
                 # [0] chooses first component
                 if verbose:
-                    print("before: depth, lll_hidden_state.shape\n\t",
+                    print(f"before iterative layer {ilay}: depth, "
+                          "lll_hidden_state.shape\n\t",
                           f"{depth}, {lll_hidden_state.shape}")
                 lll_hidden_state = layer(lll_hidden_state)[0]
                 if verbose:
-                    print("after: depth, lll_hidden_state.shape\n\t",
+                    print(f"after iterative layer {ilay}: depth, "
+                          "lll_hidden_state.shape\n\t",
                           f"{depth}, {lll_hidden_state.shape}")
 
             if verbose:
@@ -478,6 +482,9 @@ class Model(L.LightningModule):
             lll_word_hidden_state = self.merge_layer(lll_word_hidden_state)
             if verbose:
                 print("after merge layer: depth, "
+                      "lll_word_hidden_state.shape\n\t",
+                      f"{depth}, {lll_word_hidden_state.shape}")
+                print("before ilabelling layer: depth, "
                       "lll_word_hidden_state.shape\n\t",
                       f"{depth}, {lll_word_hidden_state.shape}")
             lll_word_score = self.ilabelling_layer(lll_word_hidden_state)
@@ -851,9 +858,9 @@ class Model(L.LightningModule):
                 str0 = "test_step"
             else:
                 assert False
-            if VERBOSE:
-                print("Entering Model." + str0 +
-                      " method, batch_idx=" + str(batch_idx))
+            if self.verbose:
+                print(f"Entering Model.{str0} method, "
+                      f"batch_idx={batch_idx}")
 
         batch_m_out = self.forward(batch, batch_idx, ttt)
         loss = batch_m_out.loss
@@ -957,7 +964,6 @@ class Model(L.LightningModule):
             score_d = self.metric.get_zero_score_d()
         else:
             for k, batch_m_out in enumerate(self.l_batch_m_out):
-                if VERBOSE: print("batch id", k)
                 if self.params.task == "cc":
                     self.metric(
                         batch_m_out.l_orig_sent,  # meta data
@@ -1018,7 +1024,8 @@ class Model(L.LightningModule):
                 str0 = "on_test_epoch_end"
             else:
                 assert False
-            if VERBOSE: print("Entering Model." + str0 + " method")
+            if self.verbose:
+                print(f"Entering Model.{str0} method")
 
         self.scores_epoch_end_d = \
             self.sax_get_scores_at_epoch_end(ttt)

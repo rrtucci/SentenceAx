@@ -77,11 +77,11 @@ class ActionConductor:
         this is the file path to either a cctaggs or an exctags file,
         depending on whether params.task equals "cc" or "ex". These
         samples are used for tuning (== validation).
-    verbose_model: bool
+    verbose: bool
 
     """
 
-    def __init__(self, params, save=True, verbose_model=False):
+    def __init__(self, params, save=True, verbose=False):
         """
         This constructor creates new instances of the following classes:
         ModelCheckpoint, AutoTokenizer, SaxDataLoaderTool.
@@ -92,11 +92,11 @@ class ActionConductor:
         save: bool
             save= True iff checkpoints (i.e., weights) will be saved after
             training. This is almost always True.
-        verbose_model: bool
+        verbose: bool
 
         """
         self.params = params
-        self.verbose_model = verbose_model
+        self.verbose = verbose
         self.has_cuda = torch.cuda.is_available()
         warnings.filterwarnings('ignore')
 
@@ -195,7 +195,7 @@ class ActionConductor:
         """
         return self.get_all_checkpoint_fp()[0]
 
-    def delete_all_check_points(self, fname_exceptions=None):
+    def delete_all_checkpoints(self, fname_exceptions=None):
         """
 
         Parameters
@@ -335,7 +335,7 @@ class ActionConductor:
 
         model = Model(self.params,
                       self.auto_tokenizer,
-                      verbose=self.verbose_model,
+                      verbose=self.verbose,
                       name="train")
         trainer = self.get_new_trainer(self.get_new_TB_logger("train"),
                                        use_minimal=False)
@@ -370,7 +370,7 @@ class ActionConductor:
         self.update_params(checkpoint_fp)
         model = Model(self.params,
                       self.auto_tokenizer,
-                      verbose=self.verbose_model,
+                      verbose=self.verbose,
                       name="resume")
         trainer = self.get_new_trainer(self.get_new_TB_logger("resume"),
                                        use_minimal=False)
@@ -413,7 +413,7 @@ class ActionConductor:
 
         model = Model(self.params,
                       self.auto_tokenizer,
-                      verbose=self.verbose_model,
+                      verbose=self.verbose,
                       name="test")
 
         # ex_sent_to_sent and cc_sent_to_word only stored in one place
@@ -478,7 +478,7 @@ class ActionConductor:
         # always set dataloader before constructing a Model instance
         model = Model(self.params,
                       self.auto_tokenizer,
-                      verbose=self.verbose_model,
+                      verbose=self.verbose,
                       name="pred")
 
         # No
@@ -901,7 +901,7 @@ if __name__ == "__main__":
         params.d["num_steps_per_epoch"] = 1
         params.d["model_str"] = "bert-base-cased"
         params.describe_self()
-        conductor = ActionConductor(params, verbose_model=True)
+        conductor = ActionConductor(params, verbose=True)
         print("checkpoints:", conductor.get_all_checkpoint_fp())
         conductor.run()
         print("checkpoints:", conductor.get_all_checkpoint_fp())

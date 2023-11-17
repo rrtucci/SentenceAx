@@ -18,20 +18,22 @@ class ExMetric:
     
     Attributes 
     ----------
-    tune_benchmark: Benchmark
-    sent_to_sent: dict[str, str]
+    input_carb_exs: bool
     matchingFunc: Matcher.binary_linient_tuple_match
     osentL_to_exs: dict[str, listt[SaxExtraction]]
     score_d: dict[str, float]
+    sent_to_sent: dict[str, str]
     test_benchmark: Benchmark
-    input_carb_exs: bool
+    tune_benchmark: Benchmark
+    verbose: bool
     
     """
 
     def __init__(self,
                  osentL_to_exs=None,
                  sent_to_sent=None,
-                 input_carb_exs=False):
+                 input_carb_exs=False,
+                 verbose=False):
         """
         Constructor
         
@@ -40,7 +42,9 @@ class ExMetric:
         osentL_to_exs: dict[str, list[SaxExtraction]]
         sent_to_sent: dict[str, str]
         input_carb_exs: bool
+        verbose: bool
         """
+        self.verbose = verbose
         self.tune_benchmark = Benchmark('carb_subset/data/gold/dev.tsv')
         self.test_benchmark = Benchmark('carb_subset/data/gold/test.tsv')
         self.matchingFunc = Matcher.binary_linient_tuple_match
@@ -84,7 +88,8 @@ class ExMetric:
         None
 
         """
-        if VERBOSE: print("Entering ExMetric.__call__() method.")
+        if self.verbose:
+            print("Entering ExMetric.__call__() method.")
         assert not self.input_carb_exs
         # print("ll_confi", ll_confi)
         # print("len(self.osentL_to_exs)", len(self.osentL_to_exs))
@@ -94,9 +99,12 @@ class ExMetric:
                 lll_ilabel,
                 ll_confi,
                 self.sent_to_sent)
+        if self.verbose:
+            print("len(self.osentL_to_exs) before merge=",
+                  len(self.osentL_to_exs))
         self.osentL_to_exs = merge_dicts(dominant_d, self.osentL_to_exs)
-        if VERBOSE:
-            print("len(self.osentL_to_exs) after merge",
+        if self.verbose:
+            print("len(self.osentL_to_exs) after merge=",
                   len(self.osentL_to_exs))
 
     @staticmethod
@@ -164,7 +172,8 @@ class ExMetric:
         dict[str, float]
 
         """
-        if VERBOSE: print("Entering ExMetric.get_score_d() method.")
+        if self.verbose:
+            print("Entering ExMetric.get_score_d() method.")
 
         def fun(x):
             # if x is sax extraction

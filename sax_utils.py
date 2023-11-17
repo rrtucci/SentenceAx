@@ -713,10 +713,10 @@ def delete_all_files(dir_fp,
     None
 
     """
-    for fname in fname_exceptions:
-        assert fname.endswith(ending)
     if not fname_exceptions:
         fname_exceptions = []
+    for fname in fname_exceptions:
+        assert fname.endswith(ending)
     try:
         fnames = os.listdir(dir_fp)
         for fname in fnames:

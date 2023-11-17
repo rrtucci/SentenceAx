@@ -28,15 +28,20 @@ class CCMetric:
     manager_whole: CCScoreManager
     score_d: dict[str, float]
     save: bool
-
+    verbose: bool
 
     """
 
-    def __init__(self):
+    def __init__(self, verbose=False):
         """
         Constructor
 
+        Parameters
+        ----------
+        verbose: bool
+
         """
+        self.verbose = verbose
         self.save = CC_METRIC_SAVE
         self.manager_whole = CCScoreManager("whole")
         self.manager_outer = CCScoreManager("outer")
@@ -81,7 +86,8 @@ class CCMetric:
         lll_ilabel: list[list[list[[int]]]
 
         """
-        if VERBOSE: print("Entering CCMetric.__call__() method.")
+        if self.verbose:
+            print("Entering CCMetric.__call__() method.")
         num_samples = len(lll_ilabel)
         print("number of samples=", num_samples)
         for k in range(num_samples):
@@ -183,7 +189,8 @@ class CCMetric:
         dict[str, float]
 
         """
-        if VERBOSE: print("Entering CCMetric.get_score_d method.")
+        if self.verbose:
+            print("Entering CCMetric.get_score_d method.")
         score_d = OrderedDict({
             'F1_whole': self.manager_whole.overall_scores.f1_score(),
             'F1_outer': self.manager_outer.overall_scores.f1_score(),
@@ -231,7 +238,7 @@ class CCMetric:
 
 if __name__ == "__main__":
     def main():
-        cc_met = CCMetric()
+        cc_met = CCMetric(verbose=True)
         in_fp = "tests/cc_ilabels.txt"
         with open(in_fp, "r", encoding="utf-8") as f:
             in_lines = f.readlines()

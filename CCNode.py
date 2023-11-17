@@ -102,7 +102,7 @@ class CCNode:
         max0 = self.spans[-1][1] - 1
         assert min0 <= self.ccloc <= max0
 
-    def get_span_pair(self, midpoint_id, allow_None=True):
+    def get_span_pair(self, midpoint_id, allow_None=False):
         """
         similar to Openie6.metric.Coordination.get_pair()
 
@@ -134,8 +134,7 @@ class CCNode:
                 break
         if not allow_None and span_pair is None:
             raise LookupError(
-                "Could not find any span_pair for index={}".
-                format(midpoint_id))
+                f"Could not find any span_pair for index={midpoint_id}.")
         return span_pair
 
     def is_parent(self, child):

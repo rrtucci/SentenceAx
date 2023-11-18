@@ -103,24 +103,7 @@ class SaxExtraction:
         list[str]
 
         """
-        if not self._orig_sentL_words:
-            return get_words(self.orig_sentL)
-        return self._orig_sentL_words
-
-    @orig_sentL_words.setter
-    def orig_sentL_words(self, value):
-        """
-
-        Parameters
-        ----------
-        value: list[str]
-
-        Returns
-        -------
-        list[str]
-
-        """
-        self._orig_sentL_words = value
+        return get_words(self.orig_sentL)
 
     @property
     def arg1_words(self):
@@ -131,25 +114,7 @@ class SaxExtraction:
         list[str]
 
         """
-        if not self._arg1_words:
-            return get_words(self.arg1)
-        return self._arg1_words
-
-    @arg1_words.setter
-    def arg1_words(self, value):
-        """
-
-        Parameters
-        ----------
-        value: list[str]
-
-        Returns
-        -------
-        None
-
-
-        """
-        self._arg1_words = value
+        return get_words(self.arg1)
 
     @property
     def rel_words(self):
@@ -160,24 +125,7 @@ class SaxExtraction:
         list[str]
 
         """
-        if not self._rel_words:
-            return get_words(self.rel)
-        return self._rel_words
-
-    @rel_words.setter
-    def rel_words(self, value):
-        """
-
-        Parameters
-        ----------
-        value: list[str]
-
-        Returns
-        -------
-        None
-
-        """
-        self._rel_words = value
+        return get_words(self.rel)
 
     @property
     def arg2_words(self):
@@ -188,24 +136,7 @@ class SaxExtraction:
         list[str]
 
         """
-        if not self._arg2_words:
-            return get_words(self.arg2)
-        return self._arg2_words
-
-    @arg2_words.setter
-    def arg2_words(self, value):
-        """
-
-        Parameters
-        ----------
-        value: list[str]
-
-        Returns
-        -------
-        None
-
-        """
-        self._arg2_words = value
+        return get_words(self.arg2)
 
     @property
     def time_arg_words(self):
@@ -216,24 +147,7 @@ class SaxExtraction:
         list[str]
 
         """
-        if not self._time_arg_words:
-            return get_words(self.time_arg)
-        return self._time_arg_words
-
-    @time_arg_words.setter
-    def time_arg_words(self, value):
-        """
-
-        Parameters
-        ----------
-        value: list[str]
-
-        Returns
-        -------
-        None
-
-        """
-        self._time_arg_words = value
+        return get_words(self.time_arg)
 
     @property
     def loc_arg_words(self):
@@ -244,24 +158,7 @@ class SaxExtraction:
         list[str]
 
         """
-        if not self._loc_arg_words:
-            return get_words(self.loc_arg)
-        return self._loc_arg_words
-
-    @loc_arg_words.setter
-    def loc_arg_words(self, value):
-        """
-
-        Parameters
-        ----------
-        value: list[str]
-
-        Returns
-        -------
-        None
-
-        """
-        self._loc_arg_words = value
+        return get_words(self.loc_arg)
 
     def __eq__(self, other_ex):
         """
@@ -670,10 +567,10 @@ class SaxExtraction:
         """
         if arg_name == "time":
             matches = get_matches(self.time_arg_words,
-                                       self.orig_sentL_words)
+                                  self.orig_sentL_words)
         elif arg_name == "loc":
             matches = get_matches(self.loc_arg_words,
-                                       self.orig_sentL_words)
+                                  self.orig_sentL_words)
         else:
             assert False
         if has_2_matches(matches):
@@ -909,7 +806,8 @@ if __name__ == "__main__":
                            for carb_ex in carb_exs]
             for k, sax_ex in enumerate(sax_exs):
                 new_sax_ex = new_sax_exs[k]
-                l_old = [sax_ex.arg1, sax_ex.rel, sax_ex.arg2, sax_ex.confidence]
+                l_old = [sax_ex.arg1, sax_ex.rel, sax_ex.arg2,
+                         sax_ex.confidence]
                 l_new = [new_sax_ex.arg1, new_sax_ex.rel, new_sax_ex.arg2,
                          new_sax_ex.confidence]
                 for i, old in enumerate(l_old):

@@ -37,9 +37,9 @@ from CCTree import *
 
 def translate_words_to_extags(ex):
     """
-    Translate each of the extractions (sentences) in a SaxExtraction `ex` to 
-    an extags list. This is hard, but all the hard work is done within 
-    SaxExtraction.
+    Translate the extractions (sentences) in a SaxExtraction `ex` to a list[
+    str] where each item in the list is a str of extags. This is hard,
+    but all the hard work is done within SaxExtraction.
 
     Parameters
     ----------

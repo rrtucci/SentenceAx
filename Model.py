@@ -32,10 +32,16 @@ logging.getLogger().setLevel(logging.ERROR)
 class Model(L.LightningModule):
     """
     
-    The class inherits from L.LightningModule some powerful methods that 
-    loop through the batches of an epoch, calling forward(), and calculating 
-    the loss for each batch. The class sets loops over batches for the 3 
-    actions ttt=train, tune (a.k.a. validation) and test
+    The class inherits from L.LightningModule some powerful methods that
+    loop through the batches of an epoch, calling forward(). It can either:
+
+    1. calculate the loss when training (here the weights are changing)
+
+    2. calculate the accuracy when tuning or testing or
+    predicting (here the weights are fixed).
+
+    The class sets loops over batches of an epoch for the 3 actions
+    ttt=train, tune (a.k.a. validation) and test.
 
     This class has an abstract class as its parent. To distinguish between 
     inherited and uninherited methods, we add a prefix "sax_" to the name of 
@@ -54,18 +60,19 @@ class Model(L.LightningModule):
         "word_starts":
     }
 
-    In SentenceAx, (see sax_get_batch_in_dicts()
+    In SentenceAx, (see sax_get_batch_in_dicts()), we have instead:
 
     x, y, l_orig_sent, xname_to_l_dim1 = batch
     
-    SentenceAX is a fine-tuning of bert-base-cased and bert-large-cased. 
-    Both of these weights/models are cased, but large > base. 
+    SentenceAX is a fine-tuning of bert-base-cased and bert-large-cased.
+    Both of these weights/models are cased (meaning they both distinguish
+    between upper and lower cases), but bert-large-cased > bert-base-cased.
     
     Some stats about BERT
 
     Think of BERT as outputting a tensor of shape (AH, HL, L) where
     AH = number of attention heads
-    HL = number of hidden layers
+    HL = number of hidden layers, called self.hidden_size below
     L = encoding length
 
     BERT BASE (AH=12, HL=768, L=12) Total Parameters=110M
@@ -393,6 +400,31 @@ class Model(L.LightningModule):
     def sax_get_llll_word_score(self, x_d, y_d, ttt, verbose=False):
         """
         used inside self.forward()
+
+        batch_size= 24,
+        hidden_size= 768,
+        NUM_ILABELS= 6,
+        ILABELLING_DIM= 300
+        This method has a loop that does the following for one batch:
+        We show the shape of the input and output tensors for each layer.
+        We assume 2 iterative layers and 5 depths
+
+        encoding layer
+        LINES for depth=0
+        LINES for depth=1
+        LINES for depth=2
+        LINES for depth=3
+        LINES for depth=4
+
+        where LINES=
+        *****iterative layer 0: [24, 105, 768]->[24, 105, 768]
+        bunch of torch operations: [24, 105, 768]->[24, 84, 768]
+        merge layer: [24, 84, 768]->[24, 84, 300]
+        illabelling_layer: [24, 84, 300]->[24, 84, 6]
+        *****iterative layer 1:  [24, 105, 768]->[24, 105, 768]
+        bunch of torch operations: [24, 105, 768]->[24, 84, 768]
+        merge layer: [24, 84, 768]->[24, 84, 300]
+        illabelling_layer: [24, 84, 300]->[24, 84, 6]
         
         Parameters
         ----------

@@ -12,7 +12,7 @@ class MOutput:
     ----------
         l_orig_sent: list[str]
             list of original (before splitting) sentences, usually for a batch.
-        ll_pred_confi: torch.Tensor
+        ll_pred_confidence: torch.Tensor
             predicted confidence for each extraction of each batch sample
         lll_ilabel: torch.Tensor
             if x is the feature vector and y is the classification, this is
@@ -29,7 +29,7 @@ class MOutput:
                  l_orig_sent,
                  lll_ilabel,
                  lll_pred_ilabel,
-                 ll_pred_confi,
+                 ll_pred_confidence,
                  loss):
         """
         Constructor
@@ -40,14 +40,14 @@ class MOutput:
         l_orig_sent: list[str]
         lll_ilabel: torch.Tensor
         lll_pred_ilabel: torch.Tensor
-        ll_pred_confi: torch.Tensor
+        ll_pred_confidence: torch.Tensor
         loss: float
         
         """
         self.l_orig_sent = l_orig_sent
         self.lll_ilabel = lll_ilabel
         self.lll_pred_ilabel = lll_pred_ilabel
-        self.ll_pred_confi = ll_pred_confi
+        self.ll_pred_confidence = ll_pred_confidence
         self.loss = loss
 
     def move_to_cpu(self):
@@ -62,10 +62,11 @@ class MOutput:
 
         self.lll_ilabel = self.lll_ilabel.cpu()
         self.lll_pred_ilabel = self.lll_pred_ilabel.cpu()
-        self.ll_pred_confi = self.ll_pred_confi.cpu()
+        self.ll_pred_confidence = self.ll_pred_confidence.cpu()
         # self.loss = self.loss.cpu()
 
-        self.ll_pred_confi = (self.ll_pred_confi * 100).round() / 100
+        self.ll_pred_confidence = \
+            (self.ll_pred_confidence * 100).round() / 100
 
     # def get_l_orig_sent(self):
     #     """

@@ -85,7 +85,7 @@ class AllenTool:
     @staticmethod
     def get_osent2_to_exs_from_lll_ilabel(l_osent2,
                                           lll_ilabel,
-                                          ll_confi,
+                                          ll_confidence,
                                           sent_to_sent):
         """
         similar to Openie6.metric.Carb.__call__()
@@ -108,7 +108,7 @@ class AllenTool:
         ----------
         l_osent2: list[str]
         lll_ilabel: list[list[list[int]]]
-        ll_confi: list[list[float]]
+        ll_confidence: list[list[float]]
         sent_to_sent: dict[str, str]
             a dictionary that makes small fixes on osent2
 
@@ -124,7 +124,7 @@ class AllenTool:
                               transform_d=sent_to_sent,
                               this_d=osent2_to_exs)
 
-            num_exs = len(ll_confi[sam_id])
+            num_exs = len(ll_confidence[sam_id])
             for depth in range(num_exs):
                 ilabels = lll_ilabel[sam_id][depth]
                 # all ilabels=0 once no more extractions
@@ -133,7 +133,7 @@ class AllenTool:
                 ex0 = SaxExtraction.get_ex_from_ilabels(
                     ilabels,
                     osent2,
-                    ll_confi[sam_id][depth])
+                    ll_confidence[sam_id][depth])
                 if ex0.arg1 and ex0.rel:
                     add_key_value_pair_to_this_d(
                         key=osent2,
@@ -147,7 +147,7 @@ class AllenTool:
         """
         This static method takes as input `osent2_to_exs` (one of the
         attributes of class AllenTool). It returns as output `l_osent2`,
-        `lll_ilabel`, `ll_confi`
+        `lll_ilabel`, `ll_confidence`
 
         Note this is the inverse of get_osent2_to_exs_from_lll_ilabel()
 
@@ -177,8 +177,8 @@ class AllenTool:
 
         lll_ilabel = [[get_ilabels(ex) for ex in exs] for
                       exs in l_exs]
-        ll_confi = [[ex.confi for ex in exs] for exs in l_exs]
-        return l_osent2, lll_ilabel, ll_confi
+        ll_confidence = [[ex.confidence for ex in exs] for exs in l_exs]
+        return l_osent2, lll_ilabel, ll_confidence
 
     @staticmethod
     def get_ex_from_allen_line(line):
@@ -197,7 +197,7 @@ class AllenTool:
         """
         tab_sep_vals = line.strip().split('\t')
         in_sentL = tab_sep_vals[0] + UNUSED_TOKENS_STR
-        confi = float(tab_sep_vals[2])
+        confidence = float(tab_sep_vals[2])
         # if len(tab_sep_vals) == 4:
         #     num_exs = int(tab_sep_vals[3])
         # else:
@@ -222,7 +222,7 @@ class AllenTool:
                            sent_parts[0],
                            sent_parts[1],
                            sent_parts[2],
-                           confi)
+                           confidence)
 
         return ex
 
@@ -247,7 +247,7 @@ class AllenTool:
         str0 += " <arg1> " + ex.arg1 + r" <\arg1> "
         str0 += " <rel> " + ex.rel + r" <\rel> "
         str0 += " <arg2> " + ex.arg2 + r" <\arg2> \t"
-        str0 += str(ex.confi)
+        str0 += str(ex.confidence)
         return str0
 
     def read_allen_file(self):

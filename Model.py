@@ -604,19 +604,19 @@ class Model(L.LightningModule):
         hinge_loss = 0
         llll_index = x_d["ll_osent_verb_loc"].unsqueeze(1).unsqueeze(3). \
             repeat(1, num_depths, 1, icode_dim)
-        llll_verb_confi = torch.gather(
+        llll_verb_confidence = torch.gather(
             input=llll_word_scoreT,
             dim=2,
             index=llll_index)
-        lll_verb_rel_confi = llll_verb_confi[:, :, :, 2]
+        lll_verb_rel_confidence = llll_verb_confidence[:, :, :, 2]
         # (batch_size, depth, num_words)
         lll_bool = (x_d["ll_osent_verb_loc"] != 0).unsqueeze(1).float()
 
-        lll_verb_rel_confi = lll_verb_rel_confi * lll_bool
+        lll_verb_rel_confidence = lll_verb_rel_confidence * lll_bool
         # every head-verb must be included in a relation
         if 'hvc' in con_to_weight:
             ll_column_loss = \
-                torch.abs(1 - torch.sum(lll_verb_rel_confi, dim=1))
+                torch.abs(1 - torch.sum(lll_verb_rel_confidence, dim=1))
             ll_column_loss = \
                 ll_column_loss[x_d["ll_osent_verb_loc"] != 0]
             hinge_loss += con_to_weight['hvc'] * ll_column_loss.sum()
@@ -625,26 +625,26 @@ class Model(L.LightningModule):
         # a head verb in them
         if 'hvr' in con_to_weight:
             l_a = x_d["ll_osent_verb_bool"].sum(dim=1).float()
-            l_b = torch.max(lll_verb_rel_confi, dim=2)[0].sum(dim=1)
+            l_b = torch.max(lll_verb_rel_confidence, dim=2)[0].sum(dim=1)
             row_rel_loss = F.relu(l_a - l_b)
             hinge_loss += con_to_weight['hvr'] * row_rel_loss.sum()
 
         # one relation cannot contain more than one head verb
         if 'hve' in con_to_weight:
-            ll_ex_loss = F.relu(torch.sum(lll_verb_rel_confi, dim=2) - 1)
+            ll_ex_loss = F.relu(torch.sum(lll_verb_rel_confidence, dim=2) - 1)
             hinge_loss += con_to_weight['hve'] * ll_ex_loss.sum()
 
         if 'posm' in con_to_weight:
             llll_index = x_d["ll_osent_pos_loc"]. \
                 unsqueeze(1).unsqueeze(3).repeat(1, num_depths, 1, icode_dim)
-            llll_pred_confi = torch.gather(
+            llll_pred_confidence = torch.gather(
                 input=llll_word_scoreT,
                 dim=2,
                 index=llll_index)
-            lll_pos_not_none_confi = \
-                torch.max(llll_pred_confi[:, :, :, 1:], dim=-1)[0]
+            lll_pos_not_none_confidence = \
+                torch.max(llll_pred_confidence[:, :, :, 1:], dim=-1)[0]
             ll_column_loss = \
-                (1 - torch.max(lll_pos_not_none_confi, dim=1)[0]) * \
+                (1 - torch.max(lll_pos_not_none_confidence, dim=1)[0]) * \
                 (x_d["ll_osent_pos_loc"] != 0).float()
             hinge_loss += con_to_weight['posm'] * ll_column_loss.sum()
 
@@ -761,8 +761,8 @@ class Model(L.LightningModule):
         loss = 0
         llll_pred_ilabel = []  # = all_depth_predictions
         # lll_pred_ilabel0 = all_depth_predictions after cat dim=1
-        lll_pred_confi = []  # = all_depth_confidences
-        # ll_pred_confi0 = all_depth_confidences after cat dim=1
+        lll_pred_confidence = []  # = all_depth_confidences
+        # ll_pred_confidence0 = all_depth_confidences after cat dim=1
         batch_size, num_words, xxx = llll_word_score[0].shape
         # xxx = 6, the number of different ilabels (classes)
         # y_d["lll_ilabel"] = \
@@ -815,12 +815,12 @@ class Model(L.LightningModule):
                 ll_norm_log_prob = \
                     (ll_max_log_prob * ll_nonpad_bool) \
                     / (1 + ll_nonpad_bool.sum(dim=0))
-                l_confi = torch.exp(
+                l_confidence = torch.exp(
                     torch.sum(ll_norm_log_prob, dim=1))
 
                 # this unsqueezes depth dim=1
                 llll_pred_ilabel.append(ll_pred_ilabel.unsqueeze(1))
-                lll_pred_confi.append(l_confi.unsqueeze(1))
+                lll_pred_confidence.append(l_confidence.unsqueeze(1))
         # } end of loop over depth, lll_word_score
 
         if ttt == 'train':
@@ -854,10 +854,10 @@ class Model(L.LightningModule):
         # torch.stack([A, B], dim=0) will be of shape (2, 3, 4)
 
         # llll_pred_ilabel: list[tensor]
-        # lll_pred_confi: list[tensor]
+        # lll_pred_confidence: list[tensor]
         if ttt != "train":
             lll_pred_ilabel0 = torch.cat(llll_pred_ilabel, dim=1)
-            ll_pred_confi0 = torch.cat(lll_pred_confi, dim=1)
+            ll_pred_confidence0 = torch.cat(lll_pred_confidence, dim=1)
             # never used
             # self.con_to_l_loss = self.sax_get_con_to_l_loss(
             #     x_d,
@@ -865,12 +865,12 @@ class Model(L.LightningModule):
             #     lll_pred_ilabel0)
         else:
             lll_pred_ilabel0 = Ten([0])
-            ll_pred_confi0 = Ten([0])
+            ll_pred_confidence0 = Ten([0])
 
         batch_m_out = MOutput(meta_d["l_orig_sent"],
                               y_d["lll_ilabel"],
                               lll_pred_ilabel0,
-                              ll_pred_confi0,
+                              ll_pred_confidence0,
                               loss)
         return batch_m_out
 
@@ -1026,7 +1026,7 @@ class Model(L.LightningModule):
                     self.metric(
                         batch_m_out.l_orig_sent,  # meta data
                         batch_m_out.lll_pred_ilabel,  # predictions
-                        batch_m_out.ll_pred_confi)  # scores
+                        batch_m_out.ll_pred_confidence)  # scores
             score_d = self.metric.get_score_d(ttt)
 
         if self.params.task == "cc":
@@ -1162,7 +1162,7 @@ class Model(L.LightningModule):
 
         """
         lll_ilabel = batch_m_out.lll_pred_ilabel
-        ll_confi = batch_m_out.ll_pred_confi
+        ll_confidence = batch_m_out.ll_pred_confidence
         num_samples, num_depths, _ = lll_ilabel.shape
         l_orig_sent = batch_m_out.l_orig_sent
 
@@ -1178,7 +1178,7 @@ class Model(L.LightningModule):
                 if sum(ex_ilabels) == 0:  # extractions completed
                     break
                 ex = SaxExtraction.get_ex_from_ilabels(
-                    ex_ilabels, orig_sentL, ll_confi[sample_id][depth])
+                    ex_ilabels, orig_sentL, ll_confidence[sample_id][depth])
                 if ex.arg1 and ex.rel:
                     add_key_value_pair_to_this_d(
                         key=orig_sent,
@@ -1202,7 +1202,7 @@ class Model(L.LightningModule):
                 allen_str += f"<arg1> {arg1} </arg1>"
                 allen_str += f"<rel> {rel} </rel>"
                 allen_str += f"<arg2> {arg2} </arg2>\t"
-                allen_str += f"{pred_ex.confi}\n"
+                allen_str += f"{pred_ex.confidence}\n"
             l_pred_allen_str.append(allen_str.strip("/n"))
 
         fmode = "w" if batch_idx == 0 else "a"

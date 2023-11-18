@@ -13,7 +13,7 @@ def write_tags_file(out_fp,
                     l_orig_sent,
                     ll_tags,
                     with_unused_tokens,
-                    ll_confi=None):
+                    ll_confidence=None):
     """
     This method writes an extags or a cctags file. It works for both. It is
     called internally by both write_extags_file() and write_cctags_file().
@@ -24,7 +24,7 @@ def write_tags_file(out_fp,
     l_orig_sent: list[str]
     ll_tags: list[list[list[str]]]
     with_unused_tokens: bool
-    ll_confi: list[[list[float]]
+    ll_confidence: list[[list[float]]
 
     Returns
     -------
@@ -43,15 +43,15 @@ def write_tags_file(out_fp,
                 f.write(l_orig_sent[sam])
                 for depth in range(len(ll_tags[0])):
                     end_str = "\n"
-                    if ll_confi:
-                        end_str = "(" + ll_confi[sam][depth] + ")"
+                    if ll_confidence:
+                        end_str = "(" + ll_confidence[sam][depth] + ")"
                     f.write(ll_tags[sam][depth] + end_str)
 
 
 def write_extags_file(out_fp,
                       l_orig_sent,
                       ll_tags,
-                      ll_confi=None):
+                      ll_confidence=None):
     """
     This method writes an extags file.
 
@@ -60,7 +60,7 @@ def write_extags_file(out_fp,
     out_fp: str
     l_orig_sent: list[str]
     ll_tags: list[list[list[str]]]
-    ll_confi: list[list[float]]
+    ll_confidence: list[list[float]]
 
     Returns
     -------
@@ -71,13 +71,13 @@ def write_extags_file(out_fp,
                     l_orig_sent,
                     ll_tags,
                     with_unused_tokens=True,
-                    ll_confi=ll_confi)
+                    ll_confidence=ll_confidence)
 
 
 def write_cctags_file(out_fp,
                       l_orig_sent,
                       ll_tags,
-                      ll_confi=None):
+                      ll_confidence=None):
     """
     This method writes a cctags file.
 
@@ -86,7 +86,7 @@ def write_cctags_file(out_fp,
     out_fp: str
     l_orig_sent: list[str]
     ll_tags: list[list[list[str]]]
-    ll_confi: list[list[float]]
+    ll_confidence: list[list[float]]
 
     Returns
     -------
@@ -97,7 +97,7 @@ def write_cctags_file(out_fp,
                     l_orig_sent,
                     ll_tags,
                     with_unused_tokens=False,
-                    ll_confi=ll_confi)
+                    ll_confidence=ll_confidence)
 
 
 def load_sent_to_sent(in_fp, word_tokenize=False):

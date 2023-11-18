@@ -773,7 +773,7 @@ class ActionConductor:
         # for iline, line in enumerate(rescored_allen_file):
         #     fields = line.split('\t')
         #     osent = fields[0]
-        #     confi = float(fields[2])
+        #     confidence = float(fields[2])
         #
         #     if iline == 0:
         #         sent_str = f'{osent}\n'
@@ -799,7 +799,7 @@ class ActionConductor:
         #                        arg1,
         #                        rel,
         #                        arg2,
-        #                        confi)
+        #                        confidence)
         #     l_ex.append(ex.get_simple_sent() + "\n")
         #
         # l_ex = sorted(l_ex, reverse=True,

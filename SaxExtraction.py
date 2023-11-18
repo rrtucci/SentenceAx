@@ -19,7 +19,7 @@ class SaxExtraction:
     strings: `arg1, rel, arg2, time_arg, loc_arg`
     `args` is a list[str] (assume empty).
     arg1 is the subject of a sentence.
-    rel is the verb or predict.
+    rel is the verb or predicate.
     If there is any time_arg or loc_arg string, add it to arg2.
     If `is` is added to extraction, add it to beginning of `rel`.
     If `from` or `to` are added to extraction, add it to end of `rel`.
@@ -39,7 +39,7 @@ class SaxExtraction:
     arg1: str
     arg2: str
     arg2_is_extagged: bool
-    confi: float
+    confidence: float
     extags: list[str]
     extags_are_set: bool
     is_assigned_d: dict[str, bool]
@@ -55,7 +55,7 @@ class SaxExtraction:
                  arg1="",
                  rel="",
                  arg2="",
-                 confi=None):
+                 confidence=None):
         """
 
         Parameters
@@ -64,10 +64,10 @@ class SaxExtraction:
         arg1: str
         rel: str
         arg2: str
-        confi: float
+        confidence: float
         """
 
-        self.confi = confi
+        self.confidence = confidence
 
         self.orig_sentL = orig_sentL
         self._orig_sentL_words = None
@@ -753,7 +753,7 @@ class SaxExtraction:
                              arg1=arg1,
                              rel=carb_ex.pred,
                              arg2=arg2,
-                             confi=carb_ex.confidence)
+                             confidence=carb_ex.confidence)
 
     @staticmethod
     def convert_to_carb_ex(sax_ex):
@@ -772,7 +772,7 @@ class SaxExtraction:
         carb_ex = Extraction(pred=sax_ex.rel,
                              head_pred_index=None,
                              sent=sax_ex.orig_sentL,
-                             confidence=sax_ex.confi,
+                             confidence=sax_ex.confidence,
                              index=1)
         # confidence only used for ordering exs, doesn't affect scores
         carb_ex.addArg(sax_ex.arg1)
@@ -820,7 +820,7 @@ class SaxExtraction:
         return sax_osent2_to_exs
 
     @staticmethod
-    def get_ex_from_ilabels(ex_ilabels, orig_sentL, confi):
+    def get_ex_from_ilabels(ex_ilabels, orig_sentL, confidence):
         """
         similar to Openie6.model.process_extraction()
 
@@ -838,7 +838,7 @@ class SaxExtraction:
         ----------
         ex_ilabels: list[int]
         orig_sentL: str
-        confi: float
+        confidence: float
 
         Returns
         -------
@@ -891,7 +891,7 @@ class SaxExtraction:
                                    arg1,
                                    rel_clause,
                                    arg2,
-                                   confi=confi)
+                                   confidence=confidence)
 
         return extraction
 
@@ -909,9 +909,9 @@ if __name__ == "__main__":
                            for carb_ex in carb_exs]
             for k, sax_ex in enumerate(sax_exs):
                 new_sax_ex = new_sax_exs[k]
-                l_old = [sax_ex.arg1, sax_ex.rel, sax_ex.arg2, sax_ex.confi]
+                l_old = [sax_ex.arg1, sax_ex.rel, sax_ex.arg2, sax_ex.confidence]
                 l_new = [new_sax_ex.arg1, new_sax_ex.rel, new_sax_ex.arg2,
-                         new_sax_ex.confi]
+                         new_sax_ex.confidence]
                 for i, old in enumerate(l_old):
                     new = l_new[i]
                     assert old == new

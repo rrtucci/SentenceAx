@@ -62,7 +62,7 @@ class ExMetric:
     def __call__(self,
                  l_osentL,  # meta data
                  lll_ilabel,  # predictions
-                 ll_confi):  # scores
+                 ll_confidence):  # scores
         """
         similar to Openie6.metric.Carb.__call__
 
@@ -81,7 +81,7 @@ class ExMetric:
         ----------
         l_osentL: list[str]
         lll_ilabel: list[list[list[int]]]
-        ll_confi: list[list[float]]
+        ll_confidence: list[list[float]]
 
         Returns
         -------
@@ -91,13 +91,13 @@ class ExMetric:
         if self.verbose:
             print("Entering ExMetric.__call__() method.")
         assert not self.input_carb_exs
-        # print("ll_confi", ll_confi)
+        # print("ll_confidence", ll_confidence)
         # print("len(self.osentL_to_exs)", len(self.osentL_to_exs))
         dominant_d = \
             AllenTool.get_osent2_to_exs_from_lll_ilabel(
                 l_osentL,
                 lll_ilabel,
-                ll_confi,
+                ll_confidence,
                 self.sent_to_sent)
         if self.verbose:
             print("len(self.osentL_to_exs) before merge=",
@@ -175,21 +175,14 @@ class ExMetric:
         if self.verbose:
             print("Entering ExMetric.get_score_d() method.")
 
-        def fun(x):
-            # if x is sax extraction
-            if hasattr(x, "confi"):
-                return x.confi
-            # if ex is carb extraction
-            elif hasattr(x, "confidence"):
-                return x.confidence
 
         assert self.osentL_to_exs
         for osentL, exs in self.osentL_to_exs.items():
-            # print("confi", [fun(ex) for ex in exs])
+            # print("confidence", [ex.confidence for ex in exs])
             # print("len(exs)", len(exs))
             self.osentL_to_exs[osentL] = \
                 sorted(exs,
-                       key=fun,
+                       key=lambda x: x.confidence,
                        reverse=True)[:EX_NUM_DEPTHS]
         if not self.input_carb_exs:
             osent_to_exs = undoL(self.osentL_to_exs)
@@ -242,10 +235,10 @@ if __name__ == "__main__":
     #         at.osentL_to_exs)
     #     ex_met = ExMetric()
     #     ttt = "test"
-    #     pred_l_osent, pred_lll_ilabel, pred_ll_confi = \
+    #     pred_l_osent, pred_lll_ilabel, pred_ll_confidence = \
     #         AllenTool.get_lll_ilabel_from_osent2_to_exs(osent_to_exs)
     #
-    #     ex_met(pred_l_osent, pred_lll_ilabel, pred_ll_confi)
+    #     ex_met(pred_l_osent, pred_lll_ilabel, pred_ll_confidence)
     #     score_d = ex_met.get_score_d(ttt, do_reset=True)
     #     print(score_d)
 

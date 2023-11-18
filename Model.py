@@ -32,16 +32,16 @@ logging.getLogger().setLevel(logging.ERROR)
 class Model(L.LightningModule):
     """
     
-    The class inherits from L.LightningModule some powerful methods that
-    loop through the batches of an epoch, calling forward(). It can either:
+    This class inherits from L.LightningModule some powerful methods that
+    loop through the batches of an epoch. It can either:
 
     1. calculate the loss when training (here the weights are changing)
 
     2. calculate the accuracy when tuning or testing or
     predicting (here the weights are fixed).
 
-    The class sets loops over batches of an epoch for the 3 actions
-    ttt=train, tune (a.k.a. validation) and test.
+    The class loops over batches of an epoch for the 3 actions ttt=train,
+    tune (a.k.a. validation) and test.
 
     This class has an abstract class as its parent. To distinguish between 
     inherited and uninherited methods, we add a prefix "sax_" to the name of 
@@ -70,25 +70,25 @@ class Model(L.LightningModule):
     
     Some stats about BERT
 
-    Think of BERT as outputting a tensor of shape (AH, HL, L) where
-    AH = number of attention heads
-    HL = number of hidden layers, called self.hidden_size below
+    BERT is characterized by tensor of shape (L, A, H) where
     L = encoding length
+    A = number of attention heads
+    H = dim of hidden space, called self.hidden_size below
 
-    BERT BASE (AH=12, HL=768, L=12) Total Parameters=110M
-    BERT LARGE (AH=16, HL=1024, L=24) Total Parameters=340M
+    BERT BASE (L=12, A=12, H=768) Total Parameters=110M
+    BERT LARGE (L=24, A=16, H=1024) Total Parameters=340M
 
 
     Attributes
     ----------
+    _ex_sent_to_sent: dict[str, str]
     auto_tokenizer: AutoTokenizer
-    start_model: BertModel
     cc_sent_to_words: dict[str, list[str]]
     con_to_weight: dict[str, float]
     dropout_fun: Dropout
     embedding: Embedding
     scores_epoch_end_d: dict[str, Any]
-    _ex_sent_to_sent: dict[str, str]
+    start_model: BertModel
     hidden_size: int
     ilabelling_layer: Linear
     init_name_to_param: dict[str, variable]
@@ -101,11 +101,11 @@ class Model(L.LightningModule):
     loss_fun: CrossEntropyLoss
     merge_layer: Linear
     metric: CCMetric | ExMetric
-    model_name: str
+    name: str
     params: Params
     verbose: bool
     # some inherited attributes that won't be used
-    # hparams (dictionary, Used by Openie6, not by us.
+    # hparams (dictionary, Used by Openie6, but not by us.
     #    We use the class Params instead.)
     # logger
     # trainer
@@ -119,13 +119,17 @@ class Model(L.LightningModule):
                  verbose=False,
                  name=""):
         """
-        lightning/src/lightning/pytorch/core/module.py
+        Constructor
 
         Parameters
         ----------
         params: Params
         auto_tokenizer: AutoTokenizer
         verbose: bool
+        name: str
+            name of Model instance if more than one is being used at the
+            same time. ActionConductor declares 4 Model instances which it
+            calls "train", "resume", "test", "pred"
         """
         super().__init__()
         self.params = params
@@ -144,6 +148,7 @@ class Model(L.LightningModule):
             print("****** model name= ", self.name)
             print("hidden size=", self.hidden_size)
 
+        # Actually, self.params.d["num_iterative_layers"]=2 for all Params.pid
         if self.params.d["num_iterative_layers"] > 0:
             num_layers = len(self.start_model.encoder.layer)
             num_encoder_layers = \
@@ -155,8 +160,8 @@ class Model(L.LightningModule):
             self.start_model.encoder.layer = \
                 self.start_model.encoder.layer[0:num_encoder_layers]
             if verbose:
-                print("num_iterative_layers= ", num_layers - \
-                                              num_encoder_layers)
+                print("num_iterative_layers= ", num_layers -
+                      num_encoder_layers)
                 print("num_encoder_layers= ", num_encoder_layers)
                 print("total num layers= ", num_layers)
                 print("iterative_transformer=", self.iterative_transformer)
@@ -205,7 +210,7 @@ class Model(L.LightningModule):
 
         self._ex_sent_to_sent = None  # property
         # self.cc_sent_to_words is similar to Openie6 conj_word_mapping
-        #  Note that self.cc_sent_to_words is never used;
+        # Note that self.cc_sent_to_words is never used;
         # It is filled in ActionConductor but never used.
         # We include it in SentenceAx to follow Openie6.
 
@@ -213,8 +218,8 @@ class Model(L.LightningModule):
 
         self.scores_epoch_end_d = {}  # filled in test_epoch_end()
 
-        # self.init_name_to_param=None #Openie6 has this as Model attribute but
-        # not us
+        # Openie6 has this as Model attribute but not SentenceAx
+        # self.init_name_to_param=None
 
         if "multi_opt" not in self.params.d \
                 or not self.params.d["multi_opt"]:
@@ -235,10 +240,10 @@ class Model(L.LightningModule):
                               for k in range(len(l_constraint)) if
                               l_constraint[k]}
 
-        self.l_cc_pred_str = []  # all_predictions_conj
-        self.ll_cc_spanned_word = []  # all_conjunct_words_conj
-        self.lll_cc_spanned_loc = []  # all_sentence_indices_conj
-        self.l_ex_pred_str = []  # all_predictions_oie
+        self.l_cc_pred_str = []  # Openie6.all_predictions_conj
+        self.ll_cc_spanned_word = []  # Openie6.all_conjunct_words_conj
+        self.lll_cc_spanned_loc = []  # Openie6.all_sentence_indices_conj
+        self.l_ex_pred_str = []  # Openie6.all_predictions_oie
 
         self.l_batch_m_out = \
             PickleList(f"action_{self.name}_l_batch_m_out_dir")
@@ -246,6 +251,10 @@ class Model(L.LightningModule):
     @property
     def ex_sent_to_sent(self):
         """
+        This getter and its corresponding setter, make self.ex_sent_to_sent
+        act like a symlink pointing to the real value that resides in
+        ExMetric. ex_sent_to_sent, used only when task="ex", is a dictionary
+        that maps sentences to sentences.
 
         Returns
         -------
@@ -257,6 +266,10 @@ class Model(L.LightningModule):
     @ex_sent_to_sent.setter
     def ex_sent_to_sent(self, value):
         """
+        This setter and its corresponding getter, make self.ex_sent_to_sent
+        act like a symlink pointing to the real value that resides in
+        ExMetric. ex_sent_to_sent, used only when task="ex", is a dictionary
+        that maps sentences to sentences.
 
         Parameters
         ----------
@@ -273,22 +286,23 @@ class Model(L.LightningModule):
 
     def configure_optimizers(self):
         """
-
-        The optimizer can be Adam or AdamW. If there are multiple
-        constraints `multi_con = True`, then an Adam or AdamW optimzer will
-        be used for each constraint.
+        This method returns a list of optimizers, one for each constraint in
+        self.con_to_weight. Optimizers can be either all Adam or all AdamW.
 
         Returns
         -------
         list[Adam|AdamW]
 
         """
-        # self.named_parameters() is list[Tuple[str, Parameter]]
+        # self.named_parameters() is a method inherited from parent class
+        # Its type is Iterator[Tuple[str, Parameter]]. Apply dict() to
+        # to turn it into dict[str, Parameter] or list() to turn into
+        # list[tuple(str, Parameter)]
         all_pairs = list(self.named_parameters())
 
-        # opt= optimizer
+        # opt = optimizer
         # x = parameter
-        # pair = (xname, x)
+        # pair = ("x", x)
 
         def start_model_pairs():
             return [pair for pair in all_pairs if "start_model" in pair[0]]
@@ -329,11 +343,15 @@ class Model(L.LightningModule):
 
     def get_progress_bar_dict(self):
         """
+        similar to Openie6.get_progress_bar_dict()
 
-        Additional items to be displayed in the progress bar.
+        Use this inherited method to add to super( ).get_progress_bar_dict()
+        additional items to be displayed in the progress bar. We will not
+        add any. The modified dictionary is returned  by the method.
 
-        Openie6 uses tqdm for all progress bars, including this one.
-        For this one, we use the one built into lightning.
+        Openie6 uses tqdm for all progress bars, including this one. We do
+        too, except for this one. For this one, we use the one built into
+        lightning.
 
         tqdm derives from the Arabic word taqaddum which can mean "progress"
         and is an abbreviation for "I love you so much" in Spanish (te
@@ -344,8 +362,9 @@ class Model(L.LightningModule):
         Dict[str, Union[int, str]]
             Dictionary with the items to be displayed in the progress bar.
 
-
         """
+        # take a look at what Openie6 does
+        # ----------------------------------
         # # get avg_training_loss
         # running_train_loss = self.trainer.running_loss.mean()
         # avg_training_loss = running_train_loss.cpu().item() if \
@@ -361,6 +380,7 @@ class Model(L.LightningModule):
         # tqdm_d['loss_fun'] = '{:.3f}'.format(avg_training_loss)
         # tqdm_d['best'] = best
         # return tqdm_d
+        # ----------------------------------
 
         # # Get the losses
         # losses = self.log_dict.pop('val_loss', None)
@@ -370,7 +390,7 @@ class Model(L.LightningModule):
         # Get the progress bar
         progress_bar_d = super().get_progress_bar_dict()
 
-        # # Add the losses to the progress bar
+        # # Add parameters to the progress bar
         # progress_bar_d['loss'] = self.log_dict['loss']
         # progress_bar_d['epoch_acc'] = self.log_dict['epoch_acc']
         return progress_bar_d
@@ -378,6 +398,13 @@ class Model(L.LightningModule):
     @staticmethod
     def sax_get_batch_in_dicts(batch):
         """
+        This method takes as input `batch`:
+
+        x, y, l_orig_sent, xname_to_l_dim1 = batch
+
+        and returns as output 3 dictionaries:
+
+            x_d, y_d, meta_d
 
         Parameters
         ----------
@@ -386,6 +413,7 @@ class Model(L.LightningModule):
         Returns
         -------
         OrderedDict, dict[str, torch.Tensor], dict[str, list[str]]
+            x_d, y_d, meta_d
 
         """
         x, y, l_orig_sent, xname_to_l_dim1 = batch
@@ -399,17 +427,22 @@ class Model(L.LightningModule):
 
     def sax_get_llll_word_score(self, x_d, y_d, ttt, verbose=False):
         """
-        used inside self.forward()
 
+        This method is used inside self.forward() and is the heart of that
+        method. It contains a while loop that drives a batch through the
+        layers of the model and returns `llll_word_score`. Setting `verbose`
+        to True prints out a detailed trail of what occurs in this method.
+        The following example was obtained from such a verbose trail.
+
+        Assume:
         batch_size= 24,
         hidden_size= 768,
         NUM_ILABELS= 6,
-        ILABELLING_DIM= 300
-        This method has a loop that does the following for one batch:
-        We show the shape of the input and output tensors for each layer.
-        We assume 2 iterative layers and 5 depths
+        ILABELLING_DIM= 30
+        2 iterative layers and 5 depths.
 
-        encoding layer
+        Below we show the shape of the input and output tensors for each layer.
+
         LINES for depth=0
         LINES for depth=1
         LINES for depth=2
@@ -417,14 +450,18 @@ class Model(L.LightningModule):
         LINES for depth=4
 
         where LINES=
+        encoding_layer: [24, 84, 6]->[24, 105, 768]
         *****iterative layer 0: [24, 105, 768]->[24, 105, 768]
+        dropout: [24, 105, 768]->[24, 105, 768]
         bunch of torch operations: [24, 105, 768]->[24, 84, 768]
         merge layer: [24, 84, 768]->[24, 84, 300]
-        illabelling_layer: [24, 84, 300]->[24, 84, 6]
+        ilabelling_layer: [24, 84, 300]->[24, 84, 6]
+        encoding_layer: [24, 84, 6]->[24, 105, 768]
         *****iterative layer 1:  [24, 105, 768]->[24, 105, 768]
+        dropout: [24, 105, 768]->[24, 105, 768]
         bunch of torch operations: [24, 105, 768]->[24, 84, 768]
         merge layer: [24, 84, 768]->[24, 84, 300]
-        illabelling_layer: [24, 84, 300]->[24, 84, 6]
+        ilabelling_layer: [24, 84, 300]->[24, 84, 6]
         
         Parameters
         ----------
@@ -436,6 +473,7 @@ class Model(L.LightningModule):
         Returns
         -------
         list[torch.Tensor]
+            llll_word_score
 
         """
         # lll_label is similar to Openie6.labels
@@ -520,7 +558,7 @@ class Model(L.LightningModule):
                       "lll_word_hidden_state.shape\n\t",
                       f"{depth}, {lll_word_hidden_state.shape}")
             lll_word_score = self.ilabelling_layer(lll_word_hidden_state)
-            print("after illabelling layer: depth, lll_word_score.shape\n\t",
+            print("after ilabelling layer: depth, lll_word_score.shape\n\t",
                   f"{depth}, {lll_word_score.shape}")
             llll_word_score.append(lll_word_score)
 
@@ -540,110 +578,15 @@ class Model(L.LightningModule):
                     break
         return llll_word_score
 
-    def sax_increment_loss(self,
-                           loss,
-                           x_d,
-                           llll_word_score):
-        """
-        used inside self.forward()
-
-        Parameters
-        ----------
-        loss: float
-        llll_word_score: list[torch.Tensor]
-        x_d: OrderedDict
-
-        Returns
-        -------
-        float
-
-        """
-        batch_size, _, _ = llll_word_score[0].shape
-        if self.con_to_weight:
-            # dim=1 is depth. This cats along depth dimension
-            llll_word_scoreT = torch.cat(
-                [lll.unsqueeze(1) for lll in llll_word_score], dim=1)
-            llll_word_scoreT = torch.softmax(llll_word_scoreT, dim=-1)
-
-            con_loss = Model.sax_constrained_loss(
-                x_d,
-                llll_word_scoreT,
-                self.con_to_weight) / batch_size
-            loss = con_loss
-
-        if "wreg" in self.params.d:
-            weight_diff = 0
-            name_to_param = dict(self.named_parameters())
-            for name in self.init_name_to_param:
-                weight_diff += torch.norm(name_to_param[name]
-                                          - self.init_name_to_param[name])
-            loss += self.params.d["wreg"] * weight_diff
-        return loss
-
-    def sax_get_con_to_l_loss(self,
-                              x_d,
-                              llll_word_score,
-                              lll_pred_ilabel0):
-        """
-        used inside self.forward()
-        This method is never used. Never checked
-
-        self.con_to_l_loss similar to Openie6._constD in Openie6
-
-        Parameters
-        ----------
-        x_d: OrderedDict
-        llll_word_score: list[torch.Tensor]
-        lll_pred_ilabel0: torch.Tensor
-
-        Returns
-        -------
-        dict[str, list[float]]
-
-        """
-        con_to_l_loss = {}
-        # this calculates llll_word_score
-        if self.constraint_str and \
-                'predict' not in self.params.d["action"] and \
-                self.params.d["batch_size"] != 1:
-            # reshape llll_word_score
-            llll_word_scoreT = torch.cat([lll.unsqueeze(1) for
-                                          lll in llll_word_score], dim=1)
-            # this fills tensor with 0's
-            llll_word_scoreT.fill_(0)
-
-            # for checking test set
-            # lll_ilabel = copy(lll_pred_ilabel)
-            # ll_ilabel[lll_ilabel == -100] = 0
-            lll_ilabel = copy(lll_pred_ilabel0)
-
-            llll_ilabel = lll_ilabel.unsqueeze(-1)
-            number_depths = llll_ilabel.shape[1]
-            llll_word_scoreT = llll_word_scoreT[:, :number_depths, :, :]
-            llll_word_scoreT.scatter_(
-                dim=3,
-                index=llll_ilabel.long(),
-                src=1)
-
-            # this uses llll_word_score that was calculated previously
-            # to calculate con_to_l_loss
-            for constraint, con_weight in self.con_to_weight.items():
-                con_loss = Model.sax_constrained_loss(
-                    x_d,
-                    llll_word_scoreT,
-                    {constraint: con_weight})
-                if constraint not in con_to_l_loss:
-                    con_to_l_loss[constraint] = []
-                con_to_l_loss[constraint].append(con_loss)
-        return con_to_l_loss
-
     @staticmethod
-    def sax_constrained_loss(x_d,
-                             llll_word_scoreT,
-                             con_to_weight):
+    def sax_hinge_loss(x_d,
+                       llll_word_scoreT,
+                       con_to_weight):
         """
         similar to Openie6.model.constrained_loss()
-        used inside self.forward()
+
+        This method is called inside sax_batch_loss(). It returns the
+        constraint loss (a.k.a. hinge loss).
 
         Parameters
         ----------
@@ -707,15 +650,71 @@ class Model(L.LightningModule):
 
         return hinge_loss
 
+    def sax_get_con_to_l_hinge_loss(self,
+                                    x_d,
+                                    llll_word_score,
+                                    lll_pred_ilabel0):
+        """
+        This method returns a dictionary con_to_l_hinge_loss. Although
+        Openie6 calculates con_to_l_hinge_loss inside self.forward(),
+        it never uses it. SentenceAx doeesn't either.
+
+        con_to_l_hinge_loss similar to Openie6._constD.
+
+        Parameters
+        ----------
+        x_d: OrderedDict
+        llll_word_score: list[torch.Tensor]
+        lll_pred_ilabel0: torch.Tensor
+
+        Returns
+        -------
+        dict[str, list[float]]
+
+        """
+        con_to_l_hinge_loss = {}
+        # this calculates llll_word_score
+        if self.constraint_str and \
+                'predict' not in self.params.d["action"] and \
+                self.params.d["batch_size"] != 1:
+            # reshape llll_word_score
+            llll_word_scoreT = torch.cat([lll.unsqueeze(1) for
+                                          lll in llll_word_score], dim=1)
+            # this fills tensor with 0's
+            llll_word_scoreT.fill_(0)
+
+            # for checking test set
+            # lll_ilabel = copy(lll_pred_ilabel)
+            # ll_ilabel[lll_ilabel == -100] = 0
+            lll_ilabel = copy(lll_pred_ilabel0)
+
+            llll_ilabel = lll_ilabel.unsqueeze(-1)
+            number_depths = llll_ilabel.shape[1]
+            llll_word_scoreT = llll_word_scoreT[:, :number_depths, :, :]
+            llll_word_scoreT.scatter_(
+                dim=3,
+                index=llll_ilabel.long(),
+                src=1)
+
+            # this uses llll_word_score that was calculated previously
+            # to calculate con_to_l_hinge_loss
+            for constraint, con_weight in self.con_to_weight.items():
+                hinge_loss = Model.sax_hinge_loss(
+                    x_d,
+                    llll_word_scoreT,
+                    {constraint: con_weight})
+                if constraint not in con_to_l_hinge_loss:
+                    con_to_l_hinge_loss[constraint] = []
+                con_to_l_hinge_loss[constraint].append(hinge_loss)
+        return con_to_l_hinge_loss
+
     def forward(self, batch, batch_idx, ttt):
         """
-        This method returns batch_m_out: MOutput, the result of one batch
-        passing through the NN.
+        This method returns an instance of MOutput named batch_m_out.
+        batch_m_out is the output after a batch passes through all the
+        layers of the neural net.
 
         signature of parent method:  def forward(self, *args, **kwargs)
-
-        wreg = weight regulator (default =0)
-        loss_fun = loss_fun + wreg*weight_diff
 
         The following methods invoke forward() once:
         training_step(), validation_step(), test_step()
@@ -789,7 +788,7 @@ class Model(L.LightningModule):
                 # print("loss shape", loss.shape)
                 # print_tensor("l_loss_target", l_loss_target)
                 # print("loss", loss)
-            else:  # ttt != "train
+            elif ttt != "train":
                 lll_soft_word_score = \
                     torch.log_softmax(lll_word_score, dim=2)
                 ll_max_log_prob, ll_pred_ilabel = \
@@ -822,12 +821,34 @@ class Model(L.LightningModule):
                 # this unsqueezes depth dim=1
                 llll_pred_ilabel.append(ll_pred_ilabel.unsqueeze(1))
                 lll_pred_confi.append(l_confi.unsqueeze(1))
-        # } on of for depth, lll_word_score
+        # } end of loop over depth, lll_word_score
+
         if ttt == 'train':
-            loss = self.sax_increment_loss(
-                loss,
-                x_d,
-                llll_word_score)
+            if self.con_to_weight:
+                # dim=1 is depth. This cats along depth dimension
+                llll_word_scoreT = torch.cat(
+                    [lll.unsqueeze(1) for lll in llll_word_score], dim=1)
+                llll_word_scoreT = torch.softmax(llll_word_scoreT, dim=-1)
+
+                hinge_loss = Model.sax_hinge_loss(
+                    x_d,
+                    llll_word_scoreT,
+                    self.con_to_weight) / batch_size
+
+                # IMPORTANT Openie6 has
+                # loss = const_loss
+                # instead of
+                # loss += const_loss
+                loss += hinge_loss
+
+            if "wreg" in self.params.d:
+                weight_diff = 0
+                name_to_param = dict(self.named_parameters())
+                for name in self.init_name_to_param:
+                    weight_diff += torch.norm(name_to_param[name]
+                                              - self.init_name_to_param[name])
+                loss += self.params.d["wreg"] * weight_diff
+
         # if A and B are of shape (3, 4):
         # torch.cat([A, B], dim=0) will be of shape (6, 4)
         # torch.stack([A, B], dim=0) will be of shape (2, 3, 4)
@@ -837,15 +858,14 @@ class Model(L.LightningModule):
         if ttt != "train":
             lll_pred_ilabel0 = torch.cat(llll_pred_ilabel, dim=1)
             ll_pred_confi0 = torch.cat(lll_pred_confi, dim=1)
+            # never used
+            # self.con_to_l_loss = self.sax_get_con_to_l_loss(
+            #     x_d,
+            #     llll_word_scoreT,
+            #     lll_pred_ilabel0)
         else:
             lll_pred_ilabel0 = Ten([0])
             ll_pred_confi0 = Ten([0])
-
-        # never used
-        # self.con_to_l_loss = self.sax_get_con_to_l_loss(
-        #     x_d,
-        #     llll_word_scoreT,
-        #     lll_pred_ilabel0)
 
         batch_m_out = MOutput(meta_d["l_orig_sent"],
                               y_d["lll_ilabel"],
@@ -859,14 +879,15 @@ class Model(L.LightningModule):
         This method returns the `loss` for one step (i.e., batch pass). It
         calls forward() once. forward() returns batch_m_out and loss =
         batch_m_out.loss. This loss variable is only filled with something
-        useful if ttt="train"
+        useful if ttt="train".
 
-        The method writes to a file if ttt="tune".
+        If fff="tune", the method writes to a file by calling
+        self.sax_write_batch_sents_out().
 
-        The method stores a list of batch_m_out if ttt!="train".
-        l_batch_m_out is similar to Openie6.outputs
+        If ttt!="train", the method stores a list of batch_m_out,
+        l_batch_m_out is similar to Openie6.outputs.
 
-        The method logs the loss if ttt="train".
+        If ttt="train", the method logs the loss.
 
 
         Parameters
@@ -918,6 +939,7 @@ class Model(L.LightningModule):
         """
         This method returns self.sax_ttt_step() so go there for an explanation.
 
+
         Parameters
         ----------
         batch: tuple[torch.Tensor, torch.Tensor, list[str]]
@@ -953,6 +975,7 @@ class Model(L.LightningModule):
         """
         This method returns self.sax_ttt_step() so go there for an explanation.
 
+
         Parameters
         ----------
         batch: tuple[torch.Tensor, torch.Tensor, list[str]]
@@ -973,9 +996,7 @@ class Model(L.LightningModule):
         This method prints and returns scores_epoch_end_d. That dictionary
         includes `epoch_acc` among its keys. The method is called inside
         self.sax_on_ttt_epoch_end()
-        
-        Note that both `mode` and self.params.d["action"] are used in this
-        method.
+
 
         Parameters
         ----------
@@ -1021,12 +1042,13 @@ class Model(L.LightningModule):
               str(self.trainer.current_epoch) + ":")
         print(scores_epoch_end_d)
         # For computing the constraint violations
-        # if hasattr(self, 'con_to_l_loss') and \
+        # if hasattr(self, 'con_to_l_hinge_loss') and \
         # self.params.d["constraint_str"] != '':
-        #     for key in self.con_to_l_loss:
-        #         self.con_to_l_loss[key] = sum(self.con_to_l_loss[key]).item()
-        #     print('\nViolations: ', self.con_to_l_loss)
-        #     self.con_to_l_loss = dict()
+        #     for key in self.con_to_l_hinge_loss:
+        #         self.con_to_l_hinge_loss[key] =
+        #         sum(self.con_to_l_hinge_loss[key]).item()
+        #     print('\nViolations: ', self.con_to_l_hinge_loss)
+        #     self.con_to_l_hinge_loss = dict()
         return scores_epoch_end_d
 
     def sax_on_ttt_epoch_end(self, ttt):
@@ -1127,8 +1149,7 @@ class Model(L.LightningModule):
 
     def sax_write_if_task_ex(self, batch_idx, batch_m_out):
         """
-
-        called by `sax_write_batch_sents_out()`
+        This method is called by `sax_write_batch_sents_out()`
 
         Parameters
         ----------
@@ -1185,11 +1206,11 @@ class Model(L.LightningModule):
             l_pred_allen_str.append(allen_str.strip("/n"))
 
         fmode = "w" if batch_idx == 0 else "a"
-        out_fp = VAL_OUT_DIR + "/ex_out_.txt"
+        out_fp = f"{VAL_OUT_DIR}/ex_out_.txt"
         with open(out_fp, "a") as pred_f:
             pred_f.write('\n'.join(l_pred_str) + '\n')
         if self.params.d["write_allen_file"]:
-            al_out_fp = VAL_OUT_DIR + "/ex_out_allen.txt"
+            al_out_fp = f"{VAL_OUT_DIR}/ex_out_allen.txt"
             with open(al_out_fp, fmode) as allen_f:
                 allen_f.write('\n'.join(l_pred_allen_str) + '\n')
 
@@ -1198,7 +1219,7 @@ class Model(L.LightningModule):
     def sax_write_if_task_cc(self, batch_idx, batch_m_out):
         """
 
-        called by `sax_write_batch_sents_out()`
+        This method is called by `sax_write_batch_sents_out()`
 
         Parameters
         ----------
@@ -1262,7 +1283,7 @@ class Model(L.LightningModule):
         lll_cc_spanned_loc += lll_spanned_loc
 
         fmode = "w" if batch_idx == 0 else "a"
-        out_fp = VAL_OUT_DIR + "/cc_out.txt"
+        out_fp = f"{VAL_OUT_DIR}/cc_out.txt"
         with open(out_fp, fmode) as pred_f:
             pred_f.write('\n'.join(l_pred_str) + '\n')
 
@@ -1274,7 +1295,15 @@ class Model(L.LightningModule):
         """
         similar to Openie6.model.write_to_file()
 
-        called by self.validation_step()
+        This method is called by sax_ttt_step() when ttt="tune".
+
+        For task="ex", it appends stuff, after each step (i.e., batch),
+        to the files at f"{VAL_OUT_DIR}/ex_out_.txt" and f"{
+        VAL_OUT_DIR}/ex_out_allen.txt".
+
+        For task="cc", it appends stuff, after each step, to the file f"{
+        VAL_OUT_DIR}/cc_out_.txt"
+
 
         Parameters
         ----------

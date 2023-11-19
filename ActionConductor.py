@@ -907,5 +907,5 @@ if __name__ == "__main__":
         print("checkpoints:", conductor.get_all_checkpoint_fp())
 
 
-    main(1)
+    # main(1)
     # main(5)

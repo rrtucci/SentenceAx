@@ -27,6 +27,7 @@ class SaxExtraction:
     orig_sent = osent = original (before splitting) sentence
     L = Long
     osentL = osent + UNUSED_TOKENS_STR
+    osent2 = osent or osentL
 
     Attributes
     ----------
@@ -325,6 +326,8 @@ class SaxExtraction:
 
     def set_the_is_extagged_flag_to_true(self, extag_name):
         """
+        All it method does is to set self.is_assigned_d[extag_name] equal
+        to True.
 
         Parameters
         ----------
@@ -340,6 +343,13 @@ class SaxExtraction:
 
     def set_extags_of_2_matches(self, matches, extag_name):
         """
+        This method is based on the method
+        sax_extraction_utils.has_2_matches().
+
+        The two methods set_extags_of_2_matches() and
+        set_extags_of_gt_2_matches() are building blocks that are called
+        internally by the other methods whose names start with
+        `set_extags_of_*`.
 
         Parameters
         ----------
@@ -359,6 +369,13 @@ class SaxExtraction:
 
     def set_extags_of_gt_2_matches(self, matches, extag_name):
         """
+        This method is based on the method
+        sax_extraction_utils.has_gt_2_matches().
+
+        The two methods set_extags_of_2_matches() and
+        set_extags_of_gt_2_matches() are building blocks that are called
+        internally by the other methods whose names start with
+        `set_extags_of_*`.
 
         Parameters
         ----------
@@ -380,6 +397,13 @@ class SaxExtraction:
     def set_extags_of_arg2(self):
         """
         similar to Openie6.data_processing.label_arg2()
+
+        This method's only goal in life is to be called by self.set_extags(
+        ). The method returns nothing. It just changes the class attribute
+        self.extags. That attribute is initialized when the class is created
+        to a list of NONE's. This method changes some of those NONE's to
+        to "ARG2".
+
 
 
         Returns
@@ -421,7 +445,13 @@ class SaxExtraction:
 
     def set_extags_of_arg1_or_rel(self, arg_name):
         """
-        similar to Openie6.data_processing.label_arg(),
+        similar to Openie6.data_processing.label_arg().
+
+        This method's only goal in life is to be called by self.set_extags(
+        ). The method returns nothing. It just changes the class attribute
+        self.extags. That attribute is initialized when the class is created
+        to a list of NONE's. This method changes some of those NONE's to to
+        "ARG1" and "REL".
 
 
         Parameters
@@ -453,6 +483,7 @@ class SaxExtraction:
     def set_extags_for_unused_token(self, unused_num):
         """
 
+
         Parameters
         ----------
         unused_num: int
@@ -466,29 +497,33 @@ class SaxExtraction:
         unused_str = f'[unused{unused_num}]'
         # this equals -3, -2, -1 for 1, 2, 3
         unused_loc = -4 + unused_num
+
+        # [1:-1] when self.rel[0] = "[is]" and
+        # self.rel[-1] = "of" or "from"
+
+        # [1: len(self.rel)] when self.rel[0] = "[is]" and
+        # self.rel[-1] is anything that doesn't start with "["
         if unused_num in [2, 3]:
-            last_rel_loc = -1
+            # is-rel-to and is-rel-from
+            range_end = -1  # same as len(self.rel_words)-1
         elif unused_num == 1:
-            last_rel_loc = len(self.rel_words)
+            # is-rel
+            range_end = len(self.rel_words)
         else:
             assert False
-        # [1:-1] when self.rel[0] = "[is]"
-        # and self.rel[-1] = "of" or 'from"
-        # [1: ] when self.rel[0] = "[is]"
-        # and self.rel[-1] is anything
-        # that doesn't start with "["
-        if count_sub_reps(self.rel_words[1:last_rel_loc],
+
+        if count_sub_reps(self.rel_words[1:range_end],
                           self.orig_sentL_words) == 1:
             matches = get_matches(
-                self.rel_words[1:last_rel_loc], self.orig_sentL_words)
+                self.rel_words[1:range_end], self.orig_sentL_words)
             self.set_extags_of_2_matches(matches, "REL")
             assert self.orig_sentL_words[unused_loc] == unused_str
             self.extags[unused_loc] = 'REL'
         elif len(self.rel_words) > 2 and \
-                count_sub_reps(self.rel_words[1:last_rel_loc],
+                count_sub_reps(self.rel_words[1:range_end],
                                self.orig_sentL_words) == 0:
             matches = get_matches(
-                self.rel_words[1:last_rel_loc], self.orig_sentL_words)
+                self.rel_words[1:range_end], self.orig_sentL_words)
             # sub doesn't fit in one piece into full
             # but still possible it exists in fractured form
             if has_gt_2_matches(matches):
@@ -623,7 +658,8 @@ class SaxExtraction:
                                 xlist, cost_fun)
 
                         assert rel_words == \
-                            self.orig_sentL_words[loc0: loc0 + len(rel_words)]
+                               self.orig_sentL_words[
+                               loc0: loc0 + len(rel_words)]
                         self.set_the_is_extagged_flag_to_true("REL")
                         self.extags[loc0: loc0 + len(rel_words)] = \
                             ['REL'] * len(rel_words)
@@ -677,6 +713,16 @@ class SaxExtraction:
 
     def set_extags(self):
         """
+        This method calls all the other methods in this class whose names
+        begin with `set_extags_of_*`. The method returns nothing.
+
+        When this class is first constructed, it initializes the class
+        attribute `self.extags` to a list of NONE's:
+
+        self.extags = ["NONE"] * len(self.orig_sentL_words)
+
+        This method gradually replaces some of the NONE's in that list by
+        other extags like "ARG1", "REL" and "ARG2".
 
         Returns
         -------
@@ -698,33 +744,8 @@ class SaxExtraction:
     @staticmethod
     def convert_to_sax_ex(carb_ex):
         """
-        class Extraction:
-        def __init__(self, pred, head_pred_index, sent,
-             confidence, question_dist = '', index = -1):
-        self.pred = pred
-        self.head_pred_index = head_pred_index
-        self.sent = sent
-        self.args = []
-        self.confidence = confidence
-        self.matched = []
-        self.questions = {}
-        # self.indsForQuestions = defaultdict(lambda: set())
-        self.is_mwp = False
-        self.question_dist = question_dist
-        self.index = index
-    
-        def addArg(self, arg, question = None):
-        self.args.append(arg)
-        if question:
-            self.questions[question] = \
-            self.questions.get(question,[]) + [Argument(arg)]
-    
-        class Argument:
-        def __init__(self, arg):
-            self.words = [x for x in arg[0].strip().split(' ') if x]
-            self.posTags = map(itemgetter(1), nltk.pos_tag(self.words))
-            self.indices = arg[1]
-            self.feats = {}
+        This method takes as input a Carb Extraction `carb_ex` and returns
+        the equivalent SaxExtraction.
     
         Parameters
         ----------
@@ -754,7 +775,10 @@ class SaxExtraction:
     @staticmethod
     def convert_to_carb_ex(sax_ex):
         """
-        openie6.model.write_to_files
+        used this openie6.model.write_to_files to write this method.
+
+        This method takes as input a SaxExtraction `sax_ex` and returns the
+        equivalent Carb Extraction.
 
         Parameters
         ----------
@@ -778,6 +802,9 @@ class SaxExtraction:
     @staticmethod
     def get_carb_osent2_to_exs(sax_osent2_to_exs):
         """
+        This method takes as input a dictionary `sax_osent2_to_exs` mapping
+        a sentence osent2 to a list of sax extractions. It returns the same
+        dictionary with the sax extractions replaced by carb extractions.
 
         Parameters
         ----------
@@ -798,6 +825,10 @@ class SaxExtraction:
     @staticmethod
     def get_sax_osent2_to_exs(carb_osent2_to_exs):
         """
+        This method takes as input a dictionary `carb_osent2_to_exs` mapping
+        a sentence osent2 to a list of carb extractions. It returns the same
+        dictionary with the carb extractions replaced by sax extractions.
+
 
         Parameters
         ----------
@@ -820,6 +851,9 @@ class SaxExtraction:
         """
         similar to Openie6.model.process_extraction()
 
+        This method returns a SaxExtraction which it builds from `ex_ilabels`,
+        `orig_sentL`, `confidence`.
+
         ILABEL_TO_EXTAG={
             0: 'NONE',
             1: 'ARG1',
@@ -833,7 +867,9 @@ class SaxExtraction:
         Parameters
         ----------
         ex_ilabels: list[int]
+            a list of ilabels (ints in range(0:6))
         orig_sentL: str
+            original sentence Long (i.e., ending with UNUSED_TOKEN_STR)
         confidence: float
 
         Returns

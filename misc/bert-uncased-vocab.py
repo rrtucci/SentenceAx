@@ -1,7 +1,7 @@
 from transformers import AutoTokenizer
 from pprint import pprint
 
-tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
+tokenizer = AutoTokenizer.from_pretrained("bert-base-cased")
 
 min_vocab = min(tokenizer.vocab.values())
 max_vocab = max(tokenizer.vocab.values())

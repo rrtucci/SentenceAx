@@ -701,7 +701,7 @@ if __name__ == "__main__":
         # pid=1, task="ex", action="train_test"
         # pid=5, task="cc", action="train_test"
         params = Params(pid)
-        model_str = "bert-base-uncased"
+        model_str = "bert-base-cased"
         auto_tokenizer = AutoTokenizer.from_pretrained(
             model_str,
             do_lower_case=True,
@@ -741,7 +741,7 @@ if __name__ == "__main__":
         l_sent = [
             "We went to the park on Sunday, and then went to the movies.",
             "I wish i new how to make this program work."]
-        model_str = "bert-base-uncased"
+        model_str = "bert-base-cased"
         do_lower_case = ('uncased' in model_str)
         auto_tokenizer = AutoTokenizer.from_pretrained(
             model_str,
@@ -759,15 +759,15 @@ if __name__ == "__main__":
         pprint(l_sent2)
 
 
-    # main1(tags_in_fp="tests/small_extags.txt",
-    #       verbose=False)
-    # main1(tags_in_fp="tests/small_extagsN.txt",
-    #       verbose=False)
-    # main2()
-    # # preds file has no valid exs
-    # main1(tags_in_fp="predicting/small_pred.txt",
-    #       omit_exless=False,
-    #       verbose=False)
+    main1(tags_in_fp="tests/small_extags.txt",
+          verbose=False)
+    main1(tags_in_fp="tests/small_extagsN.txt",
+          verbose=False)
+    main2()
+    # preds file has no valid exs
+    main1(tags_in_fp="predicting/small_pred.txt",
+          omit_exless=False,
+          verbose=False)
 
     main1(tags_in_fp="tests/small_cctags.txt",
           pid=5,

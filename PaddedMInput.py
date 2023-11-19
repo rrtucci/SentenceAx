@@ -270,9 +270,9 @@ class PaddedMInput(MInput):
 
 
 if __name__ == "__main__":
-    def main(in_fp):
-        params = Params(1)  # 1, task="ex", action="train_test"
-        model_str = "bert-base-uncased"
+    def main(in_fp, omit_exless):
+        params = Params(1) # 1, task="ex", action="train_test"
+        model_str = "bert-base-cased"
         do_lower_case = ('uncased' in model_str)
         auto = AutoTokenizer.from_pretrained(
             model_str,
@@ -284,7 +284,8 @@ if __name__ == "__main__":
 
         m_in = MInput(params,
                       in_fp,
-                      auto)
+                      auto,
+                      omit_exless=omit_exless)
         padded_m_in = PaddedMInput(m_in)
         padded_m_in.print_padded_data_shapes()
         li1 = get_words(padded_m_in.l_orig_sent[0])
@@ -293,6 +294,8 @@ if __name__ == "__main__":
         print([(k, li2[k]) for k in range(len(li2))])
 
 
-    # main(in_fp="tests/extags_test.txt")
-    # main(in_fp="predicting/small_pred.txt")
-    main(in_fp="input_data/carb-data/dev.txt")
+    main(in_fp="tests/extags_test.txt", omit_exless=True)
+    # the next 2 files have no valid extags per sample so
+    # must set omit_exless=False or else all samples will be excluded
+    main(in_fp="predicting/small_pred.txt", omit_exless=False)
+    main(in_fp="input_data/carb-data/dev.txt", omit_exless=False)

@@ -205,15 +205,15 @@ class Model(L.LightningModule):
 
         if self.params.task == "ex":
             self.metric = ExMetric(verbose=self.verbose)
+            self._ex_sent_to_sent = self.metric.sent_to_sent
         elif self.params.task == "cc":
             self.metric = CCMetric(verbose=self.verbose)
+            self._ex_sent_to_sent = None
 
-        self._ex_sent_to_sent = None  # property
         # self.cc_sent_to_words is similar to Openie6 conj_word_mapping
         # Note that self.cc_sent_to_words is never used;
         # It is filled in ActionConductor but never used.
         # We include it in SentenceAx to follow Openie6.
-
         self.cc_sent_to_words = None
 
         self.scores_epoch_end_d = {}  # filled in test_epoch_end()
@@ -261,6 +261,10 @@ class Model(L.LightningModule):
         dict[str, str]
 
         """
+        if self.params.task == "ex":
+            self._ex_sent_to_sent = self.metric.sent_to_sent
+        elif self.params.task == "cc":
+            assert False
         return self._ex_sent_to_sent
 
     @ex_sent_to_sent.setter
@@ -280,9 +284,11 @@ class Model(L.LightningModule):
         None
 
         """
-        self._ex_sent_to_sent = value
         if self.params.task == "ex":
+            self._ex_sent_to_sent = value
             self.metric.sent_to_sent = value
+        elif self.params.task == "cc":
+            assert False
 
     def configure_optimizers(self):
         """

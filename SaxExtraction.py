@@ -30,12 +30,12 @@ class SaxExtraction:
 
     Attributes
     ----------
-    # _arg1_words: list[str]
-    # _arg2_words: list[str]
-    # _loc_arg_words: list[str]
-    # _orig_sentL_words: list[str]
-    # _rel_words: list[str]
-    # _time_arg_words: list[str]
+    _arg1: str
+    _arg2: str
+    _loc_arg: str
+    _orig_sentL: str
+    _rel: str
+    _time_arg: str
     arg1: str
     arg2: str
     arg2_is_extagged: bool

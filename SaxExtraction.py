@@ -30,12 +30,12 @@ class SaxExtraction:
 
     Attributes
     ----------
-    _arg1_words: list[str]
-    _arg2_words: list[str]
-    _loc_arg_words: list[str]
-    _orig_sentL_words: list[str]
-    _rel_words: list[str]
-    _time_arg_words: list[str]
+    # _arg1_words: list[str]
+    # _arg2_words: list[str]
+    # _loc_arg_words: list[str]
+    # _orig_sentL_words: list[str]
+    # _rel_words: list[str]
+    # _time_arg_words: list[str]
     arg1: str
     arg2: str
     arg2_is_extagged: bool
@@ -69,23 +69,23 @@ class SaxExtraction:
 
         self.confidence = confidence
 
-        self.orig_sentL = orig_sentL
-        self._orig_sentL_words = None
+        self._orig_sentL = orig_sentL
+        self.orig_sentL_words = get_words(orig_sentL)
 
-        self.arg1 = arg1
-        self._arg1_words = None
+        self._arg1 = arg1
+        self.arg1_words = get_words(arg1)
 
-        self.rel = rel
-        self._rel_words = None
+        self._rel = rel
+        self.rel_words = get_words(rel)
 
-        self.arg2 = arg2
-        self._arg2_words = None
+        self._arg2 = arg2
+        self.arg2_words = arg2
 
-        self.time_arg = ""
-        self._time_arg_words = None
+        self._time_arg = ""
+        self.time_arg_words = []
 
-        self.loc_arg = ""
-        self._loc_arg_words = None
+        self._loc_arg = ""
+        self.loc_arg_words = []
 
         self.arg2_is_extagged = False
 
@@ -95,70 +95,165 @@ class SaxExtraction:
         self.extags_are_set = False
 
     @property
-    def orig_sentL_words(self):
+    def orig_sentL(self):
         """
 
         Returns
         -------
-        list[str]
+        str
+        """
+        return self._orig_sentL
+
+    @orig_sentL.setter
+    def orig_sentL(self, value):
+        """
+
+        Parameters
+        ----------
+        value: str
+
+        Returns
+        -------
+        None
 
         """
-        return get_words(self.orig_sentL)
+        self.orig_sentL = value
+        self.orig_sentL_words = get_words(value)
 
     @property
-    def arg1_words(self):
+    def arg1(self):
         """
 
         Returns
         -------
-        list[str]
+        str
 
         """
-        return get_words(self.arg1)
+        return self._arg1
+
+    @arg1.setter
+    def arg1(self, value):
+        """
+
+        Parameters
+        ----------
+        value: str
+
+        Returns
+        -------
+        None
+
+        """
+        self.arg1 = value
+        self.arg1_words = get_words(value)
 
     @property
-    def rel_words(self):
+    def rel(self):
         """
 
         Returns
         -------
-        list[str]
+        str
 
         """
-        return get_words(self.rel)
+        return self._rel
+
+    @rel.setter
+    def rel(self, value):
+        """
+
+        Parameters
+        ----------
+        value: str
+
+        Returns
+        -------
+        None
+
+        """
+        self.rel = value
+        self.rel_words = get_words(value)
 
     @property
-    def arg2_words(self):
+    def arg2(self):
         """
 
         Returns
         -------
-        list[str]
+        str
 
         """
-        return get_words(self.arg2)
+        return self._arg2
+
+    @arg2.setter
+    def arg2(self, value):
+        """
+
+        Parameters
+        ----------
+        value: str
+
+        Returns
+        -------
+        None
+
+        """
+        self.arg2 = value
+        self.arg2_words = get_words(value)
 
     @property
-    def time_arg_words(self):
+    def time_arg(self):
         """
 
         Returns
         -------
-        list[str]
+        str
 
         """
-        return get_words(self.time_arg)
+        return self._time_arg
+
+    @time_arg.setter
+    def time_arg(self, value):
+        """
+
+        Parameters
+        ----------
+        value: str
+
+        Returns
+        -------
+        None
+
+        """
+        self.time_arg = value
+        self.time_arg_words = get_words(value)
 
     @property
-    def loc_arg_words(self):
+    def loc_arg(self):
         """
 
         Returns
         -------
-        list[str]
+        str
 
         """
-        return get_words(self.loc_arg)
+        return self._loc_arg
+
+    @loc_arg.setter
+    def loc_arg(self, value):
+        """
+
+        Parameters
+        ----------
+        value: str
+
+        Returns
+        -------
+        None
+
+        """
+        self.loc_arg = value
+        self.loc_arg_words = get_words(value)
 
     def __eq__(self, other_ex):
         """
@@ -350,7 +445,7 @@ class SaxExtraction:
             if has_gt_2_matches(matches):
                 self.set_extags_of_gt_2_matches(matches, arg_name.upper())
 
-    def set_extags_for_unused_num(self, unused_num):
+    def set_extags_for_unused_token(self, unused_num):
         """
 
         Parameters
@@ -363,7 +458,7 @@ class SaxExtraction:
 
         """
         assert unused_num in [1, 2, 3]
-        unused_str = '[unused' + str(unused_num) + ']'
+        unused_str = f'[unused{unused_num}]'
         # this equals -3, -2, -1 for 1, 2, 3
         unused_loc = -4 + unused_num
         if unused_num in [2, 3]:
@@ -422,16 +517,16 @@ class SaxExtraction:
             # IS-OF
             elif self.rel_words[0] == '[is]' and \
                     self.rel_words[-1] == '[of]':
-                self.set_extags_for_unused_num(2)
+                self.set_extags_for_unused_token(2)
             # IS  FROM
             elif self.rel_words[0] == '[is]' and \
                     self.rel_words[-1] == '[from]':
-                self.set_extags_for_unused_num(3)
+                self.set_extags_for_unused_token(3)
             # IS
             elif self.rel_words[0] == '[is]' and \
                     len(self.rel_words) > 1:
                 assert self.rel_words[-1].startswith('[') == ""
-                self.set_extags_for_unused_num(1)
+                self.set_extags_for_unused_token(1)
 
     def set_extags_of_repeated_arg1(self):
         """

@@ -394,7 +394,7 @@ class SaxExtraction:
                 self.extags[m.b: m.b + m.size] = \
                     [extag_name] * m.size
 
-    def set_extags_of_arg2(self):
+    def set_extags_to_ARG2(self):
         """
         similar to Openie6.data_processing.label_arg2()
 
@@ -402,9 +402,10 @@ class SaxExtraction:
         ). The method returns nothing. It just changes the class attribute
         self.extags. That attribute is initialized when the class is created
         to a list of NONE's. This method changes some of those NONE's to
-        to "ARG2".
+        to ARG2.
 
-
+        Setting extags to ARG2 differs from setting them to ARG1 and REL in
+        that ARG2 must also include the legacy time_arg and loc_arg.
 
         Returns
         -------
@@ -443,15 +444,23 @@ class SaxExtraction:
         # set this flag true
         self.arg2_is_extagged = True
 
-    def set_extags_of_arg1_or_rel(self, arg_name):
+    def set_extags_to_ARG1_or_REL(self, arg_name):
         """
         similar to Openie6.data_processing.label_arg().
 
-        This method's only goal in life is to be called by self.set_extags(
-        ). The method returns nothing. It just changes the class attribute
-        self.extags. That attribute is initialized when the class is created
-        to a list of NONE's. This method changes some of those NONE's to to
-        "ARG1" and "REL".
+        This method's only goal in life is to be called by self.set_extags( 
+        ). The method returns nothing. It just changes the class attribute 
+        self.extags. That attribute is initialized when the class is created 
+        to a list of NONE's. This method changes some of those NONE's to 
+        ARG1 or REL.
+
+        Two cases are considered:
+
+        1. a sub occurs unfractured within full. In this case we call
+        set_extags_of_2_matches()
+
+        2. a sub does occur unfractured within full, but it does occur in
+        fractured form. In this case we call set_extags_of_gt_2_matches()
 
 
         Parameters
@@ -480,33 +489,62 @@ class SaxExtraction:
             if has_gt_2_matches(matches):
                 self.set_extags_of_gt_2_matches(matches, arg_name.upper())
 
-    def set_extags_for_unused_token(self, unused_num):
+    def set_extags_to_REL_for_unused_case(self, unused_case):
         """
+        This method's only goal in life is to be called by self.set_extags( 
+        ). The method returns nothing. It just changes the class attribute 
+        self.extags. That attribute is initialized when the class is created 
+        to a list of NONE's. This method changes some of those NONE's to REL 
+        for one of the 3 possible unused cases.
+
+        Two sub cases are considered:
+
+        1. a sub occurs unfractured within full. In this case we call
+        set_extags_of_2_matches()
+
+        2. a sub does occur unfractured within full, but it does occur in
+        fractured form. In this case we call set_extags_of_gt_2_matches()
+        
+        Since set_extags_to_REL_or_ARG1() also changes extags to REL, 
+        how do the 2 methods differ. This method considers 3 unused cases 
+        which are not considered by set_extags_to_REL_or_ARG1() at all.
+        
+        unused_case=1: rel has a [is] as the first word. Set the extag 
+        corresponding to the [unused1] token to REL. Set extags 
+        corresponding to rel[1:] to REL.
+        
+        unused_case=2: rel has an [is] as the first word and an [of] as the 
+        last. Set the extag corresponding to the [unused2] token to REL. Set 
+        extags corresponding to rel[1:-1] to REL.
+        
+        unused_case=3: rel has an [is] as the first word and a [from] as the 
+        last. Set the extag corresponding to the [unused3] token to REL. Set 
+        extags corresponding to rel[1:-1] to REL.
 
 
         Parameters
         ----------
-        unused_num: int
+        unused_case: int
 
         Returns
         -------
         None
 
         """
-        assert unused_num in [1, 2, 3]
-        unused_str = f'[unused{unused_num}]'
+        assert unused_case in [1, 2, 3]
+        unused_str = f'[unused{unused_case}]'
         # this equals -3, -2, -1 for 1, 2, 3
-        unused_loc = -4 + unused_num
+        unused_loc = -4 + unused_case
 
         # [1:-1] when self.rel[0] = "[is]" and
         # self.rel[-1] = "of" or "from"
 
         # [1: len(self.rel)] when self.rel[0] = "[is]" and
         # self.rel[-1] is anything that doesn't start with "["
-        if unused_num in [2, 3]:
+        if unused_case in [2, 3]:
             # is-rel-to and is-rel-from
             range_end = -1  # same as len(self.rel_words)-1
-        elif unused_num == 1:
+        elif unused_case == 1:
             # is-rel
             range_end = len(self.rel_words)
         else:
@@ -536,9 +574,12 @@ class SaxExtraction:
                 # from NONE to REL
                 self.extags[unused_loc] = 'REL'
 
-    def set_extags_of_IS_OF_FROM(self):
+    def set_extags_to_REL_for_all_unused_cases(self):
         """
         similar to Openie6.data_processing.label_is_of_relations()
+        
+        This method calls set_extags_to_REL_for_unused_case() for the 3 
+        unsed cases.
 
         Returns
         -------
@@ -557,20 +598,29 @@ class SaxExtraction:
             # IS-OF
             elif self.rel_words[0] == '[is]' and \
                     self.rel_words[-1] == '[of]':
-                self.set_extags_for_unused_token(2)
+                self.set_extags_to_REL_for_unused_case(2)
             # IS  FROM
             elif self.rel_words[0] == '[is]' and \
                     self.rel_words[-1] == '[from]':
-                self.set_extags_for_unused_token(3)
+                self.set_extags_to_REL_for_unused_case(3)
             # IS
             elif self.rel_words[0] == '[is]' and \
                     len(self.rel_words) > 1:
                 assert self.rel_words[-1].startswith('[') == ""
-                self.set_extags_for_unused_token(1)
+                self.set_extags_to_REL_for_unused_case(1)
 
-    def set_extags_of_repeated_arg1(self):
+    def set_extags_to_ARG1_if_repeated_arg1(self):
         """
         similar to Openie6.data_processing.label_multiple_arg1()
+        
+        This method's only goal in life is to be called by self.set_extags( 
+        ). The method returns nothing. It just changes the class attribute 
+        self.extags. That attribute is initialized when the class is created 
+        to a list of NONE's. This method changes some of those NONE's to 
+        ARG1, in sub cases where arg1 appears more than once in full. In 
+        that sub case it chooses just one of the occurrences of arg1, the one 
+        that is closest to rel. It changes to ARG1 the extags corresponding 
+        to that occurrence of arg1.
 
 
         Returns
@@ -599,9 +649,8 @@ class SaxExtraction:
 
                 loc0, cost0 = \
                     find_xlist_item_that_minimizes_cost_fun(xlist, cost_fun)
-                assert self.arg1_words == self.orig_sentL_words[
-                                          loc0: loc0 + len(
-                                              self.arg1_words)]
+                assert self.arg1_words == \
+                    self.orig_sentL_words[loc0: loc0 + len(self.arg1_words)]
                 self.set_the_is_extagged_flag_to_true("ARG1")
                 # only extag the first occurrence of arg1
                 self.extags[loc0: loc0 + len(self.arg1_words)] = \
@@ -609,7 +658,7 @@ class SaxExtraction:
             else:  # "REL" is not in extags
                 assert False
 
-    def set_extags_of_repeated_rel(self):
+    def set_extags_to_REL_if_repeated_rel(self):
         """
         similar to Openie6.data_processing.label_multiple_rel()
 
@@ -658,8 +707,7 @@ class SaxExtraction:
                                 xlist, cost_fun)
 
                         assert rel_words == \
-                               self.orig_sentL_words[
-                               loc0: loc0 + len(rel_words)]
+                            self.orig_sentL_words[loc0: loc0 + len(rel_words)]
                         self.set_the_is_extagged_flag_to_true("REL")
                         self.extags[loc0: loc0 + len(rel_words)] = \
                             ['REL'] * len(rel_words)
@@ -685,7 +733,7 @@ class SaxExtraction:
                         self.extags[loc0: loc0 + len(rel_words)] = \
                             ['REL'] * len(rel_words)
 
-    def set_extags_of_loc_or_time(self, arg_name):
+    def set_extags_to_ARG2_of_loc_and_time(self, arg_name):
         """
         similar to Openie6.data_processing.label_time(),
         similar to Openie6.data_processing.label_loc()
@@ -709,7 +757,8 @@ class SaxExtraction:
         else:
             assert False
         if has_2_matches(matches):
-            self.set_extags_of_2_matches(matches, arg_name.upper())
+            # self.set_extags_of_2_matches(matches, arg_name.upper())
+            self.set_extags_of_2_matches(matches, "ARG2")
 
     def set_extags(self):
         """
@@ -730,14 +779,14 @@ class SaxExtraction:
 
         """
 
-        self.set_extags_of_arg2()
-        self.set_extags_of_arg1_or_rel("arg1")
-        self.set_extags_of_arg1_or_rel("rel")
-        self.set_extags_of_IS_OF_FROM()
-        self.set_extags_of_repeated_arg1()
-        self.set_extags_of_repeated_rel()
-        self.set_extags_of_loc_or_time("loc")
-        self.set_extags_of_loc_or_time("time")
+        self.set_extags_to_ARG2()
+        self.set_extags_to_ARG1_or_REL("arg1")
+        self.set_extags_to_ARG1_or_REL("rel")
+        self.set_extags_to_REL_for_all_unused_cases()
+        self.set_extags_to_ARG1_if_repeated_arg1()
+        self.set_extags_to_REL_if_repeated_rel()
+        self.set_extags_to_ARG2_of_loc_and_time("loc")
+        self.set_extags_to_ARG2_of_loc_and_time("time")
 
         self.extags_are_set = True
 

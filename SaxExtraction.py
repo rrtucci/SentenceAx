@@ -37,16 +37,21 @@ class SaxExtraction:
     _rel: str
     _time_arg: str
     arg1: str
+    arg1_words: list[str]
     arg2: str
+    arg2_words: list[str]
     arg2_is_extagged: bool
     confidence: float
     extags: list[str]
     extags_are_set: bool
     is_assigned_d: dict[str, bool]
     loc_arg: str
+    loc_arg_words: str
     orig_sentL: str
     rel: str
+    rel_words: list[str]
     time_arg: str
+    time_arg_words: list[str]
 
     """
 
@@ -79,7 +84,7 @@ class SaxExtraction:
         self.rel_words = get_words(rel)
 
         self._arg2 = arg2
-        self.arg2_words = arg2
+        self.arg2_words = get_words(arg2)
 
         self._time_arg = ""
         self.time_arg_words = []
@@ -383,10 +388,10 @@ class SaxExtraction:
 
         """
 
-        li_2lt = self.arg2_words + self.loc_arg_words + \
-                 self.time_arg_words
-        li_2tl = self.arg2_words + self.time_arg_words + \
-                 self.loc_arg_words
+        li_2lt = \
+            self.arg2_words + self.loc_arg_words + self.time_arg_words
+        li_2tl = \
+            self.arg2_words + self.time_arg_words + self.loc_arg_words
         li_2t = self.arg2_words + self.time_arg_words
         li_2l = self.arg2_words + self.loc_arg_words
         li_2 = self.arg2_words
@@ -614,12 +619,11 @@ class SaxExtraction:
                             return abs(arg1_loc - x)
 
                         loc0, cost0 = \
-                            find_xlist_item_that_minimizes_cost_fun(xlist,
-                                                                    cost_fun)
+                            find_xlist_item_that_minimizes_cost_fun(
+                                xlist, cost_fun)
 
                         assert rel_words == \
-                               self.orig_sentL_words[
-                               loc0: loc0 + len(rel_words)]
+                            self.orig_sentL_words[loc0: loc0 + len(rel_words)]
                         self.set_the_is_extagged_flag_to_true("REL")
                         self.extags[loc0: loc0 + len(rel_words)] = \
                             ['REL'] * len(rel_words)

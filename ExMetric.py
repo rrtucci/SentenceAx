@@ -61,7 +61,7 @@ class ExMetric:
 
     def __call__(self,
                  l_osentL,  # meta data
-                 lll_ilabel,  # predictions
+                 lll_pred_ilabel,  # predictions
                  ll_confidence):  # scores
         """
         similar to Openie6.metric.Carb.__call__
@@ -80,7 +80,7 @@ class ExMetric:
         Parameters
         ----------
         l_osentL: list[str]
-        lll_ilabel: list[list[list[int]]]
+        lll_pred_ilabel: list[list[list[int]]]
         ll_confidence: list[list[float]]
 
         Returns
@@ -96,7 +96,7 @@ class ExMetric:
         dominant_d = \
             AllenTool.get_osent2_to_exs_from_lll_ilabel(
                 l_osentL,
-                lll_ilabel,
+                lll_pred_ilabel,
                 ll_confidence,
                 self.sent_to_sent)
         if self.verbose:
@@ -178,7 +178,7 @@ class ExMetric:
 
         assert self.osentL_to_exs
         for osentL, exs in self.osentL_to_exs.items():
-            # print("confidence", [ex.confidence for ex in exs])
+            # print("confidences", [ex.confidence for ex in exs])
             # print("len(exs)", len(exs))
             self.osentL_to_exs[osentL] = \
                 sorted(exs,
@@ -195,10 +195,6 @@ class ExMetric:
         # out_fp = "/dev/null"
         out_fp = "dev_null.txt"
 
-        # this means that the exs of
-        # EXTAGS_TEST_FP and EXTAGS_TUNE_FP
-        # are ignored. In the actual files, they are
-        # just a single extraction with only NONE extags
         if ttt == "tune":
             bmark = self.tune_benchmark
         elif ttt == "test":

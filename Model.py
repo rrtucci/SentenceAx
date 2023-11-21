@@ -435,10 +435,11 @@ class Model(L.LightningModule):
         """
 
         This method is used inside self.forward() and is the heart of that
-        method. It contains a while loop that drives a batch through the
-        layers of the model and returns `llll_word_score`. Setting `verbose`
-        to True prints out a detailed trail of what occurs in this method.
-        The following example was obtained from such a verbose trail.
+        method. It contains a while loop over depths that drives a batch
+        through the layers of the model and returns `llll_word_score`.
+        Setting `verbose` to True prints out a detailed trail of what occurs
+        in this method. The following example was obtained from such a
+        verbose trail.
 
         Assume:
         batch_size= 24,
@@ -468,6 +469,17 @@ class Model(L.LightningModule):
         bunch of torch operations: [24, 105, 768]->[24, 84, 768]
         merge layer: [24, 84, 768]->[24, 84, 300]
         ilabelling_layer: [24, 84, 300]->[24, 84, 6]
+
+        lll_word_score is the output of the last ilabelling_layer for each
+        depth
+
+        llll_word_score is a list of lll_word_score
+
+        len( llll_word_score)= 5 = num_depths
+
+        lll_word_score[0].shape = [24, 84, 6]
+
+        Note that llll_word_scoreT = Ten(llll_word_score)
         
         Parameters
         ----------
@@ -511,6 +523,7 @@ class Model(L.LightningModule):
         lll_word_score = Ten([0])  # this statement is unecessary
         llll_word_score = []  # similar to Openie6.all_depth_scores
         depth = 0
+        # loop over depths
         while True:
             for ilay, layer in enumerate(self.iterative_transformer):
                 if verbose:
@@ -582,6 +595,11 @@ class Model(L.LightningModule):
                         break
                 if not valid_extraction:
                     break
+
+        if verbose:
+            print("len(llll_word_score)=", len(llll_word_score))
+            print("llll_word_score[0].shape", llll_word_score[0].shape)
+
         return llll_word_score
 
     @staticmethod
@@ -725,6 +743,29 @@ class Model(L.LightningModule):
         The following methods invoke forward() once:
         training_step(), validation_step(), test_step()
 
+        lll_word_score = Openie6.word_scores
+        llll_word_score = Openie6.all_depth_scores
+
+        lll_pred_ilabel0 = Openie6.predictions
+        llll_pred_ilabel = Openie6.all_depth_predictions
+
+        ll_pred_confidence0 = Openie6.confidences
+        lll_pred_confidence = Openie6.all_depth_confidences
+
+        the outermost l in "all_depths_*" is for depth \in range(5)
+
+        Many of the tensor contortions in this method are done in order to
+        move that depth index in llll_word_score from the outermost position
+        to the dim=1, where it is located in lll_ilabel. Also, we need to
+        get rid (by averaging) of the innermost index corresponding to the 6
+        possible ilabels (classes).
+
+
+        if A and B are of shape (3, 4):
+        torch.cat([A, B], dim=0) will be of shape (6, 4)
+        torch.stack([A, B], dim=0) will be of shape (2, 3, 4)
+
+
         Parameter
         ----------
         batch: tuple[torch.Tensor, torch.Tensor, list[str]]
@@ -758,6 +799,7 @@ class Model(L.LightningModule):
         # start_model_input = \
         #     torch.Tensor(self.auto_tokenizer.encode(batch_text))
 
+
         llll_word_score = self.sax_get_llll_word_score(
             x_d, y_d, ttt, self.verbose)
 
@@ -765,17 +807,16 @@ class Model(L.LightningModule):
         # print("vvbg", "len(llll_word_score)", len(llll_word_score))
         # print_tensor("llll_word_score[0]", llll_word_score[0])
         loss = 0
-        llll_pred_ilabel = []  # = all_depth_predictions
-        # lll_pred_ilabel0 = all_depth_predictions after cat dim=1
-        lll_pred_confidence = []  # = all_depth_confidences
-        # ll_pred_confidence0 = all_depth_confidences after cat dim=1
+        llll_pred_ilabel = []
+        lll_pred_confidence = []
         batch_size, num_words, xxx = llll_word_score[0].shape
-        # xxx = 6, the number of different ilabels (classes)
+        # len(llll_word_score)=5, the num_depths
+        # xxx = 6, the number of different ilabels (num_classes)
         # y_d["lll_ilabel"] = \
         #     y_d["lll_ilabel"].long()
         for depth, lll_word_score in enumerate(llll_word_score):
             if ttt == 'train':
-                # here -1 will be the depth
+                # here -1 will be num_ilabels=6
                 ll_loss_input = \
                     lll_word_score.reshape(batch_size * num_words, -1)
                 # print_tensor("lll_word_score", lll_word_score)
@@ -794,19 +835,26 @@ class Model(L.LightningModule):
                 # print("loss shape", loss.shape)
                 # print_tensor("l_loss_target", l_loss_target)
                 # print("loss", loss)
-            elif ttt != "train":
+            if ttt != "train":
                 lll_soft_word_score = \
                     torch.log_softmax(lll_word_score, dim=2)
                 ll_max_log_prob, ll_pred_ilabel = \
                     torch.max(lll_soft_word_score, dim=2)
                 # print_tensor("ll_max_log_prob", ll_max_log_prob)
                 # print_tensor("ll_pred_ilabel", ll_pred_ilabel)
+
                 # remember: lll_ilabel was similar to Openie6.labels
                 # first (outer) list over batch events
                 # second list over extractions
                 # third (inner) list over number of ilabels in a line
+
                 # print("ttt, action", ttt, self.params.action)
                 # print_tensor("lll_ilabel", y_d["lll_ilabel"])
+
+                # For ttt!=train, y_d["lll_ilabel"] entries are all \in  [
+                # 0, -100] because we store that info in Carb benchmarks.
+                # That is fine because we only need y_d["lll_ilabel"] to
+                # create this template
                 ll_nonpad_bool = \
                     (y_d["lll_ilabel"][:, 0, :] != -100).float()
                 # print("dfrt", {name: x_d[name].shape for name in x_d.keys()})
@@ -831,7 +879,8 @@ class Model(L.LightningModule):
 
         if ttt == 'train':
             if self.con_to_weight:
-                # dim=1 is depth. This cats along depth dimension
+                # unsqeeze dim=1, then cat(). This
+                # removes the outermost l and fattens dim=1
                 llll_word_scoreT = torch.cat(
                     [lll.unsqueeze(1) for lll in llll_word_score], dim=1)
                 llll_word_scoreT = torch.softmax(llll_word_scoreT, dim=-1)
@@ -855,13 +904,11 @@ class Model(L.LightningModule):
                                               - self.init_name_to_param[name])
                 loss += self.params.d["wreg"] * weight_diff
 
-        # if A and B are of shape (3, 4):
-        # torch.cat([A, B], dim=0) will be of shape (6, 4)
-        # torch.stack([A, B], dim=0) will be of shape (2, 3, 4)
-
         # llll_pred_ilabel: list[tensor]
         # lll_pred_confidence: list[tensor]
         if ttt != "train":
+            # unsqeeze dim=1, then cat. This
+            # removes the outermost l and fattens dim=1
             lll_pred_ilabel0 = torch.cat(llll_pred_ilabel, dim=1)
             ll_pred_confidence0 = torch.cat(lll_pred_confidence, dim=1)
             # never used

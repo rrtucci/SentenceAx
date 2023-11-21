@@ -61,7 +61,7 @@ class AllenTool:
         # print("lkop", self.num_sents)
 
     @staticmethod
-    def print_osent2_to_exs(osent2_to_exs, start_id, end_id):
+    def print_osent2_to_exs(osent2_to_exs, start_id=None, end_id=None):
         """
         This method prints `osent2_to_exs` in the sample range
         `start_d:end_id`.
@@ -69,15 +69,20 @@ class AllenTool:
         Parameters
         ----------
         osent2_to_exs: dict[str, list[SaxExtraction]]
-        start_id: int
-        end_id: int
+        start_id: int|None
+        end_id: int|None
 
         Returns
         -------
         None
 
         """
+        if not start_id:
+            start_id = 0
+        if not end_id:
+            end_id = len(osent2_to_exs)
         for sent in list(osent2_to_exs.keys())[start_id: end_id]:
+            print()
             print(sent)
             for ex in osent2_to_exs[sent]:
                 print("(part) " + ex.get_simple_sent())
@@ -127,19 +132,17 @@ class AllenTool:
             num_exs = len(ll_confidence[sam_id])
             for depth in range(num_exs):
                 ilabels = lll_ilabel[sam_id][depth]
-                # all ilabels=0 once no more extractions
-                if sum(ilabels) == 0:
-                    break
-                ex0 = SaxExtraction.get_ex_from_ilabels(
-                    ilabels,
-                    osent2,
-                    ll_confidence[sam_id][depth])
-                if ex0.arg1 and ex0.rel:
-                    add_key_value_pair_to_this_d(
-                        key=osent2,
-                        value=ex0,
-                        transform_d=sent_to_sent,
-                        this_d=osent2_to_exs)
+                if sum(ilabels):
+                    ex0 = SaxExtraction.get_ex_from_ilabels(
+                        ilabels,
+                        osent2,
+                        ll_confidence[sam_id][depth])
+                    if ex0.arg1 and ex0.rel:
+                        add_key_value_pair_to_this_d(
+                            key=osent2,
+                            value=ex0,
+                            transform_d=sent_to_sent,
+                            this_d=osent2_to_exs)
         return osent2_to_exs
 
     @staticmethod

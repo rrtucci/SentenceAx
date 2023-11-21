@@ -20,6 +20,7 @@ tuning=dev=development=validation
 """
 
 LINE_SEPARATOR = "[%@!]"
+SEED = 777
 
 #"ex" stands for extraction
 # "cc" stands for coordinating conjunction

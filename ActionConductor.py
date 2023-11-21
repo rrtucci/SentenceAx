@@ -34,6 +34,8 @@ https://stackoverflow.com/questions/70790473/pytorch-lightning-epoch-end-validat
 """
 check_module_version("lightning", "2.0.1")
 
+set_seed(SEED)
+print("SEED=", SEED)
 
 class ActionConductor:
     """
@@ -262,7 +264,7 @@ class ActionConductor:
         if use_minimal:
             trainer = Trainer(
                 logger=logger,
-                # num_sanity_val_steps=0,
+                num_sanity_val_steps=0,
                 limit_train_batches=num_steps,
                 limit_val_batches=num_steps,
                 limit_test_batches=num_steps
@@ -277,7 +279,7 @@ class ActionConductor:
                 logger=logger,
                 max_epochs=self.params.d["num_epochs"],
                 min_epochs=self.params.d["num_epochs"],
-                # num_sanity_val_steps=self.params.d["num_sanity_val_steps"],
+                num_sanity_val_steps=0,
                 # gpus=no longer used
                 # use_tpu=no longer used,
                 # train_percent_check=,

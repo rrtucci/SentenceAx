@@ -983,7 +983,7 @@ class Model(L.LightningModule):
             self.l_batch_m_out.append(batch_m_out)
             assert loss == 0
 
-        self.log('train_step_loss',
+        self.log('loss',
                  loss,
                  prog_bar=True,
                  logger=True,

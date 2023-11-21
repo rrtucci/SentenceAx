@@ -431,7 +431,7 @@ class Model(L.LightningModule):
         x_d = SaxDataset.invert_cat(x, xname_to_dim1)
         return x_d, y_d, meta_d
 
-    def sax_get_llll_word_score(self, x_d, y_d, ttt, verbose=False):
+    def sax_get_llll_word_score(self, x_d, ttt, verbose=False):
         """
 
         This method is used inside self.forward() and is the heart of that
@@ -484,7 +484,6 @@ class Model(L.LightningModule):
         Parameters
         ----------
         x_d: OrderedDict
-        y_d: dict[str, torch.Tensor]
         ttt: str
         verbose: bool
 
@@ -499,12 +498,13 @@ class Model(L.LightningModule):
         # second list over extractions
         # third (inner) list over number of labels in a line
         # after padding and adding the 3 unused tokens
-        batch_size, num_depths, num_words = y_d["lll_ilabel"].shape
+
+        # batch_size, num_depths, num_words = y_d["lll_ilabel"].shape
         # sometimes num_depths will exceed max.
         # This doesn't happen when training, because
         # num_depths is specified when training.
-        if ttt != 'train':
-            num_depths = get_num_depths(self.params.task)
+        # if ttt != 'train':
+        num_depths = get_num_depths(self.params.task)
 
         # `loss_fun` is not used in this function anymore
         # loss_fun, lstm_loss = 0, 0
@@ -801,7 +801,7 @@ class Model(L.LightningModule):
 
 
         llll_word_score = self.sax_get_llll_word_score(
-            x_d, y_d, ttt, self.verbose)
+            x_d, ttt, self.verbose)
 
         # print_tensor("lll_word_score", lll_word_score)
         # print("vvbg", "len(llll_word_score)", len(llll_word_score))
@@ -843,10 +843,16 @@ class Model(L.LightningModule):
                 # print_tensor("ll_max_log_prob", ll_max_log_prob)
                 # print_tensor("ll_pred_ilabel", ll_pred_ilabel)
 
+                # print("task=", ttt)
+                # print_tensor("lll_word_score", lll_word_score)
+                # print_tensor("lll_soft_word_score", lll_soft_word_score)
+                # print_tensor("ll_pred_ilabel", ll_pred_ilabel)
+                # print("sum(""ll_pred_ilabel=", torch.sum(ll_pred_ilabel))
+
                 # remember: lll_ilabel was similar to Openie6.labels
-                # first (outer) list over batch events
+                # first (outermost) list over batch events
                 # second list over extractions
-                # third (inner) list over number of ilabels in a line
+                # third (innermost) list over number of ilabels in a line
 
                 # print("ttt, action", ttt, self.params.action)
                 # print_tensor("lll_ilabel", y_d["lll_ilabel"])
@@ -879,8 +885,8 @@ class Model(L.LightningModule):
 
         if ttt == 'train':
             if self.con_to_weight:
-                # unsqeeze dim=1, then cat(). This
-                # removes the outermost l and fattens dim=1
+                # unsqueeze dim=1, then cat() along dim=1. This
+                # removes the outermost l and "fattens" dim=1
                 llll_word_scoreT = torch.cat(
                     [lll.unsqueeze(1) for lll in llll_word_score], dim=1)
                 llll_word_scoreT = torch.softmax(llll_word_scoreT, dim=-1)
@@ -907,8 +913,8 @@ class Model(L.LightningModule):
         # llll_pred_ilabel: list[tensor]
         # lll_pred_confidence: list[tensor]
         if ttt != "train":
-            # unsqeeze dim=1, then cat. This
-            # removes the outermost l and fattens dim=1
+            # unsqueeze dim=1, then cat along dim=1. This
+            # removes the outermost l and "fattens" dim=1
             lll_pred_ilabel0 = torch.cat(llll_pred_ilabel, dim=1)
             ll_pred_confidence0 = torch.cat(lll_pred_confidence, dim=1)
             # never used
@@ -916,6 +922,7 @@ class Model(L.LightningModule):
             #     x_d,
             #     llll_word_scoreT,
             #     lll_pred_ilabel0)
+            assert loss==0
         else:
             lll_pred_ilabel0 = Ten([0])
             ll_pred_confidence0 = Ten([0])
@@ -929,18 +936,15 @@ class Model(L.LightningModule):
 
     def sax_ttt_step(self, batch, batch_idx, ttt):
         """
-        This method returns the `loss` for one step (i.e., batch pass). It
-        calls forward() once. forward() returns batch_m_out and loss =
-        batch_m_out.loss. This loss variable is only filled with something
-        useful if ttt="train".
+        This method calls forward() which returns batch_m_out and loss =
+        batch_m_out.loss. The method checks that loss==0 for ttt!="train".
+        Then it logs the loss (for all ttt).
 
         If fff="tune", the method writes to a file by calling
         self.sax_write_batch_sents_out().
 
         If ttt!="train", the method stores a list of batch_m_out,
         l_batch_m_out is similar to Openie6.outputs.
-
-        If ttt="train", the method logs the loss.
 
 
         Parameters
@@ -951,8 +955,7 @@ class Model(L.LightningModule):
 
         Returns
         -------
-        float
-            loss
+        None
 
         """
         if self.verbose:
@@ -978,15 +981,13 @@ class Model(L.LightningModule):
             # only remember batch_m_out if going to score it
             # at end of epoch. This only happens if ttt != "train".
             self.l_batch_m_out.append(batch_m_out)
-        else:
-            # loss only calculated during training
-            self.log('train_step_loss',
-                     loss,
-                     prog_bar=True,
-                     logger=True,
-                     on_step=True)
+            assert loss == 0
 
-        return loss
+        self.log('train_step_loss',
+                 loss,
+                 prog_bar=True,
+                 logger=True,
+                 on_step=True)
 
     def training_step(self, batch, batch_idx):
         """
@@ -1076,6 +1077,7 @@ class Model(L.LightningModule):
                         batch_m_out.lll_pred_ilabel,  # predictions
                         batch_m_out.lll_ilabel)  # ground truth
                 elif self.params.task == "ex":
+                    # for task="ex", ground truth in Carb benchmarks
                     self.metric(
                         batch_m_out.l_orig_sent,  # meta data
                         batch_m_out.lll_pred_ilabel,  # predictions
@@ -1214,9 +1216,9 @@ class Model(L.LightningModule):
         None
 
         """
-        lll_ilabel = batch_m_out.lll_pred_ilabel
+        lll_pred_ilabel = batch_m_out.lll_pred_ilabel
         ll_confidence = batch_m_out.ll_pred_confidence
-        num_samples, num_depths, _ = lll_ilabel.shape
+        num_samples, num_depths, _ = lll_pred_ilabel.shape
         l_orig_sent = batch_m_out.l_orig_sent
 
         osent_to_l_pred_ex = {}
@@ -1227,7 +1229,7 @@ class Model(L.LightningModule):
                               this_d=osent_to_l_pred_ex)
             for depth in range(num_depths):
                 num_words = len(get_words(orig_sentL))
-                ex_ilabels = lll_ilabel[sample_id][depth][:num_words]
+                ex_ilabels = lll_pred_ilabel[sample_id][depth][:num_words]
                 if sum(ex_ilabels) == 0:  # extractions completed
                     break
                 ex = SaxExtraction.get_ex_from_ilabels(

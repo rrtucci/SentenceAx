@@ -1090,12 +1090,14 @@ class Model(L.LightningModule):
             epoch_acc = score_d["F1"]
         else:
             assert False
-        scores_epoch_end_d = OrderedDict(score_d)
+        scores_epoch_end_d = dict(score_d)
         scores_epoch_end_d["epoch_acc"] = epoch_acc
+
+        scores_epoch_end_d = round_dict_values(scores_epoch_end_d)
 
         print('\nScores at end of epoch ' +
               str(self.trainer.current_epoch) + ":")
-        print(scores_epoch_end_d)
+        pprint(scores_epoch_end_d)
         # For computing the constraint violations
         # if hasattr(self, 'con_to_l_hinge_loss') and \
         # self.params.d["constraint_str"] != '':

@@ -18,9 +18,13 @@ ttt = train, tune, test
 tuning=dev=development=validation
 
 """
+import numpy as np
 
 LINE_SEPARATOR = "[%@!]"
 SEED = 777
+
+#NAN = np.nan
+NAN = 0
 
 #"ex" stands for extraction
 # "cc" stands for coordinating conjunction

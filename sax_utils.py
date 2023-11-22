@@ -728,6 +728,24 @@ def delete_all_files(dir_fp,
         print(f"An error occurred: {e}")
 
 
+def round_dict_values(di, precision=4):
+    """
+    This method rounds the values of a dict[str, float] to precision
+    `precision`.
+
+    Parameters
+    ----------
+    di: dict[str, float]
+    precision: int
+
+    Returns
+    -------
+    dict[str, float]
+
+    """
+    return {key: round(float(di[key]), precision) for key in di.keys()}
+
+
 if __name__ == "__main__":
     def main1():
         h = {"x": 5, "y": 3}

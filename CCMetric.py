@@ -192,12 +192,12 @@ class CCMetric:
         if self.verbose:
             print("Entering CCMetric.get_score_d method.")
         score_d = OrderedDict({
-            'F1_whole': self.manager_whole.overall_scores.f1_score(),
-            'F1_outer': self.manager_outer.overall_scores.f1_score(),
-            'F1_inner': self.manager_inner.overall_scores.f1_score(),
-            'F1_exact': self.manager_exact.overall_scores.f1_score(),
-            'P_exact': self.manager_exact.overall_scores.precision(),
-            'R_exact': self.manager_exact.overall_scores.recall()
+            'F1_whole': self.manager_whole.overall_ccscores.f1_score(),
+            'F1_outer': self.manager_outer.overall_ccscores.f1_score(),
+            'F1_inner': self.manager_inner.overall_ccscores.f1_score(),
+            'F1_exact': self.manager_exact.overall_ccscores.f1_score(),
+            'P_exact': self.manager_exact.overall_ccscores.precision(),
+            'R_exact': self.manager_exact.overall_ccscores.recall()
         })
         self.score_d = copy(score_d)
         if do_reset:
@@ -209,8 +209,8 @@ class CCMetric:
         Similar to Openie6.metric.Conjunction.get_overall_score().
         
         There are 4 kinds of managers produced by this class, and each kind
-        has an overall_scores. This method returns the F1 score of the
-        overall_scores.
+        has an overall_ccscores. This method returns the F1 score of the
+        overall_ccscores.
 
         Parameters
         ----------
@@ -232,8 +232,8 @@ class CCMetric:
         else:
             raise ValueError(
                 'invalid manager_kind: {}'.format(manager_kind))
-        # print("mkcd", manager, self.manager_inner.overall_scores)
-        return manager.overall_scores.f1_score()
+        # print("mkcd", manager, self.manager_inner.overall_ccscores)
+        return manager.overall_ccscores.f1_score()
 
 
 if __name__ == "__main__":

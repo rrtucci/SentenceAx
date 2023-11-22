@@ -155,7 +155,7 @@ class CCScoreManager:
         assert kind in ["whole", "outer", "inner", "exact"]
         self.kind = kind
         self.overall_ccscores = CCScores()
-        self.ccloc_to_ccscores = defaultdict(CCScores())
+        self.ccloc_to_ccscores = defaultdict(CCScores)
         # print("vbgn", self.overall_ccscores, self.ccloc_to_ccscores[ccloc])
 
     def reset(self):

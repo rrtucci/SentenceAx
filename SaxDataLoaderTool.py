@@ -168,16 +168,16 @@ class SaxDataLoaderTool:
         return train_dataset, tune_dataset, test_dataset
         # , vocab, orig_sents
 
-    def get_predict_dataset(self, predict_in_fp):
+    def get_predict_dataset(self, pred_tags_in_fp):
         """
         similar to Openie6.data.process_data()
 
         This method returns a dataset for predicting. It creates that
-        dataset from the info it gleans by reading the file `predict_in_fp`.
+        dataset from the info it gleans by reading the file `pred_tags_in_fp`.
 
         Parameters
         ----------
-        predict_in_fp: str
+        pred_tags_in_fp: str
 
         Returns
         -------
@@ -212,10 +212,10 @@ class SaxDataLoaderTool:
         # get_samples()
         # returns: examples, orig_sents
 
-        assert predict_in_fp
+        assert pred_tags_in_fp
 
         predict_m_in = MInput(self.params,
-                              predict_in_fp,
+                              pred_tags_in_fp,
                               self.auto_tokenizer,
                               omit_exless=False)
         # vocab = build_vocab(predict_m_in)
@@ -257,7 +257,7 @@ class SaxDataLoaderTool:
                        # collate_fn=None,
                        num_workers=1)
 
-    def set_predict_dataloader(self, predict_in_fp):
+    def set_predict_dataloader(self, pred_tags_in_fp):
         """
         This method sets the class attribute for the DataLoader for predicting.
 
@@ -267,7 +267,7 @@ class SaxDataLoaderTool:
 
         Parameters
         ----------
-        predict_in_fp: str
+        pred_tags_in_fp: str
 
         Returns
         -------
@@ -275,7 +275,7 @@ class SaxDataLoaderTool:
 
         """
         self.predict_dloader = \
-            DataLoader(self.get_predict_dataset(predict_in_fp),
+            DataLoader(self.get_predict_dataset(pred_tags_in_fp),
                        batch_size=self.params.d["batch_size"],
                        # collate_fn=None,
                        shuffle=True,

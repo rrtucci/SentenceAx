@@ -1267,8 +1267,8 @@ class Model(L.LightningModule):
         with open(out_fp, "a") as pred_f:
             pred_f.write('\n'.join(l_pred_str) + '\n')
         if self.params.d["write_allen_file"]:
-            al_out_fp = f"{VAL_OUT_DIR}/ex_out_allen.txt"
-            with open(al_out_fp, fmode) as allen_f:
+            allen_out_fp = f"{VAL_OUT_DIR}/ex_out_allen.txt"
+            with open(allen_out_fp, fmode) as allen_f:
                 allen_f.write('\n'.join(l_pred_allen_str) + '\n')
 
         self.l_ex_pred_str = l_pred_str

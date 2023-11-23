@@ -37,6 +37,7 @@ check_module_version("lightning", "2.0.1")
 set_seed(SEED)
 print("SEED=", SEED)
 
+
 class ActionConductor:
     """
     Similar to Openie6.run.py
@@ -465,6 +466,7 @@ class ActionConductor:
         Parameters
         ----------
         pred_in_fp: str
+            This file has no tags or ilabels. Only osent for each sample.
 
         Returns
         -------
@@ -513,6 +515,7 @@ class ActionConductor:
         Parameters
         ----------
         pred_in_fp: str
+            This file has no tags or ilabels. Only osent for each sample.
 
         Returns
         -------
@@ -592,8 +595,8 @@ class ActionConductor:
     def splitpredict_for_ex(self,
                             l_osentL,
                             l_ccsentL,
-                            pred_out_fp,
-                            delete_ccsents_file=False):
+                            pred_in_fp,
+                            delete_ccsents_file=True):
         """
         The method self.splitpredict() calls the methods:
         self.splitpredict_for_cc(), self.splitpredict_for_ex(),
@@ -601,13 +604,13 @@ class ActionConductor:
         private method for self.splitpredict().
 
         If self.params.d["write_extags_file"]=True, this method writes an
-        extags file at `pred_out_fp` with the predicted extractions.
+        extags file at f'{pred_in_fp.replace(".txt", "")}_extags.txt' with
+        the predicted extractions.
 
         Parameters
         ----------
         l_osentL: list[str]
         l_ccsentL: list[str]
-        pred_out_fp: str
         delete_ccsents_file: bool
 
         Returns
@@ -621,7 +624,7 @@ class ActionConductor:
         # temporary file, to be deleted after it is used by predict(). This
         # file is not used in Openie6, but is needed in SentenceAx, so as to
         # get the appropriate input for self.predict()
-        in_fp = pred_out_fp.replace(".txt", "") + "_ccsents.txt"
+        in_fp = f'{pred_in_fp.replace(".txt", "")}_ccsents.txt'
         with open(in_fp, "w", encoding="utf-8") as f:
             f.write("\n".join(l_ccsentL))
 
@@ -632,9 +635,10 @@ class ActionConductor:
 
         # Does same thing as Openie6.run.get_labels()
         if self.params.d["write_extags_file"]:
+            out_fp = f'{pred_in_fp.replace(".txt", "")}_extags.txt'
             ActionConductor.write_extags_file_from_preds(l_osentL,
                                                          l_ccsentL,
-                                                         pred_out_fp,
+                                                         out_fp,
                                                          model)
         return model
 
@@ -642,21 +646,21 @@ class ActionConductor:
     def write_extags_file_from_preds(
             l_osentL,  # Openi6.orig_sentences
             l_ccsentL,  # Openie6.sentences
-            pred_out_fp,
+            pred_in_fp,
             model):
         """
         similar to Openie6.run.get_labels()
 
-        This method is called by `self.splitpredict_for_ex()`.
-        As its name suggests, it writes an extags file to `pred_out_fp`
-        based on the predictions stored inside `model.l_batch_m_out`.
+        This method is called by `self.splitpredict_for_ex()`. It writes an
+        extags file at f'{ pred_in_fp.replace(".txt", "")}_extags.txt' based
+        on the predictions stored inside `model.l_batch_m_out`.
 
 
         Parameters
         ----------
         l_osentL: list[str]
         l_ccsentL: list[str]
-        pred_out_fp: str
+        pred_in_fp: str
         model: Model
 
 
@@ -724,98 +728,38 @@ class ActionConductor:
                     batch_id0 += 1
 
         lines.append('\n')
-        with open(pred_out_fp, "w") as f:
+        out_fp = f'{pred_in_fp.replace(".txt", "")}_extags.txt'
+        with open(out_fp, "w") as f:
             f.writelines(lines)
 
-    def splitpredict_for_rescore(self, model):
+    def splitpredict_for_rescore(self, model, pred_in_fp):
         """
-        reads re_allen_in_fp
-        writes re_allen_out_fp
+
 
 
         Parameters
         ----------
         model: Model
+        pred_in_fp: str
 
         Returns
         -------
         None
 
         """
-        # print()
-        # print("*******Starting re-scoring")
-        # print()
-        #
-        # # iline = line number
-        # osent_iline_set = set()
-        # prev_iline = 0
-        # iline_to_exless_sents = {}
-        # cur_iline = 0
-        # for sample_str in model.l_ex_pred_str:
-        #     sample_str = sample_str.strip('\n')
-        #     num_ex = len(sample_str) - 1
-        #     if num_ex == 0:
-        #         if cur_iline not in iline_to_exless_sents:
-        #             iline_to_exless_sents[cur_iline] = []
-        #         iline_to_exless_sents[cur_iline].append(sample_str)
-        #     else:
-        #         cur_iline = prev_iline + num_ex
-        #         # add() is like append, but for a set
-        #         osent_iline_set.add(cur_iline)
-        #         prev_iline = cur_iline
-        #
-        # # testing rescoring
+
+        allen_out_fp = f"{VAL_OUT_DIR}/ex_out_allen.txt"
         # rescored_allen_file = rescore(
-        #     self.re_allen_in_fp,  # f'{self.hparams.out}.allennlp'
+        #     allen_out_fp, 
         #     model_dir=,
         #     batch_size=256)
-        #
-        # l_rs_sent = []
-        # sent_str = ""
-        # for iline, line in enumerate(rescored_allen_file):
-        #     fields = line.split('\t')
-        #     osent = fields[0]
-        #     confidence = float(fields[2])
-        #
-        #     if iline == 0:
-        #         sent_str = f'{osent}\n'
-        #         l_ex = []
-        #     if iline in osent_iline_set:
-        #         l_ex = sorted(l_ex, reverse=True,
-        #                       key=lambda x: float(x.split()[0][:-1]))
-        #         l_ex = l_ex[:EX_NUM_DEPTHS]
-        #         l_rs_sent.append(sent_str + ''.join(l_ex))
-        #         sent_str = f'{osent}\n'
-        #         l_ex = []
-        #     if iline in iline_to_exless_sents:
-        #         for sent in iline_to_exless_sents[iline]:
-        #             l_rs_sent.append(f'{sent}\n')
-        #
-        #     arg1 = re.findall("<arg1>.*</arg1>", fields[1])[0].strip(
-        #         '<arg1>').strip('</arg1>').strip()
-        #     rel = re.findall("<rel>.*</rel>", fields[1])[0].strip(
-        #         '<rel>').strip('</rel>').strip()
-        #     arg2 = re.findall("<arg2>.*</arg2>", fields[1])[0].strip(
-        #         '<arg2>').strip('</arg2>').strip()
-        #     ex = SaxExtraction(osent,
-        #                        arg1,
-        #                        rel,
-        #                        arg2,
-        #                        confidence)
-        #     l_ex.append(ex.get_simple_sent() + "\n")
-        #
-        # l_ex = sorted(l_ex, reverse=True,
-        #               key=lambda x: float(x.split()[0][:-1]))
-        # l_ex = l_ex[:EX_NUM_DEPTHS]
-        # l_rs_sent.append(sent_str + ''.join(l_ex))
-        #
-        # if iline in iline_to_exless_sents:
-        #     for sent in iline_to_exless_sents[iline]:
-        #         l_rs_sent.append(f'{sent}\n')
-        #
-        # print('Predictions written to ' + self.re_allen_out_fp)
-        # with open(self.re_allen_out_fp, "w") as f:
-        #     f.write('\n'.join(l_rs_sent) + '\n')
+
+        al_tool = AllenTool(allen_out_fp)
+
+        ss_out_fp = f'{pred_in_fp.replace(".txt", "")}_ss_out.txt'
+        print('Predictions written to ' + ss_out_fp)
+        al_tool = AllenTool(allen_out_fp)
+        al_tool.write_allen_alternative_file(ss_out_fp)
 
     def splitpredict(self, pred_in_fp):
         """
@@ -845,13 +789,13 @@ class ActionConductor:
         l_osentL, l_ccsentL = self.splitpredict_for_cc(pred_in_fp)
 
         self.params.d["task"] = self.params.task = "ex"
-        pred_out_fp = pred_in_fp.strip(".txt") + "_extags_out.txt"
+
         model = self.splitpredict_for_ex(l_osentL,
                                          l_ccsentL,
-                                         pred_out_fp)
+                                         pred_in_fp)
 
         if self.params.d["do_rescoring"]:
-            self.splitpredict_for_rescore(model)
+            self.splitpredict_for_rescore(model, pred_in_fp)
         else:
             print("not doing rescoring")
 
@@ -907,7 +851,6 @@ if __name__ == "__main__":
         print("checkpoints:", conductor.get_all_checkpoint_fp())
         conductor.run()
         print("checkpoints:", conductor.get_all_checkpoint_fp())
-
 
     # main(1)
     # main(5)

@@ -466,7 +466,8 @@ class ActionConductor:
         Parameters
         ----------
         pred_in_fp: str
-            This file has no tags or ilabels. Only osent for each sample.
+            This file has no tags or ilabels. Only one osent per line for 
+            each sample.
 
         Returns
         -------
@@ -502,20 +503,112 @@ class ActionConductor:
         print(f'Total Time taken = {minutes : 2f} minutes')
         return model
 
+    @staticmethod
+    def write_extags_file_from_preds(
+            l_osentL,  # Openi6.orig_sentences
+            l_ccsentL,  # Openie6.sentences
+            pred_in_fp,
+            model):
+        """
+        similar to Openie6.run.get_labels()
+
+        This method is called by `self.splitpredict_for_ex()`. 
+        
+        It writes an extags file at f'{ pred_in_fp.replace(".txt", 
+        "")}_extags.txt' based on the predictions stored inside 
+        `model.l_batch_m_out`.
+
+
+        Parameters
+        ----------
+        l_osentL: list[str]
+        l_ccsentL: list[str]
+        pred_in_fp: str
+            This file has no tags or ilabels. Only one osent per line for 
+            each sample.
+        model: Model
+
+
+        Returns
+        -------
+        None
+
+        """
+        l_m_out = model.l_batch_m_out
+
+        lines = []
+        batch_id0 = 0  # similar to Openie6.idx1
+        sam_id0 = 0  # similar to Openie6.idx2
+        cum_sam_id0 = 0  # similar to Openie6.idx3
+        # isam similar to Openie6.i
+        # jccsent similar to Openie6.j
+
+        # lll_cc_spanned_loc is similar to
+        # sentence_indices_list, model.all_sentence_indices_conj
+        lll_cc_spanned_loc = \
+            model.lll_cc_spanned_loc
+        for isam in range(len(lll_cc_spanned_loc)):
+            osent = undoL(l_osentL[isam])
+            if len(lll_cc_spanned_loc[isam]) == 0:
+                lll_cc_spanned_loc[isam].append(list(range(len(osent))))
+            lines.append('\n' + osent)
+            num_ccsent = len(lll_cc_spanned_loc[isam])
+            for jccsent in range(num_ccsent):
+                osent = l_m_out[batch_id0].l_osent[sam_id0]
+                osentL = redoL(osent)
+                osentL_words = get_words(osentL)
+                assert len(lll_cc_spanned_loc[isam][jccsent]) == \
+                       len(osentL_words)
+                assert osentL == l_ccsentL[cum_sam_id0]
+                # similar to Openie6.predictions
+                ll_pred_ilabel = \
+                    l_m_out[batch_id0].lll_pred_ilabel[sam_id0]
+                for l_pred_ilabel in ll_pred_ilabel:
+                    # You can use x.item() to get a Python number
+                    # from a torch tensor that has one element
+                    if l_pred_ilabel.sum().item() == 0:
+                        break
+
+                    l_ilabel = [0] * len(osentL_words)
+                    l_pred_ilabel = \
+                        l_pred_ilabel[:len(osentL_words)].tolist()
+                    for k, loc in enumerate(
+                            sorted(lll_cc_spanned_loc[isam][jccsent])):
+                        l_ilabel[loc] = l_pred_ilabel[k]
+
+                    assert len(l_ilabel) == len(osentL_words)
+                    l_ilabel = l_ilabel[:-3]
+                    # 1: ARG1, 2: REL
+                    if 1 not in l_pred_ilabel and 2 not in l_pred_ilabel:
+                        continue  # not a pass
+
+                    str_extags = \
+                        ' '.join([ILABEL_TO_EXTAG[i] for i in l_ilabel])
+                    lines.append(str_extags)
+
+                cum_sam_id0 += 1
+                sam_id0 += 1
+                if sam_id0 == len(l_m_out[batch_id0].l_osent):
+                    sam_id0 = 0
+                    batch_id0 += 1
+
+        lines.append('\n')
+        out_fp = f'{pred_in_fp.replace(".txt", "")}_extags.txt'
+        with open(out_fp, "w") as f:
+            f.writelines(lines)
+
     def splitpredict_for_cc(self, pred_in_fp):
         """
-        The method self.splitpredict() calls the methods:
-        self.splitpredict_for_cc(), self.splitpredict_for_ex(),
-        and self.splitpredict_for_rescore() in that order. So this is a
-        private method for self.splitpredict().
+        This is a private method for self.splitpredict().
 
         This method reads a file at `pred_in_fp` with the sentences (one
         sentence per line) that one wants to split.
 
         Parameters
         ----------
-        pred_in_fp: str
-            This file has no tags or ilabels. Only osent for each sample.
+        pred_in_fp: str    
+            This file has no tags or ilabels. Only one osent per line for 
+            each sample.
 
         Returns
         -------
@@ -598,24 +691,28 @@ class ActionConductor:
                             pred_in_fp,
                             delete_ccsents_file=True):
         """
-        The method self.splitpredict() calls the methods:
-        self.splitpredict_for_cc(), self.splitpredict_for_ex(),
-        and self.splitpredict_for_rescore() in that order. So this is a
-        private method for self.splitpredict().
+        This is a private method for self.splitpredict().
 
-        If self.params.d["write_extags_file"]=True, this method writes an
-        extags file at f'{pred_in_fp.replace(".txt", "")}_extags.txt' with
-        the predicted extractions.
+        This method writes 
+        
+        1. an extags file at f'{pred_in_fp.replace(".txt", 
+        "")}_extags_out.txt' with the predicted extags.
+        
+        2. an ss (simple sents) file at f'{pred_in_fp.replace(".txt", 
+        "")}_ss_out.txt' with the predicted simple sentences.
 
         Parameters
         ----------
         l_osentL: list[str]
         l_ccsentL: list[str]
+        pred_in_fp: str
+            This file has no tags or ilabels. Only one osent per line for 
+            each sample.
         delete_ccsents_file: bool
 
         Returns
         -------
-        Model
+        None
 
         """
         self.params.d["best_checkpoint_fp"] = EX_BEST_WEIGHTS_FP
@@ -634,144 +731,36 @@ class ActionConductor:
             os.remove(in_fp)
 
         # Does same thing as Openie6.run.get_labels()
-        if self.params.d["write_extags_file"]:
-            out_fp = f'{pred_in_fp.replace(".txt", "")}_extags.txt'
-            ActionConductor.write_extags_file_from_preds(l_osentL,
-                                                         l_ccsentL,
-                                                         out_fp,
-                                                         model)
-        return model
+        out_fp = f'{pred_in_fp.replace(".txt", "")}_extags_out.txt'
+        ActionConductor.write_extags_file_from_preds(l_osentL,
+                                                     l_ccsentL,
+                                                     out_fp,
+                                                     model)
 
-    @staticmethod
-    def write_extags_file_from_preds(
-            l_osentL,  # Openi6.orig_sentences
-            l_ccsentL,  # Openie6.sentences
-            pred_in_fp,
-            model):
-        """
-        similar to Openie6.run.get_labels()
+        allen_fp = f"{VAL_OUT_DIR}/allen.txt"
 
-        This method is called by `self.splitpredict_for_ex()`. It writes an
-        extags file at f'{ pred_in_fp.replace(".txt", "")}_extags.txt' based
-        on the predictions stored inside `model.l_batch_m_out`.
-
-
-        Parameters
-        ----------
-        l_osentL: list[str]
-        l_ccsentL: list[str]
-        pred_in_fp: str
-        model: Model
-
-
-        Returns
-        -------
-        None
-
-        """
-        l_m_out = model.l_batch_m_out
-
-        lines = []
-        batch_id0 = 0  # similar to Openie6.idx1
-        sam_id0 = 0  # similar to Openie6.idx2
-        cum_sam_id0 = 0  # similar to Openie6.idx3
-        # isam similar to Openie6.i
-        # jccsent similar to Openie6.j
-
-        # lll_cc_spanned_loc is similar to
-        # sentence_indices_list, model.all_sentence_indices_conj
-        lll_cc_spanned_loc = \
-            model.lll_cc_spanned_loc
-        for isam in range(len(lll_cc_spanned_loc)):
-            osent = undoL(l_osentL[isam])
-            if len(lll_cc_spanned_loc[isam]) == 0:
-                lll_cc_spanned_loc[isam].append(list(range(len(osent))))
-            lines.append('\n' + osent)
-            num_ccsent = len(lll_cc_spanned_loc[isam])
-            for jccsent in range(num_ccsent):
-                osent = l_m_out[batch_id0].l_osent[sam_id0]
-                osentL = redoL(osent)
-                osentL_words = get_words(osentL)
-                assert len(lll_cc_spanned_loc[isam][jccsent]) == \
-                       len(osentL_words)
-                assert osentL == l_ccsentL[cum_sam_id0]
-                # similar to Openie6.predictions
-                ll_pred_ilabel = \
-                    l_m_out[batch_id0].lll_pred_ilabel[sam_id0]
-                for l_pred_ilabel in ll_pred_ilabel:
-                    # You can use x.item() to get a Python number
-                    # from a torch tensor that has one element
-                    if l_pred_ilabel.sum().item() == 0:
-                        break
-
-                    l_ilabel = [0] * len(osentL_words)
-                    l_pred_ilabel = \
-                        l_pred_ilabel[:len(osentL_words)].tolist()
-                    for k, loc in enumerate(
-                            sorted(lll_cc_spanned_loc[isam][jccsent])):
-                        l_ilabel[loc] = l_pred_ilabel[k]
-
-                    assert len(l_ilabel) == len(osentL_words)
-                    l_ilabel = l_ilabel[:-3]
-                    # 1: ARG1, 2: REL
-                    if 1 not in l_pred_ilabel and 2 not in l_pred_ilabel:
-                        continue  # not a pass
-
-                    str_extags = \
-                        ' '.join([ILABEL_TO_EXTAG[i] for i in l_ilabel])
-                    lines.append(str_extags)
-
-                cum_sam_id0 += 1
-                sam_id0 += 1
-                if sam_id0 == len(l_m_out[batch_id0].l_osent):
-                    sam_id0 = 0
-                    batch_id0 += 1
-
-        lines.append('\n')
-        out_fp = f'{pred_in_fp.replace(".txt", "")}_extags.txt'
-        with open(out_fp, "w") as f:
-            f.writelines(lines)
-
-    def splitpredict_for_rescore(self, model, pred_in_fp):
-        """
-
-
-
-        Parameters
-        ----------
-        model: Model
-        pred_in_fp: str
-
-        Returns
-        -------
-        None
-
-        """
-
-        allen_out_fp = f"{VAL_OUT_DIR}/ex_out_allen.txt"
         # rescored_allen_file = rescore(
-        #     allen_out_fp, 
+        #     allen_fp,
         #     model_dir=,
         #     batch_size=256)
 
-        al_tool = AllenTool(allen_out_fp)
-
         ss_out_fp = f'{pred_in_fp.replace(".txt", "")}_ss_out.txt'
         print('Predictions written to ' + ss_out_fp)
-        al_tool = AllenTool(allen_out_fp)
+        al_tool = AllenTool(allen_fp)
         al_tool.write_allen_alternative_file(ss_out_fp)
 
     def splitpredict(self, pred_in_fp):
         """
         similar to Openie6.run.splitpredict()
 
-        This method calls the 3 private methods: self.splitpredict_for_cc(),
-        self.splitpredict_for_ex(), and self.splitpredict_for_rescore() in
-        that order.
+        This method calls the 2 private methods: self.splitpredict_for_cc(), 
+        and self.splitpredict_for_ex() in that order.
 
         Parameters
         ----------
         pred_in_fp: str
+            This file has no tags or ilabels. Only one osent per line for 
+            each sample.
 
         Returns
         -------
@@ -783,21 +772,13 @@ class ActionConductor:
         #                  train_dataloader, val_dataloader, test_dataloader,
         #                  all_sentences):
 
-        self.params.d["write_allen_file"] = True
-
         self.params.d["task"] = self.params.task = "cc"
         l_osentL, l_ccsentL = self.splitpredict_for_cc(pred_in_fp)
 
         self.params.d["task"] = self.params.task = "ex"
-
-        model = self.splitpredict_for_ex(l_osentL,
-                                         l_ccsentL,
-                                         pred_in_fp)
-
-        if self.params.d["do_rescoring"]:
-            self.splitpredict_for_rescore(model, pred_in_fp)
-        else:
-            print("not doing rescoring")
+        self.splitpredict_for_ex(l_osentL,
+                                 l_ccsentL,
+                                 pred_in_fp)
 
     def run(self, pred_in_fp=None):
         """
@@ -811,6 +792,8 @@ class ActionConductor:
         Parameters
         ----------
         pred_in_fp: str
+            This file has no tags or ilabels. Only one osent per line for 
+            each sample.
 
         Returns
         -------

@@ -799,7 +799,6 @@ class Model(L.LightningModule):
         # start_model_input = \
         #     torch.Tensor(self.auto_tokenizer.encode(batch_text))
 
-
         llll_word_score = self.sax_get_llll_word_score(
             x_d, ttt, self.verbose)
 
@@ -922,7 +921,7 @@ class Model(L.LightningModule):
             #     x_d,
             #     llll_word_scoreT,
             #     lll_pred_ilabel0)
-            assert loss==0
+            assert loss == 0
         else:
             lll_pred_ilabel0 = Ten([0])
             ll_pred_confidence0 = Ten([0])
@@ -1206,7 +1205,12 @@ class Model(L.LightningModule):
 
     def sax_write_if_task_ex(self, batch_idx, batch_m_out):
         """
-        This method is called by `sax_write_batch_sents_out()`
+        This method is called by `sax_write_batch_sents_out()`. it writes:
+        
+        1. an extags file at f"{VAL_OUT_DIR}/extags.txt"
+        
+        2. an Allen file at f"{VAL_OUT_DIR}/allen.txt"
+
 
         Parameters
         ----------
@@ -1263,20 +1267,22 @@ class Model(L.LightningModule):
             l_pred_allen_str.append(allen_str.strip("/n"))
 
         fmode = "w" if batch_idx == 0 else "a"
-        out_fp = f"{VAL_OUT_DIR}/ex_out_.txt"
+        out_fp = f"{VAL_OUT_DIR}/extags.txt"
         with open(out_fp, "a") as pred_f:
             pred_f.write('\n'.join(l_pred_str) + '\n')
-        if self.params.d["write_allen_file"]:
-            allen_out_fp = f"{VAL_OUT_DIR}/ex_out_allen.txt"
-            with open(allen_out_fp, fmode) as allen_f:
-                allen_f.write('\n'.join(l_pred_allen_str) + '\n')
+
+        allen_out_fp = f"{VAL_OUT_DIR}/allen.txt"
+        with open(allen_out_fp, fmode) as allen_f:
+            allen_f.write('\n'.join(l_pred_allen_str) + '\n')
 
         self.l_ex_pred_str = l_pred_str
 
     def sax_write_if_task_cc(self, batch_idx, batch_m_out):
         """
 
-        This method is called by `sax_write_batch_sents_out()`
+        This method is called by `sax_write_batch_sents_out()`. It writes;
+        
+        1. a cctags file at f"{VAL_OUT_DIR}/cctags.txt"
 
         Parameters
         ----------
@@ -1340,7 +1346,7 @@ class Model(L.LightningModule):
         lll_cc_spanned_loc += lll_spanned_loc
 
         fmode = "w" if batch_idx == 0 else "a"
-        out_fp = f"{VAL_OUT_DIR}/cc_out.txt"
+        out_fp = f"{VAL_OUT_DIR}/cctags.txt"
         with open(out_fp, fmode) as pred_f:
             pred_f.write('\n'.join(l_pred_str) + '\n')
 
@@ -1356,10 +1362,10 @@ class Model(L.LightningModule):
 
         For task="ex", it appends stuff, after each step (i.e., batch),
         to the files at f"{VAL_OUT_DIR}/ex_out_.txt" and f"{
-        VAL_OUT_DIR}/ex_out_allen.txt".
+        VAL_OUT_DIR}/ex_allen_out.txt".
 
         For task="cc", it appends stuff, after each step, to the file f"{
-        VAL_OUT_DIR}/cc_out_.txt"
+        VAL_OUT_DIR}/cc_allen_out.txt"
 
 
         Parameters

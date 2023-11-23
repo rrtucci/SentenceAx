@@ -130,8 +130,8 @@ class Params:
         #         "ex_weights_fp": WEIGHTS_DIR +
         #                     "/ex_epoch=14_eval_acc=0.551_v0.ckpt",
         #         #"out": "predictions.txt",
-        #         # "rescore_model": WEIGHTS_DIR + "/rescore_model",
-        #         "rescoring": True,
+        #         # "rescore_model":,
+        #         # "rescoring":,
         #         "task": "ex"
         #     }
 
@@ -261,8 +261,8 @@ class Params:
                 "ex_weights_fp":
                     WEIGHTS_DIR + "/ex_epoch=14_eval_acc=0.551_v0.ckpt",
                 # "out": WEIGHTS_DIR + "/results/final",
-                # "rescore_model": WEIGHTS_DIR + "/rescore_model",
-                "do_rescoring": False,
+                # "rescore_model":
+                # "rescoring:"
                 "task": "ex"
             }
         else:
@@ -274,7 +274,6 @@ class Params:
                 "accumulate_grad_batches": 1,  # torch default is 1
                 "batch_size": 32,
                 "con_weight_str": "1",  # for multiple constraints "1_1_1"
-                "do_rescoring": False,
                 "dropout_fun": 0.0,
                 "gpus": 1,
                 "gradient_clip_val": 5,
@@ -289,9 +288,7 @@ class Params:
                 "best_checkpoint_fp": "",
                 "val_check_interval": 1.0,
                 "verbose": False,
-                "wreg": 0,
-                "write_allen_file": True,
-                "write_extags_file": True
+                "wreg": 0
             }
 
         from sax_utils import merge_dicts

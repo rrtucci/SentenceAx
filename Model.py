@@ -1280,7 +1280,7 @@ class Model(L.LightningModule):
     def sax_write_if_task_cc(self, batch_idx, batch_m_out):
         """
 
-        This method is called by `sax_write_batch_sents_out()`. It writes;
+        This method is called by `sax_write_batch_sents_out()`. It writes:
         
         1. a cctags file at f"{VAL_OUT_DIR}/cctags.txt"
 
@@ -1361,11 +1361,11 @@ class Model(L.LightningModule):
         This method is called by sax_ttt_step() when ttt="tune".
 
         For task="ex", it appends stuff, after each step (i.e., batch),
-        to the files at f"{VAL_OUT_DIR}/ex_out_.txt" and f"{
-        VAL_OUT_DIR}/ex_allen_out.txt".
+        to the files at f"{VAL_OUT_DIR}/extags.txt" and f"{
+        VAL_OUT_DIR}/allen.txt".
 
-        For task="cc", it appends stuff, after each step, to the file f"{
-        VAL_OUT_DIR}/cc_allen_out.txt"
+        For task="cc", it appends stuff, after each step, to the file at f"{
+        VAL_OUT_DIR}/cctags.txt"
 
 
         Parameters

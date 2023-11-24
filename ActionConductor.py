@@ -728,6 +728,7 @@ class ActionConductor:
 
         # Does same thing as Openie6.run.get_labels()
         extags_out_fp = f'{pred_in_fp.replace(".txt", "")}_extags_out.txt'
+        print('Predictions written to ' + extags_out_fp)
         ActionConductor.write_extags_file_from_preds(l_osentL,
                                                      l_ccsentL,
                                                      extags_out_fp,
@@ -744,6 +745,13 @@ class ActionConductor:
         print('Predictions written to ' + ss_out_fp)
         al_tool = AllenTool(allen_fp)
         al_tool.write_allen_alternative_file(ss_out_fp, ftype="ss")
+
+        ss2_out_fp = f'{pred_in_fp.replace(".txt", "")}_ss2_out.txt'
+        print('Predictions written to ' + ss2_out_fp)
+        file_translate_tags_to_words("ex",
+                                     in_fp=extags_out_fp,
+                                     out_fp=ss2_out_fp)
+
 
     def splitpredict(self, pred_in_fp):
         """

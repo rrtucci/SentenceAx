@@ -222,9 +222,12 @@ def translate_ilabels_to_extags(ilabels):
 def translate_ilabels_to_words(ilabels, orig_sentL, route="ex"):
     """
     This method translates ilabels->extags->words if route="ex",
-    or ilabels->cctags->words if route="cc". Both routes should give the
-    same result because 0->NONE->"" and (non-zero int)->??->word for both
-    routes.
+    or ilabels->cctags->words if route="cc".
+
+    IMPORTANT: One would think that both routes should give the same result
+    because 0->NONE->"" and (non-zero int)->??->word for both routes. But
+    that is not the case because the cctags files have much fewer non-NONE
+    cctags than the extags files.
 
     Parameters
     ----------
@@ -273,6 +276,8 @@ def file_translate_tags_to_ilabels(tag_type,
         lines = f.readlines()
     with open(out_fp, "w", encoding="utf-8") as f:
         for line in lines:
+            if not line:
+                continue
             if tag_type == "ex":
                 if "NONE" not in line and "REL" not in line:
                     f.write(line.strip() + "\n")
@@ -317,6 +322,8 @@ def file_translate_ilabels_to_tags(tag_type,
         lines = f.readlines()
     with open(out_fp, "w", encoding="utf-8") as f:
         for line in lines:
+            if not line:
+                continue
             words = get_words(line)
             if all([word.isdigit() for word in words[0:5]]):
                 ilabels = [int(x) for x in words]
@@ -327,6 +334,52 @@ def file_translate_ilabels_to_tags(tag_type,
                 else:
                     assert False
                 f.write(" ".join(tags) + "\n")
+
+
+def file_translate_tags_to_words(tag_type,
+                                 in_fp,
+                                 out_fp):
+    """
+    This method reads a tags file at `in_fp` and writes a words file at
+    `out_fp`. The tags file is an extags file (if tag_type=="ex") or a
+    cctatgs file (if tag_type=="cc")`.
+
+
+    Parameters
+    ----------
+    tag_type: str
+    in_fp: str
+    out_fp: str
+
+    Returns
+    -------
+    None
+
+    """
+    with open(in_fp, "r", encoding="utf-8") as f:
+        lines = f.readlines()
+    with open(out_fp, "w", encoding="utf-8") as f:
+        for line in lines:
+            if not line:
+                continue
+            if tag_type == "ex":
+                if "NONE" not in line and "REL" not in line:
+                    f.write(line.strip() + "\n")
+                    osentL = redoL(line)
+                else:
+                    words = translate_extags_to_words(get_words(line),
+                                                      osentL)
+                    f.write(" ".join(words) + "\n")
+            elif tag_type == "cc":
+                if "NONE" not in line and "CC" not in line:
+                    f.write(line.strip() + "\n")
+                    osentL = redoL(line)
+                else:
+                    words = translate_cctags_to_words(get_words(line),
+                                                      osentL)
+                    f.write(" ".join(words) + "\n")
+            else:
+                assert False
 
 
 if __name__ == "__main__":

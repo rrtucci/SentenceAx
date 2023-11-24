@@ -939,10 +939,10 @@ class Model(L.LightningModule):
         batch_m_out.loss. The method checks that loss==0 for ttt!="train".
         Then it logs the loss (for all ttt).
 
-        If fff="tune", the method writes to a file by calling
+        If ttt="tune", the method writes to a file by calling
         self.sax_write_batch_sents_out().
 
-        If ttt!="train", the method stores a list of batch_m_out,
+        If ttt!="train", the method stores a list of batch_m_out.
         l_batch_m_out is similar to Openie6.outputs.
 
 

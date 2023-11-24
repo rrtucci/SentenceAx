@@ -507,22 +507,22 @@ class ActionConductor:
     def write_extags_file_from_preds(
             l_osentL,  # Openi6.orig_sentences
             l_ccsentL,  # Openie6.sentences
-            extags_out_fp,
+            out_fp,
             model):
         """
         similar to Openie6.run.get_labels()
 
         This method is called by `self.splitpredict_for_ex()`.
 
-        It writes an extags file at `out_fp` based on the predictions stored
-        inside `model.l_batch_m_out`.
+        It writes an extags file at `out_fp` based on the predictions
+        stored inside `model.l_batch_m_out`.
 
 
         Parameters
         ----------
         l_osentL: list[str]
         l_ccsentL: list[str]
-        extags_out_fp: str
+        out_fp: str
         model: Model
 
 
@@ -590,7 +590,7 @@ class ActionConductor:
                     batch_id0 += 1
 
         lines.append('\n')
-        with open(extags_out_fp, "w") as f:
+        with open(out_fp, "w") as f:
             f.writelines(lines)
 
     def splitpredict_for_cc(self, pred_in_fp):

@@ -507,25 +507,22 @@ class ActionConductor:
     def write_extags_file_from_preds(
             l_osentL,  # Openi6.orig_sentences
             l_ccsentL,  # Openie6.sentences
-            pred_in_fp,
+            extags_out_fp,
             model):
         """
         similar to Openie6.run.get_labels()
 
-        This method is called by `self.splitpredict_for_ex()`. 
-        
-        It writes an extags file at f'{ pred_in_fp.replace(".txt", 
-        "")}_extags.txt' based on the predictions stored inside 
-        `model.l_batch_m_out`.
+        This method is called by `self.splitpredict_for_ex()`.
+
+        It writes an extags file at `out_fp` based on the predictions stored
+        inside `model.l_batch_m_out`.
 
 
         Parameters
         ----------
         l_osentL: list[str]
         l_ccsentL: list[str]
-        pred_in_fp: str
-            This file has no tags or ilabels. Only one osent per line for 
-            each sample.
+        extags_out_fp: str
         model: Model
 
 
@@ -593,8 +590,7 @@ class ActionConductor:
                     batch_id0 += 1
 
         lines.append('\n')
-        out_fp = f'{pred_in_fp.replace(".txt", "")}_extags.txt'
-        with open(out_fp, "w") as f:
+        with open(extags_out_fp, "w") as f:
             f.writelines(lines)
 
     def splitpredict_for_cc(self, pred_in_fp):
@@ -731,10 +727,10 @@ class ActionConductor:
             os.remove(in_fp)
 
         # Does same thing as Openie6.run.get_labels()
-        out_fp = f'{pred_in_fp.replace(".txt", "")}_extags_out.txt'
+        extags_out_fp = f'{pred_in_fp.replace(".txt", "")}_extags_out.txt'
         ActionConductor.write_extags_file_from_preds(l_osentL,
                                                      l_ccsentL,
-                                                     out_fp,
+                                                     extags_out_fp,
                                                      model)
 
         allen_fp = f"{VAL_OUT_DIR}/allen.txt"
@@ -747,7 +743,7 @@ class ActionConductor:
         ss_out_fp = f'{pred_in_fp.replace(".txt", "")}_ss_out.txt'
         print('Predictions written to ' + ss_out_fp)
         al_tool = AllenTool(allen_fp)
-        al_tool.write_allen_alternative_file(ss_out_fp)
+        al_tool.write_allen_alternative_file(ss_out_fp, ftype="ss")
 
     def splitpredict(self, pred_in_fp):
         """

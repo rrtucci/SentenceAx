@@ -192,7 +192,7 @@ class ExMetric:
             carb_osent_to_exs = undoL(self.osentL_to_exs)
 
         # no /dev/null in Windows
-        # out_fp = "/dev/null"
+        # extags_out_fp = "/dev/null"
         out_fp = "dev_null.txt"
 
         if ttt == "tune":

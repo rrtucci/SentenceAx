@@ -252,7 +252,7 @@ def file_translate_tags_to_ilabels(tag_type,
                                    out_fp):
     """
     This method reads a tags file at `in_fp` and writes an ilabels file at 
-    `out_fp`. The tags file is an extags file (if tag_type=="ex") or a 
+    `extags_out_fp`. The tags file is an extags file (if tag_type=="ex") or a
     cctatgs file (if tag_type=="cc")`.
     
     file_translate_tags_to_ilabels() and file_translate_ilabels_to_tags() 
@@ -296,7 +296,7 @@ def file_translate_ilabels_to_tags(tag_type,
                                    out_fp):
     """
     This method reads an ilabels file at `in_fp` and writes a tags file at 
-    `out_fp`. The tags file is an extags file (if tag_type=="ex") or a 
+    `extags_out_fp`. The tags file is an extags file (if tag_type=="ex") or a
     cctatgs file (if tag_type=="cc")`.
     
     file_translate_tags_to_ilabels() and file_translate_ilabels_to_tags() 

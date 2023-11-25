@@ -32,11 +32,6 @@ https://github.com/Lightning-AI/lightning/releases
 https://stackoverflow.com/questions/70790473/pytorch-lightning-epoch-end-validation-epoch-end.
 
 """
-check_module_version("lightning", "2.0.1")
-
-set_seed(SEED)
-print("SEED=", SEED)
-
 
 class ActionConductor:
     """
@@ -98,6 +93,10 @@ class ActionConductor:
         verbose: bool
 
         """
+        check_module_version("lightning", "2.0.1")
+        set_seed(SEED)
+        print("SEED=", SEED)
+
         self.params = params
         self.verbose = verbose
         self.has_cuda = torch.cuda.is_available()
@@ -847,13 +846,17 @@ if __name__ == "__main__":
 
     def main(pid):
         params = Params(pid)
-        params.d["refresh_cache"] = False
+        params.d["refresh_cache"] = True
         params.d["gpus"] = 0
-        params.d["num_epochs"] = 1
-        params.d["num_steps_per_epoch"] = 1
+        params.d["batch_size"] = 4
+        params.d["num_epochs"] = 3
+        params.d["num_steps_per_epoch"] = 3
         params.d["model_str"] = "bert-base-cased"
+        params.d["small_train"] = True
         params.describe_self()
+
         conductor = ActionConductor(params, verbose=True)
+        conductor.delete_all_checkpoints()
         print("checkpoints:", conductor.get_all_checkpoint_fp())
         conductor.run()
         print("checkpoints:", conductor.get_all_checkpoint_fp())

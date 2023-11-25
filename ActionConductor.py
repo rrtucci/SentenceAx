@@ -511,7 +511,7 @@ class ActionConductor:
         # splitting
         if self.params.action == "predict":
             allen_fp = f"{VAL_OUT_DIR}/allen.txt"
-            out_fp = f'{pred_in_fp.replace(".txt", "")}_ss_pred.txt'
+            out_fp = f'{pred_in_fp.replace(".txt", "")}_ss_pred_out.txt'
             print('Predictions written to ' + out_fp)
             al_tool = AllenTool(allen_fp)
             al_tool.write_allen_alternative_file(out_fp, ftype="ss")
@@ -759,12 +759,12 @@ class ActionConductor:
         #     model_dir=,
         #     batch_size=256)
 
-        out_fp = f'{pred_in_fp.replace(".txt", "")}_ss_a_splitpred.txt'
+        out_fp = f'{pred_in_fp.replace(".txt", "")}_ss_al_splitpred_out.txt'
         print('Predictions written to ' + out_fp)
         al_tool = AllenTool(allen_fp)
         al_tool.write_allen_alternative_file(out_fp, ftype="ss")
 
-        out_fp = f'{pred_in_fp.replace(".txt", "")}_ss_t_splitpred.txt'
+        out_fp = f'{pred_in_fp.replace(".txt", "")}_ss_tr_splitpred_out.txt'
         print('Predictions written to ' + out_fp)
         file_translate_tags_to_words("ex",
                                      in_fp=extags_out_fp,

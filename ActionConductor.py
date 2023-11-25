@@ -504,8 +504,11 @@ class ActionConductor:
         minutes = (end_time - start_time) / 60
         print(f'Total Time taken = {minutes : 2f} minutes')
 
-        # this next block not in Openie6.
-        # if action=="splitpredict", postpone doing this until after splitting
+        # This final block does not appear in Openie6. Openie6.predict()
+        # writes no file.
+
+        # If action=="splitpredict", postpone calling this until after
+        # splitting
         if self.params.action == "predict":
             allen_fp = f"{VAL_OUT_DIR}/allen.txt"
             ss_out_fp = f'{pred_in_fp.replace(".txt", "")}_ss_out.txt'

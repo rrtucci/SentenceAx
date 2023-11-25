@@ -170,7 +170,7 @@ class PickleList:
 
 if __name__ == "__main__":
     def main():
-        base_dir = "pickle_files"
+        base_dir = "example_PickleList_files"
         plist = PickleList(base_dir)
 
         # Appending items to the list and storing in separate pickle files

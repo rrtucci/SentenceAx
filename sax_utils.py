@@ -60,28 +60,6 @@ def merge_dicts(dominant_d, default_d):
     return new_dict
 
 
-def get_best_checkpoint_path(task):
-    """
-    This method returns the best_checkpoint_path for the task `task`,
-    where task in ["ex", "cc"].
-
-    Parameters
-    ----------
-    task: str
-
-    Returns
-    -------
-    str
-
-    """
-    if task == "ex":
-        return EX_BEST_WEIGHTS_FP
-    elif task == "cc":
-        return CC_BEST_WEIGHTS_FP
-    else:
-        assert False
-
-
 def get_tag_to_ilabel(task):
     """
     This method returns the tag_to_ilabel dictionary for the task `task`,
@@ -693,36 +671,27 @@ def get_omit_exless_flag(task, ttt):
     return True
 
 
-def delete_all_files(dir_fp,
-                     ending,
-                     fname_exceptions=""):
+def delete_all_files_with_given_ending(dir_fp, ending):
     """
     This method deletes all files in the directory with path `dir_fp` whose
-    names end in the string `ending`, except the files with the names in the
-    list `fname_exceptions`.
+    names end in the string `ending`.
 
 
     Parameters
     ----------
     dir_fp: str
     ending: str
-    fname_exceptions: list[str]|None
 
     Returns
     -------
     None
 
     """
-    if not fname_exceptions:
-        fname_exceptions = []
-    for fname in fname_exceptions:
-        assert fname.endswith(ending)
     try:
         fnames = os.listdir(dir_fp)
         for fname in fnames:
             fpath = os.path.join(dir_fp, fname)
-            if fname.endswith(ending) and \
-                    fname not in fname_exceptions:
+            if fname.endswith(ending):
                 os.remove(fpath)
     except Exception as e:
         print(f"An error occurred: {e}")
@@ -762,16 +731,18 @@ def get_tags_train_fp(task, small=False):
     str
 
     """
-    if task == "ex" and small:
-        fp = SMALL_EXTAGS_TRAIN_FP
-    elif task == "ex" and not small:
-        fp = EXTAGS_TRAIN_FP
-    elif task == "cc" and small:
-        fp = SMALL_CCTAGS_TRAIN_FP
-    elif task == "cc" and not small:
-        fp = CCTAGS_TRAIN_FP
+    if task == "ex":
+        if small:
+            fp = SMALL_EXTAGS_TRAIN_FP
+        else:
+            fp = EXTAGS_TRAIN_FP
+    elif task == "cc":
+        if small:
+            fp = SMALL_CCTAGS_TRAIN_FP
+        else:
+            fp = CCTAGS_TRAIN_FP
     else:
-        False
+        assert False
     return fp
 
 

@@ -46,12 +46,8 @@ VAL_OUT_DIR = "val_outputs"
 
 CCTAGS_TRAIN_FP = 'input_data/openie-data/ptb-train.labels'
 SMALL_CCTAGS_TRAIN_FP = 'tests/small_cctags.txt' # small file for warmup run
-
 CCTAGS_TUNE_FP = 'input_data/openie-data/ptb-dev.labels'
 CCTAGS_TEST_FP = 'input_data/openie-data/ptb-test.labels'
-
-# for Openie6, this is "models/conj_model/epoch=28_eval_acc=0.854.ckpt"
-CC_BEST_WEIGHTS_FP = WEIGHTS_DIR + '/cc.txt' # to be changed 
 
 EXTAGS_TRAIN_FP = INPUT_DIR + '/openie-data/openie4_labels'
 SMALL_EXTAGS_TRAIN_FP = "tests/small_extags.txt" # small file for warmup run
@@ -62,9 +58,6 @@ SMALL_EXTAGS_TRAIN_FP = "tests/small_extags.txt" # small file for warmup run
 # else because ExMetric is hard wired to expect them.
 EXTAGS_TUNE_FP = INPUT_DIR + "/carb-data/dev.txt"
 EXTAGS_TEST_FP = INPUT_DIR + "/carb-data/test.txt"
-
-# for Openie6, this is "models/warmup_oie_model/epoch=13_eval_acc=0.544.ckpt"
-EX_BEST_WEIGHTS_FP = WEIGHTS_DIR + '/ex.txt' # to be changed
 
 PRED_IN_FP = PREDICTING_DIR + "/carb_sentences"
 

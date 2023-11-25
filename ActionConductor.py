@@ -33,6 +33,7 @@ https://stackoverflow.com/questions/70790473/pytorch-lightning-epoch-end-validat
 
 """
 
+
 class ActionConductor:
     """
     Similar to Openie6.run.py
@@ -199,21 +200,49 @@ class ActionConductor:
         """
         return self.get_all_checkpoint_fp()[0]
 
-    def delete_all_checkpoints(self, fname_exceptions=None):
+    def get_best_checkpoint_fp(self):
         """
+        This method returns the best checkpoint file path. We manually add
+        ".best" as a suffix to the name of our best checkpoint file,
+        and this method looks for the unique file, in the appropriate
+        folder, that ends in ".best". If it doesn't find one or if it finds
+        more than one, it asserts False.
 
-        Parameters
-        ----------
-        fname_exceptions: list[str]|None
+        For Openie6, the best checkpoint files are:
+        If task="cc": "models/conj_model/epoch=28_eval_acc=0.854.ckpt"
+        If task="ex": "models/warmup_oie_model/epoch=13_eval_acc=0.544.ckpt"
+
+        Returns
+        -------
+        str
+
+        """
+        paths = list(iglob(f"{WEIGHTS_DIR}/{self.params.task}_model/*.best"))
+        if len(paths) == 0:
+            assert False, "There are no best checkpoint files."
+        if len(paths) == 1:
+            return paths[0]
+        else:
+            assert False, "There are multiple best checkpoint files."
+
+    def delete_all_checkpoints(self):
+        """
+        This method deletes all files ending in ".ckpt" in the appropriate
+        folder.
+
+        This method does not delete the best checkpoint file because that
+        one ends in ".best". If you want to prevent other files besides the
+        best checkpoint file from being deleted, just add a suffix other
+        than ".ckpt" to their name.
 
         Returns
         -------
         None
 
         """
-        delete_all_files(f"{WEIGHTS_DIR}/{self.params.task}_model",
-                         ending=".ckpt",
-                         fname_exceptions=fname_exceptions)
+        delete_all_files_with_given_ending(
+            dir_fp=f"{WEIGHTS_DIR}/{self.params.task}_model",
+            ending=".ckpt")
 
     def get_new_TB_logger(self, name):
         """
@@ -477,7 +506,9 @@ class ActionConductor:
         Model
 
         """
-        checkpoint_fp = get_best_checkpoint_path(self.params.task)
+        # This distinguishes between tasks "ex" and "cc".
+        # splitpredict() uses both best chechpoint files.
+        checkpoint_fp = self.get_best_checkpoint_fp()
 
         # assert list(self.get_all_checkpoint_fp()) == [checkpoint_fp]
 
@@ -651,7 +682,6 @@ class ActionConductor:
             else:
                 assert False
 
-        self.params.d["best_checkpoint_fp"] = CC_BEST_WEIGHTS_FP
         # For task="cc", Openie6 uses large-cased for train_test() and
         # base-cased for splitpredict(). Both are cased, but larger-cased is
         # larger than base-cased. For task="ex", Openie6 uses base-cased
@@ -730,7 +760,6 @@ class ActionConductor:
         None
 
         """
-        self.params.d["best_checkpoint_fp"] = EX_BEST_WEIGHTS_FP
         self.params.d["model_str"] = 'bert-base-cased'
 
         # temporary file, to be deleted after it is used by predict(). This
@@ -835,11 +864,11 @@ if __name__ == "__main__":
         pid, task, action   
         0. "", ""
         1. ex, train_test
-        2. ex, test  (appears twice in Openie6 readme)
-        3. ex, predict (appears twice in Openie6 readme)
+        2. ex, test 
+        3. ex, predict
         4. ex, resume
         5. cc, train_test
-        6. ex, splitpredict (appears twice in Openie6 readme)
+        6. ex, splitpredict
 
     """
 

@@ -188,8 +188,6 @@ class Params:
             self.d = {
                 "accumulate_grad_batches": 2,
                 "batch_size": 16,
-                "best_checkpoint_fp":
-                    WEIGHTS_DIR + "/warmup_ex_model-epoch=13_eval_acc=0.544.ckpt",
                 "constraint_str": "posm_hvc_hvr_hve",
                 "con_weight_str": "3_3_3_3",
                 "num_epochs": 16,
@@ -273,7 +271,6 @@ class Params:
             {
                 "accumulate_grad_batches": 1,  # torch default is 1
                 "batch_size": 32,
-                "best_checkpoint_fp": "",
                 "con_weight_str": "1",  # for multiple constraints "1_1_1"
                 "dropout_fun": 0.0,
                 "gpus": 1,

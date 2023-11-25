@@ -746,6 +746,35 @@ def round_dict_values(di, precision=4):
     return {key: round(float(di[key]), precision) for key in di.keys()}
 
 
+def get_tags_train_fp(task, small=False):
+    """
+    This method returns the file path to the training dataset.
+
+    Parameters
+    ----------
+    task: str
+    small: bool
+        True iff desire a small training dataset for warmup and debugging
+        purposes
+
+    Returns
+    -------
+    str
+
+    """
+    if task == "ex" and small:
+        fp = SMALL_EXTAGS_TRAIN_FP
+    elif task == "ex" and not small:
+        fp = EXTAGS_TRAIN_FP
+    elif task == "cc" and small:
+        fp = SMALL_CCTAGS_TRAIN_FP
+    elif task == "cc" and not small:
+        fp = CCTAGS_TRAIN_FP
+    else:
+        False
+    return fp
+
+
 if __name__ == "__main__":
     def main1():
         h = {"x": 5, "y": 3}

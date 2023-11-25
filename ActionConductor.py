@@ -104,11 +104,13 @@ class ActionConductor:
         warnings.filterwarnings('ignore')
 
         if self.params.task == 'cc':
-            self.tags_train_fp = CCTAGS_TRAIN_FP
+            self.tags_train_fp = \
+                get_tags_train_fp("cc", self.params.d["small_train"])
             self.tags_tune_fp = CCTAGS_TUNE_FP
             self.tags_test_fp = CCTAGS_TEST_FP
         elif self.params.task == 'ex':
-            self.tags_train_fp = EXTAGS_TRAIN_FP
+            self.tags_train_fp = \
+                get_tags_train_fp("ex", self.params.d["small_train"])
             self.tags_tune_fp = EXTAGS_TUNE_FP
             self.tags_test_fp = EXTAGS_TEST_FP
 

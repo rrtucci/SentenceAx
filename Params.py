@@ -257,7 +257,7 @@ class Params:
                 "gpus": 1,
                 # "inp": "carb_subset/data/carb_sentences.txt",
                 "action": "splitpredict",
-                "num_extractions": EX_NUM_DEPTHS,
+                # "num_extractions": EX_NUM_DEPTHS,
                 "ex_weights_fp":
                     WEIGHTS_DIR + "/ex_epoch=14_eval_acc=0.551_v0.ckpt",
                 # "out": WEIGHTS_DIR + "/results/final",
@@ -273,19 +273,20 @@ class Params:
             {
                 "accumulate_grad_batches": 1,  # torch default is 1
                 "batch_size": 32,
+                "best_checkpoint_fp": "",
                 "con_weight_str": "1",  # for multiple constraints "1_1_1"
                 "dropout_fun": 0.0,
                 "gpus": 1,
                 "gradient_clip_val": 5,
-                "num_iterative_layers": 2,
                 "lr": 2E-5,
                 "model_str": "bert-base-cased",
-                "num_extractions": EX_NUM_DEPTHS,
+                #"num_extractions": EX_NUM_DEPTHS,
+                "num_iterative_layers": 2,
                 "num_steps_per_epoch": None,
                 "optimizer": "adamW",
                 "refresh_cache": False,
                 "save_k": 1,
-                "best_checkpoint_fp": "",
+                "small_train": False,
                 "val_check_interval": 1.0,
                 "verbose": False,
                 "wreg": 0

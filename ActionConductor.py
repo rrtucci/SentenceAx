@@ -459,8 +459,8 @@ class ActionConductor:
         This method times how long it takes to predict.
 
         This method is called if the action is "predict" or "splitppredict".
-        If the action is "predict", this method writes an ss (simple
-        sentences) file with the simple sentences predictions. If the action
+        Iff the action is "predict", this method writes an ss (simple
+        sentences) file with the simple sentences predictions. Iff the action
         is "splitpredict", writing of such an ss file occurs in the method
         "splitpredct_for_ex()", after the splitting has been done.
 
@@ -511,10 +511,10 @@ class ActionConductor:
         # splitting
         if self.params.action == "predict":
             allen_fp = f"{VAL_OUT_DIR}/allen.txt"
-            ss_out_fp = f'{pred_in_fp.replace(".txt", "")}_ss_out.txt'
-            print('Predictions written to ' + ss_out_fp)
+            out_fp = f'{pred_in_fp.replace(".txt", "")}_ss_pred.txt'
+            print('Predictions written to ' + out_fp)
             al_tool = AllenTool(allen_fp)
-            al_tool.write_allen_alternative_file(ss_out_fp, ftype="ss")
+            al_tool.write_allen_alternative_file(out_fp, ftype="ss")
 
         return model
 
@@ -706,11 +706,14 @@ class ActionConductor:
 
         This method writes 
         
-        1. an extags file at f'{pred_in_fp.replace(".txt", 
-        "")}_extags_out.txt' with the predicted extags.
+        1. an extags file  with the predicted extags.
         
-        2. an ss (simple sents) file at f'{pred_in_fp.replace(".txt", 
-        "")}_ss_out.txt' with the predicted simple sentences.
+        2. Derived from the extags file produced in 1, an ss (simple sents)
+        file with the predicted simple sentences.
+
+        3. Derived from the allen file at f"{VAL_OUT_DIR}/allen.txt",
+        an ss (simple sents) file with the predicted simple sentences.
+
 
         Parameters
         ----------
@@ -756,16 +759,16 @@ class ActionConductor:
         #     model_dir=,
         #     batch_size=256)
 
-        ss_out_fp = f'{pred_in_fp.replace(".txt", "")}_ss_out.txt'
-        print('Predictions written to ' + ss_out_fp)
+        out_fp = f'{pred_in_fp.replace(".txt", "")}_ss_a_splitpred.txt'
+        print('Predictions written to ' + out_fp)
         al_tool = AllenTool(allen_fp)
-        al_tool.write_allen_alternative_file(ss_out_fp, ftype="ss")
+        al_tool.write_allen_alternative_file(out_fp, ftype="ss")
 
-        ss2_out_fp = f'{pred_in_fp.replace(".txt", "")}_ss2_out.txt'
-        print('Predictions written to ' + ss2_out_fp)
+        out_fp = f'{pred_in_fp.replace(".txt", "")}_ss_t_splitpred.txt'
+        print('Predictions written to ' + out_fp)
         file_translate_tags_to_words("ex",
                                      in_fp=extags_out_fp,
-                                     out_fp=ss2_out_fp)
+                                     out_fp=out_fp)
 
     def splitpredict(self, pred_in_fp):
         """

@@ -983,7 +983,7 @@ class Model(L.LightningModule):
             assert loss == 0
 
         self.log('loss',
-                 loss,
+                 round(float(loss), 6),
                  prog_bar=True,
                  logger=True,
                  on_step=True)
@@ -1145,7 +1145,8 @@ class Model(L.LightningModule):
         #     epoch_end_d["progress_bar"] = self.scores_epoch_end_d
 
         epoch_acc = self.scores_epoch_end_d["epoch_acc"]
-        self.log("epoch_acc", epoch_acc,
+        self.log("epoch_acc",
+                 round(float(epoch_acc), 6),
                  prog_bar=True,
                  logger=True,
                  on_epoch=True)

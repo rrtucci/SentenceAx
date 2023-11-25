@@ -699,7 +699,7 @@ class Model(L.LightningModule):
         con_to_l_hinge_loss = {}
         # this calculates llll_word_score
         if self.constraint_str and \
-                'predict' not in self.params.d["action"] and \
+                'predict' not in self.params.action and \
                 self.params.d["batch_size"] != 1:
             # reshape llll_word_score
             llll_word_scoreT = torch.cat([lll.unsqueeze(1) for

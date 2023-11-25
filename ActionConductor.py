@@ -390,16 +390,16 @@ class ActionConductor:
         """
         similar to Openie6.run.test()
 
-        Note: this method self.test() is different from
-        Trainer.test() which is called inside this method.
+        Note: this method self.test() is different from Trainer.test() which
+        is called inside this method.
 
         This method does testing. It creates an instance of Model. It then
         goes down the list of checkpoints and creates a Trainer for each
         one. This trainer is used to call trainer.test(), instead of
-        trainer.fit( ) as done in self.train(). trainer.test( )
-        scores the test data with the weights of that checkpoint file. test
-        accuracies for each checkpoint are saved in a file logs/ex/test.txt
-        or logs/cc/test.txt.
+        trainer.fit( ) as done in self.train(). trainer.test( ) scores the
+        test data with the weights of that checkpoint file. test accuracies
+        for each checkpoint are saved in a file logs/ex/test.txt or
+        logs/cc/test.txt.
 
 
         Returns
@@ -450,17 +450,19 @@ class ActionConductor:
         similar to Openie6.run.predict()
 
         This method does prediction. It creates instances of Model and
-        Trainer. The trainer is used to call trainer.test() instead of
-        trainer.fit( ) as done in self.train(). trainer.test() is
-        used with the test data in self.test(). But here it is
-        used with the data at `pred_in_fp` (a file of sentences, one per
-        line). This method times how long it takes to predict.
+        Trainer. The trainer is used to call trainer.test() (instead of
+        trainer.fit( ) as is done in self.train()). trainer.test() is also
+        called in self.test(), but there it takes the test data as input.
+        Here it takes the data at `pred_in_fp` (a file of osents, one per
+        line) as input.
 
-        This method does not write a prediction file! It stores the
-        predictions in the `model.l_batch_m_out` variable, but that info is
-        not written into a file unless you run self.splitpredict(
-        ). Hence, running this action alone, instead of within splitpredict(
-        ), is not very useful, except for timing.
+        This method times how long it takes to predict.
+
+        This method is called if the action is "predict" or "splitppredict".
+        If the action is "predict", this method writes an ss (simple
+        sentences) file with the simple sentences predictions. If the action
+        is "splitpredict", writing of such an ss file occurs in the method
+        "splitpredct_for_ex()", after the splitting has been done.
 
 
         Parameters
@@ -486,7 +488,7 @@ class ActionConductor:
                       verbose=self.verbose,
                       name="pred")
 
-        # No
+        # Not necessary in SentenceAx
         # model.metric.sent_to_sent = self.ex_sent_to_sent
         # model.metric.sent_to_words = self.cc_sent_to_words
 
@@ -501,6 +503,16 @@ class ActionConductor:
         end_time = time()
         minutes = (end_time - start_time) / 60
         print(f'Total Time taken = {minutes : 2f} minutes')
+
+        # this next block not in Openie6.
+        # if action=="splitpredict", postpone doing this until after splitting
+        if self.params.action == "predict":
+            allen_fp = f"{VAL_OUT_DIR}/allen.txt"
+            ss_out_fp = f'{pred_in_fp.replace(".txt", "")}_ss_out.txt'
+            print('Predictions written to ' + ss_out_fp)
+            al_tool = AllenTool(allen_fp)
+            al_tool.write_allen_alternative_file(ss_out_fp, ftype="ss")
+
         return model
 
     @staticmethod
@@ -751,7 +763,6 @@ class ActionConductor:
         file_translate_tags_to_words("ex",
                                      in_fp=extags_out_fp,
                                      out_fp=ss2_out_fp)
-
 
     def splitpredict(self, pred_in_fp):
         """

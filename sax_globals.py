@@ -59,8 +59,6 @@ SMALL_EXTAGS_TRAIN_FP = "tests/small_extags.txt" # small file for warmup run
 EXTAGS_TUNE_FP = INPUT_DIR + "/carb-data/dev.txt"
 EXTAGS_TEST_FP = INPUT_DIR + "/carb-data/test.txt"
 
-PRED_IN_FP = PREDICTING_DIR + "/carb_sentences"
-
 QUOTES = "\"\'"  # 2
 BRACKETS = "(){}[]<>"  # 8
 SEPARATORS = ",:;&-"  # 5

@@ -325,8 +325,12 @@ class ActionConductor:
         """
         similar to Openie6.run.test() and data.override_args().
 
-        This method loads parameters from the checkpoint file and inserts
-        them into the Params instance self.params.
+        deprecated: This method loads parameters from the checkpoint file
+        and inserts them into the Params instance self.params.
+
+        hparams is an attribute of Model, and there are several (4) Model
+        instances created in SentenceAx. A checkpoint file does not belong
+        to any particular model.
 
         Parameters
         ----------
@@ -337,15 +341,18 @@ class ActionConductor:
         None
 
         """
-        if self.has_cuda:
-            loaded_params = torch.load(checkpoint_fp)["params"]
-        else:
-            map_loc = torch.device('cpu')
-            loaded_params = torch.load(
-                checkpoint_fp, map_location=map_loc)["params"]
+        print("Checkpoint keywords:")
+        ckpt_keys = torch.load(checkpoint_fp).keys()
+        pprint(ckpt_keys)
+        # if self.has_cuda:
+        #     ckpt_params_d = torch.load(checkpoint_fp)["hparams"]
+        # else:
+        #     map_loc = torch.device('cpu')
+        #     ckpt_params_d = torch.load(
+        #         checkpoint_fp, map_location=map_loc)["hparams"]
 
-        self.params.d = merge_dicts(loaded_params,
-                                    default_d=self.params.d)
+        # self.params.d = merge_dicts(ckpt_params_d,
+        #                             default_d=self.params.d)
 
     def train(self):
         """
@@ -541,12 +548,12 @@ class ActionConductor:
 
         # If action=="splitpredict", postpone calling this until after
         # splitting
-        if self.params.action == "predict":
-            allen_fp = f"{VAL_OUT_DIR}/allen.txt"
-            out_fp = f'{pred_in_fp.replace(".txt", "")}_ss_pred_out.txt'
-            print('Predictions written to ' + out_fp)
-            al_tool = AllenTool(allen_fp)
-            al_tool.write_allen_alternative_file(out_fp, ftype="ss")
+        # if self.params.action == "predict":
+        #     allen_fp = f"{VAL_OUT_DIR}/allen.txt"
+        #     out_fp = f'{pred_in_fp.replace(".txt", "")}_ss_pred_out.txt'
+        #     print('Predictions written to ' + out_fp)
+        #     al_tool = AllenTool(allen_fp)
+        #     al_tool.write_allen_alternative_file(out_fp, ftype="ss")
 
         return model
 
@@ -661,7 +668,7 @@ class ActionConductor:
         """
 
         def repeated_splitpredict_for_cc():
-            cc_words = ll_cc_spanned_word[sample_id]
+            # cc_words = ll_cc_spanned_word[sample_id]
             if len(l_pred_sent) == 1:
                 l_osentL.append(redoL(l_pred_sent[0]))
                 model.ex_sent_to_sent[l_pred_sent[0]] = \
@@ -670,7 +677,7 @@ class ActionConductor:
                 l_ccsentL.append(redoL(l_pred_sent[0]))
                 # added to Openie6. Makes no difference because
                 # model.cc_sent_to_words is never used
-                model.cc_sent_to_words[l_pred_sent[0]] = cc_words
+                # model.cc_sent_to_words[l_pred_sent[0]] = cc_words
             elif len(l_pred_sent) > 1:
                 l_osentL.append(redoL(l_pred_sent[0]))
                 for sent in l_pred_sent[1:]:
@@ -678,7 +685,7 @@ class ActionConductor:
                     l_ccsentL.append(redoL(sent))
                 # added to Openie6. Makes no difference because
                 # model.cc_sent_to_words is never used
-                model.cc_sent_to_words[l_pred_sent[0]] = cc_words
+                # model.cc_sent_to_words[l_pred_sent[0]] = cc_words
             else:
                 assert False
 
@@ -690,8 +697,8 @@ class ActionConductor:
         self.params.d["action"] = self.params.action = 'predict'
 
         model = self.predict(pred_in_fp)
-        model.cc_sent_to_words = {}
-        model.ex_sent_to_sent = {}
+        # model.cc_sent_to_words = {}
+        # model.ex_sent_to_sent = {}
 
         l_cc_pred_str = model.l_cc_pred_str
         lll_cc_spanned_loc = model.lll_cc_spanned_loc
@@ -725,7 +732,7 @@ class ActionConductor:
                     l_pred_sent = line.strip().split("\n")
                     repeated_splitpredict_for_cc()
 
-        return model, l_osentL, l_ccsentL
+        return l_osentL, l_ccsentL
 
     def splitpredict_for_ex(self,
                             l_osentL,
@@ -775,7 +782,8 @@ class ActionConductor:
             os.remove(in_fp)
 
         # Does same thing as Openie6.run.get_labels()
-        extags_out_fp = f'{pred_in_fp.replace(".txt", "")}_extags_out.txt'
+        extags_out_fp = \
+            f'{pred_in_fp.replace(".txt", "")}_extags_splitpred_out.txt'
         print('Predictions written to ' + extags_out_fp)
         ActionConductor.write_extags_file_from_preds(l_osentL,
                                                      l_ccsentL,
@@ -789,16 +797,16 @@ class ActionConductor:
         #     model_dir=,
         #     batch_size=256)
 
-        out_fp = f'{pred_in_fp.replace(".txt", "")}_ss_al_splitpred_out.txt'
-        print('Predictions written to ' + out_fp)
-        al_tool = AllenTool(allen_fp)
-        al_tool.write_allen_alternative_file(out_fp, ftype="ss")
+        # out_fp = f'{pred_in_fp.replace(".txt", "")}_ss_al_splitpred_out.txt'
+        # print('Predictions written to ' + out_fp)
+        # al_tool = AllenTool(allen_fp)
+        # al_tool.write_allen_alternative_file(out_fp, ftype="ss")
 
-        out_fp = f'{pred_in_fp.replace(".txt", "")}_ss_tr_splitpred_out.txt'
-        print('Predictions written to ' + out_fp)
-        file_translate_tags_to_words("ex",
-                                     in_fp=extags_out_fp,
-                                     out_fp=out_fp)
+        # out_fp = f'{pred_in_fp.replace(".txt", "")}_ss_tr_splitpred_out.txt'
+        # print('Predictions written to ' + out_fp)
+        # file_translate_tags_to_words("ex",
+        #                              in_fp=extags_out_fp,
+        #                              out_fp=out_fp)
 
     def splitpredict(self, pred_in_fp):
         """
@@ -823,10 +831,12 @@ class ActionConductor:
         #                  train_dataloader, val_dataloader, test_dataloader,
         #                  all_sentences):
 
-        self.params.d["task"] = self.params.task = "cc"
+        self.params.d["task"] = "cc"
+        self.params.task = "cc"
         l_osentL, l_ccsentL = self.splitpredict_for_cc(pred_in_fp)
 
-        self.params.d["task"] = self.params.task = "ex"
+        self.params.d["task"] = "ex"
+        self.params.task = "ex"
         self.splitpredict_for_ex(l_osentL,
                                  l_ccsentL,
                                  pred_in_fp)
@@ -873,7 +883,7 @@ if __name__ == "__main__":
     """
 
 
-    def main(pid):
+    def main(pid, pred_in_fp=None):
         params = Params(pid)
         params.d["refresh_cache"] = True
         params.d["gpus"] = 0
@@ -887,8 +897,12 @@ if __name__ == "__main__":
         conductor = ActionConductor(params, verbose=True)
         conductor.delete_all_checkpoints()
         print("checkpoints:", conductor.get_all_checkpoint_fp())
-        conductor.run()
+        conductor.run(pred_in_fp)
         print("checkpoints:", conductor.get_all_checkpoint_fp())
 
     # main(1)
     # main(5)
+    # main(3, pred_in_fp=f"{PREDICTING_DIR}/small_pred.txt")
+    # main(3, pred_in_fp=f"{PREDICTING_DIR}/carb_sentences.txt")
+    main(6, pred_in_fp=f"{PREDICTING_DIR}/small_pred.txt")
+

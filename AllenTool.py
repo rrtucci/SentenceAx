@@ -200,12 +200,16 @@ class AllenTool:
         """
         tab_sep_vals = line.strip().split('\t')
         in_sentL = tab_sep_vals[0] + UNUSED_TOKENS_STR
-        confidence = float(tab_sep_vals[2])
+        if len(tab_sep_vals) > 2:
+            confidence = float(tab_sep_vals[2])
+        else:
+            confidence = 1
         # if len(tab_sep_vals) == 4:
         #     num_exs = int(tab_sep_vals[3])
         # else:
         #     num_exs = None
 
+        print("nhjku", tab_sep_vals)
         assert len(re.findall("<arg1>.*</arg1>", tab_sep_vals[1])) == 1
         assert len(re.findall("<rel>.*</rel>", tab_sep_vals[1])) == 1
         assert len(re.findall("<arg2>.*</arg2>", tab_sep_vals[1])) == 1

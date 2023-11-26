@@ -81,7 +81,9 @@ class Model(L.LightningModule):
 
     Attributes
     ----------
-    _ex_sent_to_sent: dict[str, str]
+    ex_sent_to_sent: dict[str, str]
+        dictionary that maps sentences to sentences.
+        Both Model and ExMetric possess a pointer to this dictionary.
     auto_tokenizer: AutoTokenizer
     cc_sent_to_words: dict[str, list[str]]
     con_to_weight: dict[str, float]
@@ -132,6 +134,14 @@ class Model(L.LightningModule):
             calls "train", "resume", "test", "pred"
         """
         super().__init__()
+
+        # This stores `pi_test=3.14` in logs/ex/test/hparams.yaml. This is
+        # here for illustrative purposes only. In SentenceAx, instead of
+        # hparams, we use the Params class and sax_globals.py
+        self.hparams["pi_test"] = 3.14
+        print("self.hparams", self.hparams)
+        self.save_hyperparameters(self.hparams)
+
         self.params = params
         self.auto_tokenizer = auto_tokenizer
         self.init_name_to_param = None
@@ -203,18 +213,23 @@ class Model(L.LightningModule):
         # see file misc/CrossEntropyLoss-examples.py for examples of usage
         self.loss_fun = nn.CrossEntropyLoss(ignore_index=-100)
 
-        if self.params.task == "ex":
-            self.metric = ExMetric(verbose=self.verbose)
-            self._ex_sent_to_sent = self.metric.sent_to_sent
-        elif self.params.task == "cc":
-            self.metric = CCMetric(verbose=self.verbose)
-            self._ex_sent_to_sent = None
 
+        self.ex_sent_to_sent = {}
         # self.cc_sent_to_words is similar to Openie6 conj_word_mapping
         # Note that self.cc_sent_to_words is never used;
         # It is filled in ActionConductor but never used.
         # We include it in SentenceAx to follow Openie6.
-        self.cc_sent_to_words = None
+        self.cc_sent_to_words = {}
+
+        if self.params.task == "ex":
+            # ExMetric gets a pointer to ex_sent_to_sent dict. If we add
+            # elements to this dictionary, the copies of this dictionary in
+            # both Model and ExMetric change.
+            self.metric = ExMetric(
+                sent_to_sent=self.ex_sent_to_sent,
+                verbose=self.verbose)
+        elif self.params.task == "cc":
+            self.metric = CCMetric(verbose=self.verbose)
 
         self.scores_epoch_end_d = {}  # filled in test_epoch_end()
 
@@ -247,48 +262,6 @@ class Model(L.LightningModule):
 
         self.l_batch_m_out = \
             PickleList(f"action_{self.name}_l_batch_m_out_dir")
-
-    @property
-    def ex_sent_to_sent(self):
-        """
-        This getter and its corresponding setter, make self.ex_sent_to_sent
-        act like a symlink pointing to the real value that resides in
-        ExMetric. ex_sent_to_sent, used only when task="ex", is a dictionary
-        that maps sentences to sentences.
-
-        Returns
-        -------
-        dict[str, str]
-
-        """
-        if self.params.task == "ex":
-            self._ex_sent_to_sent = self.metric.sent_to_sent
-        elif self.params.task == "cc":
-            assert False
-        return self._ex_sent_to_sent
-
-    @ex_sent_to_sent.setter
-    def ex_sent_to_sent(self, value):
-        """
-        This setter and its corresponding getter, make self.ex_sent_to_sent
-        act like a symlink pointing to the real value that resides in
-        ExMetric. ex_sent_to_sent, used only when task="ex", is a dictionary
-        that maps sentences to sentences.
-
-        Parameters
-        ----------
-        value: dict[str, str]
-
-        Returns
-        -------
-        None
-
-        """
-        if self.params.task == "ex":
-            self._ex_sent_to_sent = value
-            self.metric.sent_to_sent = value
-        elif self.params.task == "cc":
-            assert False
 
     def configure_optimizers(self):
         """

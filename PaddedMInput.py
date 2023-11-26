@@ -24,10 +24,10 @@ class PaddedMInput(MInput):
     # MInput attributes for the MInput
     # l_orig_sent: list[str]
     # ll_osent_icode: torch.Tensor
-    # ll_osent_pos_bool: torch.Tensor
-    # ll_osent_pos_loc: torch.Tensor
-    # ll_osent_verb_bool: torch.Tensor
-    # ll_osent_verb_loc:  torch.Tensor
+    # ll_osent_pos_bool: torch.Tensor | None
+    # ll_osent_pos_loc: torch.Tensor | None
+    # ll_osent_verb_bool: torch.Tensor | None
+    # ll_osent_verb_loc:  torch.Tensor | None
     # ll_osent_wstart_loc: torch.Tensor
     # lll_ilabel: torch.Tensor
 
@@ -76,6 +76,7 @@ class PaddedMInput(MInput):
             self.x_d["ll_osent_pos_loc"] = self.ll_osent_pos_loc
             self.x_d["ll_osent_verb_bool"] = self.ll_osent_verb_bool
             self.x_d["ll_osent_verb_loc"] = self.ll_osent_verb_loc
+
 
     @staticmethod
     def get_padded_ll_x(unpadded_ll_x, ipad1=0):
@@ -248,6 +249,12 @@ class PaddedMInput(MInput):
                 get_padded_ll_x(self.m_in.ll_osent_verb_bool)
             self.ll_osent_verb_loc = PaddedMInput. \
                 get_padded_ll_x(self.m_in.ll_osent_verb_loc)
+        else:
+            self.ll_osent_pos_bool = None
+            self.ll_osent_pos_loc = None
+            self.ll_osent_verb_bool = None
+            self.ll_osent_verb_loc = None
+
 
     def print_padded_data_shapes(self):
         """

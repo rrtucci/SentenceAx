@@ -41,20 +41,20 @@ class MInput:
     ll_osent_icode: list[list[int]]
         for each sentence in l_orig_sent, this variable gives a list of
         icodes (i.e., integer codes provided by auto_tokenizer.encode())
-    ll_osent_pos_bool: list[list[int]]
+    ll_osent_pos_bool: list[list[int]] | None
         for each sentence in l_orig_sent, this variable gives a list of
         booleans (0,1) which indicate POS (part of speech) presence in the
         words in osent (original sentence). Only filled if USE_POS_INFO=True
-    ll_osent_pos_loc: list[list[int]]
+    ll_osent_pos_loc: list[list[int]] | None
         for each sentence in l_orig_sent, this variable gives a list of 
         integers which indicate POS (part of speech) location relative to 
         the words in osent (original sentence). Only filled if 
         USE_POS_INFO=True     
-    ll_osent_verb_bool: list[list[int]]
+    ll_osent_verb_bool: list[list[int]] | None
         for each sentence in l_orig_sent, this variable gives a list of
         booleans (0,1) which indicate a verb presence in the words in osent
         (original sentence). Only filled if USE_POS_INFO=True
-    ll_osent_verb_loc: list[list[int]]
+    ll_osent_verb_loc: list[list[int]] | None
         for each sentence in l_orig_sent, this variable gives a list of
         integers which indicate verb location relative to the words in osent
         (original sentence). Only filled if USE_POS_INFO=True
@@ -315,10 +315,10 @@ class MInput:
     #     self.ll_osent_verb_bool = []
     #     self.ll_osent_verb_loc = []
     #     if not USE_POS_INFO or "predict" in self.params.action:
-    #         self.ll_osent_pos_bool = [[]]
-    #         self.ll_osent_pos_loc = [[]]
-    #         self.ll_osent_verb_bool = [[]]
-    #         self.ll_osent_verb_loc = [[]]
+    #         self.ll_osent_pos_bool = None
+    #         self.ll_osent_pos_loc = None
+    #         self.ll_osent_verb_bool = None
+    #         self.ll_osent_verb_loc = None
     #         return
     #     # print("bbght", self.l_orig_sent)
     #     for sent_id, spacy_tokens in enumerate(
@@ -432,11 +432,14 @@ class MInput:
         self.ll_osent_pos_loc = []
         self.ll_osent_verb_bool = []
         self.ll_osent_verb_loc = []
-        if not USE_POS_INFO or "predict" in self.params.action:
-            self.ll_osent_pos_bool = [[]]
-            self.ll_osent_pos_loc = [[]]
-            self.ll_osent_verb_bool = [[]]
-            self.ll_osent_verb_loc = [[]]
+        # Openie6 does not use  pos info if 'predict' in hparams.mode
+        # but I don't see why
+        # if not USE_POS_INFO or "predict" in self.params.action:
+        if not USE_POS_INFO:
+            self.ll_osent_pos_bool = None
+            self.ll_osent_pos_loc = None
+            self.ll_osent_verb_bool = None
+            self.ll_osent_verb_loc = None
             return
         # print("bbght", self.l_orig_sent)
         for sent_id, sent in enumerate(self.l_orig_sent):

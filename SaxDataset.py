@@ -89,6 +89,8 @@ class SaxDataset(Dataset):
 
         x_d = self.padded_m_in.x_d
         xnames = x_d.keys()
+        # print("vbgtt", xnames, [x_d[xname].shape for xname in xnames])
+        # print("vvbh", self.l_orig_sent)
         self.x = torch.cat([x_d[xname] for xname in xnames], dim=1)
 
         y_d = self.padded_m_in.y_d

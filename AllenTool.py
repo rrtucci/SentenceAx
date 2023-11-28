@@ -91,7 +91,7 @@ class AllenTool:
     def get_osent2_to_exs_from_lll_ilabel(l_osent2,
                                           lll_ilabel,
                                           ll_confidence,
-                                          sent_to_sent):
+                                          sub_osent2_to_osent2):
         """
         similar to Openie6.metric.Carb.__call__()
 
@@ -114,7 +114,7 @@ class AllenTool:
         l_osent2: list[str]
         lll_ilabel: list[list[list[int]]]
         ll_confidence: list[list[float]]
-        sent_to_sent: dict[str, str]
+        sub_osent2_to_osent2: dict[str, str]
             a dictionary that makes small fixes on osent2
 
         Returns
@@ -126,7 +126,7 @@ class AllenTool:
         osent2_to_exs = {}
         for sam_id, osent2 in enumerate(l_osent2):
             add_key_to_this_d(key=osent2,
-                              transform_d=sent_to_sent,
+                              grow_d=sub_osent2_to_osent2,
                               this_d=osent2_to_exs)
 
             num_exs = len(ll_confidence[sam_id])
@@ -141,7 +141,7 @@ class AllenTool:
                         add_key_value_pair_to_this_d(
                             key=osent2,
                             value=ex0,
-                            transform_d=sent_to_sent,
+                            grow_d=sub_osent2_to_osent2,
                             this_d=osent2_to_exs)
         return osent2_to_exs
 

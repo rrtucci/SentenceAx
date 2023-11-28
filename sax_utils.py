@@ -461,7 +461,7 @@ def Li(tensor):
     return tensor.tolist()
 
 
-def add_key_to_this_d(key, transform_d, this_d):
+def add_key_to_this_d(key, grow_d, this_d):
     """
     This method returns a dictionary after adding to it a key.
 
@@ -470,7 +470,7 @@ def add_key_to_this_d(key, transform_d, this_d):
     Parameters
     ----------
     key: Any
-    transform_d: dict[Any, Any]
+    grow_d: dict[Any, Any]
     this_d: dict[Any, Any]
 
     Returns
@@ -478,15 +478,15 @@ def add_key_to_this_d(key, transform_d, this_d):
     dict[Any, Any]
 
     """
-    if transform_d:
-        if transform_d[key] not in this_d:
-            this_d[transform_d[key]] = []
+    if grow_d:
+        if grow_d[key] not in this_d:
+            this_d[grow_d[key]] = []
     else:
         if key not in this_d:
             this_d[key] = []
 
 
-def add_key_value_pair_to_this_d(key, value, transform_d, this_d):
+def add_key_value_pair_to_this_d(key, value, grow_d, this_d):
     """
     This method returns a dictionary after adding to it a key-value pair.
 
@@ -496,7 +496,7 @@ def add_key_value_pair_to_this_d(key, value, transform_d, this_d):
     ----------
     key: Any
     value: Any
-    transform_d: dict[Any, Any]
+    grow_d: dict[Any, Any]
     this_d: dict[Any, Any]
 
     Returns
@@ -504,9 +504,9 @@ def add_key_value_pair_to_this_d(key, value, transform_d, this_d):
     dict[Any, Any]
 
     """
-    if transform_d:
-        if value not in this_d[transform_d[key]]:
-            this_d[transform_d[key]].append(value)
+    if grow_d:
+        if value not in this_d[grow_d[key]]:
+            this_d[grow_d[key]].append(value)
     else:
         if value not in this_d[key]:
             this_d[key].append(value)

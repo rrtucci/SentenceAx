@@ -456,11 +456,11 @@ class ActionConductor:
                       verbose=self.verbose,
                       name="test")
 
-        # ex_sent_to_sent and cc_sent_to_word only stored in one place
-        # if self.params.task == "ex" and self.ex_sent_to_sent:
-        #     model.metric.sent_to_sent = self.ex_sent_to_sent
-        # if self.params.task == "cc" and self.cc_sent_to_words:
-        #     model.metric.sent_to_words = self.cc_sent_to_words
+        # sub_osent2_to_osent2 and cc_sent_to_word only stored in one place
+        # if self.params.task == "ex" and self.sub_osent2_to_osent2:
+        #     model.metric.sub_osent2_to_osent2 = self.sub_osent2_to_osent2
+        # if self.params.task == "cc" and self.osent2_to_words:
+        #     model.metric.sent_to_words = self.osent2_to_words
 
         tdir = get_task_logs_dir(self.params.task)
         with open(tdir + '/test.txt', "w") as test_f:
@@ -528,8 +528,8 @@ class ActionConductor:
                       name="pred")
 
         # Not necessary in SentenceAx
-        # model.metric.sent_to_sent = self.ex_sent_to_sent
-        # model.metric.sent_to_words = self.cc_sent_to_words
+        # model.metric.sub_osent2_to_osent2 = self.sub_osent2_to_osent2
+        # model.metric.sent_to_words = self.osent2_to_words
 
         trainer = self.get_new_trainer(logger=None,
                                        use_minimal=True)
@@ -559,8 +559,8 @@ class ActionConductor:
 
     @staticmethod
     def write_extags_file_from_preds(
-            l_osentL,  # Openi6.orig_sentences
-            l_ccsentL,  # Openie6.sentences
+            l_osentL,  # ~ Openie6.orig_sentences
+            l_ccsentL,  # ~ Openie6.sentences
             out_fp,
             model):
         """
@@ -588,16 +588,15 @@ class ActionConductor:
         l_m_out = model.l_batch_m_out
 
         lines = []
-        batch_id0 = 0  # similar to Openie6.idx1
-        sam_id0 = 0  # similar to Openie6.idx2
-        cum_sam_id0 = 0  # similar to Openie6.idx3
-        # isam similar to Openie6.i
-        # jccsent similar to Openie6.j
+        batch_id0 = 0  # ~ Openie6.idx1
+        sam_id0 = 0  # ~ Openie6.idx2
+        cum_sam_id0 = 0  # ~ Openie6.idx3
+        # isam ~ Openie6.i
+        # jccsent ~ Openie6.j
 
-        # lll_cc_spanned_loc is similar to
-        # sentence_indices_list, model.all_sentence_indices_conj
-        lll_cc_spanned_loc = \
-            model.lll_cc_spanned_loc
+        # lll_cc_spanned ~
+        # Openie6.sentence_indices_list, Openie6.all_sentence_indices_conj
+        lll_cc_spanned_loc = model.lll_cc_spanned_loc
         for isam in range(len(lll_cc_spanned_loc)):
             osent = undoL(l_osentL[isam])
             if len(lll_cc_spanned_loc[isam]) == 0:
@@ -611,7 +610,7 @@ class ActionConductor:
                 assert len(lll_cc_spanned_loc[isam][jccsent]) == \
                        len(osentL_words)
                 assert osentL == l_ccsentL[cum_sam_id0]
-                # similar to Openie6.predictions
+                # ll_pred_ilabel ~ Openie6.predictions
                 ll_pred_ilabel = \
                     l_m_out[batch_id0].lll_pred_ilabel[sam_id0]
                 for l_pred_ilabel in ll_pred_ilabel:
@@ -647,6 +646,83 @@ class ActionConductor:
         with open(out_fp, "w") as f:
             f.writelines(lines)
 
+    @staticmethod
+    def process_l_sample_str(l_sample_str,
+                             ll_cc_word=None):
+        """
+        This method is similar to part of Openie6.run.splitpredict()
+
+        l_sample_str ~ Openie6.example_sentences
+        ll_cc_word ~ Openie6.all_conj_words
+
+        l_osentL ~ Openie6.orig_sentences
+        l_ccsentL ~ Openie6.sentences
+        sub_osent2_to_osent2 ~ Openie6.mapping
+        osent2_to_words ~ Openie6.conj_word_mapping
+
+        If you are trying to understand the meaning of Openie6.mapping and
+        Openie6.conj_word_mapping, this is where they are filled from scratch.
+
+        This method is a really productive workhorse. It takes a list of 
+        sample strings `l_sample_str` and it returns 4 things:
+        
+        l_osentL: list[str]
+            This is a list of osentL (original sentences, long)    
+        l_ccsentL: list[str]
+            This is a list of all sentences, including original sents and 
+            extractions.     
+        sub_osent2_to_osent2: dict[str, str]
+            This maps a bunch of sub osent2 (i.e., either extractions or the
+            original sent) to the original sent. osent2 means either osent
+            or osentL.
+        osent2_to_words: dict[str, list[str]]
+            This maps osent2 to some words. This corresponds to
+            Openie6.conj_words_mapping, which Openie6 fills but never uses.
+            We include it in SentenceAx only for the sake of completeness..
+        
+
+        Parameters
+        ----------
+        l_sample_str: list[str]
+        ll_cc_word: list[list[str]]
+
+
+        Returns
+        -------
+            list[str], list[str], dict[str, str], dict[str, list[str]]
+                l_osentL, l_ccsentL, sub_osent2_to_osent2, osent2_to_words
+
+        """
+        l_osentL = []
+        l_ccsentL = []
+        sub_osent2_to_osent2 = {}
+        osent2_to_words = {}
+        for sample_id, sample_str in enumerate(l_sample_str):
+            if not sample_str:
+                continue
+            l_sent = sample_str.strip("\n").split("\n")
+            if len(l_sent) == 1:
+                l_osentL.append(redoL(l_sent[0]))
+                sub_osent2_to_osent2[l_sent[0]] = l_sent[0]
+                if ll_cc_word:
+                    # model.osent2_to_words is filled but never used
+                    osent2_to_words[l_sent[0]] = \
+                        ll_cc_word[sample_id]
+                l_ccsentL.append(redoL(l_sent[0]))
+            elif len(l_sent) > 1:
+                l_osentL.append(redoL(l_sent[0]))
+                if ll_cc_word:
+                    # model.osent2_to_words is filled but never used
+                    osent2_to_words[l_sent[0]] = \
+                        ll_cc_word[sample_id]
+                for sent in l_sent[1:]:
+                    sub_osent2_to_osent2[sent] = l_sent[0]
+                    l_ccsentL.append(redoL(sent))
+            else:
+                assert False
+
+        return l_osentL, l_ccsentL, sub_osent2_to_osent2, osent2_to_words
+
     def splitpredict_for_cc(self, pred_in_fp):
         """
         This is a private method for self.splitpredict().
@@ -656,8 +732,8 @@ class ActionConductor:
 
         Parameters
         ----------
-        pred_in_fp: str    
-            This file has no tags or ilabels. Only one osent per line for 
+        pred_in_fp: str
+            This file has no tags or ilabels. Only one osent per line for
             each sample.
 
         Returns
@@ -666,71 +742,56 @@ class ActionConductor:
             l_osentL, l_ccsentL
 
         """
-
-        def repeated_splitpredict_for_cc():
-            # cc_words = ll_cc_spanned_word[sample_id]
-            if len(l_pred_sent) == 1:
-                l_osentL.append(redoL(l_pred_sent[0]))
-                model.ex_sent_to_sent[l_pred_sent[0]] = \
-                    l_pred_sent[0]
-
-                l_ccsentL.append(redoL(l_pred_sent[0]))
-                # added to Openie6. Makes no difference because
-                # model.cc_sent_to_words is never used
-                # model.cc_sent_to_words[l_pred_sent[0]] = cc_words
-            elif len(l_pred_sent) > 1:
-                l_osentL.append(redoL(l_pred_sent[0]))
-                for sent in l_pred_sent[1:]:
-                    model.ex_sent_to_sent[sent] = l_pred_sent[0]
-                    l_ccsentL.append(redoL(sent))
-                # added to Openie6. Makes no difference because
-                # model.cc_sent_to_words is never used
-                # model.cc_sent_to_words[l_pred_sent[0]] = cc_words
-            else:
-                assert False
-
         # For task="cc", Openie6 uses large-cased for train_test() and
         # base-cased for splitpredict(). Both are cased, but larger-cased is
         # larger than base-cased. For task="ex", Openie6 uses base-cased
         # throughout
+
+        self.params.d["task"] = "cc"
+        self.params.task = "cc"
         self.params.d["model_str"] = 'bert-base-cased'
-        self.params.d["action"] = self.params.action = 'predict'
+        self.params.d["action"] = 'predict'
+        self.params.action = 'predict'
 
         model = self.predict(pred_in_fp)
-        # model.cc_sent_to_words = {}
-        # model.ex_sent_to_sent = {}
+
+        # model.l_cc_pred_str ~ Openie6.all_predictions_conj
+        # model.self.lll_cc_spanned_loc ~ Openie6.all_sentence_indices_conj
+        # model.ll_cc_spanned_word ~ Openie6.all_conjunct_words_conj
+        #                          ~ Openie6.all_conj_words
 
         l_cc_pred_str = model.l_cc_pred_str
         lll_cc_spanned_loc = model.lll_cc_spanned_loc
         assert len(l_cc_pred_str) == len(lll_cc_spanned_loc)
         ll_cc_spanned_word = model.ll_cc_spanned_word
 
-        l_ccsentL = []  # Openie6.sentences
-        l_osentL = []  # Openie6.orig_sentences
+        # l_cc_pred_str ~ Openie6.conj_predictions
+        l_osentL, l_ccsentL, \
+            model.sub_osent2_to_osent2, model.osent2_to_words = \
+            ActionConductor.process_l_sample_str(
+                l_sample_str=l_cc_pred_str,
+                ll_cc_word=ll_cc_spanned_word)
+        l_ccsentL.append("\n")
 
-        if not pred_in_fp:
-            for sample_id, pred_str in enumerate(l_cc_pred_str):
-                # similar to Openie6.example_sentences
-                l_pred_sent = pred_str.strip('\n').split('\n')
-                repeated_splitpredict_for_cc()
-            # l_ccsentL.append("\n")
+        # this is never used
         # count = 0
         # for l_spanned_loc in ll_cc_spanned_loc:
         #     if len(l_spanned_loc) == 0:
         #         count += 1
         #     else:
         #         count += len(l_spanned_loc)
-        # assert count == len(l_osentL) - 1
-        else:
-            with open(pred_in_fp, "r") as f:
-                content = f.read()
-            content = content.replace("\\", "")
-            lines = content.split('\n\n')
-            for line in lines:
-                if len(line) > 0:
-                    # similar to Openie6.example_sentences
-                    l_pred_sent = line.strip().split("\n")
-                    repeated_splitpredict_for_cc()
+        # # assert count == len(l_osentL) -
+
+        # this is never used
+        # else: # splitting has already occured with output in split_out_fp
+        #     with open(split_out_fp, "r") as f:
+        #         content = f.read()
+        #     content = content.replace("\\", "")
+        #     l_sample_str = content.split('\n\n')
+        #     l_osentL, l_ccsentL = ActionConductor.process_l_sample_str(
+        #             model=model
+        #             l_sample_str=l_sample_str,
+        #             ll_cc_word=None)
 
         return l_osentL, l_ccsentL
 
@@ -767,6 +828,8 @@ class ActionConductor:
         None
 
         """
+        self.params.d["task"] = "ex"
+        self.params.task = "ex"
         self.params.d["model_str"] = 'bert-base-cased'
 
         # temporary file, to be deleted after it is used by predict(). This
@@ -831,12 +894,7 @@ class ActionConductor:
         #                  train_dataloader, val_dataloader, test_dataloader,
         #                  all_sentences):
 
-        self.params.d["task"] = "cc"
-        self.params.task = "cc"
         l_osentL, l_ccsentL = self.splitpredict_for_cc(pred_in_fp)
-
-        self.params.d["task"] = "ex"
-        self.params.task = "ex"
         self.splitpredict_for_ex(l_osentL,
                                  l_ccsentL,
                                  pred_in_fp)
@@ -900,9 +958,9 @@ if __name__ == "__main__":
         conductor.run(pred_in_fp)
         print("checkpoints:", conductor.get_all_checkpoint_fp())
 
+
     # main(1)
     # main(5)
     # main(3, pred_in_fp=f"{PREDICTING_DIR}/small_pred.txt")
     # main(3, pred_in_fp=f"{PREDICTING_DIR}/carb_sentences.txt")
     main(6, pred_in_fp=f"{PREDICTING_DIR}/small_pred.txt")
-

@@ -81,11 +81,11 @@ class Model(L.LightningModule):
 
     Attributes
     ----------
-    ex_sent_to_sent: dict[str, str]
+    sub_osent2_to_osent2: dict[str, str]
         dictionary that maps sentences to sentences.
         Both Model and ExMetric possess a pointer to this dictionary.
     auto_tokenizer: AutoTokenizer
-    cc_sent_to_words: dict[str, list[str]]
+    osent2_to_words: dict[str, list[str]]
     con_to_weight: dict[str, float]
     dropout_fun: Dropout
     embedding: Embedding
@@ -214,19 +214,19 @@ class Model(L.LightningModule):
         self.loss_fun = nn.CrossEntropyLoss(ignore_index=-100)
 
 
-        self.ex_sent_to_sent = {}
-        # self.cc_sent_to_words is similar to Openie6 conj_word_mapping
-        # Note that self.cc_sent_to_words is never used;
+        self.sub_osent2_to_osent2 = {}
+        # self.osent2_to_words is similar to Openie6 conj_word_mapping
+        # Note that self.osent2_to_words is never used;
         # It is filled in ActionConductor but never used.
         # We include it in SentenceAx to follow Openie6.
-        self.cc_sent_to_words = {}
+        self.osent2_to_words = {}
 
         if self.params.task == "ex":
-            # ExMetric gets a pointer to ex_sent_to_sent dict. If we add
+            # ExMetric gets a pointer to sub_osent2_to_osent2 dict. If we add
             # elements to this dictionary, the copies of this dictionary in
             # both Model and ExMetric change.
             self.metric = ExMetric(
-                sent_to_sent=self.ex_sent_to_sent,
+                sub_osent2_to_osent2=self.sub_osent2_to_osent2,
                 verbose=self.verbose)
         elif self.params.task == "cc":
             self.metric = CCMetric(verbose=self.verbose)
@@ -494,7 +494,7 @@ class Model(L.LightningModule):
                   lll_hidden_state.shape)
 
         lll_word_score = Ten([0])  # this statement is unecessary
-        llll_word_score = []  # similar to Openie6.all_depth_scores
+        llll_word_score = []  # ~ Openie6.all_depth_scores
         depth = 0
         # loop over depths
         while True:
@@ -1205,7 +1205,7 @@ class Model(L.LightningModule):
         for sample_id, orig_sent in enumerate(l_orig_sent):
             orig_sentL = redoL(orig_sent)
             add_key_to_this_d(key=orig_sent,
-                              transform_d=self.ex_sent_to_sent,
+                              grow_d=self.sub_osent2_to_osent2,
                               this_d=osent_to_l_pred_ex)
             for depth in range(num_depths):
                 num_words = len(get_words(orig_sentL))
@@ -1218,10 +1218,10 @@ class Model(L.LightningModule):
                     add_key_value_pair_to_this_d(
                         key=orig_sent,
                         value=ex,
-                        transform_d=self.ex_sent_to_sent,
+                        grow_d=self.sub_osent2_to_osent2,
                         this_d=osent_to_l_pred_ex)
-        l_pred_str = []  # similar to Openie6.all_pred
-        l_pred_allen_str = []  # similar to Openie6.all_pred_allen_nlp
+        l_pred_str = []  # ~ Openie6.all_pred
+        l_pred_allen_str = []  # ~ Openie6.all_pred_allen_nlp
         for osent, l_pred_ex in osent_to_l_pred_ex.items():
             orig_sentL = redoL(osent)
             str0 = ""

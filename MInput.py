@@ -492,10 +492,10 @@ class MInput:
 
         """
         l_orig_sent = []
-        ll_osent_wstart_loc = []  # similar to Openie6.word_starts
-        ll_osent_icode = []  # similar to Openie6.input_ids
-        lll_ilabel = []  # similar to Openie6.targets, target=extraction
-        sentL = ""  # similar to Openie6.sentence
+        ll_osent_wstart_loc = []  # ~ Openie6.word_starts
+        ll_osent_icode = []  # ~ Openie6.input_ids
+        lll_ilabel = []  # ~ Openie6.targets, target=extraction
+        sentL = ""  # ~ Openie6.sentence
 
         print("\nMInput started reading '" + self.tags_in_fp + "'")
         print("...")

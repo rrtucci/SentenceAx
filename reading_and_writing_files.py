@@ -100,7 +100,7 @@ def write_cctags_file(out_fp,
                     ll_confidence=ll_confidence)
 
 
-def load_sent_to_sent(in_fp, word_tokenize=False):
+def load_sub_osent2_to_osent2(in_fp, word_tokenize=False):
     """
     similar to Openie6.data_processing.load_conj_mapping()
 
@@ -108,7 +108,7 @@ def load_sent_to_sent(in_fp, word_tokenize=False):
 
     This method returns:
         if word_tokenize==False
-            sent_to_sent, similar to Openie6.mapping.
+            sub_osent2_to_osent2, similar to Openie6.mapping.
         if word_tokenize==True
             sent_to_words, similar to Openie6.conj_mapping.
 
@@ -123,7 +123,7 @@ def load_sent_to_sent(in_fp, word_tokenize=False):
     dict[str, str]|dict[str, list[str]]
 
     """
-    sent_to_sent = {}
+    sub_osent2_to_osent2 = {}
     sent_to_words = {}
     with open(in_fp, "r") as f:
         content = f.read()
@@ -134,10 +134,10 @@ def load_sent_to_sent(in_fp, word_tokenize=False):
                     fixed_sent = line
                 else:
                     if not word_tokenize:
-                        sent_to_sent[line] = fixed_sent
+                        sub_osent2_to_osent2[line] = fixed_sent
                     else:
                         sent_to_words[line] = get_words(fixed_sent)
     if not word_tokenize:
-        return sent_to_sent
+        return sub_osent2_to_osent2
     else:
         return sent_to_words

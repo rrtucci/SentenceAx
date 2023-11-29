@@ -756,37 +756,6 @@ class ActionConductor:
 
         return
 
-    def predict(self, pred_in_fp):
-        """
-        This method calls silent_predict() once.
-
-        This method calls write_predictions()
-
-        Parameters
-        ----------
-        pred_in_fp: str
-
-        Returns
-        -------
-        None
-
-        """
-
-        model = self.silent_predict(pred_in_fp)
-
-        l_osentL, l_ccsentL, \
-            model.sub_osent2_to_osent2, model.osent2_to_words = \
-            ActionConductor.process_l_sample_str(
-                l_sample_str=model.l_ex_pred_str,
-                ll_cc_word=None)
-        l_ccsentL.append("\n")
-
-        ActionConductor.write_predictions(pred_in_fp,
-                                          l_osentL,
-                                          l_ccsentL,
-                                          model,
-                                          name="pred")
-
     def splitpredict_for_cc(self, pred_in_fp):
         """
         This is a private method for self.splitpredict().
@@ -933,6 +902,37 @@ class ActionConductor:
                                           l_ccsentL,
                                           model,
                                           name="split")
+
+    def predict(self, pred_in_fp):
+        """
+        This method calls silent_predict() once.
+
+        This method calls write_predictions()
+
+        Parameters
+        ----------
+        pred_in_fp: str
+
+        Returns
+        -------
+        None
+
+        """
+
+        model = self.silent_predict(pred_in_fp)
+
+        l_osentL, l_ccsentL, \
+            model.sub_osent2_to_osent2, model.osent2_to_words = \
+            ActionConductor.process_l_sample_str(
+                l_sample_str=model.l_ex_pred_str,
+                ll_cc_word=None)
+        l_ccsentL.append("\n")
+
+        ActionConductor.write_predictions(pred_in_fp,
+                                          l_osentL,
+                                          l_ccsentL,
+                                          model,
+                                          name="pred")
 
     def splitpredict(self, pred_in_fp):
         """

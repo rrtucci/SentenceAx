@@ -221,9 +221,11 @@ class Model(L.LightningModule):
         self.osent2_to_words = {}
 
         if self.params.task == "ex":
-            # ExMetric gets a pointer to sub_osent2_to_osent2 dict. If we add
-            # elements to this dictionary, the copies of this dictionary in
-            # both Model and ExMetric change.
+            # ExMetric gets a pointer (address) to the sub_osent2_to_osent2
+            # dict. This dictionary is initially empty, but if we add
+            # elements to it later on, both Model and ExMetric will know
+            # about it because the dictionary pointer will not have changed,
+            # only its contents.
             self.metric = ExMetric(
                 sub_osent2_to_osent2=self.sub_osent2_to_osent2,
                 verbose=self.verbose)

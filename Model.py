@@ -213,7 +213,6 @@ class Model(L.LightningModule):
         # see file misc/CrossEntropyLoss-examples.py for examples of usage
         self.loss_fun = nn.CrossEntropyLoss(ignore_index=-100)
 
-
         self.sub_osent2_to_osent2 = {}
         # self.osent2_to_words is similar to Openie6 conj_word_mapping
         # Note that self.osent2_to_words is never used;
@@ -906,283 +905,12 @@ class Model(L.LightningModule):
                               loss)
         return batch_m_out
 
-    def sax_ttt_step(self, batch, batch_idx, ttt):
-        """
-        This method calls forward() which returns batch_m_out and loss =
-        batch_m_out.loss. The method checks that loss==0 for ttt!="train".
-        Then it logs the loss (for all ttt).
-
-        If ttt="tune", the method writes to a file by calling
-        self.sax_write_batch_sents_out().
-
-        If ttt!="train", the method stores a list of batch_m_out.
-        l_batch_m_out is similar to Openie6.outputs.
-
-
-        Parameters
-        ----------
-        batch: tuple[torch.Tensor, torch.Tensor, list[str]]
-        batch_idx: int
-        ttt: str
-
-        Returns
-        -------
-        None
-
-        """
-        if self.verbose:
-            if ttt == "train":
-                str0 = "training_step"
-            elif ttt == "tune":
-                str0 = "validation_step"
-            elif ttt == "test":
-                str0 = "test_step"
-            else:
-                assert False
-            if self.verbose:
-                print(f"Entering Model.{str0} method, "
-                      f"batch_idx={batch_idx}")
-
-        batch_m_out = self.forward(batch, batch_idx, ttt)
-        loss = batch_m_out.loss
-
-        if ttt == "tune":
-            self.sax_write_batch_sents_out(batch_idx, batch_m_out)
-
-        if ttt != "train":
-            # only remember batch_m_out if going to score it
-            # at end of epoch. This only happens if ttt != "train".
-            self.l_batch_m_out.append(batch_m_out)
-            assert loss == 0
-
-        self.log('loss',
-                 round(float(loss), 6),
-                 prog_bar=True,
-                 logger=True,
-                 on_step=True)
-
-    def training_step(self, batch, batch_idx):
-        """
-        This method returns self.sax_ttt_step() so go there for an explanation.
-
-
-        Parameters
-        ----------
-        batch: tuple[torch.Tensor, torch.Tensor, list[str]]
-        batch_idx: int
-
-        Returns
-        -------
-        dict[str, Any]
-            step_end_d
-
-        """
-        return self.sax_ttt_step(batch, batch_idx, "train")
-
-    def validation_step(self, batch, batch_idx):
-        """
-        This method returns self.sax_ttt_step() so go there for an explanation.
-
-
-        Parameters
-        ----------
-        batch: tuple[torch.Tensor, torch.Tensor, list[str]]
-        batch_idx: int
-
-        Returns
-        -------
-        dict[str, Any]
-            step_end_d
-
-        """
-        return self.sax_ttt_step(batch, batch_idx, "tune")
-
-    def test_step(self, batch, batch_idx):
-        """
-        This method returns self.sax_ttt_step() so go there for an explanation.
-
-
-        Parameters
-        ----------
-        batch: tuple[torch.Tensor, torch.Tensor, list[str]]
-        batch_idx: int
-
-        Returns
-        -------
-        dict[str, Any]
-            step_end_d
-
-        """
-        return self.sax_ttt_step(batch, batch_idx, "test")
-
-    def sax_get_scores_at_epoch_end(self, ttt):
-        """
-        similar to Openie6.model.evaluation_end()
-
-        This method prints and returns scores_epoch_end_d. That dictionary
-        includes `epoch_acc` among its keys. The method is called inside
-        self.sax_on_ttt_epoch_end()
-
-
-        Parameters
-        ----------
-        ttt: str
-            either "train", "tune", "test"
-
-        Returns
-        -------
-        dict[str, Any]
-            scores_epoch_end_d
-
-        """
-        # if self.params.action == 'test':
-        #     for batch_m_out in self.l_batch_m_out:
-        #         batch_m_out.move_to_cpu()
-
-        if 'predict' in self.params.action:
-            score_d = self.metric.get_zero_score_d()
-        else:
-            for k, batch_m_out in enumerate(self.l_batch_m_out):
-                if self.params.task == "cc":
-                    self.metric(
-                        batch_m_out.l_orig_sent,  # meta data
-                        batch_m_out.lll_pred_ilabel,  # predictions
-                        batch_m_out.lll_ilabel)  # ground truth
-                elif self.params.task == "ex":
-                    # for task="ex", ground truth in Carb benchmarks
-                    self.metric(
-                        batch_m_out.l_orig_sent,  # meta data
-                        batch_m_out.lll_pred_ilabel,  # predictions
-                        batch_m_out.ll_pred_confidence)  # scores
-            score_d = self.metric.get_score_d(ttt)
-
-        if self.params.task == "cc":
-            epoch_acc = score_d["F1_exact"]
-        elif self.params.task == "ex":
-            epoch_acc = score_d["F1"]
-        else:
-            assert False
-        scores_epoch_end_d = dict(score_d)
-        scores_epoch_end_d["epoch_acc"] = epoch_acc
-
-        scores_epoch_end_d = round_dict_values(scores_epoch_end_d)
-
-        print('\nScores at end of epoch ' +
-              str(self.trainer.current_epoch) + ":")
-        pprint(scores_epoch_end_d)
-        # For computing the constraint violations
-        # if hasattr(self, 'con_to_l_hinge_loss') and \
-        # self.params.d["constraint_str"] != '':
-        #     for key in self.con_to_l_hinge_loss:
-        #         self.con_to_l_hinge_loss[key] =
-        #         sum(self.con_to_l_hinge_loss[key]).item()
-        #     print('\nViolations: ', self.con_to_l_hinge_loss)
-        #     self.con_to_l_hinge_loss = dict()
-        return scores_epoch_end_d
-
-    def sax_on_ttt_epoch_end(self, ttt):
-        """
-        This method calculates the score called `epoch_acc` (i.e.,
-        the accuracy at epoch's end), and logs it. It also resets
-        l_batch_m_out to []. Scores are only relevant for ttt!="train",
-        so this method is called by on_validation_epoch_end() and
-        on_test_epoch_end() but not by on_train_epoch_end().
-
-        Parameters
-        ----------
-        ttt: str
-
-        Returns
-        -------
-        dict[str, Any]
-            epoch_end_d
-
-        """
-        if self.verbose:
-            if ttt == "train":
-                assert False
-            elif ttt == "tune":
-                str0 = "on_validation_epoch_end"
-            elif ttt == "test":
-                str0 = "on_test_epoch_end"
-            else:
-                assert False
-            if self.verbose:
-                print(f"Entering Model.{str0} method")
-
-        self.scores_epoch_end_d = \
-            self.sax_get_scores_at_epoch_end(ttt)
-        # epoch_end_d = {"log": scores_epoch_end_d,
-        #                "epoch_acc": scores_epoch_end_d["epoch_acc"]}
-        # if ttt == "test":
-        #     epoch_end_d["progress_bar"] = self.scores_epoch_end_d
-
-        epoch_acc = self.scores_epoch_end_d["epoch_acc"]
-        self.log("epoch_acc",
-                 round(float(epoch_acc), 6),
-                 prog_bar=True,
-                 logger=True,
-                 on_epoch=True)
-
-        self.l_batch_m_out.restart()
-        # self.l_batch_m_out.clear()  # free memory
-
-        return epoch_acc
-
-    def on_validation_epoch_end(self):
-        """
-        This method returns self.sax_on_ttt_epoch_end() so go there for an
-        explanation.
-
-        Returns
-        -------
-        dict[str, Any]
-            epoch_end_d
-
-        """
-        return self.sax_on_ttt_epoch_end("tune")
-
-    def on_test_epoch_end(self):
-        """
-        This method returns self.sax_on_ttt_epoch_end() so go there for an
-        explanation.
-
-        Returns
-        -------
-        dict[str, Any]
-            epoch_end_d
-
-        """
-        return self.sax_on_ttt_epoch_end("test")
-
-    def train_dataloader(self):
-        """
-        This method does nothing. It's here to override the parent method.
-
-        Returns
-        -------
-        None
-
-        """
-        return
-
-    def val_dataloader(self):
-        """
-        This method does nothing. It's here to override the parent method.
-
-        Returns
-        -------
-        None
-
-        """
-        return
-
     def sax_write_if_task_ex(self, batch_idx, batch_m_out):
         """
         This method is called by `sax_write_batch_sents_out()`. it writes:
-        
+
         1. an extags file at f"{VAL_OUT_DIR}/extags.txt"
-        
+
         2. an Allen file at f"{VAL_OUT_DIR}/allen.txt"
 
 
@@ -1255,7 +983,7 @@ class Model(L.LightningModule):
         """
 
         This method is called by `sax_write_batch_sents_out()`. It writes:
-        
+
         1. a cctags file at f"{VAL_OUT_DIR}/cctags.txt"
 
         Parameters
@@ -1361,3 +1089,270 @@ class Model(L.LightningModule):
             self.sax_write_if_task_cc(batch_idx, batch_m_out)
         else:
             assert False
+
+    def sax_ttt_step(self, batch, batch_idx, ttt):
+        """
+        This method calls forward() which returns batch_m_out and loss =
+        batch_m_out.loss. The method checks that loss==0 for ttt!="train".
+        Then it logs the loss (for all ttt).
+
+        If "predict" in params.action, the method writes to a file by
+        calling self.sax_write_batch_sents_out().
+
+        If ttt != "train", the method stores a list of batch_m_out.
+        l_batch_m_out is similar to Openie6.outputs.
+
+
+        Parameters
+        ----------
+        batch: tuple[torch.Tensor, torch.Tensor, list[str]]
+        batch_idx: int
+        ttt: str
+
+        Returns
+        -------
+        None
+
+        """
+        if self.verbose:
+            if ttt == "train":
+                str0 = "training_step"
+            elif ttt == "tune":
+                str0 = "validation_step"
+            elif ttt == "test":
+                str0 = "test_step"
+            else:
+                assert False
+            if self.verbose:
+                print(f"Entering Model.{str0} method, "
+                      f"batch_idx={batch_idx}")
+
+        batch_m_out = self.forward(batch, batch_idx, ttt)
+        loss = batch_m_out.loss
+
+        if "predict" in self.params.action:
+            # Openie6 only writes on vslidation (tune) step
+            # We will write iff "predict" in action
+            # because that is the only time these files are
+            # read later on.
+            self.sax_write_batch_sents_out(batch_idx, batch_m_out)
+
+        if ttt != "train":
+            # only remember batch_m_out if going to score it
+            # at end of epoch. This only happens if ttt != "train".
+            self.l_batch_m_out.append(batch_m_out)
+            assert loss == 0
+
+        self.log('loss',
+                 round(float(loss), 6),
+                 prog_bar=True,
+                 logger=True,
+                 on_step=True)
+
+    def training_step(self, batch, batch_idx):
+        """
+        This method returns self.sax_ttt_step() so go there for an explanation.
+
+
+        Parameters
+        ----------
+        batch: tuple[torch.Tensor, torch.Tensor, list[str]]
+        batch_idx: int
+
+        Returns
+        -------
+        None
+
+        """
+        self.sax_ttt_step(batch, batch_idx, "train")
+
+    def validation_step(self, batch, batch_idx):
+        """
+        This method returns self.sax_ttt_step() so go there for an explanation.
+
+
+        Parameters
+        ----------
+        batch: tuple[torch.Tensor, torch.Tensor, list[str]]
+        batch_idx: int
+
+        Returns
+        -------
+        None
+
+        """
+        self.sax_ttt_step(batch, batch_idx, "tune")
+
+    def test_step(self, batch, batch_idx):
+        """
+        This method returns self.sax_ttt_step() so go there for an explanation.
+
+
+        Parameters
+        ----------
+        batch: tuple[torch.Tensor, torch.Tensor, list[str]]
+        batch_idx: int
+
+        Returns
+        -------
+        None
+
+        """
+        self.sax_ttt_step(batch, batch_idx, "test")
+
+    def sax_get_scores_on_ttt_epoch_end(self, ttt):
+        """
+        similar to Openie6.model.evaluation_end()
+
+        This method prints and returns scores_epoch_end_d. That dictionary
+        includes `epoch_acc` among its keys. The method is called inside
+        self.sax_on_ttt_epoch_end()
+
+
+        Parameters
+        ----------
+        ttt: str
+            either "train", "tune", "test"
+
+        Returns
+        -------
+        dict[str, Any]
+            scores_epoch_end_d
+
+        """
+        # if self.params.action == 'test':
+        #     for batch_m_out in self.l_batch_m_out:
+        #         batch_m_out.move_to_cpu()
+
+        if 'predict' in self.params.action:
+            score_d = self.metric.get_zero_score_d()
+        else:
+            for k, batch_m_out in enumerate(self.l_batch_m_out):
+                if self.params.task == "cc":
+                    self.metric(
+                        batch_m_out.l_orig_sent,  # meta data
+                        batch_m_out.lll_pred_ilabel,  # predictions
+                        batch_m_out.lll_ilabel)  # ground truth
+                elif self.params.task == "ex":
+                    # for task="ex", ground truth in Carb benchmarks
+                    self.metric(
+                        batch_m_out.l_orig_sent,  # meta data
+                        batch_m_out.lll_pred_ilabel,  # predictions
+                        batch_m_out.ll_pred_confidence)  # scores
+            score_d = self.metric.get_score_d(ttt)
+
+        if self.params.task == "cc":
+            epoch_acc = score_d["F1_exact"]
+        elif self.params.task == "ex":
+            epoch_acc = score_d["F1"]
+        else:
+            assert False
+        scores_epoch_end_d = dict(score_d)
+        scores_epoch_end_d["epoch_acc"] = epoch_acc
+
+        scores_epoch_end_d = round_dict_values(scores_epoch_end_d)
+
+        print('\nScores at end of epoch ' +
+              str(self.trainer.current_epoch) + ":")
+        pprint(scores_epoch_end_d)
+        # For computing the constraint violations
+        # if hasattr(self, 'con_to_l_hinge_loss') and \
+        # self.params.d["constraint_str"] != '':
+        #     for key in self.con_to_l_hinge_loss:
+        #         self.con_to_l_hinge_loss[key] =
+        #         sum(self.con_to_l_hinge_loss[key]).item()
+        #     print('\nViolations: ', self.con_to_l_hinge_loss)
+        #     self.con_to_l_hinge_loss = dict()
+        return scores_epoch_end_d
+
+    def sax_on_ttt_epoch_end(self, ttt):
+        """
+        This method calculates the score called `epoch_acc` (i.e.,
+        the accuracy at epoch's end), and logs it. It also resets
+        l_batch_m_out to []. Scores are only relevant for ttt!="train",
+        so this method is called by on_validation_epoch_end() and
+        on_test_epoch_end() but not by on_train_epoch_end().
+
+        Parameters
+        ----------
+        ttt: str
+
+        Returns
+        -------
+        None
+
+        """
+        if self.verbose:
+            if ttt == "train":
+                assert False
+            elif ttt == "tune":
+                str0 = "on_validation_epoch_end"
+            elif ttt == "test":
+                str0 = "on_test_epoch_end"
+            else:
+                assert False
+            if self.verbose:
+                print(f"Entering Model.{str0} method")
+
+        self.scores_epoch_end_d = \
+            self.sax_get_scores_on_ttt_epoch_end(ttt)
+        # epoch_end_d = {"log": scores_epoch_end_d,
+        #                "epoch_acc": scores_epoch_end_d["epoch_acc"]}
+        # if ttt == "test":
+        #     epoch_end_d["progress_bar"] = self.scores_epoch_end_d
+
+        epoch_acc = self.scores_epoch_end_d["epoch_acc"]
+        self.log("epoch_acc",
+                 round(float(epoch_acc), 6),
+                 prog_bar=True,
+                 logger=True,
+                 on_epoch=True)
+
+        self.l_batch_m_out.restart()
+        # self.l_batch_m_out.clear()  # free memory
+
+    def on_validation_epoch_end(self):
+        """
+        This method returns self.sax_on_ttt_epoch_end() so go there for an
+        explanation.
+
+        Returns
+        -------
+        None
+
+        """
+        self.sax_on_ttt_epoch_end("tune")
+
+    def on_test_epoch_end(self):
+        """
+        This method returns self.sax_on_ttt_epoch_end() so go there for an
+        explanation.
+
+        Returns
+        -------
+        None
+
+        """
+        self.sax_on_ttt_epoch_end("test")
+
+    def train_dataloader(self):
+        """
+        This method does nothing. It's here to override the parent method.
+
+        Returns
+        -------
+        None
+
+        """
+        return
+
+    def val_dataloader(self):
+        """
+        This method does nothing. It's here to override the parent method.
+
+        Returns
+        -------
+        None
+
+        """
+        return

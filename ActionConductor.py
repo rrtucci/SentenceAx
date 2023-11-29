@@ -678,7 +678,7 @@ class ActionConductor:
         osent2_to_words: dict[str, list[str]]
             This maps osent2 to some words. This corresponds to
             Openie6.conj_words_mapping, which Openie6 fills but never uses.
-            We include it in SentenceAx only for the sake of completeness..
+            We include it in SentenceAx only for the sake of completeness.
         
 
         Parameters
@@ -713,7 +713,7 @@ class ActionConductor:
                 l_osentL.append(redoL(l_sent[0]))
                 if ll_cc_word:
                     # model.osent2_to_words is filled but never used
-                    osent2_to_words[l_sent[0]] = \
+                    osent2_to_words[l_sent[0]] =\
                         ll_cc_word[sample_id]
                 for sent in l_sent[1:]:
                     sub_osent2_to_osent2[sent] = l_sent[0]
@@ -726,6 +726,8 @@ class ActionConductor:
     def splitpredict_for_cc(self, pred_in_fp):
         """
         This is a private method for self.splitpredict().
+
+        This method calls predict() once.
 
         This method reads a file at `pred_in_fp` with the sentences (one
         sentence per line) that one wants to split.
@@ -767,10 +769,10 @@ class ActionConductor:
 
         # l_cc_pred_str ~ Openie6.conj_predictions
         l_osentL, l_ccsentL, \
-            model.sub_osent2_to_osent2, model.osent2_to_words = \
-            ActionConductor.process_l_sample_str(
-                l_sample_str=l_cc_pred_str,
-                ll_cc_word=ll_cc_spanned_word)
+            model.sub_osent2_to_osent2, model.osent2_to_words= \
+                ActionConductor.process_l_sample_str(
+                    l_sample_str=l_cc_pred_str,
+                    ll_cc_word=ll_cc_spanned_word)
         l_ccsentL.append("\n")
 
         # this is never used
@@ -803,16 +805,14 @@ class ActionConductor:
         """
         This is a private method for self.splitpredict().
 
+        This method calls predict() once.
+
         This method writes 
         
-        1. an extags file  with the predicted extags.
+        1. an extags file with the predicted extags.
         
-        2. Derived from the extags file produced in 1, an ss (simple sents)
+        2. (Derived from the extags file produced in 1) an ss (simple sents)
         file with the predicted simple sentences.
-
-        3. Derived from the allen file at f"{VAL_OUT_DIR}/allen.txt",
-        an ss (simple sents) file with the predicted simple sentences.
-
 
         Parameters
         ----------
@@ -853,6 +853,12 @@ class ActionConductor:
                                                      extags_out_fp,
                                                      model)
 
+        out_fp = f'{pred_in_fp.replace(".txt", "")}_ss_splitpred_out.txt'
+        print('Predictions written to ' + out_fp)
+        file_translate_tags_to_words("ex",
+                                     in_fp=extags_out_fp,
+                                     out_fp=out_fp)
+
         allen_fp = f"{VAL_OUT_DIR}/allen.txt"
 
         # rescored_allen_file = rescore(
@@ -865,18 +871,13 @@ class ActionConductor:
         # al_tool = AllenTool(allen_fp)
         # al_tool.write_allen_alternative_file(out_fp, ftype="ss")
 
-        # out_fp = f'{pred_in_fp.replace(".txt", "")}_ss_tr_splitpred_out.txt'
-        # print('Predictions written to ' + out_fp)
-        # file_translate_tags_to_words("ex",
-        #                              in_fp=extags_out_fp,
-        #                              out_fp=out_fp)
-
     def splitpredict(self, pred_in_fp):
         """
         similar to Openie6.run.splitpredict()
 
         This method calls the 2 private methods: self.splitpredict_for_cc(), 
-        and self.splitpredict_for_ex() in that order.
+        and self.splitpredict_for_ex() in that order. Both these methods
+        call predict() once.
 
         Parameters
         ----------

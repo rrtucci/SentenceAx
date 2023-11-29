@@ -482,81 +482,6 @@ class ActionConductor:
         shutil.move(tdir + '/test.part',
                     tdir + '/test')
 
-    def predict(self, pred_in_fp):
-        """
-        similar to Openie6.run.predict()
-
-        This method does prediction. It creates instances of Model and
-        Trainer. The trainer is used to call trainer.test() (instead of
-        trainer.fit( ) as is done in self.train()). trainer.test() is also
-        called in self.test(), but there it takes the test data as input.
-        Here it takes the data at `pred_in_fp` (a file of osents, one per
-        line) as input.
-
-        This method times how long it takes to predict.
-
-        This method is called if the action is "predict" or "splitppredict".
-        Iff the action is "predict", this method writes an ss (simple
-        sentences) file with the simple sentences predictions. Iff the action
-        is "splitpredict", writing of such an ss file occurs in the method
-        "splitpredct_for_ex()", after the splitting has been done.
-
-
-        Parameters
-        ----------
-        pred_in_fp: str
-            This file has no tags or ilabels. Only one osent per line for 
-            each sample.
-
-        Returns
-        -------
-        Model
-
-        """
-        # This distinguishes between tasks "ex" and "cc".
-        # splitpredict() uses both best chechpoint files.
-        checkpoint_fp = self.get_best_checkpoint_fp()
-
-        # assert list(self.get_all_checkpoint_fp()) == [checkpoint_fp]
-
-        self.update_params(checkpoint_fp)
-        self.dloader_tool.set_predict_dataloader(pred_in_fp)
-        # always set dataloader before constructing a Model instance
-        model = Model(self.params,
-                      self.auto_tokenizer,
-                      verbose=self.verbose,
-                      name="pred")
-
-        # Not necessary in SentenceAx
-        # model.metric.sub_osent2_to_osent2 = self.sub_osent2_to_osent2
-        # model.metric.sent_to_words = self.osent2_to_words
-
-        trainer = self.get_new_trainer(logger=None,
-                                       use_minimal=True)
-        start_time = time()
-        # model.all_sentences = all_sentences # never used
-        trainer.test(
-            model,
-            dataloaders=self.dloader_tool.predict_dloader,
-            ckpt_path=checkpoint_fp)
-        end_time = time()
-        minutes = (end_time - start_time) / 60
-        print(f'Total Time taken = {minutes : 2f} minutes')
-
-        # This final block does not appear in Openie6. Openie6.predict()
-        # writes no file.
-
-        # If action=="splitpredict", postpone calling this until after
-        # splitting
-        # if self.params.action == "predict":
-        #     allen_fp = f"{M_OUT_DIR}/allen.txt"
-        #     out_fp = f'{pred_in_fp.replace(".txt", "")}_ss_pred_out.txt'
-        #     print('Predictions written to ' + out_fp)
-        #     al_tool = AllenTool(allen_fp)
-        #     al_tool.write_allen_alternative_file(out_fp, ftype="ss")
-
-        return model
-
     @staticmethod
     def write_extags_file_from_preds(
             l_osentL,  # ~ Openie6.orig_sentences
@@ -684,7 +609,7 @@ class ActionConductor:
         Parameters
         ----------
         l_sample_str: list[str]
-        ll_cc_word: list[list[str]]
+        ll_cc_word: list[list[str]] | None
 
 
         Returns
@@ -713,7 +638,7 @@ class ActionConductor:
                 l_osentL.append(redoL(l_sent[0]))
                 if ll_cc_word:
                     # model.osent2_to_words is filled but never used
-                    osent2_to_words[l_sent[0]] =\
+                    osent2_to_words[l_sent[0]] = \
                         ll_cc_word[sample_id]
                 for sent in l_sent[1:]:
                     sub_osent2_to_osent2[sent] = l_sent[0]
@@ -723,11 +648,123 @@ class ActionConductor:
 
         return l_osentL, l_ccsentL, sub_osent2_to_osent2, osent2_to_words
 
+    def silent_predict(self, pred_in_fp):
+        """
+        similar to Openie6.run.predict()
+
+        This method does prediction. It creates instances of Model and
+        Trainer. The trainer is used to call trainer.test() (instead of
+        trainer.fit( ) as is done in self.train()). trainer.test() is also
+        called in self.test(), but there it takes the test data as input.
+        Here it reads the file at `pred_in_fp` (a file of osents, one per
+        line) to get data input.
+
+        This method times how long it takes to predict.
+
+        This method is silent. It writes nothing.
+
+        Parameters
+        ----------
+        pred_in_fp: str
+            This file has no tags or ilabels. Only one osent per line for
+            each sample.
+
+        Returns
+        -------
+        Model
+
+        """
+        # This distinguishes between tasks "ex" and "cc".
+        # splitpredict() uses both best chechpoint files.
+        checkpoint_fp = self.get_best_checkpoint_fp()
+
+        # assert list(self.get_all_checkpoint_fp()) == [checkpoint_fp]
+
+        self.update_params(checkpoint_fp)
+        self.dloader_tool.set_predict_dataloader(pred_in_fp)
+        # always set dataloader before constructing a Model instance
+        model = Model(self.params,
+                      self.auto_tokenizer,
+                      verbose=self.verbose,
+                      name="pred")
+
+        # Not necessary in SentenceAx
+        # model.metric.sub_osent2_to_osent2 = self.sub_osent2_to_osent2
+        # model.metric.sent_to_words = self.osent2_to_words
+
+        trainer = self.get_new_trainer(logger=None,
+                                       use_minimal=True)
+        start_time = time()
+        # model.all_sentences = all_sentences # never used
+        trainer.test(
+            model,
+            dataloaders=self.dloader_tool.predict_dloader,
+            ckpt_path=checkpoint_fp)
+        end_time = time()
+        minutes = (end_time - start_time) / 60
+        print(f'Total Time taken = {minutes : 2f} minutes')
+
+        return model
+
+    def predict(self, pred_in_fp):
+        """
+        This method calls silent_predict() once.
+
+        This method writes
+
+        1. an extags file with the predicted extags.
+
+        2. (Derived from the extags file produced in 1) an ss (simple sents)
+        file with the predicted simple sentences.
+
+        3. (Derived from the allen file at f"{M_OUT_DIR}/allen.txt") an ss (
+        simple sents) file with the predicted simple sentences.
+
+        Parameters
+        ----------
+        pred_in_fp: str
+
+        Returns
+        -------
+        None
+
+        """
+
+        model = self.silent_predict(pred_in_fp)
+
+        l_osentL, l_ccsentL, \
+            model.sub_osent2_to_osent2, model.osent2_to_words = \
+            ActionConductor.process_l_sample_str(
+                l_sample_str=model.l_ex_pred_str,
+                ll_cc_word=None)
+        l_ccsentL.append("\n")
+
+        # Does same thing as Openie6.run.get_labels()
+        extags_out_fp = \
+            f'{pred_in_fp.replace(".txt", "")}_extags_pred_out.txt'
+        print('Predictions written to ' + extags_out_fp)
+        ActionConductor.write_extags_file_from_preds(l_osentL,
+                                                     l_ccsentL,
+                                                     extags_out_fp,
+                                                     model)
+
+        out_fp = f'{pred_in_fp.replace(".txt", "")}_ss_pred_out.txt'
+        print('Predictions written to ' + out_fp)
+        file_translate_tags_to_words("ex",
+                                     in_fp=extags_out_fp,
+                                     out_fp=out_fp)
+
+        allen_fp = f"{M_OUT_DIR}/allen.txt"
+        out_fp = f'{pred_in_fp.replace(".txt", "")}_ss_al_pred_out.txt'
+        print('Predictions written to ' + out_fp)
+        al_tool = AllenTool(allen_fp)
+        al_tool.write_allen_alternative_file(out_fp, ftype="ss")
+
     def splitpredict_for_cc(self, pred_in_fp):
         """
         This is a private method for self.splitpredict().
 
-        This method calls predict() once.
+        This method calls silent_predict() once.
 
         This method reads a file at `pred_in_fp` with the sentences (one
         sentence per line) that one wants to split.
@@ -755,7 +792,7 @@ class ActionConductor:
         self.params.d["action"] = 'predict'
         self.params.action = 'predict'
 
-        model = self.predict(pred_in_fp)
+        model = self.silent_predict(pred_in_fp)
 
         # model.l_cc_pred_str ~ Openie6.all_predictions_conj
         # model.self.lll_cc_spanned_loc ~ Openie6.all_sentence_indices_conj
@@ -769,10 +806,10 @@ class ActionConductor:
 
         # l_cc_pred_str ~ Openie6.conj_predictions
         l_osentL, l_ccsentL, \
-            model.sub_osent2_to_osent2, model.osent2_to_words= \
-                ActionConductor.process_l_sample_str(
-                    l_sample_str=l_cc_pred_str,
-                    ll_cc_word=ll_cc_spanned_word)
+            model.sub_osent2_to_osent2, model.osent2_to_words = \
+            ActionConductor.process_l_sample_str(
+                l_sample_str=l_cc_pred_str,
+                ll_cc_word=ll_cc_spanned_word)
         l_ccsentL.append("\n")
 
         # this is never used
@@ -805,7 +842,7 @@ class ActionConductor:
         """
         This is a private method for self.splitpredict().
 
-        This method calls predict() once.
+        This method calls silent_predict() once.
 
         This method writes 
         
@@ -813,6 +850,9 @@ class ActionConductor:
         
         2. (Derived from the extags file produced in 1) an ss (simple sents)
         file with the predicted simple sentences.
+
+        3. (Derived from the allen file at f"{M_OUT_DIR}/allen.txt") an ss (
+        simple sents) file with the predicted simple sentences.
 
         Parameters
         ----------
@@ -832,14 +872,14 @@ class ActionConductor:
         self.params.task = "ex"
         self.params.d["model_str"] = 'bert-base-cased'
 
-        # temporary file, to be deleted after it is used by predict(). This
-        # file is not used in Openie6, but is needed in SentenceAx, so as to
-        # get the appropriate input for self.predict()
+        # temporary file, to be deleted after it is used by silent_predict(
+        # ). This file is not used in Openie6, but is needed in SentenceAx,
+        # so as to get the appropriate input for silent_predict()
         in_fp = f'{pred_in_fp.replace(".txt", "")}_ccsents.txt'
         with open(in_fp, "w", encoding="utf-8") as f:
             f.write("\n".join(l_ccsentL))
 
-        model = self.predict(in_fp)
+        model = self.silent_predict(in_fp)
 
         if delete_ccsents_file:
             os.remove(in_fp)
@@ -866,10 +906,10 @@ class ActionConductor:
         #     model_dir=,
         #     batch_size=256)
 
-        # out_fp = f'{pred_in_fp.replace(".txt", "")}_ss_al_splitpred_out.txt'
-        # print('Predictions written to ' + out_fp)
-        # al_tool = AllenTool(allen_fp)
-        # al_tool.write_allen_alternative_file(out_fp, ftype="ss")
+        out_fp = f'{pred_in_fp.replace(".txt", "")}_ss_al_splitpred_out.txt'
+        print('Predictions written to ' + out_fp)
+        al_tool = AllenTool(allen_fp)
+        al_tool.write_allen_alternative_file(out_fp, ftype="ss")
 
     def splitpredict(self, pred_in_fp):
         """

@@ -20,7 +20,7 @@ class ExMetric:
     ----------
     input_carb_exs: bool
     matchingFunc: Matcher.binary_linient_tuple_match
-    osentL_to_exs: dict[str, listt[SaxExtraction]]
+    osentL_to_exs: dict[str, list[SaxExtraction]]
     score_d: dict[str, float]
     sub_osent2_to_osent2: dict[str, str]
     test_benchmark: Benchmark

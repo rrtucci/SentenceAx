@@ -81,16 +81,11 @@ class Model(L.LightningModule):
 
     Attributes
     ----------
-    sub_osent2_to_osent2: dict[str, str]
-        dictionary that maps sentences to sentences.
-        Both Model and ExMetric possess a pointer to this dictionary.
     auto_tokenizer: AutoTokenizer
     osent2_to_words: dict[str, list[str]]
     con_to_weight: dict[str, float]
     dropout_fun: Dropout
     embedding: Embedding
-    scores_epoch_end_d: dict[str, Any]
-    start_model: BertModel
     hidden_size: int
     ilabelling_layer: Linear
     init_name_to_param: dict[str, variable]
@@ -105,6 +100,11 @@ class Model(L.LightningModule):
     metric: CCMetric | ExMetric
     name: str
     params: Params
+    scores_epoch_end_d: dict[str, Any]
+    start_model: BertModel
+    sub_osent2_to_osent2: dict[str, str]
+        dictionary that maps sentences to sentences.
+        Both Model and ExMetric possess a pointer to this dictionary.
     verbose: bool
     # some inherited attributes that won't be used
     # hparams (dictionary, Used by Openie6, but not by us.

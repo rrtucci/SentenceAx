@@ -44,8 +44,8 @@ def merge_dicts(dominant_d, default_d):
 
     Parameters
     ----------
-    dominant_d: dict
-    default_d: dict
+    dominant_d: dict[str, Any]
+    default_d: dict[str, Any]
 
     Returns
     -------
@@ -704,7 +704,7 @@ def round_dict_values(di, precision=4):
 
     Parameters
     ----------
-    di: dict[str, float]
+    di: dict[str, Any]
     precision: int
 
     Returns

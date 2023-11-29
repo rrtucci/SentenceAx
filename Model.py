@@ -911,9 +911,9 @@ class Model(L.LightningModule):
         """
         This method is called by `sax_write_batch_sents_out()`. it writes:
 
-        1. an extags file at f"{VAL_OUT_DIR}/extags.txt"
+        1. an extags file at f"{M_OUT_DIR}/extags.txt"
 
-        2. an Allen file at f"{VAL_OUT_DIR}/allen.txt"
+        2. an Allen file at f"{M_OUT_DIR}/allen.txt"
 
 
         Parameters
@@ -971,11 +971,11 @@ class Model(L.LightningModule):
             l_pred_allen_str.append(allen_str.strip("/n"))
 
         fmode = "w" if batch_idx == 0 else "a"
-        out_fp = f"{VAL_OUT_DIR}/extags.txt"
+        out_fp = f"{M_OUT_DIR}/extags.txt"
         with open(out_fp, "a") as pred_f:
             pred_f.write('\n'.join(l_pred_str) + '\n')
 
-        allen_out_fp = f"{VAL_OUT_DIR}/allen.txt"
+        allen_out_fp = f"{M_OUT_DIR}/allen.txt"
         with open(allen_out_fp, fmode) as allen_f:
             allen_f.write('\n'.join(l_pred_allen_str) + '\n')
 
@@ -986,7 +986,7 @@ class Model(L.LightningModule):
 
         This method is called by `sax_write_batch_sents_out()`. It writes:
 
-        1. a cctags file at f"{VAL_OUT_DIR}/cctags.txt"
+        1. a cctags file at f"{M_OUT_DIR}/cctags.txt"
 
         Parameters
         ----------
@@ -1050,7 +1050,7 @@ class Model(L.LightningModule):
         lll_cc_spanned_loc += lll_spanned_loc
 
         fmode = "w" if batch_idx == 0 else "a"
-        out_fp = f"{VAL_OUT_DIR}/cctags.txt"
+        out_fp = f"{M_OUT_DIR}/cctags.txt"
         with open(out_fp, fmode) as pred_f:
             pred_f.write('\n'.join(l_pred_str) + '\n')
 
@@ -1065,11 +1065,11 @@ class Model(L.LightningModule):
         This method is called by sax_ttt_step() when ttt="tune".
 
         For task="ex", it appends stuff, after each step (i.e., batch),
-        to the files at f"{VAL_OUT_DIR}/extags.txt" and f"{
-        VAL_OUT_DIR}/allen.txt".
+        to the files at f"{M_OUT_DIR}/extags.txt" and f"{
+        M_OUT_DIR}/allen.txt".
 
         For task="cc", it appends stuff, after each step, to the file at f"{
-        VAL_OUT_DIR}/cctags.txt"
+        M_OUT_DIR}/cctags.txt"
 
 
         Parameters

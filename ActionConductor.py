@@ -549,7 +549,7 @@ class ActionConductor:
         # If action=="splitpredict", postpone calling this until after
         # splitting
         # if self.params.action == "predict":
-        #     allen_fp = f"{VAL_OUT_DIR}/allen.txt"
+        #     allen_fp = f"{M_OUT_DIR}/allen.txt"
         #     out_fp = f'{pred_in_fp.replace(".txt", "")}_ss_pred_out.txt'
         #     print('Predictions written to ' + out_fp)
         #     al_tool = AllenTool(allen_fp)
@@ -859,7 +859,7 @@ class ActionConductor:
                                      in_fp=extags_out_fp,
                                      out_fp=out_fp)
 
-        allen_fp = f"{VAL_OUT_DIR}/allen.txt"
+        allen_fp = f"{M_OUT_DIR}/allen.txt"
 
         # rescored_allen_file = rescore(
         #     allen_fp,

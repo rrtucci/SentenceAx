@@ -572,6 +572,56 @@ class ActionConductor:
             f.writelines(lines)
 
     @staticmethod
+    def write_predictions(pred_in_fp,
+                          l_osentL,
+                          l_ccsentL,
+                          model,
+                          name):
+        """
+        This method writes
+
+        1. an extags file with the predicted extags.
+
+        2. (Derived from the extags file produced in 1) an ss (simple sents)
+        file with the predicted simple sentences.
+
+        3. (Derived from the allen file at f"{M_OUT_DIR}/allen.txt") an ss (
+        simple sents) file with the predicted simple sentences.
+
+
+        Parameters
+        ----------
+        pred_in_fp: str
+        l_osentL: list[str]
+        l_ccsentL: list[str]
+        model: Model
+        name: str
+
+        Returns
+        -------
+
+        """
+        extags_out_fp = \
+            f'{pred_in_fp.replace(".txt", "")}_extags_{name}_out.txt'
+        print('Predictions written to ' + extags_out_fp)
+        ActionConductor.write_extags_file_from_preds(l_osentL,
+                                                     l_ccsentL,
+                                                     extags_out_fp,
+                                                     model)
+
+        out_fp = f'{pred_in_fp.replace(".txt", "")}_ss_{name}_out.txt'
+        print('Predictions written to ' + out_fp)
+        file_translate_tags_to_words("ex",
+                                     in_fp=extags_out_fp,
+                                     out_fp=out_fp)
+
+        allen_fp = f"{M_OUT_DIR}/allen.txt"
+        out_fp = f'{pred_in_fp.replace(".txt", "")}_ss_al_{name}_out.txt'
+        print('Predictions written to ' + out_fp)
+        al_tool = AllenTool(allen_fp)
+        al_tool.write_allen_alternative_file(out_fp, ftype="ss")
+
+    @staticmethod
     def process_l_sample_str(l_sample_str,
                              ll_cc_word=None):
         """
@@ -704,21 +754,13 @@ class ActionConductor:
         minutes = (end_time - start_time) / 60
         print(f'Total Time taken = {minutes : 2f} minutes')
 
-        return model
+        return
 
     def predict(self, pred_in_fp):
         """
         This method calls silent_predict() once.
 
-        This method writes
-
-        1. an extags file with the predicted extags.
-
-        2. (Derived from the extags file produced in 1) an ss (simple sents)
-        file with the predicted simple sentences.
-
-        3. (Derived from the allen file at f"{M_OUT_DIR}/allen.txt") an ss (
-        simple sents) file with the predicted simple sentences.
+        This method calls write_predictions()
 
         Parameters
         ----------
@@ -739,26 +781,11 @@ class ActionConductor:
                 ll_cc_word=None)
         l_ccsentL.append("\n")
 
-        # Does same thing as Openie6.run.get_labels()
-        extags_out_fp = \
-            f'{pred_in_fp.replace(".txt", "")}_extags_pred_out.txt'
-        print('Predictions written to ' + extags_out_fp)
-        ActionConductor.write_extags_file_from_preds(l_osentL,
-                                                     l_ccsentL,
-                                                     extags_out_fp,
-                                                     model)
-
-        out_fp = f'{pred_in_fp.replace(".txt", "")}_ss_pred_out.txt'
-        print('Predictions written to ' + out_fp)
-        file_translate_tags_to_words("ex",
-                                     in_fp=extags_out_fp,
-                                     out_fp=out_fp)
-
-        allen_fp = f"{M_OUT_DIR}/allen.txt"
-        out_fp = f'{pred_in_fp.replace(".txt", "")}_ss_al_pred_out.txt'
-        print('Predictions written to ' + out_fp)
-        al_tool = AllenTool(allen_fp)
-        al_tool.write_allen_alternative_file(out_fp, ftype="ss")
+        ActionConductor.write_predictions(pred_in_fp,
+                                          l_osentL,
+                                          l_ccsentL,
+                                          model,
+                                          name="pred")
 
     def splitpredict_for_cc(self, pred_in_fp):
         """
@@ -777,8 +804,8 @@ class ActionConductor:
 
         Returns
         -------
-        list[str], list[str]
-            l_osentL, l_ccsentL
+        list[str], list[str], model
+            l_osentL, l_ccsentL, Model
 
         """
         # For task="cc", Openie6 uses large-cased for train_test() and
@@ -832,7 +859,7 @@ class ActionConductor:
         #             l_sample_str=l_sample_str,
         #             ll_cc_word=None)
 
-        return l_osentL, l_ccsentL
+        return l_osentL, l_ccsentL, model
 
     def splitpredict_for_ex(self,
                             l_osentL,
@@ -844,15 +871,7 @@ class ActionConductor:
 
         This method calls silent_predict() once.
 
-        This method writes 
-        
-        1. an extags file with the predicted extags.
-        
-        2. (Derived from the extags file produced in 1) an ss (simple sents)
-        file with the predicted simple sentences.
-
-        3. (Derived from the allen file at f"{M_OUT_DIR}/allen.txt") an ss (
-        simple sents) file with the predicted simple sentences.
+        This method calls write_predictions().
 
         Parameters
         ----------
@@ -884,40 +903,46 @@ class ActionConductor:
         if delete_ccsents_file:
             os.remove(in_fp)
 
-        # Does same thing as Openie6.run.get_labels()
-        extags_out_fp = \
-            f'{pred_in_fp.replace(".txt", "")}_extags_splitpred_out.txt'
-        print('Predictions written to ' + extags_out_fp)
-        ActionConductor.write_extags_file_from_preds(l_osentL,
-                                                     l_ccsentL,
-                                                     extags_out_fp,
-                                                     model)
+        ActionConductor.write_predictions(pred_in_fp,
+                                          l_osentL,
+                                          l_ccsentL,
+                                          model,
+                                          name="splitpred")
 
-        out_fp = f'{pred_in_fp.replace(".txt", "")}_ss_splitpred_out.txt'
-        print('Predictions written to ' + out_fp)
-        file_translate_tags_to_words("ex",
-                                     in_fp=extags_out_fp,
-                                     out_fp=out_fp)
+    def split(self, pred_in_fp):
+        """
+        This is a private method for self.splitpredict().
 
-        allen_fp = f"{M_OUT_DIR}/allen.txt"
+        This method calls silent_predict() once.
 
-        # rescored_allen_file = rescore(
-        #     allen_fp,
-        #     model_dir=,
-        #     batch_size=256)
+        This method calls write_predictions().
 
-        out_fp = f'{pred_in_fp.replace(".txt", "")}_ss_al_splitpred_out.txt'
-        print('Predictions written to ' + out_fp)
-        al_tool = AllenTool(allen_fp)
-        al_tool.write_allen_alternative_file(out_fp, ftype="ss")
+        Parameters
+        ----------
+        pred_in_fp: str
+
+        Returns
+        -------
+        None
+
+        """
+        l_osentL, l_ccsentL, model = self.splitpredict_for_cc(pred_in_fp)
+
+        ActionConductor.write_predictions(pred_in_fp,
+                                          l_osentL,
+                                          l_ccsentL,
+                                          model,
+                                          name="split")
 
     def splitpredict(self, pred_in_fp):
         """
         similar to Openie6.run.splitpredict()
 
-        This method calls the 2 private methods: self.splitpredict_for_cc(), 
-        and self.splitpredict_for_ex() in that order. Both these methods
-        call predict() once.
+        If params.d["split_only"] is True, this method calls split().
+
+        If params.d["split_only"] is False, the method calls the 2 private
+        methods: self.splitpredict_for_cc(), and self.splitpredict_for_ex()
+        in that order.
 
         Parameters
         ----------
@@ -930,15 +955,13 @@ class ActionConductor:
         None
 
         """
-
-        # def splitpredict(params_d, checkpoint_callback,
-        #                  train_dataloader, val_dataloader, test_dataloader,
-        #                  all_sentences):
-
-        l_osentL, l_ccsentL = self.splitpredict_for_cc(pred_in_fp)
-        self.splitpredict_for_ex(l_osentL,
-                                 l_ccsentL,
-                                 pred_in_fp)
+        if self.params.d["split_only"]:
+            self.split(pred_in_fp)
+        else:
+            l_osentL, l_ccsentL, _ = self.splitpredict_for_cc(pred_in_fp)
+            self.splitpredict_for_ex(l_osentL,
+                                     l_ccsentL,
+                                     pred_in_fp)
 
     def run(self, pred_in_fp=None):
         """

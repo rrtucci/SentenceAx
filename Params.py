@@ -283,6 +283,7 @@ class Params:
                 "optimizer": "adamW",
                 "refresh_cache": False,
                 "save_k": 1,
+                "split_only": False,
                 "small_train": False,
                 "val_check_interval": 1.0,
                 "verbose": False,

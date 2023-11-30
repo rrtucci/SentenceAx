@@ -209,7 +209,7 @@ class AllenTool:
         # else:
         #     num_exs = None
 
-        print("nhjku", tab_sep_vals)
+        # print("nhjku", tab_sep_vals)
         assert len(re.findall("<arg1>.*</arg1>", tab_sep_vals[1])) == 1
         assert len(re.findall("<rel>.*</rel>", tab_sep_vals[1])) == 1
         assert len(re.findall("<arg2>.*</arg2>", tab_sep_vals[1])) == 1

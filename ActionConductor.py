@@ -754,7 +754,7 @@ class ActionConductor:
         minutes = (end_time - start_time) / 60
         print(f'Total Time taken = {minutes : 2f} minutes')
 
-        return
+        return model
 
     def splitpredict_for_cc(self, pred_in_fp):
         """
@@ -1023,8 +1023,8 @@ if __name__ == "__main__":
         print("checkpoints:", conductor.get_all_checkpoint_fp())
 
 
-    # main(1)
+    #main(1)
     # main(5)
-    # main(3, pred_in_fp=f"{PREDICTING_DIR}/small_pred.txt")
+    main(3, pred_in_fp=f"{PREDICTING_DIR}/small_pred.txt")
     # main(3, pred_in_fp=f"{PREDICTING_DIR}/carb_sentences.txt")
-    main(6, pred_in_fp=f"{PREDICTING_DIR}/small_pred.txt")
+    # main(6, pred_in_fp=f"{PREDICTING_DIR}/small_pred.txt")

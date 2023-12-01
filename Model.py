@@ -911,9 +911,9 @@ class Model(L.LightningModule):
         """
         This method is called by `sax_write_batch_sents_out()`. it writes:
 
-        1. an extags file at f"{M_OUT_DIR}/extags.txt"
+        1. an ssents (simple sentences) file at f"{M_OUT_DIR}/ex_ssents.txt"
 
-        2. an Allen file at f"{M_OUT_DIR}/allen.txt"
+        2. an Allen file at f"{M_OUT_DIR}/ex_allen.txt"
 
 
         Parameters
@@ -971,11 +971,11 @@ class Model(L.LightningModule):
             l_pred_allen_str.append(allen_str.strip("/n"))
 
         fmode = "w" if batch_idx == 0 else "a"
-        out_fp = f"{M_OUT_DIR}/extags.txt"
+        out_fp = f"{M_OUT_DIR}/ex_ssents.txt"
         with open(out_fp, "a") as pred_f:
             pred_f.write('\n'.join(l_pred_str) + '\n')
 
-        allen_out_fp = f"{M_OUT_DIR}/allen.txt"
+        allen_out_fp = f"{M_OUT_DIR}/ex_allen.txt"
         with open(allen_out_fp, fmode) as allen_f:
             allen_f.write('\n'.join(l_pred_allen_str) + '\n')
 
@@ -986,7 +986,7 @@ class Model(L.LightningModule):
 
         This method is called by `sax_write_batch_sents_out()`. It writes:
 
-        1. a cctags file at f"{M_OUT_DIR}/cctags.txt"
+        1. an ssents (simple sentences) file at f"{M_OUT_DIR}/cc_ssents.txt"
 
         Parameters
         ----------
@@ -1050,7 +1050,7 @@ class Model(L.LightningModule):
         lll_cc_spanned_loc += lll_spanned_loc
 
         fmode = "w" if batch_idx == 0 else "a"
-        out_fp = f"{M_OUT_DIR}/cctags.txt"
+        out_fp = f"{M_OUT_DIR}/cc_ssents.txt"
         with open(out_fp, fmode) as pred_f:
             pred_f.write('\n'.join(l_pred_str) + '\n')
 

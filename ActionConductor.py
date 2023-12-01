@@ -582,11 +582,8 @@ class ActionConductor:
 
         1. an extags file with the predicted extags.
 
-        2. (Derived from the extags file produced in 1) an ss (simple sents)
-        file with the predicted simple sentences.
-
-        3. (Derived from the allen file at f"{M_OUT_DIR}/allen.txt") an ss (
-        simple sents) file with the predicted simple sentences.
+        2. (Derived from the extags file produced in 1) an ssents (simple
+        sentences) file with the predicted simple sentences.
 
 
         Parameters
@@ -609,17 +606,11 @@ class ActionConductor:
                                                      extags_out_fp,
                                                      model)
 
-        out_fp = f'{pred_in_fp.replace(".txt", "")}_ss_{name}_out.txt'
+        out_fp = f'{pred_in_fp.replace(".txt", "")}_ssents_{name}_out.txt'
         print('Predictions written to ' + out_fp)
         file_translate_tags_to_words("ex",
                                      in_fp=extags_out_fp,
                                      out_fp=out_fp)
-
-        allen_fp = f"{M_OUT_DIR}/allen.txt"
-        out_fp = f'{pred_in_fp.replace(".txt", "")}_ss_al_{name}_out.txt'
-        print('Predictions written to ' + out_fp)
-        al_tool = AllenTool(allen_fp)
-        al_tool.write_allen_alternative_file(out_fp, ftype="ss")
 
     @staticmethod
     def process_l_sample_str(l_sample_str,

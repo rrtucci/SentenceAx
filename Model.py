@@ -78,6 +78,24 @@ class Model(L.LightningModule):
     BERT BASE (L=12, A=12, H=768) Total Parameters=110M
     BERT LARGE (L=24, A=16, H=1024) Total Parameters=340M
 
+    embedding = nn.Embedding(num_embeddings=10, embedding_dim=3) an
+    embedding or encoding takes a tensor ll_x with shape (2, 4) to a
+    tensor lll_x of shape (2, 4, 3) The elements of the tensor will be
+    called icodes. The num of possible icodes here is 10. This is also
+    the vocab size.
+
+    a = torch.LongTensor([[1, 2, 3, 9], [4, 3, 2, 0]]) # (2, 4)
+    embedding(a) has shape (2, 4, 3)
+    num_embeddings (int) – vocab size, num icodes
+    embedding_dim (int) – 3 = len(lll[0][0])
+
+    Embedding is a layer that takes a tensor of icodes to another tensor
+    of icodes with one more index. An encoder takes each word and
+    replaces it by an icode.
+
+    output = nn.Linear(na, nb)(input)
+    If input has shape (10, 20, na), then output has shape (10, 20, nb)
+
 
     Attributes
     ----------
@@ -180,26 +198,6 @@ class Model(L.LightningModule):
 
         self.dropout_fun = nn.Dropout(p=DROPOUT)  # 0.0
 
-        """
-        embedding = nn.Embedding(num_embeddings=10, embedding_dim=3)
-        an embedding or encoding takes a tensor ll_x with shape (2, 4)
-        to a tensor lll_x of shape (2, 4, 3)
-        The elements of the tensor will be called icodes. The num of 
-        possible icodes here is 10. This is also the vocab size.
-
-        a = torch.LongTensor([[1, 2, 3, 9], [4, 3, 2, 0]]) # (2, 4)
-        embedding(a) has shape (2, 4, 3)
-        num_embeddings (int) – vocab size, num icodes
-        embedding_dim (int) – 3 = len(lll[0][0])
-
-        Embedding is a layer that takes a tensor of icodes to another tensor 
-        of icodes with one more index. An encoder takes each word and 
-        replaces it by an icode.
-
-        output = nn.Linear(na, nb)(input)
-        If input has shape (10, 20, na), then output has shape (10, 20, nb)
-
-        """
         self.embedding = nn.Embedding(
             100,  # vocab size
             self.hidden_size)  # dim of embedding space
@@ -954,7 +952,7 @@ class Model(L.LightningModule):
         l_pred_allen_str = []  # ~ Openie6.all_pred_allen_nlp
         for osent, l_pred_ex in osent_to_l_pred_ex.items():
             orig_sentL = redoL(osent)
-            str0 = ""
+            str0 = orig_sentL + "\n"
             for pred_ex in l_pred_ex:
                 str0 += pred_ex.get_simple_sent() + '\n'
             l_pred_str.append(str0.strip("/n"))
@@ -972,7 +970,7 @@ class Model(L.LightningModule):
 
         fmode = "w" if batch_idx == 0 else "a"
         out_fp = f"{M_OUT_DIR}/ex_ssents.txt"
-        with open(out_fp, "a") as pred_f:
+        with open(out_fp, fmode) as pred_f:
             pred_f.write('\n'.join(l_pred_str) + '\n')
 
         allen_out_fp = f"{M_OUT_DIR}/ex_allen.txt"

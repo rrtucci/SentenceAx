@@ -510,7 +510,36 @@ class ActionConductor:
         None
 
         """
+        if model.verbose:
+            print("Entering `ActionConductor.write_extags_file_from_preds`")
+            print_list("l_osentL", l_osentL)
+            print_list("l_ccsentL", l_ccsentL)
         l_m_out = model.l_batch_m_out
+
+        def append_extags_str_to_lines(lines):
+            for l_pred_ilabel in ll_pred_ilabel:
+                # You can use x.item() to get a Python number
+                # from a torch tensor that has one element
+                if l_pred_ilabel.sum().item() == 0:
+                    break
+
+                l_ilabel = [0] * len(osentL_words)
+                l_pred_ilabel = \
+                    l_pred_ilabel[:len(osentL_words)].tolist()
+                for k, loc in enumerate(
+                        sorted(lll_cc_spanned_loc[isam][jccsent])):
+                    l_ilabel[loc] = l_pred_ilabel[k]
+
+                assert len(l_ilabel) == len(osentL_words)
+                l_ilabel = l_ilabel[:-3]
+                # 1: ARG1, 2: REL
+                if 1 not in l_pred_ilabel and 2 not in l_pred_ilabel:
+                    continue  # not a pass
+
+                extags_str = \
+                    ' '.join([ILABEL_TO_EXTAG[i] for i in l_ilabel])
+                lines.append(extags_str)
+            return lines
 
         lines = []
         batch_id0 = 0  # ~ Openie6.idx1
@@ -529,6 +558,11 @@ class ActionConductor:
             lines.append('\n' + osent)
             num_ccsent = len(lll_cc_spanned_loc[isam])
             for jccsent in range(num_ccsent):
+                if model.verbose:
+                    print(
+                        f"isam={isam}, jccsent={jccsent}, "
+                        f"batch_id0={batch_id0}, "
+                        f"sam_id0={sam_id0}, cum_sam_id0={cum_sam_id0}")
                 osent = l_m_out[batch_id0].l_osent[sam_id0]
                 osentL = redoL(osent)
                 osentL_words = get_words(osentL)
@@ -538,34 +572,15 @@ class ActionConductor:
                 # ll_pred_ilabel ~ Openie6.predictions
                 ll_pred_ilabel = \
                     l_m_out[batch_id0].lll_pred_ilabel[sam_id0]
-                for l_pred_ilabel in ll_pred_ilabel:
-                    # You can use x.item() to get a Python number
-                    # from a torch tensor that has one element
-                    if l_pred_ilabel.sum().item() == 0:
-                        break
+                lines = append_extags_str_to_lines(lines)
 
-                    l_ilabel = [0] * len(osentL_words)
-                    l_pred_ilabel = \
-                        l_pred_ilabel[:len(osentL_words)].tolist()
-                    for k, loc in enumerate(
-                            sorted(lll_cc_spanned_loc[isam][jccsent])):
-                        l_ilabel[loc] = l_pred_ilabel[k]
-
-                    assert len(l_ilabel) == len(osentL_words)
-                    l_ilabel = l_ilabel[:-3]
-                    # 1: ARG1, 2: REL
-                    if 1 not in l_pred_ilabel and 2 not in l_pred_ilabel:
-                        continue  # not a pass
-
-                    str_extags = \
-                        ' '.join([ILABEL_TO_EXTAG[i] for i in l_ilabel])
-                    lines.append(str_extags)
-
-                cum_sam_id0 += 1
-                sam_id0 += 1
-                if sam_id0 == len(l_m_out[batch_id0].l_osent):
-                    sam_id0 = 0
-                    batch_id0 += 1
+            if model.verbose:
+                print(lines)
+            cum_sam_id0 += 1
+            sam_id0 += 1
+            if sam_id0 == len(l_m_out[batch_id0].l_osent):
+                sam_id0 = 0
+                batch_id0 += 1
 
         lines.append('\n')
         with open(out_fp, "w") as f:
@@ -629,14 +644,14 @@ class ActionConductor:
         If you are trying to understand the meaning of Openie6.mapping and
         Openie6.conj_word_mapping, this is where they are filled from scratch.
 
-        This method is a really productive workhorse. It takes a list of 
+        This method is a really productive workhorse. It takes a list of
         sample strings `l_sample_str` and it returns 4 things:
-        
+
         l_osentL: list[str]
-            This is a list of osentL (original sentences, long)    
+            This is a list of osentL (original sentences, long)
         l_ccsentL: list[str]
-            This is a list of all sentences, including original sents and 
-            extractions.     
+            This is a list of all sentences, including original sents and
+            extractions.
         sub_osent2_to_osent2: dict[str, str]
             This maps a bunch of sub osent2 (i.e., either extractions or the
             original sent) to the original sent. osent2 means either osent
@@ -645,7 +660,7 @@ class ActionConductor:
             This maps osent2 to some words. This corresponds to
             Openie6.conj_words_mapping, which Openie6 fills but never uses.
             We include it in SentenceAx only for the sake of completeness.
-        
+
 
         Parameters
         ----------
@@ -838,7 +853,7 @@ class ActionConductor:
         l_osentL: list[str]
         l_ccsentL: list[str]
         pred_in_fp: str
-            This file has no tags or ilabels. Only one osent per line for 
+            This file has no tags or ilabels. Only one osent per line for
             each sample.
         delete_ccsents_file: bool
 
@@ -938,7 +953,7 @@ class ActionConductor:
         Parameters
         ----------
         pred_in_fp: str
-            This file has no tags or ilabels. Only one osent per line for 
+            This file has no tags or ilabels. Only one osent per line for
             each sample.
 
         Returns
@@ -966,7 +981,7 @@ class ActionConductor:
         Parameters
         ----------
         pred_in_fp: str
-            This file has no tags or ilabels. Only one osent per line for 
+            This file has no tags or ilabels. Only one osent per line for
             each sample.
 
         Returns
@@ -1014,7 +1029,7 @@ if __name__ == "__main__":
         print("checkpoints:", conductor.get_all_checkpoint_fp())
 
 
-    #main(1)
+    # main(1)
     # main(5)
     main(3, pred_in_fp=f"{PREDICTING_DIR}/small_pred.txt")
     # main(3, pred_in_fp=f"{PREDICTING_DIR}/carb_sentences.txt")

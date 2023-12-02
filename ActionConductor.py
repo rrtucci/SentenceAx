@@ -483,9 +483,9 @@ class ActionConductor:
                     tdir + '/test')
 
     @staticmethod
-    def write_extags_file_from_preds(
+    def write_extags_file_from_split_sents(
             l_osentL,  # ~ Openie6.orig_sentences
-            l_any_sentL,  # ~ Openie6.sentences
+            l_split_sentL,  # ~ Openie6.sentences
             out_fp,
             model):
         """
@@ -500,7 +500,7 @@ class ActionConductor:
         Parameters
         ----------
         l_osentL: list[str]
-        l_any_sentL: list[str]
+        l_split_sentL: list[str]
         out_fp: str
         model: Model
 
@@ -511,9 +511,9 @@ class ActionConductor:
 
         """
         if model.verbose:
-            print("Entering `ActionConductor.write_extags_file_from_preds`")
+            print("Entering `ActionConductor.write_extags_file_from_split_sents`")
             print_list("l_osentL", l_osentL)
-            print_list("l_any_sentL", l_any_sentL)
+            print_list("l_split_sentL", l_split_sentL)
         l_m_out = model.l_batch_m_out
 
         def append_extags_str_to_lines(lines):
@@ -527,7 +527,7 @@ class ActionConductor:
                 l_pred_ilabel = \
                     l_pred_ilabel[:len(osentL_words)].tolist()
                 for k, loc in enumerate(
-                        sorted(lll_cc_spanned_loc[isam][jany_sent])):
+                        sorted(lll_cc_spanned_loc[isam][jsplit_sent])):
                     l_ilabel[loc] = l_pred_ilabel[k]
 
                 assert len(l_ilabel) == len(osentL_words)
@@ -546,7 +546,7 @@ class ActionConductor:
         sam_id0 = 0  # ~ Openie6.idx2
         cum_sam_id0 = 0  # ~ Openie6.idx3
         # isam ~ Openie6.i
-        # jany_sent ~ Openie6.j
+        # jsplit_sent ~ Openie6.j
 
         # lll_cc_spanned ~
         # Openie6.sentence_indices_list, Openie6.all_sentence_indices_conj
@@ -556,19 +556,19 @@ class ActionConductor:
             if len(lll_cc_spanned_loc[isam]) == 0:
                 lll_cc_spanned_loc[isam].append(list(range(len(osent))))
             lines.append('\n' + osent)
-            num_any_sent = len(lll_cc_spanned_loc[isam])
-            for jany_sent in range(num_any_sent):
+            num_split_sent = len(lll_cc_spanned_loc[isam])
+            for jsplit_sent in range(num_split_sent):
                 if model.verbose:
                     print(
-                        f"isam={isam}, jany_sent={jany_sent}, "
+                        f"isam={isam}, jsplit_sent={jsplit_sent}, "
                         f"batch_id0={batch_id0}, "
                         f"sam_id0={sam_id0}, cum_sam_id0={cum_sam_id0}")
                 osent = l_m_out[batch_id0].l_osent[sam_id0]
                 osentL = redoL(osent)
                 osentL_words = get_words(osentL)
-                assert len(lll_cc_spanned_loc[isam][jany_sent]) == \
+                assert len(lll_cc_spanned_loc[isam][jsplit_sent]) == \
                        len(osentL_words)
-                assert osentL == l_any_sentL[cum_sam_id0]
+                assert osentL == l_split_sentL[cum_sam_id0]
                 # ll_pred_ilabel ~ Openie6.predictions
                 ll_pred_ilabel = \
                     l_m_out[batch_id0].lll_pred_ilabel[sam_id0]
@@ -587,11 +587,11 @@ class ActionConductor:
             f.writelines(lines)
 
     @staticmethod
-    def write_predictions(pred_in_fp,
-                          l_osentL,
-                          l_any_sentL,
-                          model,
-                          name):
+    def write_splitpred_predictions(pred_in_fp,
+                                    l_osentL,
+                                    l_split_sentL,
+                                    model,
+                                    name):
         """
         This method writes
 
@@ -605,7 +605,7 @@ class ActionConductor:
         ----------
         pred_in_fp: str
         l_osentL: list[str]
-        l_any_sentL: list[str]
+        l_split_sentL: list[str]
         model: Model
         name: str
 
@@ -616,10 +616,10 @@ class ActionConductor:
         extags_out_fp = \
             f'{pred_in_fp.replace(".txt", "")}_extags_{name}_out.txt'
         print('Predictions written to ' + extags_out_fp)
-        ActionConductor.write_extags_file_from_preds(l_osentL,
-                                                     l_any_sentL,
-                                                     extags_out_fp,
-                                                     model)
+        ActionConductor.write_extags_file_from_split_sents(l_osentL,
+                                                           l_split_sentL,
+                                                           extags_out_fp,
+                                                           model)
 
         out_fp = f'{pred_in_fp.replace(".txt", "")}_ssents_{name}_out.txt'
         print('Predictions written to ' + out_fp)
@@ -637,7 +637,7 @@ class ActionConductor:
         ll_cc_word ~ Openie6.all_conj_words
 
         l_osentL ~ Openie6.orig_sentences
-        l_any_sentL ~ Openie6.sentences
+        l_split_sentL ~ Openie6.sentences
         sub_osent2_to_osent2 ~ Openie6.mapping
         osent2_to_words ~ Openie6.conj_word_mapping
 
@@ -649,9 +649,10 @@ class ActionConductor:
 
         l_osentL: list[str]
             This is a list of osentL (original sentences, long)
-        l_any_sentL: list[str]
-            This is a list of all sentences, including original sents and
-            extractions.
+        l_split_sentL: list[str]
+            This is a list of sents produced by split but before predict. In
+            case the osent yielded no split sents, the osent is included
+            instead. If there are split sents, the osent is not included.
         sub_osent2_to_osent2: dict[str, str]
             This maps a bunch of sub osent2 (i.e., either extractions or the
             original sent) to the original sent. osent2 means either osent
@@ -671,11 +672,11 @@ class ActionConductor:
         Returns
         -------
             list[str], list[str], dict[str, str], dict[str, list[str]]
-                l_osentL, l_any_sentL, sub_osent2_to_osent2, osent2_to_words
+                l_osentL, l_split_sentL, sub_osent2_to_osent2, osent2_to_words
 
         """
         l_osentL = []
-        l_any_sentL = []
+        l_split_sentL = []
         sub_osent2_to_osent2 = {}
         osent2_to_words = {}
         for sample_id, sample_str in enumerate(l_sample_str):
@@ -689,7 +690,7 @@ class ActionConductor:
                     # model.osent2_to_words is filled but never used
                     osent2_to_words[l_sent[0]] = \
                         ll_cc_word[sample_id]
-                l_any_sentL.append(redoL(l_sent[0]))
+                l_split_sentL.append(redoL(l_sent[0]))
             elif len(l_sent) > 1:
                 l_osentL.append(redoL(l_sent[0]))
                 if ll_cc_word:
@@ -698,11 +699,11 @@ class ActionConductor:
                         ll_cc_word[sample_id]
                 for sent in l_sent[1:]:
                     sub_osent2_to_osent2[sent] = l_sent[0]
-                    l_any_sentL.append(redoL(sent))
+                    l_split_sentL.append(redoL(sent))
             else:
                 assert False
 
-        return l_osentL, l_any_sentL, sub_osent2_to_osent2, osent2_to_words
+        return l_osentL, l_split_sentL, sub_osent2_to_osent2, osent2_to_words
 
     def silent_predict(self, pred_in_fp):
         """
@@ -780,7 +781,7 @@ class ActionConductor:
         Returns
         -------
         list[str], list[str], model
-            l_osentL, l_any_sentL, Model
+            l_osentL, l_split_sentL, Model
 
         """
         # For task="cc", Openie6 uses large-cased for train_test() and
@@ -807,12 +808,12 @@ class ActionConductor:
         ll_cc_spanned_word = model.ll_cc_spanned_word
 
         # l_cc_pred_sample_str ~ Openie6.conj_predictions
-        l_osentL, l_any_sentL, \
+        l_osentL, l_split_sentL, \
             model.sub_osent2_to_osent2, model.osent2_to_words = \
             ActionConductor.process_l_sample_str(
                 l_sample_str=l_cc_pred_sample_str,
                 ll_cc_word=ll_cc_spanned_word)
-        l_any_sentL.append("\n")
+        # l_split_sentL.append("\n")
 
         # this is never used
         # count = 0
@@ -829,33 +830,33 @@ class ActionConductor:
         #         content = f.read()
         #     content = content.replace("\\", "")
         #     l_sample_str = content.split('\n\n')
-        #     l_osentL, l_any_sentL = ActionConductor.process_l_sample_str(
+        #     l_osentL, l_split_sentL = ActionConductor.process_l_sample_str(
         #             model=model
         #             l_sample_str=l_sample_str,
         #             ll_cc_word=None)
 
-        return l_osentL, l_any_sentL, model
+        return l_osentL, l_split_sentL, model
 
     def splitpredict_for_ex(self,
                             l_osentL,
-                            l_any_sentL,
+                            l_split_sentL,
                             pred_in_fp,
-                            delete_any_sents_file=True):
+                            delete_split_sents_file=True):
         """
         This is a private method for self.splitpredict().
 
         This method calls silent_predict() once.
 
-        This method calls write_predictions().
+        This method calls write_splitpred_predictions().
 
         Parameters
         ----------
         l_osentL: list[str]
-        l_any_sentL: list[str]
+        l_split_sentL: list[str]
         pred_in_fp: str
             This file has no tags or ilabels. Only one osent per line for
             each sample.
-        delete_any_sents_file: bool
+        delete_split_sents_file: bool
 
         Returns
         -------
@@ -869,20 +870,20 @@ class ActionConductor:
         # temporary file, to be deleted after it is used by silent_predict(
         # ). This file is not used in Openie6, but is needed in SentenceAx,
         # so as to get the appropriate input for silent_predict()
-        in_fp = f'{pred_in_fp.replace(".txt", "")}_any_sents.txt'
+        in_fp = f'{pred_in_fp.replace(".txt", "")}_split_sents.txt'
         with open(in_fp, "w", encoding="utf-8") as f:
-            f.write("\n".join(l_any_sentL))
+            f.write("\n".join(l_split_sentL))
 
         model = self.silent_predict(in_fp)
 
-        if delete_any_sents_file:
+        if delete_split_sents_file:
             os.remove(in_fp)
 
-        ActionConductor.write_predictions(pred_in_fp,
-                                          l_osentL,
-                                          l_any_sentL,
-                                          model,
-                                          name="splitpred")
+        ActionConductor.write_splitpred_predictions(pred_in_fp,
+                                                    l_osentL,
+                                                    l_split_sentL,
+                                                    model,
+                                                    name="splitpred")
 
     def split(self, pred_in_fp):
         """
@@ -890,7 +891,7 @@ class ActionConductor:
 
         This method calls silent_predict() once.
 
-        This method calls write_predictions().
+        This method calls write_splitpred_predictions().
 
         Parameters
         ----------
@@ -901,19 +902,27 @@ class ActionConductor:
         None
 
         """
-        l_osentL, l_any_sentL, model = self.splitpredict_for_cc(pred_in_fp)
+        self.params.d["task"] = "cc"
+        self.params.task = "cc"
+        self.params.d["model_str"] = 'bert-base-cased'
+        self.params.d["action"] = 'predict'
+        self.params.action = 'predict'
 
-        ActionConductor.write_predictions(pred_in_fp,
-                                          l_osentL,
-                                          l_any_sentL,
-                                          model,
-                                          name="split")
+        model = self.silent_predict(pred_in_fp)
+
+        # l_osentL, l_split_sentL, model = self.splitpredict_for_cc(pred_in_fp)
+
+        # ActionConductor.write_splitpred_predictions(pred_in_fp,
+        #                                   l_osentL,
+        #                                   l_split_sentL,
+        #                                   model,
+        #                                   name="split")
 
     def predict(self, pred_in_fp):
         """
         This method calls silent_predict() once.
 
-        This method calls write_predictions()
+        This method calls write_splitpred_predictions()
 
         Parameters
         ----------
@@ -927,18 +936,18 @@ class ActionConductor:
 
         model = self.silent_predict(pred_in_fp)
 
-        l_osentL, l_any_sentL, \
-            model.sub_osent2_to_osent2, model.osent2_to_words = \
-            ActionConductor.process_l_sample_str(
-                l_sample_str=model.l_ex_pred_sample_str,
-                ll_cc_word=None)
-        l_any_sentL.append("\n")
-
-        ActionConductor.write_predictions(pred_in_fp,
-                                          l_osentL,
-                                          l_any_sentL,
-                                          model,
-                                          name="pred")
+        # l_osentL, l_split_sentL, \
+        #     model.sub_osent2_to_osent2, model.osent2_to_words = \
+        #     ActionConductor.process_l_sample_str(
+        #         l_sample_str=model.l_ex_pred_sample_str,
+        #         ll_cc_word=None)
+        # l_split_sentL.append("\n")
+        #
+        # ActionConductor.write_splitpred_predictions(pred_in_fp,
+        #                                   l_osentL,
+        #                                   l_split_sentL,
+        #                                   model,
+        #                                   name="pred")
 
     def splitpredict(self, pred_in_fp):
         """
@@ -964,9 +973,9 @@ class ActionConductor:
         if self.params.d["split_only"]:
             self.split(pred_in_fp)
         else:
-            l_osentL, l_any_sentL, _ = self.splitpredict_for_cc(pred_in_fp)
+            l_osentL, l_split_sentL, _ = self.splitpredict_for_cc(pred_in_fp)
             self.splitpredict_for_ex(l_osentL,
-                                     l_any_sentL,
+                                     l_split_sentL,
                                      pred_in_fp)
 
     def run(self, pred_in_fp=None):

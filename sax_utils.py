@@ -715,7 +715,7 @@ def round_dict_values(di, precision=4):
     return {key: round(float(di[key]), precision) for key in di.keys()}
 
 
-def get_tags_train_fp(task, small=False):
+def get_train_tags_fp(task, small=False):
     """
     This method returns the file path to the training dataset.
 

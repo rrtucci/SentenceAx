@@ -173,7 +173,7 @@ class SaxDataset(Dataset):
 if __name__ == "__main__":
     def main():
         params = Params(1)  # pid=1, task="ex", action="train_test"
-        in_fp = "tests/extags_test.txt"
+        in_fp = "tests/test_extags.txt"
         model_str = "bert-base-cased"
         do_lower_case = ('uncased' in model_str)
         auto = AutoTokenizer.from_pretrained(

@@ -301,7 +301,7 @@ if __name__ == "__main__":
         print([(k, li2[k]) for k in range(len(li2))])
 
 
-    main(in_fp="tests/extags_test.txt", omit_exless=True)
+    main(in_fp="tests/test_extags.txt", omit_exless=True)
     # the next 2 files have no valid extags per sample so
     # must set omit_exless=False or else all samples will be excluded
     main(in_fp="predicting/small_pred.txt", omit_exless=False)

@@ -412,16 +412,16 @@ class AllenTool:
               tune_first_last,
               test_first_last)
 
-        tags_train_fp = out_dir + "/extags_train.txt"
-        tags_tune_fp = out_dir + "/extags_tune.txt"
-        tags_test_fp = out_dir + "/extags_test.txt"
+        train_tags_fp = out_dir + "/train_extags.txt"
+        tune_tags_fp = out_dir + "/tune_extags.txt"
+        test_tags_fp = out_dir + "/test_extags.txt"
 
         self.write_allen_alternative_file(
-            tags_train_fp, first_last_sample_id=train_first_last)
+            train_tags_fp, first_last_sample_id=train_first_last)
         self.write_allen_alternative_file(
-            tags_tune_fp, first_last_sample_id=tune_first_last)
+            tune_tags_fp, first_last_sample_id=tune_first_last)
         self.write_allen_alternative_file(
-            tags_test_fp, first_last_sample_id=test_first_last)
+            test_tags_fp, first_last_sample_id=test_first_last)
 
 
 if __name__ == "__main__":

@@ -64,15 +64,15 @@ class ActionConductor:
         For BERT models, this is 0
     params: Param
         class containing parameters
-    tags_test_fp: str
+    test_tags_fp: str
         this is the file path to either a cctaggs or an exctags file,
         depending on whether params.task equals "cc" or "ex". These
         samples are used for testing.
-    tags_train_fp: str
+    train_tags_fp: str
         this is the file path to either a cctaggs or an exctags file,
         depending on whether params.task equals "cc" or "ex". These
         samples are used for training.
-    tags_tune_fp: str
+    tune_tags_fp: str
         this is the file path to either a cctaggs or an exctags file,
         depending on whether params.task equals "cc" or "ex". These
         samples are used for tuning (== validation).
@@ -104,15 +104,15 @@ class ActionConductor:
         warnings.filterwarnings('ignore')
 
         if self.params.task == 'cc':
-            self.tags_train_fp = \
-                get_tags_train_fp("cc", self.params.d["small_train"])
-            self.tags_tune_fp = CCTAGS_TUNE_FP
-            self.tags_test_fp = CCTAGS_TEST_FP
+            self.train_tags_fp = \
+                get_train_tags_fp("cc", self.params.d["small_train"])
+            self.tune_tags_fp = CCTAGS_TUNE_FP
+            self.test_tags_fp = CCTAGS_TEST_FP
         elif self.params.task == 'ex':
-            self.tags_train_fp = \
-                get_tags_train_fp("ex", self.params.d["small_train"])
-            self.tags_tune_fp = EXTAGS_TUNE_FP
-            self.tags_test_fp = EXTAGS_TEST_FP
+            self.train_tags_fp = \
+                get_train_tags_fp("ex", self.params.d["small_train"])
+            self.tune_tags_fp = EXTAGS_TUNE_FP
+            self.test_tags_fp = EXTAGS_TEST_FP
 
         if save:
             self.checkpoint_callback = self.get_new_checkpoint_callback()
@@ -137,9 +137,9 @@ class ActionConductor:
 
         self.dloader_tool = SaxDataLoaderTool(params,
                                               self.auto_tokenizer,
-                                              self.tags_train_fp,
-                                              self.tags_tune_fp,
-                                              self.tags_test_fp)
+                                              self.train_tags_fp,
+                                              self.tune_tags_fp,
+                                              self.test_tags_fp)
 
         if 'predict' not in params.action:
             # ttt dloaders not used for action="predict", "splitpredict"
@@ -585,13 +585,23 @@ class ActionConductor:
         lines.append('\n')
         with open(out_fp, "w") as f:
             f.writelines(lines)
+            
+    @staticmethod
+    def write_preds_in_original_order(pred_in_fp,
+                                      unsorted_fp,
+                                      sorted_fp,
+                                      delete_unsorted=False):
+        
+        l_osent = []
+        with open(
+        
+    
 
     @staticmethod
     def write_splitpred_predictions(pred_in_fp,
                                     l_osentL,
                                     l_split_sentL,
-                                    model,
-                                    name):
+                                    model):
         """
         This method writes
 
@@ -607,21 +617,20 @@ class ActionConductor:
         l_osentL: list[str]
         l_split_sentL: list[str]
         model: Model
-        name: str
 
         Returns
         -------
 
         """
         extags_out_fp = \
-            f'{pred_in_fp.replace(".txt", "")}_extags_{name}_out.txt'
+            f'{pred_in_fp.replace(".txt", "")}_splitpredict_extags.txt'
         print('Predictions written to ' + extags_out_fp)
         ActionConductor.write_extags_file_from_split_sents(l_osentL,
                                                            l_split_sentL,
                                                            extags_out_fp,
                                                            model)
 
-        out_fp = f'{pred_in_fp.replace(".txt", "")}_ssents_{name}_out.txt'
+        out_fp = f'{pred_in_fp.replace(".txt", "")}_split_predict_ssents.txt'
         print('Predictions written to ' + out_fp)
         file_translate_tags_to_words("ex",
                                      in_fp=extags_out_fp,
@@ -870,7 +879,7 @@ class ActionConductor:
         # temporary file, to be deleted after it is used by silent_predict(
         # ). This file is not used in Openie6, but is needed in SentenceAx,
         # so as to get the appropriate input for silent_predict()
-        in_fp = f'{pred_in_fp.replace(".txt", "")}_split_sents.txt'
+        in_fp = f'{pred_in_fp.replace(".txt", "")}_for_cc_ssents.txt'
         with open(in_fp, "w", encoding="utf-8") as f:
             f.write("\n".join(l_split_sentL))
 
@@ -882,8 +891,7 @@ class ActionConductor:
         ActionConductor.write_splitpred_predictions(pred_in_fp,
                                                     l_osentL,
                                                     l_split_sentL,
-                                                    model,
-                                                    name="splitpred")
+                                                    model)
 
     def split(self, pred_in_fp):
         """
@@ -973,7 +981,8 @@ class ActionConductor:
         if self.params.d["split_only"]:
             self.split(pred_in_fp)
         else:
-            l_osentL, l_split_sentL, _ = self.splitpredict_for_cc(pred_in_fp)
+            l_osentL, l_split_sentL, _ = \
+                self.splitpredict_for_cc(pred_in_fp)
             self.splitpredict_for_ex(l_osentL,
                                      l_split_sentL,
                                      pred_in_fp)

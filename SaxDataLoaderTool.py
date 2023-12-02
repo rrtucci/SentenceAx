@@ -43,11 +43,11 @@ class SaxDataLoaderTool:
         parameters
     predict_dloader: DataLoader|None
         DataLoader for predicting.
-    tags_test_fp: str
+    test_tags_fp: str
         file path for extags or cctags file used when ttt="test"
-    tags_train_fp: str
+    train_tags_fp: str
         file path for extags or cctags file used when ttt="train"
-    tags_tune_fp: str
+    tune_tags_fp: str
         file path for extags or cctags file used when ttt="tune". (
         tune=validation)
     test_dloader: DataLoader|None
@@ -62,7 +62,7 @@ class SaxDataLoaderTool:
     def __init__(self,
                  params,
                  auto_tokenizer,
-                 tags_train_fp, tags_tune_fp, tags_test_fp):
+                 train_tags_fp, tune_tags_fp, test_tags_fp):
         """
         Constructor
 
@@ -70,9 +70,9 @@ class SaxDataLoaderTool:
         ----------
         params: Params
         auto_tokenizer: AutoTokenizer
-        tags_train_fp: str
-        tags_tune_fp: str
-        tags_test_fp: str
+        train_tags_fp: str
+        tune_tags_fp: str
+        test_tags_fp: str
         """
 
         self.params = params
@@ -81,9 +81,9 @@ class SaxDataLoaderTool:
         self.pad_icode = \
             auto_tokenizer.encode(auto_tokenizer.pad_token)[1]
 
-        self.tags_train_fp = tags_train_fp
-        self.tags_tune_fp = tags_tune_fp
-        self.tags_test_fp = tags_test_fp
+        self.train_tags_fp = train_tags_fp
+        self.tune_tags_fp = tune_tags_fp
+        self.test_tags_fp = test_tags_fp
 
         self.train_dloader = None
         self.tune_dloader = None
@@ -100,7 +100,7 @@ class SaxDataLoaderTool:
         Take ttt="train" as an example. If self.params.d["refresh_cache"] =
         True or there is a file with the appropriate info previously stored
         in the `cache` folder, this method constructs the train dataset from
-        that. Otherwise, this method reads the self.tags_train_fp file and
+        that. Otherwise, this method reads the self.train_tags_fp file and
         constructs the dataset from that, and stores the results, for future
         use, as a pickle file in the `cache` folder.
 
@@ -110,25 +110,25 @@ class SaxDataLoaderTool:
 
         """
 
-        # tags_train_fp = self.params.d["tags_train_fp"]
-        # tags_tune_fp = self.params.d["tags_tune_fp"]
-        # tags_test_fp = self.params.d["tags_test_fp"]
+        # train_tags_fp = self.params.d["train_tags_fp"]
+        # tune_tags_fp = self.params.d["tune_tags_fp"]
+        # test_tags_fp = self.params.d["test_tags_fp"]
 
         # if 'predict' not in params.action, use caching
-        assert self.tags_train_fp, self.tags_train_fp
-        assert self.tags_tune_fp, self.tags_tune_fp
-        assert self.tags_test_fp, self.tags_test_fp
+        assert self.train_tags_fp, self.train_tags_fp
+        assert self.tune_tags_fp, self.tune_tags_fp
+        assert self.test_tags_fp, self.test_tags_fp
         # model_str = self.params.d["model_str"].replace("/", "_")
         task = self.params.task
         cached_train_m_in_fp = \
             CACHE_DIR + "/" + task + "_train_m_in_" + \
-            self.tags_train_fp.replace("/", "_").split(".")[0] + ".pkl"
+            self.train_tags_fp.replace("/", "_").split(".")[0] + ".pkl"
         cached_tune_m_in_fp = \
             CACHE_DIR + "/" + task + "_tune_m_in_" + \
-            self.tags_tune_fp.replace("/", "_").split(".")[0] + ".pkl"
+            self.tune_tags_fp.replace("/", "_").split(".")[0] + ".pkl"
         cached_test_m_in_fp = \
             CACHE_DIR + "/" + task + "_test_m_in_" + \
-            self.tags_test_fp.replace("/", "_").split(".")[0] + ".pkl"
+            self.test_tags_fp.replace("/", "_").split(".")[0] + ".pkl"
 
         def find_m_in(cached_fp, tags_fp, ttt):
             if not os.path.exists(cached_fp) or \
@@ -144,13 +144,13 @@ class SaxDataLoaderTool:
             return m_in
 
         train_m_in = find_m_in(cached_train_m_in_fp,
-                               self.tags_train_fp,
+                               self.train_tags_fp,
                                "train")
         tune_m_in = find_m_in(cached_tune_m_in_fp,
-                              self.tags_tune_fp,
+                              self.tune_tags_fp,
                               "tune")
         test_m_in = find_m_in(cached_test_m_in_fp,
-                              self.tags_test_fp,
+                              self.test_tags_fp,
                               "test")
 
         # vocab = self.build_vocab(
@@ -293,15 +293,15 @@ if __name__ == "__main__":
             data_dir=CACHE_DIR,
             add_special_tokens=False,
             additional_special_tokens=UNUSED_TOKENS)
-        tags_train_fp = "tests/extags_train.txt"
-        tags_tune_fp = "tests/extags_tune.txt"
-        tags_test_fp = "tests/extags_test.txt"
+        train_tags_fp = "tests/train_extags.txt"
+        tune_tags_fp = "tests/tune_extags.txt"
+        test_tags_fp = "tests/test_extags.txt"
 
         dl_tool = SaxDataLoaderTool(params,
                                     auto,
-                                    tags_train_fp,
-                                    tags_tune_fp,
-                                    tags_test_fp)
+                                    train_tags_fp,
+                                    tune_tags_fp,
+                                    test_tags_fp)
         train_dataset, tune_dataset, test_dataset = \
             dl_tool.get_all_ttt_datasets()
 

@@ -796,21 +796,21 @@ class ActionConductor:
 
         model = self.silent_predict(pred_in_fp)
 
-        # model.l_cc_pred_str ~ Openie6.all_predictions_conj
+        # model.l_cc_pred_sample_str ~ Openie6.all_predictions_conj
         # model.self.lll_cc_spanned_loc ~ Openie6.all_sentence_indices_conj
         # model.ll_cc_spanned_word ~ Openie6.all_conjunct_words_conj
         #                          ~ Openie6.all_conj_words
 
-        l_cc_pred_str = model.l_cc_pred_str
+        l_cc_pred_sample_str = model.l_cc_pred_sample_str
         lll_cc_spanned_loc = model.lll_cc_spanned_loc
-        assert len(l_cc_pred_str) == len(lll_cc_spanned_loc)
+        assert len(l_cc_pred_sample_str) == len(lll_cc_spanned_loc)
         ll_cc_spanned_word = model.ll_cc_spanned_word
 
-        # l_cc_pred_str ~ Openie6.conj_predictions
+        # l_cc_pred_sample_str ~ Openie6.conj_predictions
         l_osentL, l_ccsentL, \
             model.sub_osent2_to_osent2, model.osent2_to_words = \
             ActionConductor.process_l_sample_str(
-                l_sample_str=l_cc_pred_str,
+                l_sample_str=l_cc_pred_sample_str,
                 ll_cc_word=ll_cc_spanned_word)
         l_ccsentL.append("\n")
 
@@ -930,7 +930,7 @@ class ActionConductor:
         l_osentL, l_ccsentL, \
             model.sub_osent2_to_osent2, model.osent2_to_words = \
             ActionConductor.process_l_sample_str(
-                l_sample_str=model.l_ex_pred_str,
+                l_sample_str=model.l_ex_pred_sample_str,
                 ll_cc_word=None)
         l_ccsentL.append("\n")
 

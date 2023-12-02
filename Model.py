@@ -109,8 +109,8 @@ class Model(L.LightningModule):
     init_name_to_param: dict[str, variable]
     iterative_transformer: ModuleList
     l_batch_m_out: list[MOutput]
-    l_cc_pred_str: list[str]
-    l_ex_pred_str: list[str]
+    l_cc_pred_sample_str: list[str]
+    l_ex_pred_sample_str: list[str]
     ll_cc_spanned_word: list[list[str]]
     lll_cc_spanned_loc: list[list[list[int]]]
     loss_fun: CrossEntropyLoss
@@ -254,10 +254,10 @@ class Model(L.LightningModule):
                               for k in range(len(l_constraint)) if
                               l_constraint[k]}
 
-        self.l_cc_pred_str = []  # Openie6.all_predictions_conj
+        self.l_cc_pred_sample_str = []  # Openie6.all_predictions_conj
         self.ll_cc_spanned_word = []  # Openie6.all_conjunct_words_conj
         self.lll_cc_spanned_loc = []  # Openie6.all_sentence_indices_conj
-        self.l_ex_pred_str = []  # Openie6.all_predictions_oie
+        self.l_ex_pred_sample_str = []  # Openie6.all_predictions_oie
 
         self.l_batch_m_out = \
             PickleList(f"action_{self.name}_l_batch_m_out_dir")
@@ -948,36 +948,36 @@ class Model(L.LightningModule):
                         value=ex,
                         grow_d=self.sub_osent2_to_osent2,
                         this_d=osent_to_l_pred_ex)
-        l_pred_str = []  # ~ Openie6.all_pred
-        l_pred_allen_str = []  # ~ Openie6.all_pred_allen_nlp
+        l_pred_sample_str = []  # ~ Openie6.all_pred
+        l_pred_al_sample_str = []  # ~ Openie6.all_pred_allen_nlp
         for osent, l_pred_ex in osent_to_l_pred_ex.items():
             orig_sentL = redoL(osent)
             str0 = orig_sentL + "\n"
             for pred_ex in l_pred_ex:
                 str0 += pred_ex.get_simple_sent() + '\n'
-            l_pred_str.append(str0.strip("/n"))
-            allen_str = ""
+            l_pred_sample_str.append(str0.strip("/n"))
+            al_sample_str = ""
             for pred_ex in l_pred_ex:
                 arg1 = pred_ex.arg1
                 rel = pred_ex.rel
                 arg2 = pred_ex.arg2
-                allen_str += f"{orig_sentL}\t"
-                allen_str += f"<arg1> {arg1} </arg1>"
-                allen_str += f"<rel> {rel} </rel>"
-                allen_str += f"<arg2> {arg2} </arg2>\t"
-                allen_str += f"{pred_ex.confidence}\n"
-            l_pred_allen_str.append(allen_str.strip("/n"))
+                al_sample_str += f"{orig_sentL}\t"
+                al_sample_str += f"<arg1> {arg1} </arg1>"
+                al_sample_str += f"<rel> {rel} </rel>"
+                al_sample_str += f"<arg2> {arg2} </arg2>\t"
+                al_sample_str += f"{pred_ex.confidence}\n"
+            l_pred_al_sample_str.append(al_sample_str.strip("/n"))
 
         fmode = "w" if batch_idx == 0 else "a"
         out_fp = f"{M_OUT_DIR}/ex_ssents.txt"
         with open(out_fp, fmode) as pred_f:
-            pred_f.write('\n'.join(l_pred_str) + '\n')
+            pred_f.write('\n'.join(l_pred_sample_str) + '\n')
 
         allen_out_fp = f"{M_OUT_DIR}/ex_allen.txt"
         with open(allen_out_fp, fmode) as allen_f:
-            allen_f.write('\n'.join(l_pred_allen_str) + '\n')
+            allen_f.write('\n'.join(l_pred_al_sample_str) + '\n')
 
-        self.l_ex_pred_str = l_pred_str
+        self.l_ex_pred_sample_str = l_pred_sample_str
 
     def sax_write_if_task_cc(self, batch_idx, batch_m_out):
         """
@@ -1004,10 +1004,10 @@ class Model(L.LightningModule):
         num_samples, num_depths, _ = lll_ilabel.shape
         # true_lll_ilabel = self.true_batch_m_out.lll_label
         l_orig_sent = batch_m_out.l_orig_sent
-        l_cc_pred_str = []
+        l_cc_pred_sample_str = []
         ll_cc_spanned_word = []
         lll_cc_spanned_loc = []
-        l_pred_str = []
+        l_pred_sample_str = []
         ll_spanned_word = []
         lll_spanned_loc = []
         for sam, orig_sent in enumerate(l_orig_sent):
@@ -1017,7 +1017,7 @@ class Model(L.LightningModule):
                 l_ilabel = lll_ilabel[sam][depth][:num_words].tolist()
                 ll_ilabel.append(l_ilabel)
 
-            pred_str = orig_sent + '\n'
+            pred_sample_str = orig_sent + '\n'
             # split_sentences, conj_words, sentence_indices_list = \
             #       data.coords_to_sentences(pred_coords, words)
             # this method returns
@@ -1039,20 +1039,20 @@ class Model(L.LightningModule):
             lll_spanned_loc.append(ll_spanned_loc)
             total_num_ccsents1 += len(ccsents)
             total_num_ccsents2 += 1 if len(ccsents) > 0 else 0
-            pred_str += '\n'.join(ccsents) + '\n'
+            pred_sample_str += '\n'.join(ccsents) + '\n'
 
-            l_pred_str.append(pred_str)
+            l_pred_sample_str.append(pred_sample_str)
         # list1 + list2 is the same as list1.extend(list2)
         ll_cc_spanned_word += ll_spanned_word
-        l_cc_pred_str += l_pred_str
+        l_cc_pred_sample_str += l_pred_sample_str
         lll_cc_spanned_loc += lll_spanned_loc
 
         fmode = "w" if batch_idx == 0 else "a"
         out_fp = f"{M_OUT_DIR}/cc_ssents.txt"
         with open(out_fp, fmode) as pred_f:
-            pred_f.write('\n'.join(l_pred_str) + '\n')
+            pred_f.write('\n'.join(l_pred_sample_str) + '\n')
 
-        self.l_cc_pred_str = l_cc_pred_str
+        self.l_cc_pred_sample_str = l_cc_pred_sample_str
         self.ll_cc_spanned_word = ll_cc_spanned_word
         self.lll_cc_spanned_loc = lll_cc_spanned_loc
 

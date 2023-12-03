@@ -1017,28 +1017,31 @@ class ActionConductor:
                                                             sorted_fp)
 
 
-    def splitpredict(self, pred_in_fp):
+    def splitpredict(self, pred_in_fp, split_only=False):
         """
         similar to Openie6.run.splitpredict()
 
-        If params.d["split_only"] is True, this method calls split().
+        If split_only is True, this method calls split().
 
-        If params.d["split_only"] is False, the method calls the 2 private
-        methods: self.splitpredict_for_cc(), and self.splitpredict_for_ex()
-        in that order.
+        If split_only is False, the method calls the 2 private methods:
+        self.splitpredict_for_cc(), and self.splitpredict_for_ex() in that
+        order.
 
         Parameters
         ----------
         pred_in_fp: str
             This file has no tags or ilabels. Only one osent per line for
             each sample.
+        split_only: bool
+            True iff the action "splitpredict" does only the cc split,
+            and does not follow it with the ex extraction.
 
         Returns
         -------
         None
 
         """
-        if self.params.d["split_only"]:
+        if split_only:
             self.split(pred_in_fp)
         else:
             l_osentL, l_split_sentL, _ = \
@@ -1047,7 +1050,7 @@ class ActionConductor:
                                      l_split_sentL,
                                      pred_in_fp)
 
-    def run(self, pred_in_fp=None):
+    def run(self, pred_in_fp=None, split_only=False):
         """
         This method is the only non-private method for the entire class.
         Users should never have to invoke any method of this class other
@@ -1061,6 +1064,9 @@ class ActionConductor:
         pred_in_fp: str
             This file has no tags or ilabels. Only one osent per line for
             each sample.
+        split_only: bool
+            True iff the action "splitpredict" does only the cc split,
+            and does not follow it with the ex extraction
 
         Returns
         -------
@@ -1068,9 +1074,12 @@ class ActionConductor:
 
         """
         for process in self.params.action.split('_'):
-            if process in ["predict", "splitpredict"]:
+            if process == "predict":
                 assert pred_in_fp
                 getattr(self, process)(pred_in_fp)
+            elif process == "splitpredict":
+                assert pred_in_fp
+                getattr(self, process)(pred_in_fp, split_only)
             else:
                 getattr(self, process)()
 

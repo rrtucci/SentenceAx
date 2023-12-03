@@ -129,7 +129,7 @@ def load_sub_osent2_to_osent2(in_fp, word_tokenize=False):
         content = get_ascii(f.read())
         fixed_sent = ''
         for sample in content.split('\n\n'):
-            for i, line in enumerate(sample.strip('\n').split('\n')):
+            for i, line in enumerate(sample.strip().split('\n')):
                 if i == 0:
                     fixed_sent = line
                 else:

@@ -623,20 +623,22 @@ class ActionConductor:
         with open(pred_in_fp, "r", encoding="utf-8") as f:
             l_osent = get_ascii(f.readlines())
 
-        with open(unsorted_fp, "r") as f:
-            unsorted_content = f.read()
+        with open(unsorted_fp, "r", encoding="utf-8") as f:
+            unsorted_content = get_ascii(f.read())
 
-        unsorted_content = unsorted_content.strip("\n").strip(LINE_SEPARATOR)
-        l_unsorted_sample_str = unsorted_content.split(LINE_SEPARATOR)
-        osent_to_sample = {}
+        sep = LINE_SEPARATOR + "\n"
+        unsorted_content = unsorted_content.strip().strip(sep)
+        l_unsorted_sample_str = unsorted_content.split(sep)
+        osent_to_sample_str = {}
         for sample_str in l_unsorted_sample_str:
-            l_sent = sample_str.strip("\n").split("\n")
-            osent_to_sample[l_sent[0]] = l_sent
+            l_sent =undoL(sample_str.strip().split(sep))
+            osent_to_sample_str[undoL(l_sent[0])] = sample_str
 
         l_sorted_sample_str = []
         for osent in l_osent:
-            if osent in osent_to_sample.keys():
-                l_sorted_sample_str.append(osent_to_sample[osent])
+            osent = osent.strip()
+            if osent in osent_to_sample_str.keys():
+                l_sorted_sample_str.append(osent_to_sample_str[osent])
             else:
                 print("This sentence not in pred_in_fp:\n" + osent)
 
@@ -644,7 +646,7 @@ class ActionConductor:
             num_sam = len(l_sorted_sample_str)
             for k in range(num_sam):
                 f.write(LINE_SEPARATOR + str(k + 1) + "\n" +
-                        l_sorted_sample_str[k])
+                        l_sorted_sample_str[k].strip() + "\n")
 
     @staticmethod
     def write_splitpred_predictions(pred_in_fp,
@@ -746,7 +748,7 @@ class ActionConductor:
         for sample_id, sample_str in enumerate(l_sample_str):
             if not sample_str:
                 continue
-            l_sent = sample_str.strip("\n").split("\n")
+            l_sent = sample_str.strip().split("\n")
             if len(l_sent) == 1:
                 l_osentL.append(redoL(l_sent[0]))
                 sub_osent2_to_osent2[l_sent[0]] = l_sent[0]

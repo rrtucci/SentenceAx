@@ -970,12 +970,13 @@ class Model(L.LightningModule):
 
         fmode = "w" if batch_idx == 0 else "a"
         out_fp = f"{M_OUT_DIR}/ex_ssents.txt"
+        sep = LINE_SEPARATOR + "\n"
         with open(out_fp, fmode) as pred_f:
-            pred_f.write('\n'.join(l_pred_sample_str) + LINE_SEPARATOR)
+            pred_f.write( sep + sep.join(l_pred_sample_str))
 
         allen_out_fp = f"{M_OUT_DIR}/ex_allen.txt"
         with open(allen_out_fp, fmode) as allen_f:
-            allen_f.write('\n'.join(l_pred_al_sample_str) + LINE_SEPARATOR)
+            allen_f.write(sep + sep.join(l_pred_al_sample_str))
 
         self.l_ex_pred_sample_str = l_pred_sample_str
 
@@ -1048,8 +1049,9 @@ class Model(L.LightningModule):
 
         fmode = "w" if batch_idx == 0 else "a"
         out_fp = f"{M_OUT_DIR}/cc_ssents.txt"
-        with open(out_fp, fmode) as pred_f:
-            pred_f.write('\n'.join(l_pred_sample_str) + LINE_SEPARATOR)
+        sep = LINE_SEPARATOR + "\n"
+        with open(out_fp, fmode) as f:
+            f.write(sep + sep.join(l_pred_sample_str))
 
         self.l_cc_pred_sample_str = l_cc_pred_sample_str
         self.ll_cc_spanned_word = ll_cc_spanned_word

@@ -790,9 +790,19 @@ if __name__ == "__main__":
         simp = Simple()
         print(to_dict(simp))
 
+    def main6():
+        curly_quotes = "‘magic’"
+        str0 = "``abc" + curly_quotes
+        print(get_ascii(str0))
+        print(get_words(str0))
+        print(get_words(get_ascii(str0)))
 
-    main1()
-    main2()
-    main3()
-    main4()
-    main5()
+
+
+    # main1()
+    # main2()
+    # main3()
+    # main4()
+    # main5()
+    main6()
+

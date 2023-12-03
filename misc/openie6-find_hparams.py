@@ -14,7 +14,7 @@ def find_hparams_variables(files):
     # variable_pattern = r'\bbatch\.\w+\b'
 
     for file_path in files:
-        with open(file_path, 'r', encoding="utf-8") as file:
+        with open(file_path, "r") as file:
             content = file.read()
             variables = re.findall(variable_pattern, content)
             hparams_variables.update(variables)

@@ -52,7 +52,7 @@ additional_dict = {
 }
 
 def replace_in_file(file_path):
-    with open(file_path, mode='r', encoding="utf-8") as file:
+    with open(file_path, "r") as file:
         lines = file.readlines()
 
     new_lines = []
@@ -73,7 +73,7 @@ def replace_in_file(file_path):
 
         new_lines.append(new_line)
 
-    with open(file_path, mode='w', encoding="utf-8") as file:
+    with open(file_path, mode="w") as file:
         file.writelines(new_lines)
 
 

@@ -500,7 +500,7 @@ class MInput:
         print("\nMInput started reading '" + self.tags_in_fp + "'")
         print("...")
         with open(self.tags_in_fp, "r", encoding="utf-8") as f:
-            lines = f.readlines()
+            lines = get_ascii(f.readlines())
 
         def is_empty_line_of_sample(line0):
             return not line0 or LINE_SEPARATOR in line0

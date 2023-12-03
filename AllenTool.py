@@ -268,9 +268,8 @@ class AllenTool:
         dict[str, list[SaxExtraction]]
 
         """
-        with open(self.allen_fp, 'r', encoding='utf-8') as f:
-            lines = f.readlines()
-        lines = [unidecode(line) for line in lines]
+        with open(self.allen_fp, "r", encoding="utf-8") as f:
+            lines = get_ascii(f.readlines())
         osentL_to_exs = OrderedDict()
         exs = []
         prev_osentL = ''
@@ -345,7 +344,7 @@ class AllenTool:
         else:
             last_sample_id = self.num_sents
 
-        with open(out_fp, 'w', encoding='utf-8') as f:
+        with open(out_fp, "w") as f:
             sample_id = 0
             num_sams = 0
             for osentL, l_ex in self.osentL_to_exs.items():

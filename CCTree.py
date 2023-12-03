@@ -512,7 +512,7 @@ if __name__ == "__main__":
         in_fp = "tests/one_sample_cc_ilabels.txt"
         # out_fp = "tests/cc_trees.txt"
         with open(in_fp, "r", encoding="utf-8") as f:
-            in_lines = f.readlines()
+            in_lines = get_ascii(f.readlines())
 
         l_osent = []
         lll_ilabel = []

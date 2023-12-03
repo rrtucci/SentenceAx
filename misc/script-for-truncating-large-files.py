@@ -11,8 +11,8 @@ def delete_lines_from_file(fp, start_line):
         temp_fp = fp + ".temp"
 
         # Open the input file for reading and the temp file for writing
-        with open(fp, 'r', encoding="utf-8") as f, \
-            open(temp_fp, 'w', encoding="utf-8") as temp_f:
+        with open(fp, "r", encoding="utf-8") as f, \
+            open(temp_fp, "w", encoding="utf-8") as temp_f:
             line_number = 1
             for line in f:
                 # If the current line number is less than the start_line, keep the line

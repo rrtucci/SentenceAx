@@ -331,24 +331,27 @@ def redoL(x):
         assert False
 
 
-def convert_to_ascii(line):
+def get_ascii(x):
     """
-    This method takes as input a str `line` with possibly non-ascii
-    characters (utf-8). It returns a new string which is the same as the old
-    one, except that non-ascii characters have been converted to their
-    nearest ascii counterparts. For example, curly quotes will be converted
-    to straight ones.
+    This method takes as input a string or list of strings x, with possibly
+    non-ascii characters ( utf-8). It returns a new string or list of
+    strings which is the same as the old one, except that non-ascii
+    characters have been converted to their nearest ascii counterparts. For
+    example, curly quotes will be converted to straight ones.
 
     Parameters
     ----------
-    line: str
+    x: str | list[str]
 
     Returns
     -------
-    str
+    str | list[str]
 
     """
-    return unidecode(line)
+    if type(x) == str:
+        return unidecode(x)
+    else:
+        return [unidecode(str0) for str0 in x]
 
 
 def replace_in_list(l_x, x, new_x):
@@ -733,14 +736,14 @@ def get_train_tags_fp(task, small=False):
     """
     if task == "ex":
         if small:
-            fp = SMALL_EXTAGS_TRAIN_FP
+            fp = SMALL_TRAIN_EXTAGS_FP
         else:
-            fp = EXTAGS_TRAIN_FP
+            fp = TRAIN_EXTAGS_FP
     elif task == "cc":
         if small:
-            fp = SMALL_CCTAGS_TRAIN_FP
+            fp = SMALL_TRAIN_CCTAGS_FP
         else:
-            fp = CCTAGS_TRAIN_FP
+            fp = TRAIN_CCTAGS_FP
     else:
         assert False
     return fp

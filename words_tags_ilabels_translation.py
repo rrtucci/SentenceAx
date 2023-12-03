@@ -273,10 +273,10 @@ def file_translate_tags_to_ilabels(tag_type,
 
     """
     with open(in_fp, "r", encoding="utf-8") as f:
-        lines = f.readlines()
-    with open(out_fp, "w", encoding="utf-8") as f:
+        lines = get_ascii(f.readlines())
+    with open(out_fp, "w") as f:
         for line in lines:
-            if not line:
+            if not line or LINE_SEPARATOR in line:
                 continue
             if tag_type == "ex":
                 if "NONE" not in line and "REL" not in line:
@@ -319,10 +319,10 @@ def file_translate_ilabels_to_tags(tag_type,
 
     """
     with open(in_fp, "r", encoding="utf-8") as f:
-        lines = f.readlines()
-    with open(out_fp, "w", encoding="utf-8") as f:
+        lines = get_ascii(f.readlines())
+    with open(out_fp, "w") as f:
         for line in lines:
-            if not line:
+            if not line or LINE_SEPARATOR in line:
                 continue
             words = get_words(line)
             if all([word.isdigit() for word in words[0:5]]):
@@ -357,10 +357,10 @@ def file_translate_tags_to_words(tag_type,
 
     """
     with open(in_fp, "r", encoding="utf-8") as f:
-        lines = f.readlines()
-    with open(out_fp, "w", encoding="utf-8") as f:
+        lines = get_ascii(f.readlines())
+    with open(out_fp, "w") as f:
         for line in lines:
-            if not line:
+            if not line or LINE_SEPARATOR in line:
                 continue
             if tag_type == "ex":
                 if "NONE" not in line and "REL" not in line:

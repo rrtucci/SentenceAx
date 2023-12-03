@@ -195,7 +195,7 @@ class SaxDataLoaderTool:
         #
         #     pred_in_sents = []
         #     for line in predict_lines:
-        #         line = convert_to_ascii(line)
+        #         line = line_to_ascii(line)
         #         # tokenized_line = line.split()
         #
         #         # Why use both nltk and spacy to word tokenize.

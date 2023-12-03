@@ -125,8 +125,8 @@ def load_sub_osent2_to_osent2(in_fp, word_tokenize=False):
     """
     sub_osent2_to_osent2 = {}
     sent_to_words = {}
-    with open(in_fp, "r") as f:
-        content = f.read()
+    with open(in_fp, "r", encoding="utf-8") as f:
+        content = get_ascii(f.read())
         fixed_sent = ''
         for sample in content.split('\n\n'):
             for i, line in enumerate(sample.strip('\n').split('\n')):

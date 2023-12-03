@@ -106,13 +106,13 @@ class ActionConductor:
         if self.params.task == 'cc':
             self.train_tags_fp = \
                 get_train_tags_fp("cc", self.params.d["small_train"])
-            self.tune_tags_fp = CCTAGS_TUNE_FP
-            self.test_tags_fp = CCTAGS_TEST_FP
+            self.tune_tags_fp = TUNE_CCTAGS_FP
+            self.test_tags_fp = TEST_CCTAGS_FP
         elif self.params.task == 'ex':
             self.train_tags_fp = \
                 get_train_tags_fp("ex", self.params.d["small_train"])
-            self.tune_tags_fp = EXTAGS_TUNE_FP
-            self.test_tags_fp = EXTAGS_TEST_FP
+            self.tune_tags_fp = TUNE_EXTAGS_FP
+            self.test_tags_fp = TEST_EXTAGS_FP
 
         if save:
             self.checkpoint_callback = self.get_new_checkpoint_callback()
@@ -377,7 +377,8 @@ class ActionConductor:
                       self.auto_tokenizer,
                       verbose=self.verbose,
                       name="train")
-        trainer = self.get_new_trainer(self.get_new_TB_logger("train"),
+        logger = self.get_new_TB_logger("train")
+        trainer = self.get_new_trainer(logger=logger,
                                        use_minimal=False)
         trainer.fit(
             model,
@@ -412,7 +413,8 @@ class ActionConductor:
                       self.auto_tokenizer,
                       verbose=self.verbose,
                       name="resume")
-        trainer = self.get_new_trainer(self.get_new_TB_logger("resume"),
+        logger = self.get_new_TB_logger("resume")
+        trainer = self.get_new_trainer(logger=logger,
                                        use_minimal=False)
         trainer.fit(
             model,
@@ -511,7 +513,8 @@ class ActionConductor:
 
         """
         if model.verbose:
-            print("Entering `ActionConductor.write_extags_file_from_split_sents`")
+            print(
+                "Entering `ActionConductor.write_extags_file_from_split_sents`")
             print_list("l_osentL", l_osentL)
             print_list("l_split_sentL", l_split_sentL)
         l_m_out = model.l_batch_m_out
@@ -582,20 +585,66 @@ class ActionConductor:
                 sam_id0 = 0
                 batch_id0 += 1
 
-        lines.append('\n')
+        # lines.append('\n')
         with open(out_fp, "w") as f:
-            f.writelines(lines)
-            
+            for line in lines:
+                f.write(LINE_SEPARATOR + "\n" + line)
+
     @staticmethod
-    def write_preds_in_original_order(pred_in_fp,
-                                      unsorted_fp,
-                                      sorted_fp,
-                                      delete_unsorted=False):
-        
-        l_osent = []
-        with open(
-        
-    
+    def write_predictions_in_original_order(pred_in_fp,
+                                            unsorted_fp,
+                                            sorted_fp):
+        """
+        This method reads the file `pred_in_fp` with the sentences we want
+        to split. It also reads an ssent (simple sentences) file
+        `unsorted_fp` with a split. Each sample in `unsorted_fp` is assumed
+        to be separated by a line with the LINE_SEPARATOR str.
+
+        After reading these 2 files, the method writes a file `sorted_fp`
+        with the same samples as `unsorted_fp`, but in the original order
+        given by the osents in `pred_in_fp`.
+
+        If the strings `unsorted_fp` and `sorted_fp` are the same, the
+        unsorted file is overwritten.
+
+
+        Parameters
+        ----------
+        pred_in_fp: str
+        unsorted_fp: str
+        sorted_fp: str
+
+        Returns
+        -------
+        None
+
+        """
+
+        with open(pred_in_fp, "r", encoding="utf-8") as f:
+            l_osent = get_ascii(f.readlines())
+
+        with open(unsorted_fp, "r") as f:
+            unsorted_content = f.read()
+
+        unsorted_content = unsorted_content.strip("\n").strip(LINE_SEPARATOR)
+        l_unsorted_sample_str = unsorted_content.split(LINE_SEPARATOR)
+        osent_to_sample = {}
+        for sample_str in l_unsorted_sample_str:
+            l_sent = sample_str.strip("\n").split("\n")
+            osent_to_sample[l_sent[0]] = l_sent
+
+        l_sorted_sample_str = []
+        for osent in l_osent:
+            if osent in osent_to_sample.keys():
+                l_sorted_sample_str.append(osent_to_sample[osent])
+            else:
+                print("This sentence not in pred_in_fp:\n" + osent)
+
+        with open(sorted_fp, "w") as f:
+            num_sam = len(l_sorted_sample_str)
+            for k in range(num_sam):
+                f.write(LINE_SEPARATOR + str(k + 1) + "\n" +
+                        l_sorted_sample_str[k])
 
     @staticmethod
     def write_splitpred_predictions(pred_in_fp,
@@ -629,6 +678,12 @@ class ActionConductor:
                                                            l_split_sentL,
                                                            extags_out_fp,
                                                            model)
+
+        unsorted_fp = extags_out_fp
+        sorted_fp = extags_out_fp
+        ActionConductor.write_predictions_in_original_order(pred_in_fp,
+                                                            unsorted_fp,
+                                                            sorted_fp)
 
         out_fp = f'{pred_in_fp.replace(".txt", "")}_split_predict_ssents.txt'
         print('Predictions written to ' + out_fp)
@@ -758,7 +813,8 @@ class ActionConductor:
         # model.metric.sub_osent2_to_osent2 = self.sub_osent2_to_osent2
         # model.metric.sent_to_words = self.osent2_to_words
 
-        trainer = self.get_new_trainer(logger=None,
+        logger = self.get_new_TB_logger("predict")
+        trainer = self.get_new_trainer(logger=logger,
                                        use_minimal=True)
         start_time = time()
         # model.all_sentences = all_sentences # never used
@@ -880,7 +936,7 @@ class ActionConductor:
         # ). This file is not used in Openie6, but is needed in SentenceAx,
         # so as to get the appropriate input for silent_predict()
         in_fp = f'{pred_in_fp.replace(".txt", "")}_for_cc_ssents.txt'
-        with open(in_fp, "w", encoding="utf-8") as f:
+        with open(in_fp, "w") as f:
             f.write("\n".join(l_split_sentL))
 
         model = self.silent_predict(in_fp)
@@ -899,7 +955,7 @@ class ActionConductor:
 
         This method calls silent_predict() once.
 
-        This method calls write_splitpred_predictions().
+        This method calls write_predictions_in_original_order().
 
         Parameters
         ----------
@@ -917,6 +973,13 @@ class ActionConductor:
         self.params.action = 'predict'
 
         model = self.silent_predict(pred_in_fp)
+
+        unsorted_fp = f"{M_OUT_DIR}/cc_ssents.txt"
+        sorted_fp = \
+            f'{pred_in_fp.replace(".txt", "")}_split_ssents.txt'
+        ActionConductor.write_predictions_in_original_order(pred_in_fp,
+                                                            unsorted_fp,
+                                                            sorted_fp)
 
         # l_osentL, l_split_sentL, model = self.splitpredict_for_cc(pred_in_fp)
 
@@ -944,18 +1007,13 @@ class ActionConductor:
 
         model = self.silent_predict(pred_in_fp)
 
-        # l_osentL, l_split_sentL, \
-        #     model.sub_osent2_to_osent2, model.osent2_to_words = \
-        #     ActionConductor.process_l_sample_str(
-        #         l_sample_str=model.l_ex_pred_sample_str,
-        #         ll_cc_word=None)
-        # l_split_sentL.append("\n")
-        #
-        # ActionConductor.write_splitpred_predictions(pred_in_fp,
-        #                                   l_osentL,
-        #                                   l_split_sentL,
-        #                                   model,
-        #                                   name="pred")
+        unsorted_fp = f"{M_OUT_DIR}/ex_ssents.txt"
+        sorted_fp = \
+            f'{pred_in_fp.replace(".txt", "")}_pred_ssents.txt'
+        ActionConductor.write_predictions_in_original_order(pred_in_fp,
+                                                            unsorted_fp,
+                                                            sorted_fp)
+
 
     def splitpredict(self, pred_in_fp):
         """

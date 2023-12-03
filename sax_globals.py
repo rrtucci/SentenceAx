@@ -44,20 +44,20 @@ LOGS_DIR = "logs"
 CC_METRIC_STORAGE_DIR = "cc_metric_storage"
 M_OUT_DIR = PREDICTING_DIR + "/model_out"
 
-CCTAGS_TRAIN_FP = 'input_data/openie-data/ptb-train.labels'
-SMALL_CCTAGS_TRAIN_FP = 'tests/small_cctags.txt' # small file for warmup run
-CCTAGS_TUNE_FP = 'input_data/openie-data/ptb-dev.labels'
-CCTAGS_TEST_FP = 'input_data/openie-data/ptb-test.labels'
+TRAIN_CCTAGS_FP = 'input_data/openie-data/ptb-train.labels'
+SMALL_TRAIN_CCTAGS_FP = 'tests/small_cctags.txt' # small file for warmup run
+TUNE_CCTAGS_FP = 'input_data/openie-data/ptb-dev.labels'
+TEST_CCTAGS_FP = 'input_data/openie-data/ptb-test.labels'
 
-EXTAGS_TRAIN_FP = INPUT_DIR + '/openie-data/openie4_labels'
-SMALL_EXTAGS_TRAIN_FP = "tests/small_extags.txt" # small file for warmup run
+TRAIN_EXTAGS_FP = INPUT_DIR + '/openie-data/openie4_labels'
+SMALL_TRAIN_EXTAGS_FP = "tests/small_extags.txt" # small file for warmup run
 
 # IMPORTANT: dev.txt and test.txt are extag files with single ex that only
 # contains NONE extags. The actual extags are obtained by ExMetric from
 # benchmark files. Don't change the dev.txt or test.txt files to something
 # else because ExMetric is hard wired to expect them.
-EXTAGS_TUNE_FP = INPUT_DIR + "/carb-data/dev.txt"
-EXTAGS_TEST_FP = INPUT_DIR + "/carb-data/test.txt"
+TUNE_EXTAGS_FP = INPUT_DIR + "/carb-data/dev.txt"
+TEST_EXTAGS_FP = INPUT_DIR + "/carb-data/test.txt"
 
 QUOTES = "\"\'"  # 2
 BRACKETS = "(){}[]<>"  # 8

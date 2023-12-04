@@ -38,7 +38,7 @@ class Model(L.LightningModule):
     1. calculate the loss when training (here the weights are changing)
 
     2. calculate the accuracy when tuning or testing or
-    predicting (here the weights are fixed).
+    extracting (here the weights are fixed).
 
     The class loops over batches of an epoch for the 3 actions ttt=train,
     tune (a.k.a. validation) and test.
@@ -671,7 +671,7 @@ class Model(L.LightningModule):
         con_to_l_hinge_loss = {}
         # this calculates llll_word_score
         if self.constraint_str and \
-                'predict' not in self.params.action and \
+                'extract' not in self.params.action and \
                 self.params.d["batch_size"] != 1:
             # reshape llll_word_score
             llll_word_scoreT = torch.cat([lll.unsqueeze(1) for
@@ -1097,7 +1097,7 @@ class Model(L.LightningModule):
         batch_m_out.loss. The method checks that loss==0 for ttt!="train".
         Then it logs the loss (for all ttt).
 
-        If "predict" in params.action, the method writes to a file by
+        If "extract" in params.action, the method writes to a file by
         calling self.sax_write_batch_sents_out().
 
         If ttt != "train", the method stores a list of batch_m_out.
@@ -1131,9 +1131,9 @@ class Model(L.LightningModule):
         batch_m_out = self.forward(batch, batch_idx, ttt)
         loss = batch_m_out.loss
 
-        if "predict" in self.params.action:
+        if "extract" in self.params.action:
             # Openie6 only writes on vslidation (tune) step
-            # We will write iff "predict" in action
+            # We will write iff "extract" in action
             # because that is the only time these files are
             # read later on.
             self.sax_write_batch_sents_out(batch_idx, batch_m_out)
@@ -1225,7 +1225,7 @@ class Model(L.LightningModule):
         #     for batch_m_out in self.l_batch_m_out:
         #         batch_m_out.move_to_cpu()
 
-        if 'predict' in self.params.action:
+        if 'extract' in self.params.action:
             score_d = self.metric.get_zero_score_d()
         else:
             for k, batch_m_out in enumerate(self.l_batch_m_out):

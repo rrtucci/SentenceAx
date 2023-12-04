@@ -41,12 +41,12 @@ class ActionConductor:
 
     This method executes various actions when you call its method run().
     run() calls the action methods: 1. train(), 2. resume( ), 3. test(),
-    4. predict(), 5. splitpredict(). All other methods in this class are
+    4. extract(), 5. splitextract(). All other methods in this class are
     called internally by those 5 action methods. Actions can be combined.
     For example, action train_test calls train() first and test() second.
 
     Note that 4 different Model instances are created by this class: for
-    ttt= train, tune, test, and for predict.
+    ttt= train, tune, test, and for extract.
 
     Attributes
     ----------
@@ -141,9 +141,9 @@ class ActionConductor:
                                               self.tune_tags_fp,
                                               self.test_tags_fp)
 
-        if 'predict' not in params.action:
-            # ttt dloaders not used for action="predict", "splitpredict"
-            # for those actions, only a predict dloader is used.
+        if 'extract' not in params.action:
+            # ttt dloaders not used for action="extract", "splitextract"
+            # for those actions, only a extract dloader is used.
             self.dloader_tool.set_all_ttt_dataloaders()
             # always set dataloader before constructing a Model instance
 
@@ -493,7 +493,7 @@ class ActionConductor:
         """
         similar to Openie6.run.get_labels()
 
-        This method is called by `self.splitpredict_for_ex()`.
+        This method is called by `self.splitextract_for_ex()`.
 
         It writes an extags file at `out_fp` based on the predictions
         stored inside `model.l_batch_m_out`.
@@ -649,10 +649,10 @@ class ActionConductor:
                         l_sorted_sample_str[k].strip() + "\n")
 
     @staticmethod
-    def write_splitpred_predictions(pred_in_fp,
-                                    l_osentL,
-                                    l_split_sentL,
-                                    model):
+    def write_splitextract_predictions(pred_in_fp,
+                                       l_osentL,
+                                       l_split_sentL,
+                                       model):
         """
         This method writes
 
@@ -674,7 +674,7 @@ class ActionConductor:
 
         """
         extags_out_fp = \
-            f'{pred_in_fp.replace(".txt", "")}_splitpredict_extags.txt'
+            f'{pred_in_fp.replace(".txt", "")}_splitextract_extags.txt'
         print('Predictions written to ' + extags_out_fp)
         ActionConductor.write_extags_file_from_split_sents(l_osentL,
                                                            l_split_sentL,
@@ -687,7 +687,7 @@ class ActionConductor:
                                                             unsorted_fp,
                                                             sorted_fp)
 
-        out_fp = f'{pred_in_fp.replace(".txt", "")}_split_predict_ssents.txt'
+        out_fp = f'{pred_in_fp.replace(".txt", "")}_splitextract_ssents.txt'
         print('Predictions written to ' + out_fp)
         file_translate_tags_to_words("ex",
                                      in_fp=extags_out_fp,
@@ -697,7 +697,7 @@ class ActionConductor:
     def process_l_sample_str(l_sample_str,
                              ll_cc_word=None):
         """
-        This method is similar to part of Openie6.run.splitpredict()
+        This method is similar to part of Openie6.run.splitextract()
 
         l_sample_str ~ Openie6.example_sentences
         ll_cc_word ~ Openie6.all_conj_words
@@ -716,7 +716,7 @@ class ActionConductor:
         l_osentL: list[str]
             This is a list of osentL (original sentences, long)
         l_split_sentL: list[str]
-            This is a list of sents produced by split but before predict. In
+            This is a list of sents produced by split but before extract. In
             case the osent yielded no split sents, the osent is included
             instead. If there are split sents, the osent is not included.
         sub_osent2_to_osent2: dict[str, str]
@@ -771,9 +771,9 @@ class ActionConductor:
 
         return l_osentL, l_split_sentL, sub_osent2_to_osent2, osent2_to_words
 
-    def silent_predict(self, pred_in_fp):
+    def silent_extract(self, pred_in_fp):
         """
-        similar to Openie6.run.predict()
+        similar to Openie6.run.extract()
 
         This method does prediction. It creates instances of Model and
         Trainer. The trainer is used to call trainer.test() (instead of
@@ -782,7 +782,7 @@ class ActionConductor:
         Here it reads the file at `pred_in_fp` (a file of osents, one per
         line) to get data input.
 
-        This method times how long it takes to predict.
+        This method times how long it takes to extract.
 
         This method is silent. It writes nothing.
 
@@ -798,13 +798,13 @@ class ActionConductor:
 
         """
         # This distinguishes between tasks "ex" and "cc".
-        # splitpredict() uses both best chechpoint files.
+        # splitextract() uses both best chechpoint files.
         checkpoint_fp = self.get_best_checkpoint_fp()
 
         # assert list(self.get_all_checkpoint_fp()) == [checkpoint_fp]
 
         self.update_params(checkpoint_fp)
-        self.dloader_tool.set_predict_dataloader(pred_in_fp)
+        self.dloader_tool.set_extract_dataloader(pred_in_fp)
         # always set dataloader before constructing a Model instance
         model = Model(self.params,
                       self.auto_tokenizer,
@@ -815,14 +815,14 @@ class ActionConductor:
         # model.metric.sub_osent2_to_osent2 = self.sub_osent2_to_osent2
         # model.metric.sent_to_words = self.osent2_to_words
 
-        logger = self.get_new_TB_logger("predict")
+        logger = self.get_new_TB_logger("extract")
         trainer = self.get_new_trainer(logger=logger,
                                        use_minimal=True)
         start_time = time()
         # model.all_sentences = all_sentences # never used
         trainer.test(
             model,
-            dataloaders=self.dloader_tool.predict_dloader,
+            dataloaders=self.dloader_tool.extract_dloader,
             ckpt_path=checkpoint_fp)
         end_time = time()
         minutes = (end_time - start_time) / 60
@@ -830,11 +830,11 @@ class ActionConductor:
 
         return model
 
-    def splitpredict_for_cc(self, pred_in_fp):
+    def splitextract_for_cc(self, pred_in_fp):
         """
-        This is a private method for self.splitpredict().
+        This is a private method for self.splitextract().
 
-        This method calls silent_predict() once.
+        This method calls silent_extract() once.
 
         This method reads a file at `pred_in_fp` with the sentences (one
         sentence per line) that one wants to split.
@@ -852,17 +852,17 @@ class ActionConductor:
 
         """
         # For task="cc", Openie6 uses large-cased for train_test() and
-        # base-cased for splitpredict(). Both are cased, but larger-cased is
+        # base-cased for splitextract(). Both are cased, but larger-cased is
         # larger than base-cased. For task="ex", Openie6 uses base-cased
         # throughout
 
         self.params.d["task"] = "cc"
         self.params.task = "cc"
         self.params.d["model_str"] = 'bert-base-cased'
-        self.params.d["action"] = 'predict'
-        self.params.action = 'predict'
+        self.params.d["action"] = 'extract'
+        self.params.action = 'extract'
 
-        model = self.silent_predict(pred_in_fp)
+        model = self.silent_extract(pred_in_fp)
 
         # model.l_cc_pred_sample_str ~ Openie6.all_predictions_conj
         # model.self.lll_cc_spanned_loc ~ Openie6.all_sentence_indices_conj
@@ -904,17 +904,17 @@ class ActionConductor:
 
         return l_osentL, l_split_sentL, model
 
-    def splitpredict_for_ex(self,
+    def splitextract_for_ex(self,
                             l_osentL,
                             l_split_sentL,
                             pred_in_fp,
                             delete_split_sents_file=True):
         """
-        This is a private method for self.splitpredict().
+        This is a private method for self.splitextract().
 
-        This method calls silent_predict() once.
+        This method calls silent_extract() once.
 
-        This method calls write_splitpred_predictions().
+        This method calls write_splitextract_predictions().
 
         Parameters
         ----------
@@ -934,28 +934,28 @@ class ActionConductor:
         self.params.task = "ex"
         self.params.d["model_str"] = 'bert-base-cased'
 
-        # temporary file, to be deleted after it is used by silent_predict(
+        # temporary file, to be deleted after it is used by silent_extract(
         # ). This file is not used in Openie6, but is needed in SentenceAx,
-        # so as to get the appropriate input for silent_predict()
+        # so as to get the appropriate input for silent_extract()
         in_fp = f'{pred_in_fp.replace(".txt", "")}_for_cc_ssents.txt'
         with open(in_fp, "w") as f:
             f.write("\n".join(l_split_sentL))
 
-        model = self.silent_predict(in_fp)
+        model = self.silent_extract(in_fp)
 
         if delete_split_sents_file:
             os.remove(in_fp)
 
-        ActionConductor.write_splitpred_predictions(pred_in_fp,
-                                                    l_osentL,
-                                                    l_split_sentL,
-                                                    model)
+        ActionConductor.write_splitextract_predictions(pred_in_fp,
+                                                       l_osentL,
+                                                       l_split_sentL,
+                                                       model)
 
     def split(self, pred_in_fp):
         """
-        This is a private method for self.splitpredict().
+        This is a private method for self.splitextract().
 
-        This method calls silent_predict() once.
+        This method calls silent_extract() once.
 
         This method calls write_predictions_in_original_order().
 
@@ -971,10 +971,10 @@ class ActionConductor:
         self.params.d["task"] = "cc"
         self.params.task = "cc"
         self.params.d["model_str"] = 'bert-base-cased'
-        self.params.d["action"] = 'predict'
-        self.params.action = 'predict'
+        self.params.d["action"] = 'extract'
+        self.params.action = 'extract'
 
-        model = self.silent_predict(pred_in_fp)
+        model = self.silent_extract(pred_in_fp)
 
         unsorted_fp = f"{M_OUT_DIR}/cc_ssents.txt"
         sorted_fp = \
@@ -983,19 +983,19 @@ class ActionConductor:
                                                             unsorted_fp,
                                                             sorted_fp)
 
-        # l_osentL, l_split_sentL, model = self.splitpredict_for_cc(pred_in_fp)
+        # l_osentL, l_split_sentL, model = self.splitextract_for_cc(pred_in_fp)
 
-        # ActionConductor.write_splitpred_predictions(pred_in_fp,
+        # ActionConductor.write_splitextract_predictions(pred_in_fp,
         #                                   l_osentL,
         #                                   l_split_sentL,
         #                                   model,
         #                                   name="split")
 
-    def predict(self, pred_in_fp):
+    def extract(self, pred_in_fp):
         """
-        This method calls silent_predict() once.
+        This method calls silent_extract() once.
 
-        This method calls write_splitpred_predictions()
+        This method calls write_splitextract_predictions()
 
         Parameters
         ----------
@@ -1007,7 +1007,7 @@ class ActionConductor:
 
         """
 
-        model = self.silent_predict(pred_in_fp)
+        model = self.silent_extract(pred_in_fp)
 
         unsorted_fp = f"{M_OUT_DIR}/ex_ssents.txt"
         sorted_fp = \
@@ -1017,14 +1017,14 @@ class ActionConductor:
                                                             sorted_fp)
 
 
-    def splitpredict(self, pred_in_fp, split_only=False):
+    def splitextract(self, pred_in_fp, split_only=False):
         """
-        similar to Openie6.run.splitpredict()
+        similar to Openie6.run.splitextract()
 
         If split_only is True, this method calls split().
 
         If split_only is False, the method calls the 2 private methods:
-        self.splitpredict_for_cc(), and self.splitpredict_for_ex() in that
+        self.splitextract_for_cc(), and self.splitextract_for_ex() in that
         order.
 
         Parameters
@@ -1033,7 +1033,7 @@ class ActionConductor:
             This file has no tags or ilabels. Only one osent per line for
             each sample.
         split_only: bool
-            True iff the action "splitpredict" does only the cc split,
+            True iff the action "splitextract" does only the cc split,
             and does not follow it with the ex extraction.
 
         Returns
@@ -1045,8 +1045,8 @@ class ActionConductor:
             self.split(pred_in_fp)
         else:
             l_osentL, l_split_sentL, _ = \
-                self.splitpredict_for_cc(pred_in_fp)
-            self.splitpredict_for_ex(l_osentL,
+                self.splitextract_for_cc(pred_in_fp)
+            self.splitextract_for_ex(l_osentL,
                                      l_split_sentL,
                                      pred_in_fp)
 
@@ -1065,7 +1065,7 @@ class ActionConductor:
             This file has no tags or ilabels. Only one osent per line for
             each sample.
         split_only: bool
-            True iff the action "splitpredict" does only the cc split,
+            True iff the action "splitextract" does only the cc split,
             and does not follow it with the ex extraction
 
         Returns
@@ -1074,10 +1074,10 @@ class ActionConductor:
 
         """
         for process in self.params.action.split('_'):
-            if process == "predict":
+            if process == "extract":
                 assert pred_in_fp
                 getattr(self, process)(pred_in_fp)
-            elif process == "splitpredict":
+            elif process == "splitextract":
                 assert pred_in_fp
                 getattr(self, process)(pred_in_fp, split_only)
             else:
@@ -1090,10 +1090,10 @@ if __name__ == "__main__":
         0. "", ""
         1. ex, train_test
         2. ex, test 
-        3. ex, predict
+        3. ex, extract
         4. ex, resume
         5. cc, train_test
-        6. ex, splitpredict
+        6. ex, splitextract
 
     """
 

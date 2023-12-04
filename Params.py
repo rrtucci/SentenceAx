@@ -25,20 +25,20 @@ class Params:
        Conductor.train() followed by Conductor.test()
     2. ex, test  (appears twice in Openie6 readme)
         Conductor.test()
-    3. ex, predict (appears twice in Openie6 readme)
-        Conductor.predict()
+    3. ex, extract (appears twice in Openie6 readme)
+        Conductor.extract()
     4. ex, resume
         Conductor.resume()
     5. cc, train_test
        Conductor.train() followed by Conductor.test()
-    6. ex, splitpredict (appears twice in Openie6 readme)
-       Conductor.splitpredict()
+    6. ex, splitextract (appears twice in Openie6 readme)
+       Conductor.splitextract()
 
     self.task in ("ex", "cc"). SentenceAx uses ("ex", "cc") whereas Openie6
     uses ("oie", "conj") for self.task
 
     `action` is similar to Openie6.mode. self.action in ("train_test",
-    "resume", "test", "predict", "splitpredict")
+    "resume", "test", "extract", "splitextract")
 
 
     Attributes
@@ -63,10 +63,10 @@ class Params:
             0: ("", ""),
             1: ("ex", "train_test"),
             2: ("ex", "test"),
-            3: ("ex", "predict"),
+            3: ("ex", "extract"),
             4: ("ex", "resume"),
             5: ("cc", "train_test"),
-            6: ("ex", "splitpredict")
+            6: ("ex", "splitextract")
         }
 
         self.task, self.action = pid_to_pair[pid]
@@ -114,18 +114,18 @@ class Params:
         if not self.action:
             print("****self.action is empty")
         else:
-            assert self.action in ["predict", "train_test", "splitpredict",
+            assert self.action in ["extract", "train_test", "splitextract",
                                    "resume", "test"]
 
         ## Running self.model
         # this is repeated at begin and end of Openie6.readme.
-        # elif self.task == "ex" and self.action == "splitpredict":
+        # elif self.task == "ex" and self.action == "splitextract":
         #     self.d = {
         #         "cc_weights_fp": WEIGHTS_DIR +
         #                     "/cc_epoch=28_eval_acc=0.854.ckpt",
         #         "gpus": 1,
         #         # "inp": "sentences.txt",
-        #         "action": "splitpredict",
+        #         "action": "splitextract",
         #         "num_extractions": 5,
         #         "ex_weights_fp": WEIGHTS_DIR +
         #                     "/ex_epoch=14_eval_acc=0.551_v0.ckpt",
@@ -165,14 +165,14 @@ class Params:
         #         "task": "ex"
         #     }
 
-        # Predicting
-        # this ex/predict pair is a repeat. First one only differs
+        # Extracting
+        # this ex/extract pair is a repeat. First one only differs
         # in save directory
-        # elif self.task == "ex" and self.action == "predict":
+        # elif self.task == "ex" and self.action == "extract":
         #     self.d = {
         #         "gpus": 1,
         #         # "inp": "sentences.txt",
-        #         "action": "predict",
+        #         "action": "extract",
         #         "model_str": "bert-base-cased",
         #         #"out": "predictions.txt",
         #         # "save": WEIGHTS_DIR + "/warmup_ex_model",
@@ -217,11 +217,11 @@ class Params:
             }
 
         # Predicting
-        elif self.task == "ex" and self.action == "predict":
+        elif self.task == "ex" and self.action == "extract":
             self.d = {
                 "gpus": 1,
                 # "inp": "sentences.txt",
-                "action": "predict",
+                "action": "extract",
                 "model_str": "bert-base-cased",
                 # "out": "predictions.txt",
                 # "save": WEIGHTS_DIR + "/ex_model",
@@ -246,15 +246,15 @@ class Params:
         ### Final self.model
 
         # Running
-        # The splitpredict self.action was stated already at the beginning.
+        # The splitextract self.action was stated already at the beginning.
         # It is a repeat.
-        elif self.task == "ex" and self.action == "splitpredict":
+        elif self.task == "ex" and self.action == "splitextract":
             self.d = {
                 "cc_weights_fp":
                     WEIGHTS_DIR + "/cc_epoch=28_eval_acc=0.854.ckpt",
                 "gpus": 1,
                 # "inp": "carb_subset/data/carb_sentences.txt",
-                "action": "splitpredict",
+                "action": "splitextract",
                 # "num_extractions": EX_NUM_DEPTHS,
                 "ex_weights_fp":
                     WEIGHTS_DIR + "/ex_epoch=14_eval_acc=0.551_v0.ckpt",

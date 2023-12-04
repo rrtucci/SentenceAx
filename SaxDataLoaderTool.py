@@ -17,7 +17,7 @@ from Params import *
 class SaxDataLoaderTool:
     """
     This main purpose of this class is to create torch DataLoaders for ttt
-    in ["train", "tune", "test"]. and for predicting.
+    in ["train", "tune", "test"]. and for extracting.
 
     Dataset and DataLoader are located in torch.utils.data. Dataset stores a
     huge number of samples, and DataLoader wraps an iterable around the
@@ -41,8 +41,8 @@ class SaxDataLoaderTool:
         integer code for padding. This equals 0 for BERT
     params: Params
         parameters
-    predict_dloader: DataLoader|None
-        DataLoader for predicting.
+    extract_dloader: DataLoader|None
+        DataLoader for extracting.
     test_tags_fp: str
         file path for extags or cctags file used when ttt="test"
     train_tags_fp: str
@@ -88,7 +88,7 @@ class SaxDataLoaderTool:
         self.train_dloader = None
         self.tune_dloader = None
         self.test_dloader = None
-        self.predict_dloader = None
+        self.extract_dloader = None
 
     def get_all_ttt_datasets(self):
         """
@@ -114,7 +114,7 @@ class SaxDataLoaderTool:
         # tune_tags_fp = self.params.d["tune_tags_fp"]
         # test_tags_fp = self.params.d["test_tags_fp"]
 
-        # if 'predict' not in params.action, use caching
+        # if 'extract' not in params.action, use caching
         assert self.train_tags_fp, self.train_tags_fp
         assert self.tune_tags_fp, self.tune_tags_fp
         assert self.test_tags_fp, self.test_tags_fp
@@ -168,11 +168,11 @@ class SaxDataLoaderTool:
         return train_dataset, tune_dataset, test_dataset
         # , vocab, orig_sents
 
-    def get_predict_dataset(self, pred_tags_in_fp):
+    def get_extract_dataset(self, pred_tags_in_fp):
         """
         similar to Openie6.data.process_data()
 
-        This method returns a dataset for predicting. It creates that
+        This method returns a dataset for extracting. It creates that
         dataset from the info it gleans by reading the file `pred_tags_in_fp`.
 
         Parameters
@@ -184,8 +184,8 @@ class SaxDataLoaderTool:
         SaxDataset
 
         """
-        # no caching used if predict in action
-        # if not pred_in_sents:  # predict
+        # no caching used if extract in action
+        # if not pred_in_sents:  # extract
         #     # if self.params.d["in_fp"] :
         #     #     predict_fp = self.params.d["in_fp"]
         #     # else:
@@ -214,15 +214,15 @@ class SaxDataLoaderTool:
 
         assert pred_tags_in_fp
 
-        predict_m_in = MInput(self.params,
+        extract_m_in = MInput(self.params,
                               pred_tags_in_fp,
                               self.auto_tokenizer,
                               omit_exless=False)
-        # vocab = build_vocab(predict_m_in)
+        # vocab = build_vocab(extract_m_in)
 
-        predict_dataset = SaxDataset(predict_m_in)
+        extract_dataset = SaxDataset(extract_m_in)
 
-        return predict_dataset
+        return extract_dataset
 
     def set_all_ttt_dataloaders(self):
         """
@@ -257,12 +257,12 @@ class SaxDataLoaderTool:
                        # collate_fn=None,
                        num_workers=1)
 
-    def set_predict_dataloader(self, pred_tags_in_fp):
+    def set_extract_dataloader(self, pred_tags_in_fp):
         """
-        This method sets the class attribute for the DataLoader for predicting.
+        This method sets the class attribute for the DataLoader for extracting.
 
-        The method does this by first calling get_predict_dataset() to get a
-        predict Dataset. It then constructs the DataLoader from that Dataset.
+        The method does this by first calling get_extract_dataset() to get a
+        extract Dataset. It then constructs the DataLoader from that Dataset.
 
 
         Parameters
@@ -274,8 +274,8 @@ class SaxDataLoaderTool:
         None
 
         """
-        self.predict_dloader = \
-            DataLoader(self.get_predict_dataset(pred_tags_in_fp),
+        self.extract_dloader = \
+            DataLoader(self.get_extract_dataset(pred_tags_in_fp),
                        batch_size=self.params.d["batch_size"],
                        # collate_fn=None,
                        shuffle=True,
@@ -312,6 +312,6 @@ if __name__ == "__main__":
 
     # try with params_id=2, 3
     # 2: ex", "test"
-    # 3: "ex", "predict"
+    # 3: "ex", "extract"
     main(2)
     main(3)

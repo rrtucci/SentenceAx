@@ -314,7 +314,7 @@ class MInput:
     #     self.ll_osent_pos_loc = []
     #     self.ll_osent_verb_bool = []
     #     self.ll_osent_verb_loc = []
-    #     if not USE_POS_INFO or "predict" in self.params.action:
+    #     if not USE_POS_INFO or "extract" in self.params.action:
     #         self.ll_osent_pos_bool = None
     #         self.ll_osent_pos_loc = None
     #         self.ll_osent_verb_bool = None
@@ -432,9 +432,9 @@ class MInput:
         self.ll_osent_pos_loc = []
         self.ll_osent_verb_bool = []
         self.ll_osent_verb_loc = []
-        # Openie6 does not use  pos info if 'predict' in hparams.mode
+        # Openie6 does not use  pos info if 'extract' in hparams.mode
         # but I don't see why
-        # if not USE_POS_INFO or "predict" in self.params.action:
+        # if not USE_POS_INFO or "extract" in self.params.action:
         if not USE_POS_INFO:
             self.ll_osent_pos_bool = None
             self.ll_osent_pos_loc = None

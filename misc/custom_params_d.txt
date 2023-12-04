@@ -12,7 +12,7 @@
 #     "inp": ("carb/data/carb_sentences.txt", "sentences.txt",)
 #     "iterative_layers": (2,)
 #     "lr": (2E-5, 5e-06,)
-#     "mode": ("predict", "train_test", "splitpredict", "resume", "test",)
+#     "mode": ("extract", "train_test", "splitextract", "resume", "test",)
 #     "model_str": ("bert-large-cased", "bert-base-cased",)
 #     "multi_opt": (True,)
 #     "num_extractions": (5,)

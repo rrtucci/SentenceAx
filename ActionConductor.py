@@ -224,7 +224,7 @@ class ActionConductor:
         """
         paths = list(iglob(f"{WEIGHTS_DIR}/{task}_model/*.best"))
         if len(paths) == 0:
-            assert False, "There are no best checkpoint files."
+            assert False, "There is no checkpoint file ending in '.best'."
         if len(paths) == 1:
             return paths[0]
         else:
@@ -636,12 +636,12 @@ class ActionConductor:
         with open(unsorted_fp, "r", encoding="utf-8") as f:
             unsorted_content = get_ascii(f.read())
 
-        sep = LINE_SEPARATOR + "\n"
+        sep = LINE_SEPARATOR
         unsorted_content = unsorted_content.strip().strip(sep)
         l_unsorted_sample_str = unsorted_content.split(sep)
         osent_to_sample_str = {}
         for sample_str in l_unsorted_sample_str:
-            l_sent =undoL(sample_str.strip().split(sep))
+            l_sent =undoL(sample_str.strip().split("\n"))
             osent_to_sample_str[undoL(l_sent[0]).strip()] = sample_str
 
         l_sorted_sample_str = []

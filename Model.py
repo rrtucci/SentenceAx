@@ -1033,17 +1033,18 @@ class Model(L.LightningModule):
             # ll_spanned_loc ~ Openie6.sentence_indices_list
 
             tree = CCTree(orig_sent, ll_ilabel)
-            print("orig_sent", orig_sent)
-            print("ll_ilabel", ll_ilabel)
-            ccsents = tree.ccsents  # split_sentences
-            tree.draw_self()
-            print_list("ccsents", ccsents)
+            ccsents = tree.ccsents  # ~ Openie6.split_sentences
+            # print("orig_sent", orig_sent)
+            # print("ll_ilabel", ll_ilabel)
+            # print_list("ccsents", ccsents)
+            # tree.draw_self()
             spanned_words = \
-                tree.l_spanned_word  # conj_words
+                tree.l_spanned_word  # ~ Openie6.conj_words
             ll_spanned_loc = \
-                tree.ll_spanned_loc  # sentence_indices_list
+                tree.ll_spanned_loc  # ~ Openie6.sentence_indices_list
             ll_spanned_word.append(spanned_words)
             lll_spanned_loc.append(ll_spanned_loc)
+            # not used
             # total_num_ccsents1 += len(ccsents)
             # total_num_ccsents2 += 1 if len(ccsents) > 0 else 0
             pred_sample_str += '\n'.join(ccsents)

@@ -100,7 +100,6 @@ class Model(L.LightningModule):
     Attributes
     ----------
     auto_tokenizer: AutoTokenizer
-    osent2_to_words: dict[str, list[str]]
     con_to_weight: dict[str, float]
     dropout_fun: Dropout
     embedding: Embedding
@@ -109,17 +108,17 @@ class Model(L.LightningModule):
     init_name_to_param: dict[str, variable]
     iterative_transformer: ModuleList
     l_batch_m_out: list[MOutput]
-    l_cc_pred_sample_str: list[str]
-    l_ex_pred_sample_str: list[str]
-    ll_cc_spanned_word: list[list[str]]
-    lll_cc_spanned_loc: list[list[list[int]]]
+    l_cc_epoch_sample_str: list[str]
+    l_cc_epoch_spanned_word: list[list[str]]
+    lll_cc_epoch_spanned_loc: list[list[list[int]]]
     loss_fun: CrossEntropyLoss
     merge_layer: Linear
     metric: CCMetric | ExMetric
     name: str
+    osent2_to_words: dict[str, list[str]]
     params: Params
     scores_epoch_end_d: dict[str, Any]
-    start_model: BertModel
+    starting_model: BertModel
     sub_osent2_to_osent2: dict[str, str]
         dictionary that maps sentences to sentences.
         Both Model and ExMetric possess a pointer to this dictionary.
@@ -156,9 +155,10 @@ class Model(L.LightningModule):
         # This stores `pi_test=3.14` in logs/ex/test/hparams.yaml. This is
         # here for illustrative purposes only. In SentenceAx, instead of
         # hparams, we use the Params class and sax_globals.py
-        self.hparams["pi_test"] = 3.14
-        print("self.hparams", self.hparams)
-        self.save_hyperparameters(self.hparams)
+        if verbose:
+            self.hparams["pi_test"] = 3.14
+            self.save_hyperparameters(self.hparams)
+            print("Saving self.hparams= ", self.hparams)
 
         self.params = params
         self.auto_tokenizer = auto_tokenizer
@@ -167,26 +167,26 @@ class Model(L.LightningModule):
         self.name = name
 
         # return_dict=False avoids error message from Dropout
-        self.start_model = AutoModel.from_pretrained(
+        self.starting_model = AutoModel.from_pretrained(
             self.params.d["model_str"],
             cache_dir=CACHE_DIR,
             return_dict=False)
-        self.hidden_size = self.start_model.config.hidden_size
+        self.hidden_size = self.starting_model.config.hidden_size
         if self.verbose:
             print("****** model name= ", self.name)
             print("hidden size=", self.hidden_size)
 
         # Actually, self.params.d["num_iterative_layers"]=2 for all Params.pid
         if self.params.d["num_iterative_layers"] > 0:
-            num_layers = len(self.start_model.encoder.layer)
+            num_layers = len(self.starting_model.encoder.layer)
             num_encoder_layers = \
                 num_layers - self.params.d["num_iterative_layers"]
             self.iterative_transformer = \
-                self.start_model.encoder.layer[num_encoder_layers:num_layers]
-            # this truncation of self.start_model.encoder.layer must
+                self.starting_model.encoder.layer[num_encoder_layers:num_layers]
+            # this truncation of self.starting_model.encoder.layer must
             # be done after, not before defining self.iterative_transformer
-            self.start_model.encoder.layer = \
-                self.start_model.encoder.layer[0:num_encoder_layers]
+            self.starting_model.encoder.layer = \
+                self.starting_model.encoder.layer[0:num_encoder_layers]
             if verbose:
                 print("num_iterative_layers= ", num_layers -
                       num_encoder_layers)
@@ -254,10 +254,12 @@ class Model(L.LightningModule):
                               for k in range(len(l_constraint)) if
                               l_constraint[k]}
 
-        self.l_cc_pred_sample_str = []  # Openie6.all_predictions_conj
-        self.ll_cc_spanned_word = []  # Openie6.all_conjunct_words_conj
-        self.lll_cc_spanned_loc = []  # Openie6.all_sentence_indices_conj
-        self.l_ex_pred_sample_str = []  # Openie6.all_predictions_oie
+        self.l_cc_epoch_sample_str = []  # Openie6.all_predictions_conj
+        self.l_cc_epoch_spanned_word = []  # Openie6.all_conjunct_words_conj
+        self.lll_cc_epoch_spanned_loc = []  # Openie6.all_sentence_indices_conj
+        
+        # not used
+        # self.l_ex_pred_sample_str = []  # Openie6.all_predictions_oie
 
         self.l_batch_m_out = \
             PickleList(f"action_{self.name}_l_batch_m_out_dir")
@@ -282,11 +284,11 @@ class Model(L.LightningModule):
         # x = parameter
         # pair = ("x", x)
 
-        def start_model_pairs():
-            return [pair for pair in all_pairs if "start_model" in pair[0]]
+        def starting_model_pairs():
+            return [pair for pair in all_pairs if "starting_model" in pair[0]]
 
-        def non_start_model_pairs():
-            return [pair for pair in all_pairs if "start_model" not in pair[0]]
+        def non_starting_model_pairs():
+            return [pair for pair in all_pairs if "starting_model" not in pair[0]]
 
         xnames = ["bias", "gamma", "beta"]
 
@@ -294,15 +296,15 @@ class Model(L.LightningModule):
             return any((pair[0] in xname) for xname in xnames)
 
         opt_param_d = [
-            {"params": [pair[1] for pair in start_model_pairs() if
+            {"params": [pair[1] for pair in starting_model_pairs() if
                         not pair_in_xnames(pair)],
              "weight_decay_rate": 0.01,
              'lr': self.params.d["lr"]},
-            {"params": [pair[1] for pair in start_model_pairs() if
+            {"params": [pair[1] for pair in starting_model_pairs() if
                         pair_in_xnames(pair)],
              "weight_decay_rate": 0.0,
              'lr': self.params.d["lr"]},
-            {"params": [pair[1] for pair in non_start_model_pairs()],
+            {"params": [pair[1] for pair in non_starting_model_pairs()],
              'lr': self.params.d["lr"]}
         ]
 
@@ -482,14 +484,14 @@ class Model(L.LightningModule):
         # loss_fun, lstm_loss = 0, 0
 
         # batch_text = " ".join(redoL(meta_d["l_orig_sent"]))
-        # start_model_input = \
+        # starting_model_input = \
         #     torch.Tensor(self.auto_tokenizer.encode(batch_text))
 
-        lll_hidden_state, _ = self.start_model(x_d["ll_osent_icode"])
+        lll_hidden_state, _ = self.starting_model(x_d["ll_osent_icode"])
         if verbose:
             print()
             print("ll_osent_icode.shape", x_d["ll_osent_icode"].shape)
-            print("after start_model, lll_hidden_state.shape",
+            print("after starting_model, lll_hidden_state.shape",
                   lll_hidden_state.shape)
 
         lll_word_score = Ten([0])  # this statement is unecessary
@@ -768,7 +770,7 @@ class Model(L.LightningModule):
         # loss_fun, lstm_loss = 0, 0
 
         # batch_text = " ".join(redoL(meta_d["l_orig_sent"]))
-        # start_model_input = \
+        # starting_model_input = \
         #     torch.Tensor(self.auto_tokenizer.encode(batch_text))
 
         llll_word_score = self.sax_get_llll_word_score(
@@ -955,7 +957,7 @@ class Model(L.LightningModule):
             str0 = orig_sentL + "\n"
             for pred_ex in l_pred_ex:
                 str0 += pred_ex.get_simple_sent() + '\n'
-            l_pred_sample_str.append(str0.strip("/n"))
+            l_pred_sample_str.append(str0.strip())
             al_sample_str = ""
             for pred_ex in l_pred_ex:
                 arg1 = pred_ex.arg1
@@ -966,19 +968,23 @@ class Model(L.LightningModule):
                 al_sample_str += f"<rel> {rel} </rel>"
                 al_sample_str += f"<arg2> {arg2} </arg2>\t"
                 al_sample_str += f"{pred_ex.confidence}\n"
-            l_pred_al_sample_str.append(al_sample_str.strip("/n"))
+            l_pred_al_sample_str.append(al_sample_str.strip())
 
-        fmode = "w" if batch_idx == 0 else "a"
+
         out_fp = f"{M_OUT_DIR}/ex_ssents.txt"
-        sep = LINE_SEPARATOR + "\n"
-        with open(out_fp, fmode) as pred_f:
-            pred_f.write( sep + sep.join(l_pred_sample_str))
+        appended = False if batch_idx == 0 else True
+        write_l_sample_str(l_pred_sample_str,
+                           out_fp,
+                           appended,
+                           numbered=False)
 
         allen_out_fp = f"{M_OUT_DIR}/ex_allen.txt"
-        with open(allen_out_fp, fmode) as allen_f:
-            allen_f.write(sep + sep.join(l_pred_al_sample_str))
+        write_l_sample_str(l_pred_al_sample_str,
+                           allen_out_fp,
+                           appended,
+                           numbered=False)
 
-        self.l_ex_pred_sample_str = l_pred_sample_str
+        # self.l_ex_pred_sample_str = l_pred_sample_str
 
     def sax_write_if_task_cc(self, batch_idx, batch_m_out):
         """
@@ -999,63 +1005,65 @@ class Model(L.LightningModule):
         """
 
         # correct = True
-        total_num_ccsents1 = 0
-        total_num_ccsents2 = 0
-        lll_ilabel = batch_m_out.lll_ilabel
-        num_samples, num_depths, _ = lll_ilabel.shape
+        # total_num_ccsents1 = 0
+        # total_num_ccsents2 = 0
+        lll_pred_ilabel = batch_m_out.lll_pred_ilabel
+        num_samples, num_depths, _ = lll_pred_ilabel.shape
         # true_lll_ilabel = self.true_batch_m_out.lll_label
         l_orig_sent = batch_m_out.l_orig_sent
-        l_cc_pred_sample_str = []
-        ll_cc_spanned_word = []
-        lll_cc_spanned_loc = []
+        l_cc_epoch_sample_str = []
+        l_cc_epoch_spanned_word = []
+        lll_cc_epoch_spanned_loc = []
         l_pred_sample_str = []
         ll_spanned_word = []
         lll_spanned_loc = []
-        for sam, orig_sent in enumerate(l_orig_sent):
+        for isam, orig_sent in enumerate(l_orig_sent):
             ll_ilabel = []
             for depth in range(num_depths):
                 num_words = len(get_words(orig_sent))
-                l_ilabel = lll_ilabel[sam][depth][:num_words].tolist()
+                l_ilabel = lll_pred_ilabel[isam][depth][:num_words].tolist()
                 ll_ilabel.append(l_ilabel)
 
             pred_sample_str = orig_sent + '\n'
-            # split_sentences, conj_words, sentence_indices_list = \
-            #       data.coords_to_sentences(pred_coords, words)
-            # this method returns
-            # return word_sentences, conj_words, sentences
-            # openie6.data.coords_to_sentences()
-            # is similar to
-            # CCTree.set_ccsents()
-            # split_sentences, conj_words, sentence_indices_list
-            # is similar to
-            #  ccsents, l_spanned_word, ll_spanned_loc
+
+            # CCTree.set_ccsents() ~ Openie6.data.coords_to_sentences()
+            # ccsents ~ Openie6.split_sentences,
+            #           ~ Openie.6.word_sentences
+            # l_spanned_word ~ Openie6.conj_words,
+            # ll_spanned_loc ~ Openie6.sentence_indices_list
 
             tree = CCTree(orig_sent, ll_ilabel)
+            print("orig_sent", orig_sent)
+            print("ll_ilabel", ll_ilabel)
             ccsents = tree.ccsents  # split_sentences
+            tree.draw_self()
+            print_list("ccsents", ccsents)
             spanned_words = \
                 tree.l_spanned_word  # conj_words
             ll_spanned_loc = \
                 tree.ll_spanned_loc  # sentence_indices_list
             ll_spanned_word.append(spanned_words)
             lll_spanned_loc.append(ll_spanned_loc)
-            total_num_ccsents1 += len(ccsents)
-            total_num_ccsents2 += 1 if len(ccsents) > 0 else 0
+            # total_num_ccsents1 += len(ccsents)
+            # total_num_ccsents2 += 1 if len(ccsents) > 0 else 0
             pred_sample_str += '\n'.join(ccsents)
             l_pred_sample_str.append(pred_sample_str)
         # list1 + list2 is the same as list1.extend(list2)
-        ll_cc_spanned_word += ll_spanned_word
-        l_cc_pred_sample_str += l_pred_sample_str
-        lll_cc_spanned_loc += lll_spanned_loc
+        # left sides accumulate over all batches
+        l_cc_epoch_spanned_word += ll_spanned_word
+        l_cc_epoch_sample_str += l_pred_sample_str
+        lll_cc_epoch_spanned_loc += lll_spanned_loc
 
-        fmode = "w" if batch_idx == 0 else "a"
+        appended = False if batch_idx == 0 else True
         out_fp = f"{M_OUT_DIR}/cc_ssents.txt"
-        sep = LINE_SEPARATOR + "\n"
-        with open(out_fp, fmode) as f:
-            f.write(sep + sep.join(l_pred_sample_str))
+        write_l_sample_str(l_pred_sample_str,
+                           out_fp,
+                           appended,
+                           numbered=False)
 
-        self.l_cc_pred_sample_str = l_cc_pred_sample_str
-        self.ll_cc_spanned_word = ll_cc_spanned_word
-        self.lll_cc_spanned_loc = lll_cc_spanned_loc
+        self.l_cc_epoch_sample_str = l_cc_epoch_sample_str
+        self.l_cc_epoch_spanned_word = l_cc_epoch_spanned_word
+        self.lll_cc_epoch_spanned_loc = lll_cc_epoch_spanned_loc
 
     def sax_write_batch_sents_out(self, batch_idx, batch_m_out):
         """

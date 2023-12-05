@@ -22,20 +22,23 @@ class Params:
     pid, task, action
     0. "", ""
     1. ex, train_test
-       Conductor.train() followed by Conductor.test()
+       ActionConductor.train() followed by ActionConductor.test()
     2. ex, test  (appears twice in Openie6 readme)
-        Conductor.test()
+        ActionConductor.test()
     3. ex, extract (appears twice in Openie6 readme)
-        Conductor.extract()
+        ActionConductor.extract().
     4. ex, resume
-        Conductor.resume()
+        ActionConductor.resume()
     5. cc, train_test
-       Conductor.train() followed by Conductor.test()
+       ActionConductor.train() followed by ActionConductor.test()
     6. ex, splitextract (appears twice in Openie6 readme)
-       Conductor.splitextract()
+       ActionConductor.splitextract()
 
     self.task in ("ex", "cc"). SentenceAx uses ("ex", "cc") whereas Openie6
-    uses ("oie", "conj") for self.task
+    uses ("oie", "conj") for self.task.
+
+    extract() ~ Openie6.predict()
+    splitextract() ~ Openie6.splitpredict()
 
     `action` is similar to Openie6.mode. self.action in ("train_test",
     "resume", "test", "extract", "splitextract")
@@ -114,8 +117,8 @@ class Params:
         if not self.action:
             print("****self.action is empty")
         else:
-            assert self.action in ["extract", "train_test", "splitextract",
-                                   "resume", "test"]
+            assert self.action in ["train_test", "resume", "test",
+                                   "extract", "splitextract"]
 
         ## Running self.model
         # this is repeated at begin and end of Openie6.readme.

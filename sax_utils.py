@@ -749,6 +749,40 @@ def get_train_tags_fp(task, small=False):
     return fp
 
 
+def write_l_sample_str(l_sample_str,
+                       out_fp,
+                       appended,
+                       numbered):
+    """
+    This method writes a file at `out_fp`. The file is an enumerated list of
+    the strings in the list `l_sample_str`. The file precedes each sample
+    string by a line consisting of LINE_SEPARATOR and the enumeration number
+    (or no number if numbered=False)
+
+    Parameters
+    ----------
+    l_sample_str: list[str]
+    out_fp: str
+    appended: bool
+        open() mode is either "w" or "a"
+    numbered: bool
+
+    Returns
+    -------
+    None
+
+    """
+    fmode = "a" if appended else "w"
+    with open(out_fp, fmode) as f:
+        num_sam = len(l_sample_str)
+        for k in range(num_sam):
+            num_str = ""
+            if numbered:
+                num_str = str(k + 1)
+            f.write(LINE_SEPARATOR + num_str + "\n" +
+                    l_sample_str[k].strip() + "\n")
+
+
 if __name__ == "__main__":
     def main1():
         h = {"x": 5, "y": 3}
@@ -790,6 +824,7 @@ if __name__ == "__main__":
         simp = Simple()
         print(to_dict(simp))
 
+
     def main6():
         curly_quotes = "‘magic’"
         str0 = "``abc" + curly_quotes
@@ -798,11 +833,9 @@ if __name__ == "__main__":
         print(get_words(get_ascii(str0)))
 
 
-
     # main1()
     # main2()
     # main3()
     # main4()
     # main5()
     main6()
-

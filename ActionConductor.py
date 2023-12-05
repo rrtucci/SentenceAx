@@ -200,7 +200,8 @@ class ActionConductor:
         """
         return self.get_all_checkpoint_fp()[0]
 
-    def get_best_checkpoint_fp(self):
+    @staticmethod
+    def get_best_checkpoint_fp(task):
         """
         This method returns the best checkpoint file path. We manually add
         ".best" as a suffix to the name of our best checkpoint file,
@@ -212,12 +213,16 @@ class ActionConductor:
         If task="cc": "models/conj_model/epoch=28_eval_acc=0.854.ckpt"
         If task="ex": "models/warmup_oie_model/epoch=13_eval_acc=0.544.ckpt"
 
+        Parameters
+        ----------
+        task: str
+
         Returns
         -------
         str
 
         """
-        paths = list(iglob(f"{WEIGHTS_DIR}/{self.params.task}_model/*.best"))
+        paths = list(iglob(f"{WEIGHTS_DIR}/{task}_model/*.best"))
         if len(paths) == 0:
             assert False, "There are no best checkpoint files."
         if len(paths) == 1:
@@ -530,7 +535,7 @@ class ActionConductor:
                 l_pred_ilabel = \
                     l_pred_ilabel[:len(osentL_words)].tolist()
                 for k, loc in enumerate(
-                        sorted(lll_cc_spanned_loc[isam][jsplit_sent])):
+                        sorted(lll_cc_epoch_spanned_loc[isam][jsplit_sent])):
                     l_ilabel[loc] = l_pred_ilabel[k]
 
                 assert len(l_ilabel) == len(osentL_words)
@@ -553,13 +558,13 @@ class ActionConductor:
 
         # lll_cc_spanned ~
         # Openie6.sentence_indices_list, Openie6.all_sentence_indices_conj
-        lll_cc_spanned_loc = model.lll_cc_spanned_loc
-        for isam in range(len(lll_cc_spanned_loc)):
+        lll_cc_epoch_spanned_loc = model.lll_cc_epoch_spanned_loc
+        for isam in range(len(lll_cc_epoch_spanned_loc)):
             osent = undoL(l_osentL[isam])
-            if len(lll_cc_spanned_loc[isam]) == 0:
-                lll_cc_spanned_loc[isam].append(list(range(len(osent))))
+            if len(lll_cc_epoch_spanned_loc[isam]) == 0:
+                lll_cc_epoch_spanned_loc[isam].append(list(range(len(osent))))
             lines.append('\n' + osent)
-            num_split_sent = len(lll_cc_spanned_loc[isam])
+            num_split_sent = len(lll_cc_epoch_spanned_loc[isam])
             for jsplit_sent in range(num_split_sent):
                 if model.verbose:
                     print(
@@ -569,7 +574,7 @@ class ActionConductor:
                 osent = l_m_out[batch_id0].l_osent[sam_id0]
                 osentL = redoL(osent)
                 osentL_words = get_words(osentL)
-                assert len(lll_cc_spanned_loc[isam][jsplit_sent]) == \
+                assert len(lll_cc_epoch_spanned_loc[isam][jsplit_sent]) == \
                        len(osentL_words)
                 assert osentL == l_split_sentL[cum_sam_id0]
                 # ll_pred_ilabel ~ Openie6.predictions
@@ -589,6 +594,11 @@ class ActionConductor:
         with open(out_fp, "w") as f:
             for line in lines:
                 f.write(LINE_SEPARATOR + "\n" + line)
+        # write_l_sample_str(lines,
+        #                    out_fp,
+        #                    appended=False,
+        #                    numbered=False)
+
 
     @staticmethod
     def write_predictions_in_original_order(pred_in_fp,
@@ -632,7 +642,7 @@ class ActionConductor:
         osent_to_sample_str = {}
         for sample_str in l_unsorted_sample_str:
             l_sent =undoL(sample_str.strip().split(sep))
-            osent_to_sample_str[undoL(l_sent[0])] = sample_str
+            osent_to_sample_str[undoL(l_sent[0]).strip()] = sample_str
 
         l_sorted_sample_str = []
         for osent in l_osent:
@@ -642,11 +652,10 @@ class ActionConductor:
             else:
                 print("This sentence not in pred_in_fp:\n" + osent)
 
-        with open(sorted_fp, "w") as f:
-            num_sam = len(l_sorted_sample_str)
-            for k in range(num_sam):
-                f.write(LINE_SEPARATOR + str(k + 1) + "\n" +
-                        l_sorted_sample_str[k].strip() + "\n")
+        write_l_sample_str(l_sorted_sample_str,
+                           sorted_fp,
+                           appended=False,
+                           numbered=True)
 
     @staticmethod
     def write_splitextract_predictions(pred_in_fp,
@@ -697,7 +706,7 @@ class ActionConductor:
     def process_l_sample_str(l_sample_str,
                              ll_cc_word=None):
         """
-        This method is similar to part of Openie6.run.splitextract()
+        This method is similar to part of Openie6.run.splitpredict()
 
         l_sample_str ~ Openie6.example_sentences
         ll_cc_word ~ Openie6.all_conj_words
@@ -771,9 +780,9 @@ class ActionConductor:
 
         return l_osentL, l_split_sentL, sub_osent2_to_osent2, osent2_to_words
 
-    def silent_extract(self, pred_in_fp):
+    def test_pred_in(self, pred_in_fp, name):
         """
-        similar to Openie6.run.extract()
+        similar to Openie6.run.predict()
 
         This method does prediction. It creates instances of Model and
         Trainer. The trainer is used to call trainer.test() (instead of
@@ -791,6 +800,7 @@ class ActionConductor:
         pred_in_fp: str
             This file has no tags or ilabels. Only one osent per line for
             each sample.
+        name: str
 
         Returns
         -------
@@ -799,23 +809,25 @@ class ActionConductor:
         """
         # This distinguishes between tasks "ex" and "cc".
         # splitextract() uses both best chechpoint files.
-        checkpoint_fp = self.get_best_checkpoint_fp()
+        checkpoint_fp =\
+                ActionConductor.get_best_checkpoint_fp(self.params.task)
 
         # assert list(self.get_all_checkpoint_fp()) == [checkpoint_fp]
 
         self.update_params(checkpoint_fp)
         self.dloader_tool.set_extract_dataloader(pred_in_fp)
         # always set dataloader before constructing a Model instance
+        test_name = "test_" + name
         model = Model(self.params,
                       self.auto_tokenizer,
                       verbose=self.verbose,
-                      name="pred")
+                      name=test_name)
 
         # Not necessary in SentenceAx
         # model.metric.sub_osent2_to_osent2 = self.sub_osent2_to_osent2
         # model.metric.sent_to_words = self.osent2_to_words
 
-        logger = self.get_new_TB_logger("extract")
+        logger = self.get_new_TB_logger(test_name)
         trainer = self.get_new_trainer(logger=logger,
                                        use_minimal=True)
         start_time = time()
@@ -826,7 +838,7 @@ class ActionConductor:
             ckpt_path=checkpoint_fp)
         end_time = time()
         minutes = (end_time - start_time) / 60
-        print(f'Total Time taken = {minutes : 2f} minutes')
+        print(f'{test_name}, total time taken = {minutes : 2f} minutes')
 
         return model
 
@@ -834,7 +846,7 @@ class ActionConductor:
         """
         This is a private method for self.splitextract().
 
-        This method calls silent_extract() once.
+        This method calls test_pred_in() once.
 
         This method reads a file at `pred_in_fp` with the sentences (one
         sentence per line) that one wants to split.
@@ -856,30 +868,29 @@ class ActionConductor:
         # larger than base-cased. For task="ex", Openie6 uses base-cased
         # throughout
 
-        self.params.d["task"] = "cc"
-        self.params.task = "cc"
+        self.params.d["task"] , self.params.task = "cc", "cc"
+        # self.params.d["action"] = 'test'
+        # self.params.action = 'test'
         self.params.d["model_str"] = 'bert-base-cased'
-        self.params.d["action"] = 'extract'
-        self.params.action = 'extract'
 
-        model = self.silent_extract(pred_in_fp)
+        model = self.test_pred_in(pred_in_fp, "splitextract_for_cc")
 
-        # model.l_cc_pred_sample_str ~ Openie6.all_predictions_conj
-        # model.self.lll_cc_spanned_loc ~ Openie6.all_sentence_indices_conj
-        # model.ll_cc_spanned_word ~ Openie6.all_conjunct_words_conj
+        # model.l_cc_epoch_sample_str ~ Openie6.all_predictions_conj
+        # model.self.lll_cc_epoch_spanned_loc ~ Openie6.all_sentence_indices_conj
+        # model.l_cc_epoch_spanned_word ~ Openie6.all_conjunct_words_conj
         #                          ~ Openie6.all_conj_words
 
-        l_cc_pred_sample_str = model.l_cc_pred_sample_str
-        lll_cc_spanned_loc = model.lll_cc_spanned_loc
-        assert len(l_cc_pred_sample_str) == len(lll_cc_spanned_loc)
-        ll_cc_spanned_word = model.ll_cc_spanned_word
+        l_sample_str = model.l_cc_epoch_sample_str
+        lll_spanned_loc = model.lll_cc_epoch_spanned_loc
+        assert len(l_sample_str) == len(lll_spanned_loc)
+        l_spanned_word = model.l_cc_epoch_spanned_word
 
-        # l_cc_pred_sample_str ~ Openie6.conj_predictions
+        # l_cc_epoch_sample_str ~ Openie6.conj_predictions
         l_osentL, l_split_sentL, \
             model.sub_osent2_to_osent2, model.osent2_to_words = \
             ActionConductor.process_l_sample_str(
-                l_sample_str=l_cc_pred_sample_str,
-                ll_cc_word=ll_cc_spanned_word)
+                l_sample_str=l_sample_str,
+                ll_cc_word=l_spanned_word)
         # l_split_sentL.append("\n")
 
         # this is never used
@@ -912,7 +923,7 @@ class ActionConductor:
         """
         This is a private method for self.splitextract().
 
-        This method calls silent_extract() once.
+        This method calls test_pred_in() once.
 
         This method calls write_splitextract_predictions().
 
@@ -930,18 +941,19 @@ class ActionConductor:
         None
 
         """
-        self.params.d["task"] = "ex"
-        self.params.task = "ex"
+        self.params.d["task"] , self.params.task = "ex", "ex"
+        # self.params.d["action"] = 'test'
+        # self.params.action = 'test'
         self.params.d["model_str"] = 'bert-base-cased'
 
-        # temporary file, to be deleted after it is used by silent_extract(
+        # temporary file, to be deleted after it is used by test_pred_in(
         # ). This file is not used in Openie6, but is needed in SentenceAx,
-        # so as to get the appropriate input for silent_extract()
+        # so as to get the appropriate input for test_pred_in()
         in_fp = f'{pred_in_fp.replace(".txt", "")}_for_cc_ssents.txt'
         with open(in_fp, "w") as f:
             f.write("\n".join(l_split_sentL))
 
-        model = self.silent_extract(in_fp)
+        model = self.test_pred_in(in_fp, "splitextract_for_ex")
 
         if delete_split_sents_file:
             os.remove(in_fp)
@@ -955,7 +967,7 @@ class ActionConductor:
         """
         This is a private method for self.splitextract().
 
-        This method calls silent_extract() once.
+        This method calls test_pred_in() once.
 
         This method calls write_predictions_in_original_order().
 
@@ -968,13 +980,12 @@ class ActionConductor:
         None
 
         """
-        self.params.d["task"] = "cc"
-        self.params.task = "cc"
+        self.params.d["task"], self.params.task = "cc", "cc"
+        # self.params.d["action"] = 'test'
+        # self.params.action = 'test'
         self.params.d["model_str"] = 'bert-base-cased'
-        self.params.d["action"] = 'extract'
-        self.params.action = 'extract'
 
-        model = self.silent_extract(pred_in_fp)
+        model = self.test_pred_in(pred_in_fp, "split")
 
         unsorted_fp = f"{M_OUT_DIR}/cc_ssents.txt"
         sorted_fp = \
@@ -993,7 +1004,7 @@ class ActionConductor:
 
     def extract(self, pred_in_fp):
         """
-        This method calls silent_extract() once.
+        This method calls test_pred_in() once.
 
         This method calls write_splitextract_predictions()
 
@@ -1006,12 +1017,11 @@ class ActionConductor:
         None
 
         """
-
-        model = self.silent_extract(pred_in_fp)
+        model = self.test_pred_in(pred_in_fp, "extract")
 
         unsorted_fp = f"{M_OUT_DIR}/ex_ssents.txt"
         sorted_fp = \
-            f'{pred_in_fp.replace(".txt", "")}_pred_ssents.txt'
+            f'{pred_in_fp.replace(".txt", "")}_extract_ssents.txt'
         ActionConductor.write_predictions_in_original_order(pred_in_fp,
                                                             unsorted_fp,
                                                             sorted_fp)

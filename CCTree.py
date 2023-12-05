@@ -269,7 +269,7 @@ class CCTree:
             if not self.child_ccloc_to_par_cclocs[ccloc]:
                 self.root_cclocs.append(ccloc)
 
-    def draw_tree(self):
+    def draw_self(self):
         """
         important bug that must be fixed in treelib. In your Python
         installation, go to Lib\site-packages\treelib and edit tree.py. Find
@@ -541,7 +541,7 @@ if __name__ == "__main__":
                           lll_ilabel[k],
                           forced_tree,
                           verbose=True)
-            tree.draw_tree()
+            tree.draw_self()
             for i, sent in enumerate(tree.ccsents):
                 print(str(i + 1) + ". " + sent)
             print()

@@ -224,15 +224,16 @@ class ActionConductor:
 
         """
         weights_dir = self.params.d["weights_dir"]
-        paths = list(iglob(f"{weights_dir}/{self.params.task}_model/*.best"))
+        task = self.params.task
+        paths = list(iglob(f"{weights_dir}/{task}_model/*.best"))
         if len(paths) == 0:
             assert False, f"There is no checkpoint file ending in '.best' " \
-                f"in the `{weights_dir}/{self.params.task}_model/` directory."
+                          f"in the `{weights_dir}/{task}_model/` directory."
         if len(paths) == 1:
             return paths[0]
         else:
             assert False, f"There are multiple best checkpoint files " \
-                f"in the`{weights_dir}/{self.params.task}_model/` directory."
+                          f"in the`{weights_dir}/{task}_model/` directory."
 
     def delete_all_checkpoints(self):
         """
@@ -604,7 +605,6 @@ class ActionConductor:
         #                    appended=False,
         #                    numbered=False)
 
-
     @staticmethod
     def write_predictions_in_original_order(pred_in_fp,
                                             unsorted_fp,
@@ -646,7 +646,7 @@ class ActionConductor:
         l_unsorted_sample_str = unsorted_content.split(sep)
         osent_to_sample_str = {}
         for sample_str in l_unsorted_sample_str:
-            l_sent =undoL(sample_str.strip().split("\n"))
+            l_sent = undoL(sample_str.strip().split("\n"))
             osent_to_sample_str[undoL(l_sent[0]).strip()] = sample_str
 
         l_sorted_sample_str = []
@@ -872,7 +872,7 @@ class ActionConductor:
         # larger than base-cased. For task="ex", Openie6 uses base-cased
         # throughout
 
-        self.params.d["task"] , self.params.task = "cc", "cc"
+        self.params.d["task"], self.params.task = "cc", "cc"
         # self.params.d["action"] = 'test'
         # self.params.action = 'test'
         self.params.d["model_str"] = 'bert-base-cased'
@@ -945,7 +945,7 @@ class ActionConductor:
         None
 
         """
-        self.params.d["task"] , self.params.task = "ex", "ex"
+        self.params.d["task"], self.params.task = "ex", "ex"
         # self.params.d["action"] = 'test'
         # self.params.action = 'test'
         self.params.d["model_str"] = 'bert-base-cased'
@@ -1029,7 +1029,6 @@ class ActionConductor:
         ActionConductor.write_predictions_in_original_order(pred_in_fp,
                                                             unsorted_fp,
                                                             sorted_fp)
-
 
     def splitextract(self, pred_in_fp, split_only=False):
         """

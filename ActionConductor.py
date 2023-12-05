@@ -352,9 +352,12 @@ class ActionConductor:
         None
 
         """
-        print("Checkpoint keywords:")
-        ckpt_keys = torch.load(checkpoint_fp).keys()
-        pprint(ckpt_keys)
+        if self.verbose:
+            print("Checkpoint dictionary:")
+            ckpt_d = torch.load(checkpoint_fp)
+            print("ckpt_keys: ", ckpt_d.keys())
+            print('ckpt_d["hyper_parameters"]', ckpt_d["hyper_parameters"])
+            print('ckpt_d["hparams_name"]', ckpt_d["hparams_name"])
         # if self.has_cuda:
         #     ckpt_params_d = torch.load(checkpoint_fp)["hparams"]
         # else:
@@ -889,13 +892,14 @@ class ActionConductor:
         assert len(l_sample_str) == len(lll_spanned_loc)
         l_spanned_word = model.l_cc_epoch_spanned_word
 
+        print_list("model.l_cc_epoch_sample_str", l_sample_str)
+
         # l_cc_epoch_sample_str ~ Openie6.conj_predictions
         l_osentL, l_split_sentL, \
             model.sub_osent2_to_osent2, model.osent2_to_words = \
             ActionConductor.process_l_sample_str(
                 l_sample_str=l_sample_str,
                 ll_cc_word=l_spanned_word)
-        # l_split_sentL.append("\n")
 
         # this is never used
         # count = 0

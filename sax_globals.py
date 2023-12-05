@@ -18,7 +18,6 @@ ttt = train, tune, test
 tuning=dev=development=validation
 
 """
-import numpy as np
 
 SAMPLE_SEPARATOR = "[%@!]"
 SEED = 777

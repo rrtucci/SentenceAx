@@ -783,6 +783,29 @@ def write_l_sample_str(l_sample_str,
                     l_sample_str[k].strip() + "\n")
 
 
+def print_global_variables(in_fp):
+    """
+    This method prints all the global variables in the file at `in_fp`.
+
+    Parameters
+    ----------
+    in_fp: str
+
+    Returns
+    -------
+    None
+
+    """
+    with open(in_fp, 'r') as file:
+        global_d = {}
+        exec(file.read(), global_d)
+        print("Global Variables in: ", in_fp)
+        print("-------------------")
+        for name, value in global_d.items():
+            if not name.startswith("__"):  # Exclude special variables
+                print(f"{name}: {value}")
+
+
 if __name__ == "__main__":
     def main1():
         h = {"x": 5, "y": 3}

@@ -313,7 +313,7 @@ class AllenTool:
 
         If `numbered` is set to False, the output file will have no blank
         lines separating samples. If it is set to True, it will have a line
-        with the string (LINE_SEPARATOR + 1-based sample number) at the
+        with the string (SAMPLE_SEPARATOR + 1-based sample number) at the
         beginning of
         each sample.
 
@@ -330,7 +330,7 @@ class AllenTool:
             written. If ftype=="ss", a simple sentences file is written
             instead.
         numbered:
-            True iff the string (LINE_SEPARATOR + 1-based sample number)
+            True iff the string (SAMPLE_SEPARATOR + 1-based sample number)
             will be written as the first line of each sample.
 
         Returns
@@ -353,7 +353,7 @@ class AllenTool:
                         sample_id > last_sample_id:
                     continue
                 if numbered:
-                    f.write(LINE_SEPARATOR + str(sample_id) + "\n")
+                    f.write(SAMPLE_SEPARATOR + str(sample_id) + "\n")
                 num_sams += 1
                 f.write(osentL + "\n")
                 for ex in l_ex:

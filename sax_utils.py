@@ -756,7 +756,7 @@ def write_l_sample_str(l_sample_str,
     """
     This method writes a file at `out_fp`. The file is an enumerated list of
     the strings in the list `l_sample_str`. The file precedes each sample
-    string by a line consisting of LINE_SEPARATOR and the enumeration number
+    string by a line consisting of SAMPLE_SEPARATOR and the enumeration number
     (or no number if numbered=False)
 
     Parameters
@@ -779,7 +779,7 @@ def write_l_sample_str(l_sample_str,
             num_str = ""
             if numbered:
                 num_str = str(k + 1)
-            f.write(LINE_SEPARATOR + num_str + "\n" +
+            f.write(SAMPLE_SEPARATOR + num_str + "\n" +
                     l_sample_str[k].strip() + "\n")
 
 

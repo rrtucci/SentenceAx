@@ -598,7 +598,7 @@ class ActionConductor:
         # lines.append('\n')
         with open(out_fp, "w") as f:
             for line in lines:
-                f.write(LINE_SEPARATOR + "\n" + line)
+                f.write(SAMPLE_SEPARATOR + "\n" + line)
         # write_l_sample_str(lines,
         #                    out_fp,
         #                    appended=False,
@@ -613,7 +613,7 @@ class ActionConductor:
         This method reads the file `pred_in_fp` with the sentences we want
         to split. It also reads an ssent (simple sentences) file
         `unsorted_fp` with a split. Each sample in `unsorted_fp` is assumed
-        to be separated by a line with the LINE_SEPARATOR str.
+        to be separated by a line with the SAMPLE_SEPARATOR str.
 
         After reading these 2 files, the method writes a file `sorted_fp`
         with the same samples as `unsorted_fp`, but in the original order
@@ -641,7 +641,7 @@ class ActionConductor:
         with open(unsorted_fp, "r", encoding="utf-8") as f:
             unsorted_content = get_ascii(f.read())
 
-        sep = LINE_SEPARATOR
+        sep = SAMPLE_SEPARATOR
         unsorted_content = unsorted_content.strip().strip(sep)
         l_unsorted_sample_str = unsorted_content.split(sep)
         osent_to_sample_str = {}

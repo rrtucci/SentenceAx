@@ -20,7 +20,7 @@ tuning=dev=development=validation
 """
 import numpy as np
 
-LINE_SEPARATOR = "[%@!]"
+SAMPLE_SEPARATOR = "[%@!]"
 SEED = 777
 
 #NAN = np.nan

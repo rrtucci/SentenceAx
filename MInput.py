@@ -503,7 +503,7 @@ class MInput:
             lines = get_ascii(f.readlines())
 
         def is_empty_line_of_sample(line0):
-            return not line0 or LINE_SEPARATOR in line0
+            return not line0 or SAMPLE_SEPARATOR in line0
 
         def is_osent_line_of_sample(line0):
             if is_empty_line_of_sample(line0):
@@ -535,7 +535,7 @@ class MInput:
         k = 0
         k_osent = 0
         # add empty last sentence so last sentence of file is considered
-        for line in lines + [LINE_SEPARATOR]:
+        for line in lines + [SAMPLE_SEPARATOR]:
             k += 1
             line = line.strip()
             # if line == "":

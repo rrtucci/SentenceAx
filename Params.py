@@ -253,14 +253,14 @@ class Params:
         # It is a repeat.
         elif self.task == "ex" and self.action == "splitextract":
             self.d = {
-                "cc_weights_fp":
-                    WEIGHTS_DIR + "/cc_epoch=28_eval_acc=0.854.ckpt",
+                # "cc_weights_fp":
+                #     WEIGHTS_DIR + "/cc_epoch=28_eval_acc=0.854.ckpt",
                 "gpus": 1,
                 # "inp": "carb_subset/data/carb_sentences.txt",
                 "action": "splitextract",
                 # "num_extractions": EX_NUM_DEPTHS,
-                "ex_weights_fp":
-                    WEIGHTS_DIR + "/ex_epoch=14_eval_acc=0.551_v0.ckpt",
+                # "ex_weights_fp":
+                #     WEIGHTS_DIR + "/ex_epoch=14_eval_acc=0.551_v0.ckpt",
                 # "out": WEIGHTS_DIR + "/results/final",
                 # "rescore_model":
                 # "rescoring:"
@@ -289,6 +289,7 @@ class Params:
                 "small_train": False,
                 "val_check_interval": 1.0,
                 "verbose": False,
+                "weights_dir": "weights",
                 "wreg": 0
             }
 

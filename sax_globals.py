@@ -38,7 +38,6 @@ CC_METRIC_SAVE = True
 
 INPUT_DIR = "input_data"
 CACHE_DIR = 'cache'
-WEIGHTS_DIR = "weights"
 PREDICTING_DIR = "predicting"
 LOGS_DIR = "logs"
 CC_METRIC_STORAGE_DIR = "cc_metric_storage"

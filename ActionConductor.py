@@ -161,8 +161,9 @@ class ActionConductor:
         """
         # epoch and epoch_acc known by ModelCheckPoint instance
         # str "epoch_acc"  entered via `monitor` variable.
+        weights_dir = self.params.d["weights_dir"]
         return ModelCheckpoint(
-            dirpath=f"{WEIGHTS_DIR}/{self.params.task}_model",
+            dirpath=f"{weights_dir}/{self.params.task}_model",
             filename='{epoch:02d}_{epoch_acc:.3f}',
             verbose=True,
             monitor='epoch_acc',
@@ -185,7 +186,8 @@ class ActionConductor:
         list[str]
 
         """
-        paths = iglob(f"{WEIGHTS_DIR}/{self.params.task}_model/*.ckpt")
+        weights_dir = self.params.d["weights_dir"]
+        paths = iglob(f"{weights_dir}/{self.params.task}_model/*.ckpt")
         # latest first in list
         return sorted(paths, key=os.path.getctime, reverse=True)
 
@@ -200,8 +202,7 @@ class ActionConductor:
         """
         return self.get_all_checkpoint_fp()[0]
 
-    @staticmethod
-    def get_best_checkpoint_fp(task):
+    def get_best_checkpoint_fp(self):
         """
         This method returns the best checkpoint file path. We manually add
         ".best" as a suffix to the name of our best checkpoint file,
@@ -222,13 +223,16 @@ class ActionConductor:
         str
 
         """
-        paths = list(iglob(f"{WEIGHTS_DIR}/{task}_model/*.best"))
+        weights_dir = self.params.d["weights_dir"]
+        paths = list(iglob(f"{weights_dir}/{self.params.task}_model/*.best"))
         if len(paths) == 0:
-            assert False, "There is no checkpoint file ending in '.best'."
+            assert False, f"There is no checkpoint file ending in '.best' " \
+                f"in the `{weights_dir}/{self.params.task}_model/` directory."
         if len(paths) == 1:
             return paths[0]
         else:
-            assert False, "There are multiple best checkpoint files."
+            assert False, f"There are multiple best checkpoint files " \
+                f"in the`{weights_dir}/{self.params.task}_model/` directory."
 
     def delete_all_checkpoints(self):
         """
@@ -245,8 +249,9 @@ class ActionConductor:
         None
 
         """
+        weights_dir = self.params.d["weights_dir"]
         delete_all_files_with_given_ending(
-            dir_fp=f"{WEIGHTS_DIR}/{self.params.task}_model",
+            dir_fp=f"{weights_dir}/{self.params.task}_model",
             ending=".ckpt")
 
     def get_new_TB_logger(self, name):
@@ -808,9 +813,8 @@ class ActionConductor:
 
         """
         # This distinguishes between tasks "ex" and "cc".
-        # splitextract() uses both best chechpoint files.
-        checkpoint_fp =\
-                ActionConductor.get_best_checkpoint_fp(self.params.task)
+        # splitextract() uses both best checkpoint files.
+        checkpoint_fp = self.get_best_checkpoint_fp()
 
         # assert list(self.get_all_checkpoint_fp()) == [checkpoint_fp]
 

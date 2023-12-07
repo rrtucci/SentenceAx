@@ -214,10 +214,6 @@ class ActionConductor:
         If task="cc": "models/conj_model/epoch=28_eval_acc=0.854.ckpt"
         If task="ex": "models/warmup_oie_model/epoch=13_eval_acc=0.544.ckpt"
 
-        Parameters
-        ----------
-        task: str
-
         Returns
         -------
         str
@@ -556,6 +552,7 @@ class ActionConductor:
                            appended=False,
                            numbered=True)
 
+    # no longer used.
     # @staticmethod
     # def write_extags_file_from_split_sents(
     #         l_osentL,  # ~ Openie6.orig_sentences
@@ -585,8 +582,8 @@ class ActionConductor:
     #
     #     """
     #     if model.verbose:
-    #         print(
-    #             "Entering `ActionConductor.write_extags_file_from_split_sents`")
+    #         print("Entering
+    #           `ActionConductor.write_extags_file_from_split_sents`")
     #         print_list("l_osentL", l_osentL)
     #         print_list("l_split_sentL", l_split_sentL)
     #     l_m_out = model.l_batch_m_out
@@ -687,17 +684,17 @@ class ActionConductor:
         sample strings `l_sample_str` and it returns 4 things:
 
         l_osentL: list[str]
-            This is a list of osentL (original sentences, long)
+            This is a list of osentL (original sentences, with unused token
+            str)
         l_split_sentL: list[str]
             This is a list of sents produced by split but before extract. In
             case the osent yielded no split sents, the osent is included
             instead. If there are split sents, the osent is not included.
         sub_osent_to_osent: dict[str, str]
-            This maps a bunch of sub osent2 (i.e., either extractions or the
-            original sent) to the original sent. osent2 means either osent
-            or osentL.
+            This maps a bunch of sub osent (i.e., either extractions or the
+            original sent) to the original sent.
         osent_to_words: dict[str, list[str]]
-            This maps osent2 to some words. This corresponds to
+            This maps osent to some words. This corresponds to
             Openie6.conj_words_mapping, which Openie6 fills but never uses.
             We include it in SentenceAx only for the sake of completeness.
 
@@ -745,21 +742,23 @@ class ActionConductor:
 
         return l_osentL, l_split_sentL, sub_osent_to_osent, osent_to_words
 
-
     def test_pred_in(self, pred_in_fp, name):
         """
         similar to Openie6.run.predict()
 
-        This method does prediction. It creates instances of Model and
-        Trainer. The trainer is used to call trainer.test() (instead of
-        trainer.fit( ) as is done in self.train()). trainer.test() is also
-        called in self.test(), but there it takes the test data as input.
-        Here it reads the file at `pred_in_fp` (a file of osents, one per
-        line) to get data input.
+        This method does reading and writing of files. 
+        
+        The method creates instances of Model and Trainer. The trainer is 
+        used to call trainer.test() (instead of trainer.fit( ) as is done in 
+        self.train()). trainer.test() is also called in self.test(), 
+        but there it takes the test data as input. Here it reads the file at 
+        `pred_in_fp` (a file of osents, one per line) to get data input.
 
+        This method creates a Model and a Trainer. When it calls
+        trainer.test(), this writes a file f"{PREDICTING_DIR}/{M_OUT_DIR}/{
+        task}_ssents.txt" or where task="ex" or task="cc".
+                  
         This method times how long it takes to extract.
-
-        This method is silent. It writes nothing.
 
         Parameters
         ----------
@@ -810,15 +809,14 @@ class ActionConductor:
 
         return model
 
-
     def splitextract_for_cc(self, pred_in_fp):
         """
         This is a private method for self.splitextract().
 
-        This method calls test_pred_in() once.
+        This method calls test_pred_in(pred_in_fp) once. This reads the file
+        `pred_in_fp` and writes a file at f"{PREDICTING_DIR}/{
+        M_OUT_DIR}/cc_ssents.txt"
 
-        This method reads a file at `pred_in_fp` with the sentences (one
-        sentence per line) that one wants to split.
 
         Parameters
         ----------
@@ -844,7 +842,8 @@ class ActionConductor:
         model = self.test_pred_in(pred_in_fp, "splitextract_for_cc")
 
         # model.l_cc_epoch_sample_str ~ Openie6.all_predictions_conj
-        # model.self.lll_cc_epoch_spanned_loc ~ Openie6.all_sentence_indices_conj
+        # model.self.lll_cc_epoch_spanned_loc ~
+        #                       Openie6.all_sentence_indices_conj
         # model.l_cc_epoch_spanned_word ~ Openie6.all_conjunct_words_conj
         #                          ~ Openie6.all_conj_words
 
@@ -892,7 +891,6 @@ class ActionConductor:
 
         return l_osentL, l_split_sentL, model
 
-
     def splitextract_for_ex(self,
                             l_osentL,
                             l_split_sentL,
@@ -901,9 +899,15 @@ class ActionConductor:
         """
         This is a private method for self.splitextract().
 
-        This method calls test_pred_in() once.
+        This method calls test_pred_in(new_pred_in_fp) once. This reads the
+        file `new_pred_in_fp` and writes a file at f"{PREDICTING_DIR}/{
+        M_OUT_DIR}/ex_ssents.txt". `new_pred_in_fp` is a prediction file,
+        similar to `pred_in_fp`, with osents we want to extract from.
+        `new_pred_in_fp` is generated by splitextract_for_cc().
 
-        This method calls write_splitextract_predictions().
+        This method writes the predictions after splitting and extracting
+        `pred_in_fp`. The method writes these predictions at `f'{
+        pred_in_fp.replace(".txt", "")}_splitextract_ssents.txt'`
 
         Parameters
         ----------
@@ -925,8 +929,6 @@ class ActionConductor:
         l_osentL = []
         for line in lines:
             l_osentL.append(redoL(line))
-
-
 
         self.params.d["task"], self.params.task = "ex", "ex"
         # self.params.d["action"] = 'test'
@@ -951,8 +953,7 @@ class ActionConductor:
         # print_list("l_sample_str", l_sample_str)
         print_list("l_osentL", l_osentL)
 
-
-        l_sample_str_new = [""]*len(l_osentL)
+        l_sample_str_new = [""] * len(l_osentL)
         for isam, osentL in enumerate(l_osentL):
             osent = undoL(osentL)
             l_sample_str_new[isam] = osentL + "\n"
@@ -974,14 +975,13 @@ class ActionConductor:
                            appended=False,
                            numbered=True)
 
-
     def split(self, pred_in_fp):
         """
-        This is a private method for self.splitextract().
+        This method calls test_pred_in(pred_in_fp) once.
 
-        This method calls test_pred_in() once.
-
-        This method calls write_predictions_in_original_order().
+        This method writes predictions after splitting (but before
+        extracting). It writes those predictions at f'{pred_in_fp.replace(
+        ".txt", "")}_split_ssents.txt'
 
         Parameters
         ----------
@@ -1014,12 +1014,13 @@ class ActionConductor:
         #                                   model,
         #                                   name="split")
 
-
     def extract(self, pred_in_fp):
         """
-        This method calls test_pred_in() once.
+        This method calls test_pred_in(pred_in_fp) once.
 
-        This method calls write_splitextract_predictions()
+        This method writes predictions after extracting (without splitting
+        first). It writes those predictions at f'{pred_in_fp.replace(".txt",
+        "")}_extract_ssents.txt'
 
         Parameters
         ----------
@@ -1038,7 +1039,6 @@ class ActionConductor:
         ActionConductor.write_predictions_in_original_order(pred_in_fp,
                                                             unsorted_fp,
                                                             sorted_fp)
-
 
     def splitextract(self, pred_in_fp, split_only=False):
         """
@@ -1073,7 +1073,6 @@ class ActionConductor:
                                      l_split_sentL,
                                      cc_model,
                                      pred_in_fp)
-
 
     def run(self, pred_in_fp=None, split_only=False):
         """

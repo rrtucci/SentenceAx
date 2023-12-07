@@ -22,7 +22,7 @@ class ExMetric:
     matchingFunc: Matcher.binary_linient_tuple_match
     osentL_to_exs: dict[str, list[SaxExtraction]]
     score_d: dict[str, float]
-    sub_osent2_to_osent2: dict[str, str]
+    sub_osent_to_osent: dict[str, str]
     test_benchmark: Benchmark
     tune_benchmark: Benchmark
     verbose: bool
@@ -31,7 +31,7 @@ class ExMetric:
 
     def __init__(self,
                  osentL_to_exs=None,
-                 sub_osent2_to_osent2=None,
+                 sub_osent_to_osent=None,
                  input_carb_exs=False,
                  verbose=False):
         """
@@ -40,7 +40,7 @@ class ExMetric:
         Parameters
         ----------
         osentL_to_exs: dict[str, list[SaxExtraction]]
-        sub_osent2_to_osent2: dict[str, str]
+        sub_osent_to_osent: dict[str, str]
         input_carb_exs: bool
         verbose: bool
         """
@@ -56,7 +56,7 @@ class ExMetric:
         # self.ll_osent_pos_bool = [] # not used
         # self.ll_osent_verb_bool = [] # not used
         self.score_d = ExMetric.get_zero_score_d()
-        self.sub_osent2_to_osent2 = sub_osent2_to_osent2
+        self.sub_osent_to_osent = sub_osent_to_osent
         self.input_carb_exs = input_carb_exs
 
     def __call__(self,
@@ -98,7 +98,7 @@ class ExMetric:
                 l_osentL,
                 lll_pred_ilabel,
                 ll_confidence,
-                self.sub_osent2_to_osent2)
+                self.sub_osent_to_osent)
         if self.verbose:
             print("len(self.osentL_to_exs) before merge=",
                   len(self.osentL_to_exs))

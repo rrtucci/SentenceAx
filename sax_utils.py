@@ -806,6 +806,23 @@ def print_global_variables(in_fp):
                 print(f"{name}: {value}")
 
 
+def get_num_lines_in_file(in_fp):
+    """
+    This method returns the number of lines in a text file at `in_fp`.
+
+    Parameters
+    ----------
+    in_fp: str
+
+    Returns
+    -------
+    int
+
+    """
+
+    return sum(1 for _ in open(in_fp))
+
+
 if __name__ == "__main__":
     def main1():
         h = {"x": 5, "y": 3}

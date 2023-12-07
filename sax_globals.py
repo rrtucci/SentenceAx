@@ -40,7 +40,7 @@ CACHE_DIR = 'cache'
 PREDICTING_DIR = "predicting"
 LOGS_DIR = "logs"
 CC_METRIC_STORAGE_DIR = "cc_metric_storage"
-M_OUT_DIR = PREDICTING_DIR + "/model_out"
+M_OUT_DIR = PREDICTING_DIR + "/model_output"
 
 TRAIN_CCTAGS_FP = 'input_data/openie-data/ptb-train.labels'
 SMALL_TRAIN_CCTAGS_FP = 'tests/small_cctags.txt' # small file for warmup run

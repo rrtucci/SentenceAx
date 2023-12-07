@@ -86,9 +86,33 @@ class Params:
         """
         print("***************** new params")
         print(f"new params: "
-            f"pid={str(self.pid)}, task='{self.task}', action='{self.action}'")
+              f"pid={str(self.pid)}, task='{self.task}', action='{self.action}'")
         print("params=")
         pprint(self.d)
+
+    def check_test_params(self, num_samples):
+        """
+        This method checks to make sure that all samples will be tested.
+        This might not occur if num_steps_per_epoch*batch_size is too 
+        small. For example, once I had for warmup, num_steps_per_epoch=3, 
+        batch_size=4, but num_samples=14.
+
+        Parameters
+        ----------
+        num_samples: int
+
+        Returns
+        -------
+        None
+
+        """
+        x = self.d["batch_size"]
+        y = self.d["num_steps_per_epoch"]
+        if x and y:
+            assert x * y >= num_samples, \
+                "Not all samples will be tested." \
+                f"batch_size={x}, num_steps_per_epoch={y}, " \
+                f"num_samples={num_samples}"
 
     def get_d(self):
         """
@@ -280,7 +304,7 @@ class Params:
                 "gradient_clip_val": 5,
                 "lr": 2E-5,
                 "model_str": "bert-base-cased",
-                #"num_extractions": EX_NUM_DEPTHS,
+                # "num_extractions": EX_NUM_DEPTHS,
                 "num_iterative_layers": 2,
                 "num_steps_per_epoch": None,
                 "optimizer": "adamW",

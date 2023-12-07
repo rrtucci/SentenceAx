@@ -472,11 +472,11 @@ class ActionConductor:
                       verbose=self.verbose,
                       name="test")
 
-        # sub_osent2_to_osent2 and cc_sent_to_word only stored in one place
-        # if self.params.task == "ex" and self.sub_osent2_to_osent2:
-        #     model.metric.sub_osent2_to_osent2 = self.sub_osent2_to_osent2
-        # if self.params.task == "cc" and self.osent2_to_words:
-        #     model.metric.sent_to_words = self.osent2_to_words
+        # sub_osent_to_osent and cc_sent_to_word only stored in one place
+        # if self.params.task == "ex" and self.sub_osent_to_osent:
+        #     model.metric.sub_osent_to_osent = self.sub_osent_to_osent
+        # if self.params.task == "cc" and self.osent_to_words:
+        #     model.metric.sent_to_words = self.osent_to_words
 
         tdir = get_task_logs_dir(self.params.task)
         with open(tdir + '/test.txt', "w") as test_f:
@@ -497,116 +497,6 @@ class ActionConductor:
                 test_f.flush()
         shutil.move(tdir + '/test.part',
                     tdir + '/test')
-
-    @staticmethod
-    def write_extags_file_from_split_sents(
-            l_osentL,  # ~ Openie6.orig_sentences
-            l_split_sentL,  # ~ Openie6.sentences
-            out_fp,
-            model):
-        """
-        similar to Openie6.run.get_labels()
-
-        This method is called by `self.splitextract_for_ex()`.
-
-        It writes an extags file at `out_fp` based on the predictions
-        stored inside `model.l_batch_m_out`.
-
-
-        Parameters
-        ----------
-        l_osentL: list[str]
-        l_split_sentL: list[str]
-        out_fp: str
-        model: Model
-
-
-        Returns
-        -------
-        None
-
-        """
-        if model.verbose:
-            print(
-                "Entering `ActionConductor.write_extags_file_from_split_sents`")
-            print_list("l_osentL", l_osentL)
-            print_list("l_split_sentL", l_split_sentL)
-        l_m_out = model.l_batch_m_out
-
-        def append_extags_str_to_lines(lines):
-            for l_pred_ilabel in ll_pred_ilabel:
-                # You can use x.item() to get a Python number
-                # from a torch tensor that has one element
-                if l_pred_ilabel.sum().item() == 0:
-                    break
-
-                l_ilabel = [0] * len(osentL_words)
-                l_pred_ilabel = \
-                    l_pred_ilabel[:len(osentL_words)].tolist()
-                for k, loc in enumerate(
-                        sorted(lll_cc_epoch_spanned_loc[isam][jsplit_sent])):
-                    l_ilabel[loc] = l_pred_ilabel[k]
-
-                assert len(l_ilabel) == len(osentL_words)
-                l_ilabel = l_ilabel[:-3]
-                # 1: ARG1, 2: REL
-                if 1 not in l_pred_ilabel and 2 not in l_pred_ilabel:
-                    continue  # not a pass
-
-                extags_str = \
-                    ' '.join([ILABEL_TO_EXTAG[i] for i in l_ilabel])
-                lines.append(extags_str)
-            return lines
-
-        lines = []
-        batch_id0 = 0  # ~ Openie6.idx1
-        sam_id0 = 0  # ~ Openie6.idx2
-        cum_sam_id0 = 0  # ~ Openie6.idx3
-        # isam ~ Openie6.i
-        # jsplit_sent ~ Openie6.j
-
-        # lll_cc_spanned ~
-        # Openie6.sentence_indices_list, Openie6.all_sentence_indices_conj
-        lll_cc_epoch_spanned_loc = model.lll_cc_epoch_spanned_loc
-        for isam in range(len(lll_cc_epoch_spanned_loc)):
-            osent = undoL(l_osentL[isam])
-            if len(lll_cc_epoch_spanned_loc[isam]) == 0:
-                lll_cc_epoch_spanned_loc[isam].append(list(range(len(osent))))
-            lines.append('\n' + osent)
-            num_split_sent = len(lll_cc_epoch_spanned_loc[isam])
-            for jsplit_sent in range(num_split_sent):
-                if model.verbose:
-                    print(
-                        f"isam={isam}, jsplit_sent={jsplit_sent}, "
-                        f"batch_id0={batch_id0}, "
-                        f"sam_id0={sam_id0}, cum_sam_id0={cum_sam_id0}")
-                osent = l_m_out[batch_id0].l_osent[sam_id0]
-                osentL = redoL(osent)
-                osentL_words = get_words(osentL)
-                assert len(lll_cc_epoch_spanned_loc[isam][jsplit_sent]) == \
-                       len(osentL_words)
-                assert osentL == l_split_sentL[cum_sam_id0]
-                # ll_pred_ilabel ~ Openie6.predictions
-                ll_pred_ilabel = \
-                    l_m_out[batch_id0].lll_pred_ilabel[sam_id0]
-                lines = append_extags_str_to_lines(lines)
-
-            if model.verbose:
-                print(lines)
-            cum_sam_id0 += 1
-            sam_id0 += 1
-            if sam_id0 == len(l_m_out[batch_id0].l_osent):
-                sam_id0 = 0
-                batch_id0 += 1
-
-        # lines.append('\n')
-        with open(out_fp, "w") as f:
-            for line in lines:
-                f.write(SAMPLE_SEPARATOR + "\n" + line)
-        # write_l_sample_str(lines,
-        #                    out_fp,
-        #                    appended=False,
-        #                    numbered=False)
 
     @staticmethod
     def write_predictions_in_original_order(pred_in_fp,
@@ -659,56 +549,122 @@ class ActionConductor:
                 l_sorted_sample_str.append(osent_to_sample_str[osent])
             else:
                 print("This sentence not in pred_in_fp:\n" + osent)
+                assert False
 
         write_l_sample_str(l_sorted_sample_str,
                            sorted_fp,
                            appended=False,
                            numbered=True)
 
-    @staticmethod
-    def write_splitextract_predictions(pred_in_fp,
-                                       l_osentL,
-                                       l_split_sentL,
-                                       model):
-        """
-        This method writes
-
-        1. an extags file with the predicted extags.
-
-        2. (Derived from the extags file produced in 1) an ssents (simple
-        sentences) file with the predicted simple sentences.
-
-
-        Parameters
-        ----------
-        pred_in_fp: str
-        l_osentL: list[str]
-        l_split_sentL: list[str]
-        model: Model
-
-        Returns
-        -------
-
-        """
-        extags_out_fp = \
-            f'{pred_in_fp.replace(".txt", "")}_splitextract_extags.txt'
-        print('Predictions written to ' + extags_out_fp)
-        ActionConductor.write_extags_file_from_split_sents(l_osentL,
-                                                           l_split_sentL,
-                                                           extags_out_fp,
-                                                           model)
-
-        unsorted_fp = extags_out_fp
-        sorted_fp = extags_out_fp
-        ActionConductor.write_predictions_in_original_order(pred_in_fp,
-                                                            unsorted_fp,
-                                                            sorted_fp)
-
-        out_fp = f'{pred_in_fp.replace(".txt", "")}_splitextract_ssents.txt'
-        print('Predictions written to ' + out_fp)
-        file_translate_tags_to_words("ex",
-                                     in_fp=extags_out_fp,
-                                     out_fp=out_fp)
+    # @staticmethod
+    # def write_extags_file_from_split_sents(
+    #         l_osentL,  # ~ Openie6.orig_sentences
+    #         l_split_sentL,  # ~ Openie6.sentences
+    #         out_fp,
+    #         model):
+    #     """
+    #     similar to Openie6.run.get_labels()
+    #
+    #     This method is called by `self.splitextract_for_ex()`.
+    #
+    #     It writes an extags file at `out_fp` based on the predictions
+    #     stored inside `model.l_batch_m_out`.
+    #
+    #
+    #     Parameters
+    #     ----------
+    #     l_osentL: list[str]
+    #     l_split_sentL: list[str]
+    #     out_fp: str
+    #     model: Model
+    #
+    #
+    #     Returns
+    #     -------
+    #     None
+    #
+    #     """
+    #     if model.verbose:
+    #         print(
+    #             "Entering `ActionConductor.write_extags_file_from_split_sents`")
+    #         print_list("l_osentL", l_osentL)
+    #         print_list("l_split_sentL", l_split_sentL)
+    #     l_m_out = model.l_batch_m_out
+    #
+    #     def append_extags_str_to_lines(lines):
+    #         for l_pred_ilabel in ll_pred_ilabel:
+    #             # You can use x.item() to get a Python number
+    #             # from a torch tensor that has one element
+    #             if l_pred_ilabel.sum().item() == 0:
+    #                 break
+    #
+    #             l_ilabel = [0] * len(osentL_words)
+    #             l_pred_ilabel = \
+    #                 l_pred_ilabel[:len(osentL_words)].tolist()
+    #             for k, loc in enumerate(
+    #                     sorted(lll_cc_epoch_spanned_loc[isam][jsplit_sent])):
+    #                 l_ilabel[loc] = l_pred_ilabel[k]
+    #
+    #             assert len(l_ilabel) == len(osentL_words)
+    #             l_ilabel = l_ilabel[:-3]
+    #             # 1: ARG1, 2: REL
+    #             if 1 not in l_pred_ilabel and 2 not in l_pred_ilabel:
+    #                 continue  # not a pass
+    #
+    #             extags_str = \
+    #                 ' '.join([ILABEL_TO_EXTAG[i] for i in l_ilabel])
+    #             lines.append(extags_str)
+    #         return lines
+    #
+    #     lines = []
+    #     batch_id0 = 0  # ~ Openie6.idx1
+    #     sam_id0 = 0  # ~ Openie6.idx2
+    #     cum_sam_id0 = 0  # ~ Openie6.idx3
+    #     # isam ~ Openie6.i
+    #     # jsplit_sent ~ Openie6.j
+    #
+    #     # lll_cc_spanned ~
+    #     # Openie6.sentence_indices_list, Openie6.all_sentence_indices_conj
+    #     lll_cc_epoch_spanned_loc = model.lll_cc_epoch_spanned_loc
+    #     for isam in range(len(lll_cc_epoch_spanned_loc)):
+    #         osent = undoL(l_osentL[isam])
+    #         if len(lll_cc_epoch_spanned_loc[isam]) == 0:
+    #             lll_cc_epoch_spanned_loc[isam].append(list(range(len(osent))))
+    #         lines.append('\n' + osent)
+    #         num_split_sent = len(lll_cc_epoch_spanned_loc[isam])
+    #         for jsplit_sent in range(num_split_sent):
+    #             if model.verbose:
+    #                 print(
+    #                     f"isam={isam}, jsplit_sent={jsplit_sent}, "
+    #                     f"batch_id0={batch_id0}, "
+    #                     f"sam_id0={sam_id0}, cum_sam_id0={cum_sam_id0}")
+    #             osent = l_m_out[batch_id0].l_osent[sam_id0]
+    #             osentL = redoL(osent)
+    #             osentL_words = get_words(osentL)
+    #             assert len(lll_cc_epoch_spanned_loc[isam][jsplit_sent]) == \
+    #                    len(osentL_words)
+    #             assert osentL == l_split_sentL[cum_sam_id0]
+    #             # ll_pred_ilabel ~ Openie6.predictions
+    #             ll_pred_ilabel = \
+    #                 l_m_out[batch_id0].lll_pred_ilabel[sam_id0]
+    #             lines = append_extags_str_to_lines(lines)
+    #
+    #         if model.verbose:
+    #             print(lines)
+    #         cum_sam_id0 += 1
+    #         sam_id0 += 1
+    #         if sam_id0 == len(l_m_out[batch_id0].l_osent):
+    #             sam_id0 = 0
+    #             batch_id0 += 1
+    #
+    #     # lines.append('\n')
+    #     with open(out_fp, "w") as f:
+    #         for line in lines:
+    #             f.write(SAMPLE_SEPARATOR + "\n" + line)
+    #     # write_l_sample_str(lines,
+    #     #                    out_fp,
+    #     #                    appended=False,
+    #     #                    numbered=False)
 
     @staticmethod
     def process_l_sample_str(l_sample_str,
@@ -721,8 +677,8 @@ class ActionConductor:
 
         l_osentL ~ Openie6.orig_sentences
         l_split_sentL ~ Openie6.sentences
-        sub_osent2_to_osent2 ~ Openie6.mapping
-        osent2_to_words ~ Openie6.conj_word_mapping
+        sub_osent_to_osent ~ Openie6.mapping
+        osent_to_words ~ Openie6.conj_word_mapping
 
         If you are trying to understand the meaning of Openie6.mapping and
         Openie6.conj_word_mapping, this is where they are filled from scratch.
@@ -736,11 +692,11 @@ class ActionConductor:
             This is a list of sents produced by split but before extract. In
             case the osent yielded no split sents, the osent is included
             instead. If there are split sents, the osent is not included.
-        sub_osent2_to_osent2: dict[str, str]
+        sub_osent_to_osent: dict[str, str]
             This maps a bunch of sub osent2 (i.e., either extractions or the
             original sent) to the original sent. osent2 means either osent
             or osentL.
-        osent2_to_words: dict[str, list[str]]
+        osent_to_words: dict[str, list[str]]
             This maps osent2 to some words. This corresponds to
             Openie6.conj_words_mapping, which Openie6 fills but never uses.
             We include it in SentenceAx only for the sake of completeness.
@@ -751,42 +707,44 @@ class ActionConductor:
         l_sample_str: list[str]
         ll_cc_word: list[list[str]] | None
 
-
         Returns
         -------
             list[str], list[str], dict[str, str], dict[str, list[str]]
-                l_osentL, l_split_sentL, sub_osent2_to_osent2, osent2_to_words
+                l_osentL, l_split_sentL, sub_osent_to_osent, osent_to_words
 
         """
         l_osentL = []
         l_split_sentL = []
-        sub_osent2_to_osent2 = {}
-        osent2_to_words = {}
+        sub_osent_to_osent = {}
+        osent_to_words = {}
         for sample_id, sample_str in enumerate(l_sample_str):
-            if not sample_str:
-                continue
             l_sent = sample_str.strip().split("\n")
+            sent0L = redoL(l_sent[0])
+            sent0 = undoL(sent0L)
+            # print("nnnmjk**********", sent0L)
             if len(l_sent) == 1:
-                l_osentL.append(redoL(l_sent[0]))
-                sub_osent2_to_osent2[l_sent[0]] = l_sent[0]
+                l_osentL.append(sent0L)
+                sub_osent_to_osent[sent0] = sent0
                 if ll_cc_word:
-                    # model.osent2_to_words is filled but never used
-                    osent2_to_words[l_sent[0]] = \
+                    # model.osent_to_words is filled but never used
+                    osent_to_words[sent0] = \
                         ll_cc_word[sample_id]
-                l_split_sentL.append(redoL(l_sent[0]))
-            elif len(l_sent) > 1:
-                l_osentL.append(redoL(l_sent[0]))
+                l_split_sentL.append(sent0L)
+            # len(l_sent) > 1
+            else:
+                l_osentL.append(sent0L)
+                # IMP: we omit this on purpose
+                # l_split_sentL.append(sent0L)
                 if ll_cc_word:
-                    # model.osent2_to_words is filled but never used
-                    osent2_to_words[l_sent[0]] = \
+                    # model.osent_to_words is filled but never used
+                    osent_to_words[sent0] = \
                         ll_cc_word[sample_id]
                 for sent in l_sent[1:]:
-                    sub_osent2_to_osent2[sent] = l_sent[0]
+                    sub_osent_to_osent[undoL(sent)] = sent0
                     l_split_sentL.append(redoL(sent))
-            else:
-                assert False
 
-        return l_osentL, l_split_sentL, sub_osent2_to_osent2, osent2_to_words
+        return l_osentL, l_split_sentL, sub_osent_to_osent, osent_to_words
+
 
     def test_pred_in(self, pred_in_fp, name):
         """
@@ -831,12 +789,15 @@ class ActionConductor:
                       name=test_name)
 
         # Not necessary in SentenceAx
-        # model.metric.sub_osent2_to_osent2 = self.sub_osent2_to_osent2
-        # model.metric.sent_to_words = self.osent2_to_words
+        # model.metric.sub_osent_to_osent = self.sub_osent_to_osent
+        # model.metric.sent_to_words = self.osent_to_words
 
         logger = self.get_new_TB_logger(test_name)
         trainer = self.get_new_trainer(logger=logger,
                                        use_minimal=True)
+        num_lines = get_num_lines_in_file(pred_in_fp)
+        self.params.check_test_params(num_lines)
+
         start_time = time()
         # model.all_sentences = all_sentences # never used
         trainer.test(
@@ -848,6 +809,7 @@ class ActionConductor:
         print(f'{test_name}, total time taken = {minutes : 2f} minutes')
 
         return model
+
 
     def splitextract_for_cc(self, pred_in_fp):
         """
@@ -870,10 +832,9 @@ class ActionConductor:
             l_osentL, l_split_sentL, Model
 
         """
-        # For task="cc", Openie6 uses large-cased for train_test() and
-        # base-cased for splitextract(). Both are cased, but larger-cased is
-        # larger than base-cased. For task="ex", Openie6 uses base-cased
-        # throughout
+        # For task="cc" and action="train_test", Openie6 uses
+        # bert-large-cased. It uses bert-small-cased for everything else.
+        # Both are cased, but larger-cased is larger than base-cased.
 
         self.params.d["task"], self.params.task = "cc", "cc"
         # self.params.d["action"] = 'test'
@@ -887,19 +848,27 @@ class ActionConductor:
         # model.l_cc_epoch_spanned_word ~ Openie6.all_conjunct_words_conj
         #                          ~ Openie6.all_conj_words
 
-        l_sample_str = model.l_cc_epoch_sample_str
-        lll_spanned_loc = model.lll_cc_epoch_spanned_loc
-        assert len(l_sample_str) == len(lll_spanned_loc)
-        l_spanned_word = model.l_cc_epoch_spanned_word
+        # l_sample_str = model.l_cc_epoch_sample_str
+        # lll_spanned_loc = model.lll_cc_epoch_spanned_loc
+        # assert len(l_sample_str) == len(lll_spanned_loc)
+        # l_spanned_word = model.l_cc_epoch_spanned_word
 
-        print_list("model.l_cc_epoch_sample_str", l_sample_str)
+        in_fp = f"{M_OUT_DIR}/cc_ssents.txt"
+        with open(in_fp, "r") as f:
+            content = f.read()
+        content = content.strip().strip(SAMPLE_SEPARATOR).strip()
+        l_sample_str = content.split(SAMPLE_SEPARATOR + "\n")
+
+        #  print_list("model.l_cc_epoch_sample_str", l_sample_str)
 
         # l_cc_epoch_sample_str ~ Openie6.conj_predictions
+
         l_osentL, l_split_sentL, \
-            model.sub_osent2_to_osent2, model.osent2_to_words = \
-            ActionConductor.process_l_sample_str(
-                l_sample_str=l_sample_str,
-                ll_cc_word=l_spanned_word)
+            model.sub_osent_to_osent, model.osent_to_words = \
+            ActionConductor.process_l_sample_str(l_sample_str)
+
+        # print_list("l_osentL", l_osentL)
+        # print_list("l_split_sentL", l_split_sentL)
 
         # this is never used
         # count = 0
@@ -923,11 +892,12 @@ class ActionConductor:
 
         return l_osentL, l_split_sentL, model
 
+
     def splitextract_for_ex(self,
                             l_osentL,
                             l_split_sentL,
-                            pred_in_fp,
-                            delete_split_sents_file=True):
+                            cc_model,
+                            pred_in_fp):
         """
         This is a private method for self.splitextract().
 
@@ -939,37 +909,71 @@ class ActionConductor:
         ----------
         l_osentL: list[str]
         l_split_sentL: list[str]
+        cc_model: Model
         pred_in_fp: str
             This file has no tags or ilabels. Only one osent per line for
             each sample.
-        delete_split_sents_file: bool
 
         Returns
         -------
         None
 
         """
+        # l_osentL not in pred_in_fp order so rederive it
+        with open(pred_in_fp, "r", encoding="utf-8") as f:
+            lines = get_ascii(f.readlines())
+        l_osentL = []
+        for line in lines:
+            l_osentL.append(redoL(line))
+
+
+
         self.params.d["task"], self.params.task = "ex", "ex"
         # self.params.d["action"] = 'test'
         # self.params.action = 'test'
         self.params.d["model_str"] = 'bert-base-cased'
 
-        # temporary file, to be deleted after it is used by test_pred_in(
-        # ). This file is not used in Openie6, but is needed in SentenceAx,
-        # so as to get the appropriate input for test_pred_in()
-        in_fp = f'{pred_in_fp.replace(".txt", "")}_for_cc_ssents.txt'
-        with open(in_fp, "w") as f:
-            f.write("\n".join(l_split_sentL))
+        new_pred_in_fp = f'{M_OUT_DIR}/splitextract_ex_pred_in.txt'
+        with open(new_pred_in_fp, "w") as f:
+            for sentL in l_split_sentL:
+                f.write(undoL(sentL).strip() + "\n")
 
-        model = self.test_pred_in(in_fp, "splitextract_for_ex")
+        ex_model = self.test_pred_in(new_pred_in_fp, "splitextract_for_ex")
 
-        if delete_split_sents_file:
-            os.remove(in_fp)
+        in_fp = f'{M_OUT_DIR}/ex_ssents.txt'
+        out_fp = \
+            f'{pred_in_fp.replace(".txt", "")}_splitextract_ssents.txt'
 
-        ActionConductor.write_splitextract_predictions(pred_in_fp,
-                                                       l_osentL,
-                                                       l_split_sentL,
-                                                       model)
+        with open(in_fp, "r") as f:
+            content = f.read()
+        content = content.strip().strip(SAMPLE_SEPARATOR).strip()
+        l_sample_str = content.split(SAMPLE_SEPARATOR + "\n")
+        # print_list("l_sample_str", l_sample_str)
+        print_list("l_osentL", l_osentL)
+
+
+        l_sample_str_new = [""]*len(l_osentL)
+        for isam, osentL in enumerate(l_osentL):
+            osent = undoL(osentL)
+            l_sample_str_new[isam] = osentL + "\n"
+            for sample_str in l_sample_str:
+                l_sent = sample_str.strip().split("\n")
+                sub_osent0L = redoL(l_sent[0])
+                sub_osent0 = undoL(l_sent[0])
+                # print_list("nnnvbg l_sent", l_sent)
+                if cc_model.sub_osent_to_osent[sub_osent0] == osent:
+                    if len(l_sent) == 1:
+                        if osent != sub_osent0:
+                            l_sample_str_new[isam] += sub_osent0
+                    else:
+                        for sent in l_sent[1:]:
+                            l_sample_str_new[isam] += undoL(sent) + "\n"
+
+        write_l_sample_str(l_sample_str_new,
+                           out_fp,
+                           appended=False,
+                           numbered=True)
+
 
     def split(self, pred_in_fp):
         """
@@ -1010,6 +1014,7 @@ class ActionConductor:
         #                                   model,
         #                                   name="split")
 
+
     def extract(self, pred_in_fp):
         """
         This method calls test_pred_in() once.
@@ -1033,6 +1038,7 @@ class ActionConductor:
         ActionConductor.write_predictions_in_original_order(pred_in_fp,
                                                             unsorted_fp,
                                                             sorted_fp)
+
 
     def splitextract(self, pred_in_fp, split_only=False):
         """
@@ -1061,11 +1067,13 @@ class ActionConductor:
         if split_only:
             self.split(pred_in_fp)
         else:
-            l_osentL, l_split_sentL, _ = \
+            l_osentL, l_split_sentL, cc_model = \
                 self.splitextract_for_cc(pred_in_fp)
             self.splitextract_for_ex(l_osentL,
                                      l_split_sentL,
+                                     cc_model,
                                      pred_in_fp)
+
 
     def run(self, pred_in_fp=None, split_only=False):
         """

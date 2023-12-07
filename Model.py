@@ -115,11 +115,11 @@ class Model(L.LightningModule):
     merge_layer: Linear
     metric: CCMetric | ExMetric
     name: str
-    osent2_to_words: dict[str, list[str]]
+    osent_to_words: dict[str, list[str]]
     params: Params
     scores_epoch_end_d: dict[str, Any]
     starting_model: BertModel
-    sub_osent2_to_osent2: dict[str, str]
+    sub_osent_to_osent: dict[str, str]
         dictionary that maps sentences to sentences.
         Both Model and ExMetric possess a pointer to this dictionary.
     verbose: bool
@@ -211,21 +211,21 @@ class Model(L.LightningModule):
         # see file misc/CrossEntropyLoss-examples.py for examples of usage
         self.loss_fun = nn.CrossEntropyLoss(ignore_index=-100)
 
-        self.sub_osent2_to_osent2 = {}
-        # self.osent2_to_words is similar to Openie6 conj_word_mapping
-        # Note that self.osent2_to_words is never used;
+        self.sub_osent_to_osent = {}
+        # self.osent_to_words is similar to Openie6 conj_word_mapping
+        # Note that self.osent_to_words is never used;
         # It is filled in ActionConductor but never used.
         # We include it in SentenceAx to follow Openie6.
-        self.osent2_to_words = {}
+        self.osent_to_words = {}
 
         if self.params.task == "ex":
-            # ExMetric gets a pointer (address) to the sub_osent2_to_osent2
+            # ExMetric gets a pointer (address) to the sub_osent_to_osent
             # dict. This dictionary is initially empty, but if we add
             # elements to it later on, both Model and ExMetric will know
             # about it because the dictionary pointer will not have changed,
             # only its contents.
             self.metric = ExMetric(
-                sub_osent2_to_osent2=self.sub_osent2_to_osent2,
+                sub_osent_to_osent=self.sub_osent_to_osent,
                 verbose=self.verbose)
         elif self.params.task == "cc":
             self.metric = CCMetric(verbose=self.verbose)
@@ -254,9 +254,10 @@ class Model(L.LightningModule):
                               for k in range(len(l_constraint)) if
                               l_constraint[k]}
 
-        self.l_cc_epoch_sample_str = []  # Openie6.all_predictions_conj
-        self.l_cc_epoch_spanned_word = []  # Openie6.all_conjunct_words_conj
-        self.lll_cc_epoch_spanned_loc = []  # Openie6.all_sentence_indices_conj
+        # no longer used
+        # self.l_cc_epoch_sample_str = []  # Openie6.all_predictions_conj
+        # self.l_cc_epoch_spanned_word = []  # Openie6.all_conjunct_words_conj
+        # self.lll_cc_epoch_spanned_loc = []  # Openie6.all_sentence_indices_conj
         
         # not used
         # self.l_ex_pred_sample_str = []  # Openie6.all_predictions_oie
@@ -935,7 +936,7 @@ class Model(L.LightningModule):
         for sample_id, orig_sent in enumerate(l_orig_sent):
             orig_sentL = redoL(orig_sent)
             add_key_to_this_d(key=orig_sent,
-                              grow_d=self.sub_osent2_to_osent2,
+                              grow_d=self.sub_osent_to_osent,
                               this_d=osent_to_l_pred_ex)
             for depth in range(num_depths):
                 num_words = len(get_words(orig_sentL))
@@ -948,7 +949,7 @@ class Model(L.LightningModule):
                     add_key_value_pair_to_this_d(
                         key=orig_sent,
                         value=ex,
-                        grow_d=self.sub_osent2_to_osent2,
+                        grow_d=self.sub_osent_to_osent,
                         this_d=osent_to_l_pred_ex)
         l_pred_sample_str = []  # ~ Openie6.all_pred
         l_pred_al_sample_str = []  # ~ Openie6.all_pred_allen_nlp
@@ -1011,9 +1012,6 @@ class Model(L.LightningModule):
         num_samples, num_depths, _ = lll_pred_ilabel.shape
         # true_lll_ilabel = self.true_batch_m_out.lll_label
         l_orig_sent = batch_m_out.l_orig_sent
-        l_cc_epoch_sample_str = []
-        l_cc_epoch_spanned_word = []
-        lll_cc_epoch_spanned_loc = []
         l_pred_sample_str = []
         ll_spanned_word = []
         lll_spanned_loc = []
@@ -1024,7 +1022,7 @@ class Model(L.LightningModule):
                 l_ilabel = lll_pred_ilabel[isam][depth][:num_words].tolist()
                 ll_ilabel.append(l_ilabel)
 
-            pred_sample_str = orig_sent + '\n'
+            pred_sample_str = redoL(orig_sent) + '\n'
 
             # CCTree.set_ccsents() ~ Openie6.data.coords_to_sentences()
             # ccsents ~ Openie6.split_sentences,
@@ -1051,9 +1049,10 @@ class Model(L.LightningModule):
             l_pred_sample_str.append(pred_sample_str)
         # list1 + list2 is the same as list1.extend(list2)
         # left sides accumulate over all batches
-        l_cc_epoch_spanned_word += ll_spanned_word
-        l_cc_epoch_sample_str += l_pred_sample_str
-        lll_cc_epoch_spanned_loc += lll_spanned_loc
+        # no longer used
+        # self.l_cc_epoch_spanned_word += ll_spanned_word
+        # self.l_cc_epoch_sample_str += l_pred_sample_str
+        # self.lll_cc_epoch_spanned_loc += lll_spanned_loc
 
         appended = False if batch_idx == 0 else True
         out_fp = f"{M_OUT_DIR}/cc_ssents.txt"
@@ -1061,10 +1060,6 @@ class Model(L.LightningModule):
                            out_fp,
                            appended,
                            numbered=False)
-
-        self.l_cc_epoch_sample_str = l_cc_epoch_sample_str
-        self.l_cc_epoch_spanned_word = l_cc_epoch_spanned_word
-        self.lll_cc_epoch_spanned_loc = lll_cc_epoch_spanned_loc
 
     def sax_write_batch_sents_out(self, batch_idx, batch_m_out):
         """

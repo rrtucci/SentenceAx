@@ -1,8 +1,12 @@
-Github does not allow uploading 
-single files larger than 50MB.
-The files in the `data` folder 
-are too large to include in this 
-github repo. 
+## Weights and Input Dataset
 
-oie4_extractions.tsv can be found at
-SentenceAx/input_data/imojie-data/train/oie4_extractions.tsv
+Due to a < 50MB per file limitation at Github, the weights and input datasets will be located at HuggingFace.
+
+* input dataset. Unzip [this file](https://huggingface.co/datasets/rrtucci/SentenceAx-input-data) and use it to replace the 
+directory `input_data` of this github repo. 
+
+
+Once the `input_data` directory is uploaded from
+HuggingFace, the main, biggie training dataset
+`oie4_extractions.tsv` (52.3 MB) can be found at
+`SentenceAx/input_data/imojie-data/train/oie4_extractions.tsv`

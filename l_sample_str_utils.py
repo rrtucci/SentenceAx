@@ -2,10 +2,35 @@ from sax_utils import *
 import re
 
 
+def read_l_sample_str(in_fp, numbered):
+    """
+
+    Parameters
+    ----------
+    in_fp: str
+    numbered: bool
+
+    Returns
+    -------
+    list[str]
+
+    """
+    with open(in_fp, "r", encoding="utf-8") as f:
+        content = get_ascii(f.read())
+    if numbered:
+        pattern = re.compile(SAMPLE_SEPARATOR + r'\d+\n')
+        content = re.sub(pattern,
+                         repl=SAMPLE_SEPARATOR + "\n",
+                         string=content)
+    content = content.strip().strip(SAMPLE_SEPARATOR).strip()
+    l_sample_str = content.split(SAMPLE_SEPARATOR + "\n")
+    return l_sample_str
+
+
 def write_l_sample_str(l_sample_str,
                        out_fp,
-                       appended,
-                       numbered):
+                       appended=False,
+                       numbered=False):
     """
     This method writes a file at `out_fp`. The file is an enumerated list of
     the strings in the list `l_sample_str`. The file precedes each sample
@@ -155,87 +180,39 @@ def rebuild_l_sample_str(l_sample_str,
     return l_sample_str_new
 
 
-def write_predictions_in_original_order(pred_in_fp,
-                                        unsorted_fp,
-                                        sorted_fp):
+def sort_l_sample_str(l_sample_str_unsorted,
+                      l_osentL):
     """
-    This method reads the file `pred_in_fp` with the sentences we want
-    to split. It also reads an ssent (simple sentences) file
-    `unsorted_fp` with a split. Each sample in `unsorted_fp` is assumed
-    to be separated by a line with the SAMPLE_SEPARATOR str.
-
-    After reading these 2 files, the method writes a file `sorted_fp`
-    with the same samples as `unsorted_fp`, but in the original order
-    given by the osents in `pred_in_fp`.
-
-    If the strings `unsorted_fp` and `sorted_fp` are the same, the
-    unsorted file is overwritten.
+    This method returns an l_sample_str which contains the same samples as
+    `l_sample_str_unsorted` except in a new order. In the new l_sample_str,
+    a list of the first sentence in each sample equals `l_osentL`.
 
 
     Parameters
     ----------
-    pred_in_fp: str
-    unsorted_fp: str
-    sorted_fp: str
-
-    Returns
-    -------
-    None
-
-    """
-
-    with open(pred_in_fp, "r", encoding="utf-8") as f:
-        l_osent = get_ascii(f.readlines())
-
-    with open(unsorted_fp, "r", encoding="utf-8") as f:
-        unsorted_content = get_ascii(f.read())
-
-    sep = SAMPLE_SEPARATOR
-    unsorted_content = unsorted_content.strip().strip(sep)
-    l_unsorted_sample_str = unsorted_content.split(sep)
-    osent_to_sample_str = {}
-    for sample_str in l_unsorted_sample_str:
-        l_sent = undoL(sample_str.strip().split("\n"))
-        osent_to_sample_str[undoL(l_sent[0]).strip()] = sample_str
-
-    l_sorted_sample_str = []
-    for osent in l_osent:
-        osent = osent.strip()
-        if osent in osent_to_sample_str.keys():
-            l_sorted_sample_str.append(osent_to_sample_str[osent])
-        else:
-            print("This sentence not in pred_in_fp:\n" + osent)
-            assert False
-
-    write_l_sample_str(l_sorted_sample_str,
-                       sorted_fp,
-                       appended=False,
-                       numbered=True)
-
-
-def read_l_sample_str(in_fp, numbered):
-    """
-
-    Parameters
-    ----------
-    in_fp: str
-    numbered: bool
+    l_sample_str_unsorted: list[str]
+    l_osentL: list[str]
 
     Returns
     -------
     list[str]
 
     """
-    with open(in_fp, "r") as f:
-        content = f.read()
-    if numbered:
-        pattern = re.compile(SAMPLE_SEPARATOR + r'\d+\n')
-        content = re.sub(pattern,
-                         repl=SAMPLE_SEPARATOR + "\n",
-                         string=content)
-    content = content.strip().strip(SAMPLE_SEPARATOR).strip()
-    l_sample_str = content.split(SAMPLE_SEPARATOR + "\n")
-    return l_sample_str
+    sent_to_sample_str = {}
+    for sample_str in l_sample_str_unsorted:
+        l_sent = undoL(sample_str.strip().split("\n"))
+        sent_to_sample_str[undoL(l_sent[0]).strip()] = sample_str
+
+    l_sample_str_new = []
+    for osentL in l_osentL:
+        osent = undoL(osentL)
+        if osent in sent_to_sample_str.keys():
+            l_sample_str_new.append(sent_to_sample_str[osent])
+        else:
+            print("This sentence osent not in l_unsorted_sample_str:\n" +
+                  osent)
+            assert False
+    return l_sample_str_new
 
 
 def prune_l_sample_str(l_sample_str):
@@ -247,14 +224,14 @@ def prune_l_sample_str(l_sample_str):
 
     Parameters
     ----------
-    l_sample_str: str
+    l_sample_str: list[str]
 
     Returns
     -------
-    None
+    list[str]
 
     """
-    l_sample_str_new = [""]*len(l_sample_str)
+    l_sample_str_new = [""] * len(l_sample_str)
     for isam, sample_str in enumerate(l_sample_str):
         l_sent = sample_str.strip().split("\n")
         sent0L = l_sent[0]

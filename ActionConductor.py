@@ -11,7 +11,7 @@ from time import time
 from Model import *
 from SaxDataLoaderTool import *
 from sax_utils import *
-from sample_str_utils import *
+from l_sample_str_utils import *
 from Params import *
 from transformers import AutoTokenizer
 import io
@@ -606,6 +606,28 @@ class ActionConductor:
     #     #                    appended=False,
     #     #                    numbered=False)
 
+    @staticmethod
+    def get_l_osentL(pred_in_fp):
+        """
+        This method returns a list of long sents `l_osentL`. Each line in the
+        file `pred_in_fp` is converted to a long sent.
+
+        Parameters
+        ----------
+        pred_in_fp: str
+
+        Returns
+        -------
+        list[str]
+
+        """
+        with open(pred_in_fp, "r", encoding="utf-8") as f:
+            lines = get_ascii(f.readlines())
+        l_osentL = []
+        for line in lines:
+            l_osentL.append(redoL(line))
+        return l_osentL
+
     def test_of_pred_in(self, pred_in_fp, name):
         """
         similar to Openie6.run.predict()
@@ -728,7 +750,7 @@ class ActionConductor:
 
         l_osentL, l_split_sentL, \
             model.sub_osent_to_osent, model.osent_to_words = \
-                process_l_sample_str(l_sample_str)
+            process_l_sample_str(l_sample_str)
 
         # print_list("l_osentL", l_osentL)
         # print_list("l_split_sentL", l_split_sentL)
@@ -788,11 +810,7 @@ class ActionConductor:
 
         """
         # l_osentL not in pred_in_fp order so rederive it
-        with open(pred_in_fp, "r", encoding="utf-8") as f:
-            lines = get_ascii(f.readlines())
-        l_osentL = []
-        for line in lines:
-            l_osentL.append(redoL(line))
+        l_osentL = ActionConductor.get_l_osentL(pred_in_fp)
 
         self.params.d["task"], self.params.task = "ex", "ex"
         # self.params.d["action"] = 'test'
@@ -854,9 +872,10 @@ class ActionConductor:
         unsorted_fp = f"{M_OUT_DIR}/cc_ssents.txt"
         sorted_fp = \
             f'{pred_in_fp.replace(".txt", "")}_split_ssents.txt'
-        write_predictions_in_original_order(pred_in_fp,
-                                            unsorted_fp,
-                                            sorted_fp)
+        l_sample_str = read_l_sample_str(unsorted_fp, numbered=False)
+        l_osentL = ActionConductor.get_l_osentL(pred_in_fp)
+        l_sample_str = sort_l_sample_str(l_sample_str, l_osentL)
+        write_l_sample_str(l_sample_str, sorted_fp, numbered=True)
 
         # l_osentL, l_split_sentL, model = self.splitextract_for_cc(pred_in_fp)
 
@@ -888,9 +907,10 @@ class ActionConductor:
         unsorted_fp = f"{M_OUT_DIR}/ex_ssents.txt"
         sorted_fp = \
             f'{pred_in_fp.replace(".txt", "")}_extract_ssents.txt'
-        write_predictions_in_original_order(pred_in_fp,
-                                            unsorted_fp,
-                                            sorted_fp)
+        l_sample_str = read_l_sample_str(unsorted_fp, numbered=False)
+        l_osentL = ActionConductor.get_l_osentL(pred_in_fp)
+        l_sample_str = sort_l_sample_str(l_sample_str, l_osentL)
+        write_l_sample_str(l_sample_str, sorted_fp, numbered=True)
 
     def splitextract(self, pred_in_fp, split_only=False):
         """

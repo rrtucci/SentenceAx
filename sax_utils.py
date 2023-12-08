@@ -749,40 +749,6 @@ def get_train_tags_fp(task, small=False):
     return fp
 
 
-def write_l_sample_str(l_sample_str,
-                       out_fp,
-                       appended,
-                       numbered):
-    """
-    This method writes a file at `out_fp`. The file is an enumerated list of
-    the strings in the list `l_sample_str`. The file precedes each sample
-    string by a line consisting of SAMPLE_SEPARATOR and the enumeration number
-    (or no number if numbered=False)
-
-    Parameters
-    ----------
-    l_sample_str: list[str]
-    out_fp: str
-    appended: bool
-        open() mode is either "w" or "a"
-    numbered: bool
-
-    Returns
-    -------
-    None
-
-    """
-    fmode = "a" if appended else "w"
-    with open(out_fp, fmode) as f:
-        num_sam = len(l_sample_str)
-        for k in range(num_sam):
-            num_str = ""
-            if numbered:
-                num_str = str(k + 1)
-            f.write(SAMPLE_SEPARATOR + num_str + "\n" +
-                    l_sample_str[k].strip() + "\n")
-
-
 def print_global_variables(in_fp):
     """
     This method prints all the global variables in the file at `in_fp`.

@@ -6,6 +6,7 @@ from MOutput import *
 from PaddedMInput import *
 from SaxDataset import *
 from PickleList import *
+from sample_str_utils import write_l_sample_str
 
 import os
 from copy import copy, deepcopy

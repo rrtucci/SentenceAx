@@ -809,9 +809,6 @@ class ActionConductor:
         None
 
         """
-        # l_osentL not in pred_in_fp order so rederive it
-        l_osentL = ActionConductor.get_l_osentL(pred_in_fp)
-
         self.params.d["task"], self.params.task = "ex", "ex"
         # self.params.d["action"] = 'test'
         # self.params.action = 'test'
@@ -941,6 +938,9 @@ class ActionConductor:
         else:
             l_osentL, l_split_sentL, cc_model = \
                 self.splitextract_for_cc(pred_in_fp)
+            # l_osentL is not, at this point, in pred_in_fp order
+            # so rederive it
+            l_osentL = ActionConductor.get_l_osentL(pred_in_fp)
             self.splitextract_for_ex(l_osentL,
                                      l_split_sentL,
                                      cc_model,

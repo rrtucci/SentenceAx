@@ -106,6 +106,21 @@ class CCTree:
         else:
             return ccnodes[unique_k]
 
+    def get_ccnode(self, ccloc):
+        """
+
+        Parameters
+        ----------
+        ccloc: int
+
+        Returns
+        -------
+        CCNode
+
+        """
+
+        return CCTree.get_ccnode_from_ccloc(ccloc, self.ccnodes)
+
 
     def remove_bad_ccnodes(self):
         """
@@ -119,28 +134,44 @@ class CCTree:
         if self.verbose:
             print("nodes before removals: ", [str(ccnode) for ccnode in
                                             self.ccnodes])
-        # one to one mapping between ccnodes and cclocs
-        ccloc_to_ccnode = {}
+        # enforce one to one mapping between ccnodes and cclocs
+        ccloc_to_l_ccnode = {}
         for ccnode in self.ccnodes:
-            if ccnode.ccloc not in ccloc_to_ccnode.keys():
-                ccloc_to_ccnode[ccnode.ccloc] = []
-            ccloc_to_ccnode[ccnode.ccloc].append(ccnode)
-        for ccloc in ccloc_to_ccnode.keys():
-            if len(ccloc_to_ccnode[ccloc]) > 1:
-                for k, ccnode in enumerate(ccloc_to_ccnode[ccloc]):
+            if ccnode.ccloc not in ccloc_to_l_ccnode.keys():
+                ccloc_to_l_ccnode[ccnode.ccloc] = []
+            ccloc_to_l_ccnode[ccnode.ccloc].append(ccnode)
+        for ccloc in ccloc_to_l_ccnode.keys():
+            if len(ccloc_to_l_ccnode[ccloc]) > 1:
+                for k, ccnode in enumerate(ccloc_to_l_ccnode[ccloc]):
                     if k >=1:
                         if self.verbose:
-                            print("node " + str(ccnode) + " removed")
+                            print(f"node {ccnode} removed because there is "
+                                  "more than one ccnode with this ccloc")
                         self.ccnodes.remove(ccnode)
 
         for ccnode in self.ccnodes:
-            if ccnode.ccloc >= len(self.osent_words) or \
-                    not self.osent_words[ccnode.ccloc] or \
-                    self.osent_words[ccnode.ccloc] in ['nor', '&'] or \
-                    ccnode.an_unbreakable_word_is_not_spanned():
+            ccloc = ccnode.ccloc
+            len_osent = len(self.osent_words)
+            if ccloc >= len_osent:
                 if self.verbose:
-                    print("node " + str(ccnode) + " removed")
+                    print(f"node {ccnode} removed because "
+                          f"ccloc={ccloc} is >= to len(osent)={len_osent}")
                 self.ccnodes.remove(ccnode)
+                continue
+            ccword = self.osent_words[ccloc]
+            word_to_loc = ccnode.get_spanned_unbreakable_word_to_loc()
+            if ccword in ['nor', '&']:
+                if self.verbose:
+                    print(f"node {ccnode} removed because "
+                          f"{ccword} is not allowed as a CC.")
+                self.ccnodes.remove(ccnode)
+            elif len(word_to_loc):
+                if self.verbose:
+                    print(f"node {ccnode} removed because "
+                          "its span contains unbreakable words.")
+                    print("unbreakable_word_to_loc=", word_to_loc)
+                self.ccnodes.remove(ccnode)
+
 
     def set_ccnodes(self):
         """
@@ -295,17 +326,14 @@ class CCTree:
             for child_ccloc, par_cclocs in \
                     self.child_ccloc_to_par_cclocs.items():
                 # print("lmkp", str(child_ccloc), str(par_cclocs))
-                child_ccnode = CCTree.get_ccnode_from_ccloc(child_ccloc,
-                                                          self.ccnodes)
+                child_ccnode = self.get_ccnode(child_ccloc)
                 if child_ccnode:
                     child_name = str(child_ccnode)
                     if not par_cclocs:
                         tree.create_node(child_name, child_name)
                     else:
                         for par_ccloc in par_cclocs:
-                            par_ccnode = CCTree.get_ccnode_from_ccloc(
-                                par_ccloc,
-                                self.ccnodes)
+                            par_ccnode = self.get_ccnode(par_ccloc)
                             # print("hgfd", str(par_ccloc))
                             if par_ccnode:
                                 # print("lmjk", child_ccloc, par_ccloc)
@@ -427,8 +455,7 @@ class CCTree:
                 print("level_ccnodes", [str(x) for x in level_ccnodes])
 
             rooty_ccloc = rooty_cclocs.pop(0)
-            rooty_ccnode  = CCTree.get_ccnode_from_ccloc(rooty_ccloc,
-                                                        self.ccnodes)
+            rooty_ccnode  = self.get_ccnode(rooty_ccloc)
 
             # nd=node
             level_nd_count -= 1

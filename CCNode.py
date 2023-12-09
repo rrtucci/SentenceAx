@@ -1,4 +1,5 @@
 from sax_utils import *
+from collections import OrderedDict
 
 
 class CCNode:
@@ -224,31 +225,28 @@ class CCNode:
                 unspanned_locs.append(i)
         return unspanned_locs
 
-    def an_unbreakable_word_is_not_spanned(self):
+    def get_spanned_unbreakable_word_to_loc(self):
         """
         similar to Openie6.data.remove_unbreakable_conjuncts()
 
-        This method returns True iff an unbreakable word is not inside any 
-        of the spans.
+        This method returns a dictionary mapping the spanned unbreakable
+        words to their locations.
          
         Used in CCTree.remove_bad_ccnodes()
 
         Returns
         -------
-        bool
+        dict[str, int]
 
         """
 
-        unbreakable_locs = []
+        spanned_unbreakable_word_to_loc = OrderedDict()
         spanned_words = [self.osent_words[loc] for loc in self.spanned_locs]
-        for i, word in enumerate(spanned_words):
-            if word.lower() in UNBREAKABLE_WORDS:
-                unbreakable_locs.append(i)
+        for i, word in enumerate(self.osent_words):
+            if word.lower() in UNBREAKABLE_WORDS and i in self.spanned_locs:
+                spanned_unbreakable_word_to_loc[word] = i
 
-        for i in unbreakable_locs:
-            if i in self.unspanned_locs:
-                return True
-        return False
+        return spanned_unbreakable_word_to_loc
 
     def __str__(self):
         """
@@ -259,4 +257,4 @@ class CCNode:
         str
 
         """
-        return str(self.spans) + str(self.ccloc)
+        return str(self.spans[0]) + str(self.ccloc) + str(self.spans[1])

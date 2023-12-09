@@ -31,8 +31,12 @@ NAN = 0
 # because they start with the letters f-a-n-b-o-y-s
 FANBOYS = ["for" , "and" , "nor", "but", "or", "yet", "so"]
 
-
+# Openie6 sets `spacy_model != None  for all actions except
+# for action="extract". I see no good reason for this,
+# except maybe to make extraction faster.
+# I set USE_POS_INFO = True always.
 USE_POS_INFO = True
+
 CC_METRIC_SAVE = True
 
 INPUT_DIR = "input_data"

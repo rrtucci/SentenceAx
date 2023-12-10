@@ -4,6 +4,7 @@ from sax_utils import get_words
 from copy import deepcopy
 import treelib as tr
 from words_tags_ilabels_translation import *
+from itertools import product
 
 
 class CCTree:
@@ -11,16 +12,12 @@ class CCTree:
     
     Attributes
     ----------
-    calc_tree_struc: bool
     ccnodes: list[CCNode]
     ccsents: list[str]
     child_ccloc_to_par_cclocs: dict[int, list[int]]
     forced_tree: bool
-    level_to_ccnodes: dict[int, list[Node]]
-    level_to_fat_ll_spanned_loc: dict[int, list[list[int]]]
     ll_ilabel: list[list[int]]
     orig_sent: str
-    osent_words: list[str]
     par_ccloc_to_child_cclocs: list[int,list[int]]
     root_cclocs: list[int]
     verbose: str
@@ -41,10 +38,8 @@ class CCTree:
         calc_tree_struc: bool
         """
         self.orig_sent = orig_sent
-        self.osent_words = get_words(orig_sent)
         self.ll_ilabel = ll_ilabel
         self.forced_tree = forced_tree
-        self.calc_tree_struc = calc_tree_struc
         self.verbose = verbose
 
         # self.osent_locs = range(len(self.osent_words))
@@ -57,18 +52,22 @@ class CCTree:
         self.par_ccloc_to_child_cclocs = None
         self.child_ccloc_to_par_cclocs = None
         # this fill the 3 previous None's
+        #
+        # calc_tree_struc=False makes this class basically a structureless
+        # lightweight list of ccnodes
         if calc_tree_struc:
             self.set_tree_structure()
 
         self.ccsents = None
-        self.level_to_ccnodes = None
-        self.level_to_fat_ll_spanned_loc = None
-
-        self.ll_spanned_loc = None
-        self.l_spanned_word = None
+        # self.level0_to_ccnodes = None
+        # self.level0_to_fat_ll_spanned_loc = None
+        #
+        # self.ll_spanned_loc = None
+        # self.l_spanned_word = None
 
         # this fills the previous unfilled None's
         if calc_tree_struc:
+            self.set_spanned_attributes()
             self.set_ccsents()
 
     @staticmethod
@@ -121,7 +120,6 @@ class CCTree:
 
         return CCTree.get_ccnode_from_ccloc(ccloc, self.ccnodes)
 
-
     def remove_bad_ccnodes(self):
         """
         similar to Openie6.data.coords_to_sentences
@@ -133,7 +131,7 @@ class CCTree:
         """
         if self.verbose:
             print("nodes before removals: ", [str(ccnode) for ccnode in
-                                            self.ccnodes])
+                                              self.ccnodes])
         # enforce one to one mapping between ccnodes and cclocs
         ccloc_to_l_ccnode = {}
         for ccnode in self.ccnodes:
@@ -143,7 +141,7 @@ class CCTree:
         for ccloc in ccloc_to_l_ccnode.keys():
             if len(ccloc_to_l_ccnode[ccloc]) > 1:
                 for k, ccnode in enumerate(ccloc_to_l_ccnode[ccloc]):
-                    if k >=1:
+                    if k >= 1:
                         if self.verbose:
                             print(f"node {ccnode} removed because there is "
                                   "more than one ccnode with this ccloc")
@@ -151,11 +149,11 @@ class CCTree:
 
         for ccnode in self.ccnodes:
             ccloc = ccnode.ccloc
-            len_osent = len(self.osent_words)
-            if ccloc >= len_osent:
+            num_osent_words = len(self.osent_words)
+            if ccloc >= num_osent_words:
                 if self.verbose:
                     print(f"node {ccnode} removed because "
-                          f"ccloc={ccloc} is >= to len(osent)={len_osent}")
+                          f"ccloc={ccloc} is >= to len(osent)={num_osent_words}")
                 self.ccnodes.remove(ccnode)
                 continue
             ccword = self.osent_words[ccloc]
@@ -171,7 +169,6 @@ class CCTree:
                           "its span contains unbreakable words.")
                     print("unbreakable_word_to_loc=", word_to_loc)
                 self.ccnodes.remove(ccnode)
-
 
     def set_ccnodes(self):
         """
@@ -300,6 +297,407 @@ class CCTree:
             if not self.child_ccloc_to_par_cclocs[ccloc]:
                 self.root_cclocs.append(ccloc)
 
+    # @staticmethod
+    # def get_essential_locs(num_osent_words, ccnodes):
+    #     """
+    #     This method returns the list of all locations in osent that are not
+    #     spanned, or a cc, or a seploc, for ANY ccnode.
+    #
+    #     Parameters
+    #     ----------
+    #     num_osent_words: int
+    #     ccnodes: list[Nodes]
+    #
+    #     Returns
+    #     -------
+    #     list[int]
+    #
+    #     """
+    #     essential_locs = list(range(num_osent_words))
+    #     for ccnode in ccnodes:
+    #         spans = ccnode.spans
+    #         # print("essential_locs, ccloc", essential_locs, ccnode.ccloc)
+    #         try:
+    #             essential_locs.remove(ccnode.ccloc)
+    #         except:
+    #             pass
+    #         for i in range(*spans[0]):
+    #             try:
+    #                 essential_locs.remove(i)
+    #             except:
+    #                 pass
+    #         for i in range(*spans[1]):
+    #             try:
+    #                 essential_locs.remove(i)
+    #             except:
+    #                 pass
+    #         for i in ccnode.seplocs:
+    #             try:
+    #                 essential_locs.remove(i)
+    #             except:
+    #                 pass
+    #     return essential_locs
+
+    # @staticmethod
+    # def get_ccsents(osent, ccnodes):
+    #     """
+    #     This method returns a list of the ccsents (conjugate coordination
+    #     sentences).
+    #
+    #     Parameters
+    #     ----------
+    #     osent: str
+    #         original sentence
+    #     ccnodes: list[Node]
+    #
+    #     Returns
+    #     -------
+    #     list[str]
+    #
+    #     """
+    #     osent_words = get_words(osent)
+    #     essential_locs = CCTree.get_essential_locs(len(osent_words), ccnodes)
+    #     cclocs = [ccnode.ccloc for ccnode in ccnodes]
+    #     osent_words = get_words(osent)
+    #     ccsents = []
+    #     print_list("essential_locs", essential_locs)
+    #     for bool_vec in product([0, 1], repeat=len(cclocs)):
+    #         ccsent_locs = copy(essential_locs)
+    #         for k in range(len(bool_vec)):
+    #             ccloc = cclocs[k]
+    #             spans = CCTree.get_ccnode_from_ccloc(ccloc, ccnodes).spans
+    #             ccsent_locs += list(range(*spans[bool_vec[k]]))
+    #         print("llojk", ccsent_locs)
+    #         ccsent_locs.sort()
+    #         ccsent = " ".join([osent_words[loc] for loc in ccsent_locs])
+    #         ccsents.append(ccsent)
+    #     return ccsents
+
+    @staticmethod
+    def get_donut(span,
+                  sub_spans,
+                  kept_sub_span):
+        """
+
+        Parameters
+        ----------
+        span: list[int, int] | tuple[int, int]
+        sub_spans: list[list[str], list[str]]
+        kept_sub_span: bool
+
+        Returns
+        -------
+        list[int]
+
+        """
+        span_set = set(range(*span))
+        subset0 = set(range(*sub_spans[0]))
+        subset1 = set(range(*sub_spans[1]))
+        assert subset0.issubset(span_set)
+        assert subset1.issubset(span_set)
+        diff_set = (span_set - subset0) - subset1
+        if kept_sub_span == 0:
+            return list[diff_set | subset0]
+        elif kept_sub_span == 1:
+            return list[diff_set | subset1]
+        else:
+            return False
+
+    @staticmethod
+    def get_all_paths(root_nodes,
+                      child_to_parents,
+                      verbose=False):
+        l_path_1root = []
+
+        def get_paths_for_single_root_node(root_node, path):
+            path = path + [root_node]
+            if not child_to_parents[root_node]:
+                l_path_1root.append(path)
+            else:
+                for parent in child_to_parents[root_node]:
+                    get_paths_for_single_root_node(parent, path)
+            return l_path_1root
+
+        l_path = []
+        for root_node in root_nodes:
+            l_path_1root = []
+            l_path_1root = get_paths_for_single_root_node(root_node, path=[])
+            if verbose:
+                print(f"root node = {root_node}:")
+                print(l_path_1root)
+            l_path += l_path_1root
+        return l_path
+
+    def get_all_ccnode_paths(self, verbose=False):
+        l_ccloc_path = CCTree.get_all_paths(
+            self.root_cclocs,
+            self.child_ccloc_to_par_cclocs,
+            verbose)
+        l_ccnode_path = []
+        for ccloc_path in l_ccloc_path:
+            ccnode_path = [self.get_ccnode(ccloc) for ccloc in ccloc_path]
+            l_ccnode_path.append(ccnode_path)
+        return l_ccnode_path
+
+    @staticmethod
+    def get_donut_path(ccnode_path,
+                       l_bit,
+                       len_osent_words):
+        """
+
+        Parameters
+        ----------
+        ccnode_path: list[Node]
+        l_bit: list[int]
+        len_osent_words: int
+
+        Returns
+        -------
+        list[list[int]]
+
+        """
+        assert len(ccnode_path) == len(l_bit)
+        num_depths = len(l_bit)
+        l_span = [list(range(len_osent_words))]
+        for depth in range(num_depths):
+            l_span.append(ccnode_path[depth].spans[l_bit[depth]])
+        donut_path = []
+        for depth in range(num_depths):
+            donut = CCTree.get_donut(l_span[depth],
+                                     ccnode_path[depth].spans,
+                                     kept_sub_span=l_bit[depth])
+            donut_path.append(donut)
+        return donut_path
+
+    @staticmethod
+    def get_ccsent(donut_path,
+                   osent):
+        """
+
+        Parameters
+        ----------
+        donut_path: list[list[int]]
+        osent: str
+
+        Returns
+        -------
+        str
+
+        """
+        osent_words = get_words(osent)
+        donuts_union = set()
+        for donut in donut_path:
+            donuts_union |= set(donut)
+        donut_locs = sorted(list(donuts_union))
+        ccsent = [osent_words[loc] for loc in donut_locs]
+        return ccsent
+
+    def set_ccsents(self):
+        """
+        similar to Openie6.data.get_sentences()
+
+        Returns
+        -------
+        None
+
+        """
+        ccnode_paths = self.get_all_ccnode_paths()
+        osent_words = get_words(self.orig_sent)
+        l_ccsent = []
+        for ccnode_path in ccnode_paths:
+            path_len = len(ccnode_path)
+            for l_bit in product([0, 1], path_len):
+                donut_path = CCTree.get_donut_path(
+                    ccnode_path,
+                    l_bit,
+                    len(osent_words))
+                ccsent = CCTree.get_ccsent(donut_path, self.orig_sent)
+                l_ccsent.append(ccsent)
+        self.ccsents = l_ccsent
+
+        # this mimics Openie6.get_sentences()
+        # ccsents = []
+        # for level0, ccnodes in self.level0_to_ccnodes.items():
+        #     fat_ll_spanned_loc = self.level0_to_fat_ll_spanned_loc[level0]
+        #     for k, node in enumerate(ccnodes):
+        #         fat_spanned_locs = sorted(fat_ll_spanned_loc[k])
+        #         spanned_locs = sorted(node.spanned_locs)
+        #         left_words = []
+        #         right_words = []
+        #         for i in fat_spanned_locs:
+        #             if i >= node.ccloc and i in spanned_locs:
+        #                 pass
+        #             else:
+        #                 left_words.append(self.osent_words[i])
+        #             if i <= node.ccloc and i in spanned_locs:
+        #                 pass
+        #             else:
+        #                 right_words.append(self.osent_words[i])
+        #         ccsents.append(' '.join(left_words))
+        #         ccsents.append(' '.join(right_words))
+        # self.ccsents = ccsents
+
+    # not used anymore
+    # @staticmethod
+    # def fatten_ll_spanned_loc(ll_spanned_loc,
+    #                           level0_ccnodes,
+    #                           level0,
+    #                           verbose):
+    #     """
+    #     similar to Openie6.data.get_sentences(sentences,
+    #               conj_same_level0,
+    #               conj_coords,
+    #               sentence_indices)
+    #     doesn't return anything but changes sentences
+    #
+    #     conj = ccloc, conjunct = spans, coord = ccnode
+    #     sentences = ll_spanned_loc
+    #     sentence = level0_spanned_locs
+    #     conj_same_level0 = level0_cclocs
+    #     conj_coords = swaps
+    #     sentence_indices = osent_locs
+    #
+    #     level0 = same/equal level0
+    #     li = list
+    #
+    #
+    #     Parameters
+    #     ----------
+    #     ll_spanned_loc: list[list[int]]
+    #     level0_ccnodes: list[CCNode]
+    #     level0: int
+    #
+    #     Returns
+    #     -------
+    #     list[list[int]]
+    #
+    #     """
+    #     # print("level0=", level0)
+    #     # print("ll_spanned_loc", ll_spanned_loc)
+    #     k = 0
+    #     # print("num_nodes", len(self.ccnodes))
+    #     for ccnode in level0_ccnodes:
+    #         # print("nnml", "node_id", k)
+    #         k += 1
+    #         fat_spanned_locs = ccnode.get_spanned_locs(fat=True)
+    #         if not ll_spanned_loc:
+    #             ll_spanned_loc.append(fat_spanned_locs)
+    #         else:
+    #             # to_be_added_ll_loc = []
+    #             # to_be_removed_ll_loc = []
+    #             for spanned_locs in ll_spanned_loc:
+    #                 # print("bhk", spanned_locs)
+    #                 # only ccnodes that satisfy this have fat-spanned_locs
+    #                 if ccnode.spans[0][0] in spanned_locs:
+    #                     # to_be_added_ll_loc.append(fat_spanned_locs)
+    #                     # to_be_removed_ll_loc.append(spanned_locs)
+    #                     if spanned_locs in ll_spanned_loc:
+    #                         ll_spanned_loc.remove(spanned_locs)
+    #                     ll_spanned_loc.append(fat_spanned_locs)
+    #
+    #             # for l_loc in to_be_removed_ll_loc:
+    #             #     ll_spanned_loc.remove(l_loc)
+    #             # for l_loc in to_be_added_ll_loc:
+    #             #     ll_spanned_loc.append(l_loc)
+    #     if verbose:
+    #         print("new_ll_spanned_loc", ll_spanned_loc)
+    #     return ll_spanned_loc
+
+    # def set_spanned_attributes(self):
+    #     """
+    #     similar to Openie6.data.coords_to_sentences()
+    #     ccsents ~ Openie6.split_sentences
+    #
+    #     Returns
+    #     -------
+    #     None
+    #
+    #     """
+    #     # self.remove_bad_ccnodes()  was called at the end of get_ccnodes()
+    #
+    #     l_spanned_word = []
+    #     for ccnode in self.ccnodes:
+    #         for span in ccnode.spans:
+    #             l_spanned_word.append(
+    #                 ' '.join(self.osent_words[span[0]:span[1]]))
+    #
+    #     level0_nd_count = len(self.root_cclocs)
+    #     rooty_cclocs = copy(self.root_cclocs)
+    #     next_level0_nd_count = 0
+    #
+    #     level0_ccnodes = []
+    #     ll_spanned_loc = []  # node,num_locs
+    #     self.level0_to_ccnodes = {}
+    #     self.level0_to_fat_ll_spanned_loc = {}
+    #
+    #     # self.root_cclocs was filled by __init__
+    #     level0 = 0
+    #     while len(rooty_cclocs) > 0:
+    #         if self.verbose:
+    #             print("****************************beginning of while loop")
+    #             print("rooty_cclocs", rooty_cclocs)
+    #             print("level0, nd_count, next_nd_count", level0, "/",
+    #                   level0_nd_count,
+    #                   next_level0_nd_count)
+    #             print("ll_spanned_loc", ll_spanned_loc)
+    #             print("level0_ccnodes", [str(x) for x in level0_ccnodes])
+    #
+    #         rooty_ccloc = rooty_cclocs.pop(0)
+    #         rooty_ccnode = self.get_ccnode(rooty_ccloc)
+    #
+    #         # nd=node
+    #         level0_nd_count -= 1
+    #         level0_ccnodes.append(rooty_ccnode)
+    #         ll_spanned_loc = [ccnode.spanned_locs
+    #                           for ccnode in level0_ccnodes if ccnode]
+    #         if self.verbose:
+    #             print("level0_ccnodes", [str(x) for x in level0_ccnodes])
+    #             print("ll_spanned_loc", ll_spanned_loc)
+    #
+    #         for child_ccloc in \
+    #                 self.par_ccloc_to_child_cclocs[rooty_ccloc]:
+    #             # child becomes new root as tree is pared down
+    #             rooty_cclocs.append(child_ccloc)
+    #             next_level0_nd_count += 1
+    #         if self.verbose:
+    #             print("level0, nd_count, next_nd_count", level0, "/",
+    #                   level0_nd_count,
+    #                   next_level0_nd_count)
+    #
+    #         if level0_nd_count == 0:
+    #             ll_spanned_loc = \
+    #                 CCTree.fatten_ll_spanned_loc(
+    #                     ll_spanned_loc,
+    #                     level0_ccnodes,
+    #                     level0,
+    #                     self.verbose)
+    #             if level0 not in self.level0_to_fat_ll_spanned_loc.keys():
+    #                 self.level0_to_fat_ll_spanned_loc[level0] = []
+    #             self.level0_to_ccnodes[level0] = level0_ccnodes
+    #             self.level0_to_fat_ll_spanned_loc[level0] += ll_spanned_loc
+    #             level0 += 1
+    #             level0_nd_count = next_level0_nd_count
+    #             next_level0_nd_count = 0
+    #             level0_ccnodes = []
+    #             ll_spanned_loc = []
+    #             if self.verbose:
+    #                 print("level0, nd_count, next_nd_count", level0, "/",
+    #                       level0_nd_count,
+    #                       next_level0_nd_count)
+    #
+    #     if self.verbose:
+    #         print("level0_to_ll_spanned_loc", self.level0_to_fat_ll_spanned_loc)
+    #
+    #     # setting value of self.ccsents done here in Openie6
+    #
+    #     # self.ll_spanned_loc = ll_spanned_loc
+    #     # self.l_spanned_word = l_spanned_word
+    #
+    #     # ccsents, l_spanned_word, ll_spanned_loc
+    #     # these 3 variables similar to:
+    #     # word_sentences, conj_words, sentences
+    #     # split_sentences, conj_words, sentence_indices_list
+
     def draw_self(self):
         """
         important bug that must be fixed in treelib. In your Python
@@ -351,182 +749,6 @@ class CCTree:
                   self.par_ccloc_to_child_cclocs)
             return False
 
-    @staticmethod
-    def fatten_ll_spanned_loc(ll_spanned_loc,
-                              level_ccnodes,
-                              level,
-                              verbose):
-        """
-        similar to Openie6.data.get_sentences(sentences,
-                  conj_same_level,
-                  conj_coords,
-                  sentence_indices)
-        doesn't return anything but changes  sentences
-
-        conj = ccloc, conjunct = spans, coord = ccnode
-        sentences = ll_spanned_loc
-        sentence = level_spanned_locs
-        conj_same_level = level_cclocs
-        conj_coords = swaps
-        sentence_indices = osent_locs
-
-        level = same/equal level
-        li = list
-
-
-        Parameters
-        ----------
-        ll_spanned_loc: list[list[int]]
-        level_ccnodes: list[CCNode]
-        level: int
-
-        Returns
-        -------
-        list[list[int]]
-
-        """
-        # print("level=", level)
-        # print("ll_spanned_loc", ll_spanned_loc)
-        k = 0
-        # print("num_nodes", len(self.ccnodes))
-        for ccnode in level_ccnodes:
-            # print("nnml", "node_id", k)
-            k += 1
-            fat_spanned_locs = ccnode.get_spanned_locs(fat=True)
-            if not ll_spanned_loc:
-                ll_spanned_loc.append(fat_spanned_locs)
-            else:
-                # to_be_added_ll_loc = []
-                # to_be_removed_ll_loc = []
-                for spanned_locs in ll_spanned_loc:
-                    # print("bhk", spanned_locs)
-                    # only ccnodes that satisfy this have fat-spanned_locs
-                    if ccnode.spans[0][0] in spanned_locs:
-                        # to_be_added_ll_loc.append(fat_spanned_locs)
-                        # to_be_removed_ll_loc.append(spanned_locs)
-                        if spanned_locs in ll_spanned_loc:
-                            ll_spanned_loc.remove(spanned_locs)
-                        ll_spanned_loc.append(fat_spanned_locs)
-
-                # for l_loc in to_be_removed_ll_loc:
-                #     ll_spanned_loc.remove(l_loc)
-                # for l_loc in to_be_added_ll_loc:
-                #     ll_spanned_loc.append(l_loc)
-        if verbose:
-            print("new_ll_spanned_loc", ll_spanned_loc)
-        return ll_spanned_loc
-
-    def set_ccsents(self):
-        """
-        similar to Openie6.data.coords_to_sentences()
-
-        Returns
-        -------
-        None
-
-        """
-        # self.remove_bad_ccnodes()  was called at the end of get_ccnodes()
-
-        l_spanned_word = []
-        for ccnode in self.ccnodes:
-            for span in ccnode.spans:
-                l_spanned_word.append(
-                    ' '.join(self.osent_words[span[0]:span[1]]))
-
-        level_nd_count = len(self.root_cclocs)
-        rooty_cclocs = copy(self.root_cclocs)
-        next_level_nd_count = 0
-
-        level_ccnodes = []
-        ll_spanned_loc = []  # node,num_locs
-        self.level_to_ccnodes = {}
-        self.level_to_fat_ll_spanned_loc = {}
-
-        # self.root_cclocs was filled by __init__
-        level = 0
-        while len(rooty_cclocs) > 0:
-            if self.verbose:
-                print("****************************beginning of while loop")
-                print("rooty_cclocs", rooty_cclocs)
-                print("level, nd_count, next_nd_count", level, "/",
-                      level_nd_count,
-                      next_level_nd_count)
-                print("ll_spanned_loc", ll_spanned_loc)
-                print("level_ccnodes", [str(x) for x in level_ccnodes])
-
-            rooty_ccloc = rooty_cclocs.pop(0)
-            rooty_ccnode  = self.get_ccnode(rooty_ccloc)
-
-            # nd=node
-            level_nd_count -= 1
-            level_ccnodes.append(rooty_ccnode)
-            ll_spanned_loc = [ccnode.spanned_locs
-                              for ccnode in level_ccnodes if ccnode]
-            if self.verbose:
-                print("level_ccnodes", [str(x) for x in level_ccnodes])
-                print("ll_spanned_loc", ll_spanned_loc)
-
-            for child_ccloc in \
-                    self.par_ccloc_to_child_cclocs[rooty_ccloc]:
-                # child becomes new root as tree is pared down
-                rooty_cclocs.append(child_ccloc)
-                next_level_nd_count += 1
-            if self.verbose:
-                print("level, nd_count, next_nd_count", level, "/",
-                      level_nd_count,
-                      next_level_nd_count)
-
-            if level_nd_count == 0:
-                ll_spanned_loc = \
-                    CCTree.fatten_ll_spanned_loc(
-                        ll_spanned_loc,
-                        level_ccnodes,
-                        level,
-                        self.verbose)
-                if level not in self.level_to_fat_ll_spanned_loc.keys():
-                    self.level_to_fat_ll_spanned_loc[level] = []
-                self.level_to_ccnodes[level] = level_ccnodes
-                self.level_to_fat_ll_spanned_loc[level] += ll_spanned_loc
-                level += 1
-                level_nd_count = next_level_nd_count
-                next_level_nd_count = 0
-                level_ccnodes = []
-                ll_spanned_loc = []
-                if self.verbose:
-                    print("level, nd_count, next_nd_count", level, "/",
-                          level_nd_count,
-                          next_level_nd_count)
-
-        if self.verbose:
-            print("level_to_ll_spanned_loc", self.level_to_fat_ll_spanned_loc)
-        ccsents = []
-        for level, ccnodes in self.level_to_ccnodes.items():
-            fat_ll_spanned_loc = self.level_to_fat_ll_spanned_loc[level]
-            for k, node in enumerate(ccnodes):
-                fat_spanned_locs = sorted(fat_ll_spanned_loc[k])
-                spanned_locs = sorted(node.spanned_locs)
-                left_words = []
-                right_words = []
-                for i in fat_spanned_locs:
-                    if i >= node.ccloc and i in spanned_locs:
-                        pass
-                    else:
-                        left_words.append(self.osent_words[i])
-                    if i <= node.ccloc and i in spanned_locs:
-                        pass
-                    else:
-                        right_words.append(self.osent_words[i])
-                ccsents.append(' '.join(left_words))
-                ccsents.append(' '.join(right_words))
-        self.ccsents = ccsents
-        self.ll_spanned_loc = ll_spanned_loc
-        self.l_spanned_word = l_spanned_word
-
-        # ccsents, l_spanned_word, ll_spanned_loc
-        # these 3 variables similar to:
-        # word_sentences, conj_words, sentences
-        # split_sentences, conj_words, sentence_indices_list
-
 
 if __name__ == "__main__":
     def main1():
@@ -574,5 +796,35 @@ if __name__ == "__main__":
             print()
 
 
-    main1()
-    main2()
+    def main3():
+        # Example tree structure
+
+        #        E
+        #       /
+        # A->B->C->F
+        #     \
+        #      D
+        # A1->B1
+        # 4 paths
+
+        # leaf nodes must be included!
+        child_to_parents = {
+            'A': ['B'],
+            'B': ['C', 'D'],
+            'C': ['E', "F"],
+            "E": [],
+            "D": [],
+            "F": [],
+            'A1': ['B1'],
+            "B1": []
+        }
+        root_nodes = ["A", "A1"]
+        l_path = CCTree.get_all_paths(root_nodes,
+                                      child_to_parents,
+                                      verbose=True)
+        print("l_path:\n", l_path)
+
+
+    # main1()
+    # main2()
+    main3()

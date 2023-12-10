@@ -243,7 +243,7 @@ class CCNode:
         spanned_unbreakable_word_to_loc = OrderedDict()
         spanned_words = [self.osent_words[loc] for loc in self.spanned_locs]
         for i, word in enumerate(self.osent_words):
-            if word.lower() in UNBREAKABLE_WORDS and i in self.spanned_locs:
+            if word.lower() in SAX_UNBREAKABLE_WORDS and i in self.spanned_locs:
                 spanned_unbreakable_word_to_loc[word] = i
 
         return spanned_unbreakable_word_to_loc

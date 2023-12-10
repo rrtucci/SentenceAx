@@ -1014,8 +1014,8 @@ class Model(L.LightningModule):
         # true_lll_ilabel = self.true_batch_m_out.lll_label
         l_orig_sent = batch_m_out.l_orig_sent
         l_pred_sample_str = []
-        ll_spanned_word = []
-        lll_spanned_loc = []
+        # ll_spanned_word = []
+        # lll_spanned_loc = []
         for isam, orig_sent in enumerate(l_orig_sent):
             ll_ilabel = []
             for depth in range(num_depths):
@@ -1037,12 +1037,12 @@ class Model(L.LightningModule):
             # print("ll_ilabel", ll_ilabel)
             # print_list("ccsents", ccsents)
             # tree.draw_self()
-            spanned_words = \
-                tree.l_spanned_word  # ~ Openie6.conj_words
-            ll_spanned_loc = \
-                tree.ll_spanned_loc  # ~ Openie6.sentence_indices_list
-            ll_spanned_word.append(spanned_words)
-            lll_spanned_loc.append(ll_spanned_loc)
+            # spanned_words = \
+            #     tree.l_spanned_word  # ~ Openie6.conj_words
+            # ll_spanned_loc = \
+            #     tree.ll_spanned_loc  # ~ Openie6.sentence_indices_list
+            # ll_spanned_word.append(spanned_words)
+            # lll_spanned_loc.append(ll_spanned_loc)
             # not used
             # total_num_ccsents1 += len(ccsents)
             # total_num_ccsents2 += 1 if len(ccsents) > 0 else 0

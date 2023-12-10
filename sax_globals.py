@@ -125,11 +125,11 @@ LIGHT_VERBS = [
 ]
 
 # 15 words in alphabetical order from Openie6
-UNBREAKABLE_WORDS0 = \
+UNBREAKABLE_WORDS = \
     ['addition', 'aggregate', 'amount', 'among', 'average',
      'between', 'center', 'equidistant', 'gross', 'mean',
      'median', 'middle', 'sum', 'total', 'value']
 
 # I think the Openie6 list is too strict. I use this
-UNBREAKABLE_WORDS = ['between', 'sum']
+SAX_UNBREAKABLE_WORDS = ['between', 'sum']
 

@@ -381,9 +381,10 @@ class CCTree:
 
         Parameters
         ----------
-        span: list[int, int] | tuple[int, int]
-        sub_spans: list[list[str], list[str]]
-        kept_sub_span: bool
+        span: list[int] | tuple[int]
+        sub_spans: list[list[str]] | list[list[int]]
+        kept_sub_span: int
+            either 0 or 1
 
         Returns
         -------
@@ -407,6 +408,19 @@ class CCTree:
     def get_all_paths(root_nodes,
                       child_to_parents,
                       verbose=False):
+        """
+
+        Parameters
+        ----------
+        root_nodes: list[Node] | list[int]
+        child_to_parents: dict[Node, list[Node]] | dict[int, list[int]]
+        verbose: bool
+
+        Returns
+        -------
+        list[list[Node]] | list[list[int]]
+
+        """
         l_path_1root = []
 
         def get_paths_for_single_root_node(root_node, path):
@@ -429,6 +443,17 @@ class CCTree:
         return l_path
 
     def get_all_ccnode_paths(self, verbose=False):
+        """
+
+        Parameters
+        ----------
+        verbose: bool
+
+        Returns
+        -------
+        list[list[Node]]
+
+        """
         l_ccloc_path = CCTree.get_all_paths(
             self.root_cclocs,
             self.child_ccloc_to_par_cclocs,
@@ -449,6 +474,7 @@ class CCTree:
         ----------
         ccnode_path: list[Node]
         l_bit: list[int]
+            list of 0's or 1's
         len_osent_words: int
 
         Returns
@@ -458,14 +484,27 @@ class CCTree:
         """
         assert len(ccnode_path) == len(l_bit)
         num_depths = len(l_bit)
-        l_span = [list(range(len_osent_words))]
+        l_span = []
         for depth in range(num_depths):
             l_span.append(ccnode_path[depth].spans[l_bit[depth]])
+        # add first dummy item to ccnode_path. Won't be used
         donut_path = []
-        for depth in range(num_depths):
-            donut = CCTree.get_donut(l_span[depth],
-                                     ccnode_path[depth].spans,
-                                     kept_sub_span=l_bit[depth])
+        span_all = list(range(len_osent_words))
+        for depth in range(-1, num_depths):
+            if depth == -1:
+                donut = CCTree.get_donut(span_all,
+                                         ccnode_path[0].spans,
+                                         kept_sub_span=l_bit[depth])
+            elif depth >0 and depth <num_depths-1:
+                donut = CCTree.get_donut(l_span[depth],
+                                         ccnode_path[depth+1].spans,
+                                         kept_sub_span=l_bit[depth])
+            elif depth == num_depths-1:
+                donut = CCTree.get_donut(l_span[depth],
+                                         [[], []],
+                                         kept_sub_span=l_bit[depth])
+            else:
+                assert False
             donut_path.append(donut)
         return donut_path
 
@@ -506,7 +545,8 @@ class CCTree:
         l_ccsent = []
         for ccnode_path in ccnode_paths:
             path_len = len(ccnode_path)
-            for l_bit in product([0, 1], path_len):
+            for l_bit in product([0, 1], repeat=path_len):
+                l_bit = list(l_bit)
                 donut_path = CCTree.get_donut_path(
                     ccnode_path,
                     l_bit,

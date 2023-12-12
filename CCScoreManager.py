@@ -198,22 +198,33 @@ class CCScoreManager:
             true_ccnode = \
                 CCTree.get_ccnode_from_ccloc(true_ccloc, true_ccnodes)
             if pred_ccnode and true_ccnode:
-                pred_spans = pred_ccnode.spans
-                true_spans = true_ccnode.spans
+                # In SentenceAx, ccnode has only 2 spans and 1 ccloc.
+                # CCTagsLine can have more than 2 spans and more than 1 ccloc
+                # pred_spans = pred_ccnode.spans
+                # true_spans = true_ccnode.spans
+                pred_span0, pred_span1 = \
+                    pred_ccnode.span_pair[0], pred_ccnode.span_pair[1]
+                true_span0, true_span1 = \
+                    true_ccnode.span_pair[0], true_ccnode.span_pair[1]
                 if self.kind == "whole":
-                    is_correct = (pred_spans[0][0] == true_spans[0][0]
-                                  and pred_spans[-1][1] == true_spans[-1][1])
+                    # is_correct = (pred_spans[0][0] == true_spans[0][0]
+                    #               and pred_spans[-1][1] == true_spans[-1][1])
+                    is_correct = pred_span0[0] == true_span0[0] and \
+                                 pred_span1[1] == true_span1[1]
                 elif self.kind == "outer":
-                    is_correct = (pred_spans[0] == true_spans[0]
-                                  and pred_spans[-1] == true_spans[-1])
+                    # is_correct = (pred_spans[0] == true_spans[0]
+                    #               and pred_spans[-1] == true_spans[-1])
+                    is_correct = pred_span0 == true_span0 and \
+                                 pred_span1 == true_span1
                 elif self.kind == "inner":
-                    pred_pair = pred_ccnode.get_span_pair(
-                        true_ccloc, allow_None=False)
-                    true_pair = true_ccnode.get_span_pair(
-                        true_ccloc, allow_None=False)
-                    is_correct = (pred_pair == true_pair)
+                    # pred_pair = pred_ccnode.get_span_pair(
+                    #     true_ccloc, throw_if_None=True)
+                    # true_pair = true_ccnode.get_span_pair(
+                    #     true_ccloc, throw_if_None=True)
+                    # is_correct = (pred_pair == true_pair)
+                    is_correct = pred_ccnode.ccloc == true_ccnode.ccloc
                 elif self.kind == "exact":
-                    is_correct = (pred_spans == true_spans)
+                    is_correct = true_ccnode == pred_ccnode
                 else:
                     assert False
                 self.overall_ccscores.N1L1 += 1

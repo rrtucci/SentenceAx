@@ -255,7 +255,6 @@ class Params:
                 "task": "ex"
             }
 
-        ### Running CCNode Analysis
         elif self.task == "cc" and self.action == "train_test":
             self.d = {
                 "batch_size": 32,

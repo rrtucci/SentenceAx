@@ -1,5 +1,6 @@
 from sax_utils import *
 from collections import OrderedDict
+from span_utils import *
 
 
 class CCNode:
@@ -13,19 +14,19 @@ class CCNode:
 
     SentenceAx uses NLTK both to tokenize sentences into words (see
     sax_utils.get_words()), and to find the POS of each token/word. A
-    token/word may be a punctuation mark.
+    token/word may be a punctuation mark. Openie6 mixes NLTK and Spacy (bad!)
 
     A span is a tuple (i,j), where i is position of first token/word and j-1
     is the position of last token/word. Hence, span(5, 8) covers range(5,
     8) = (5, 6, 7).
 
-    self.spans is a list of spans.
+    self.span_pair is a list of 2 spans.
 
     e.g. osent = "He ate apples and oranges ."
     self.ccloc = 3
     self.osent_words = ["He", "ate", "apples", "and", "oranges", "."]
-    self.spans=[(0,3), (4,5)]
-    Note that the spans in self.spans exclude self.ccloc
+    self.span_pair=[(0,3), (4,5)]
+    Note that the spans in self.span_pair exclude self.ccloc
 
     Attributes
     ----------
@@ -37,14 +38,12 @@ class CCNode:
         between CCNodes. Not used for anything.
     osent_words: list[str]
         list of words in osent (original sentence)
-    seplocs: list[int]
+    sep_locs: list[int]
         locs of separators (like commas and period)
     spanned_locs: list[int]
         locs that are within a span
     spans: list[tuple[int, int]]
         a list of spans. spans exclude location ccloc
-    unspanned_locs: list[int]
-        locs that are outside all spans
 
     """
 
@@ -52,8 +51,7 @@ class CCNode:
                  ccloc,
                  depth,
                  osent_words,
-                 seplocs,
-                 spans):
+                 span_pair):
         """
         Constructor
 
@@ -61,19 +59,16 @@ class CCNode:
         ----------
         ccloc: int
         depth: int
-        seplocs: list[int]
         osent_words: list[str]
-        spans: list[tuple[int,int]]
+        span_pair: list[tuple[int,int]]
         """
         self.ccloc = ccloc
         self.depth = depth
         self.osent_words = osent_words
-        self.seplocs = seplocs
-        self.spans = spans
+        self.span_pair = span_pair
 
         self.spanned_locs = self.get_spanned_locs()
         # print("lobhj", self.spanned_locs)
-        self.unspanned_locs = self.get_unspanned_locs()
 
     def check_self(self):
         """
@@ -87,56 +82,21 @@ class CCNode:
 
         """
         last_b = -1
-        for a, b in self.spans:
+        for a, b in self.span_pair:
             assert a < b
             assert last_b <= a
             last_b = b
         # print("by56x", self.osent_words)
-        # print("lkou", self.spans)
+        # print("lkou", self.span_pair)
         # print("bnhj", self.ccloc)
-        # print("bxxx", self.seplocs)
+        # print("bxxx", self.sep_locs)
         locs = self.get_spanned_locs()
         for loc in locs:
             if self.ccloc == loc:
                 assert False
-        min0 = self.spans[0][0]
-        max0 = self.spans[-1][1] - 1
+        min0 = self.span_pair[0][0]
+        max0 = self.span_pair[1][1] - 1
         assert min0 <= self.ccloc <= max0
-
-    def get_span_pair(self, midpoint_id, allow_None=False):
-        """
-        similar to Openie6.metric.Coordination.get_pair()
-
-        This method returns two **consecutive** spans such that
-        `midpoint_id` is between the 2 spans but outside both of them. If no
-        span_pair is found and allow_None=False, it raises an exception.
-
-        Used in CCScoreManager.absorb_new_sample()
-        
-        Parameters
-        ----------
-        midpoint_id: int
-        allow_None: bool
-
-        Returns
-        -------
-        list[tuple[int,int], tuple[int, int]]
-
-
-        """
-        span_pair = None
-        for i in range(1, len(self.spans)):
-            if midpoint_id < self.spans[i][0]:
-                span_pair = (self.spans[i - 1], self.spans[i])
-                # there must be at least one point between the
-                # 2 spans, or else the 2 spans would be 1
-                assert span_pair[0][1] <= midpoint_id \
-                       < span_pair[1][0]
-                break
-        if not allow_None and span_pair is None:
-            raise LookupError(
-                f"Could not find any span_pair for index={midpoint_id}.")
-        return span_pair
 
     def is_parent(self, child):
         """
@@ -154,12 +114,12 @@ class CCNode:
 
         """
         # parent, child are instances of CCNode
-        ch_min = child.spans[0][0]
-        ch_max = child.spans[-1][1] - 1
+        ch_min = child.span_pair[0][0]
+        ch_max = child.span_pair[1][1] - 1
 
         # self is parent iff
-        # at least one span in self.spans contains all spans of the child
-        for span in self.spans:
+        # at least one span in self.span_pair contains all spans of the child
+        for span in self.span_pair:
             if span[0] <= ch_min and ch_max <= span[1] - 1:
                 return True
         return False
@@ -179,7 +139,7 @@ class CCNode:
         """
         return parent.is_parent(self)
 
-    def get_spanned_locs(self, fat=False):
+    def get_spanned_locs(self):
         """
         This method returns the word locations, relative to 
         self.osent_words, of all words inside a span (spanned words).
@@ -197,33 +157,11 @@ class CCNode:
 
         """
         spanned_locs = []
-        for span in self.spans:
-            for i in range(span[0], span[1]):
+        for span in self.span_pair:
+            for i in range(*span):
                 if i < len(self.osent_words):
                     spanned_locs.append(i)
-        min0 = self.spans[0][0]
-        max0 = self.spans[-1][1] - 1
-        if fat:
-            for i in range(len(self.osent_words)):
-                if i < min0 or i > max0:
-                    spanned_locs.append(i)
         return sorted(spanned_locs)
-
-    def get_unspanned_locs(self):
-        """
-        This method returns the word locations, relative to 
-        self.osent_words, of all words outside a span (unspanned words).
-
-        Returns
-        -------
-        list[int]
-
-        """
-        unspanned_locs = []
-        for i in range(len(self.osent_words)):
-            if i not in self.spanned_locs:
-                unspanned_locs.append(i)
-        return unspanned_locs
 
     def get_spanned_unbreakable_word_to_loc(self):
         """
@@ -248,13 +186,31 @@ class CCNode:
 
         return spanned_unbreakable_word_to_loc
 
+    def __eq__(self, node):
+        """
+        This method defines equality of 2 Node instances.
+
+        Parameters
+        ----------
+        node: Node
+
+        Returns
+        -------
+        bool
+
+        """
+        return self.ccloc == node.ccloc and \
+            self.span_pair[0] == node.span_pair[0] and \
+            self.span_pair[1] == node.span_pair[1]
+
     def __str__(self):
         """
-        Returns a string containing self.spans and self.ccloc.
+        Returns a string containing self.span_pair and self.ccloc.
 
         Returns
         -------
         str
 
         """
-        return str(self.spans[0]) + str(self.ccloc) + str(self.spans[1])
+        return str(self.span_pair[0]) + str(self.ccloc) + str(
+            self.span_pair[1])

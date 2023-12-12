@@ -789,6 +789,28 @@ def get_num_lines_in_file(in_fp):
     return sum(1 for _ in open(in_fp))
 
 
+def flip(x):
+    """
+    This method returns 0 if x==1 and vice versa.
+
+    Parameters
+    ----------
+    x: int
+        either 0 or 1
+
+    Returns
+    -------
+    int
+
+    """
+    if x == 0:
+        return 1
+    elif x == 1:
+        return 0
+    else:
+        assert False
+
+
 if __name__ == "__main__":
     def main1():
         h = {"x": 5, "y": 3}

@@ -5,6 +5,8 @@ from copy import deepcopy
 import treelib as tr
 from words_tags_ilabels_translation import *
 from itertools import product
+from span_utils import *
+from CCTagsLine import *
 
 
 class CCTree:
@@ -50,6 +52,7 @@ class CCTree:
         # self.osent_locs = range(len(self.osent_words))
 
         self.ccnodes = None
+        self.l_cctags_line = None
         # This must be called before calling self.set_tree_structure()
         self.set_ccnodes()
 
@@ -185,67 +188,27 @@ class CCTree:
 
         """
         self.ccnodes = []
+        self.l_cctags_line = []
 
-        for depth in range(len(self.ll_ilabel)):
-            start_loc = -1
-            started_CP = False  # CP stands for coordinating phrase
+        num_depths = len(self.ll_ilabel)
+        for depth in range(num_depths):
             l_ilabel = self.ll_ilabel[depth]
-            ccloc = -1
-            seplocs = []
-            spans = []
+            cctags_line = CCTagsLine(depth, l_ilabel)
+            self.l_cctags_line.append(cctags_line)
 
-            # CCTAG_TO_ILABEL = {
-            #   'NONE': 0
-            #   'CP': 1,
-            #   'CP_START': 2,
-            #    'CC': 3,
-            #    'SEP': 4,
-            #    'OTHERS': 5
-            # }
-
-            for i, ilabel in enumerate(l_ilabel):
-                # print("lmk90", i, spans, ccloc, started_CP,
-                #       "ilabel=", ilabel)
-                if ilabel != 1:  # CP
-                    if started_CP:
-                        started_CP = False
-                        spans.append((start_loc, i))
-                if ilabel in [0, 2]:  # NONE or CP_START
-                    # ccnode phrase can end
-                    # two spans at least, split by CC
-                    if spans and len(spans) >= 2 and \
-                            spans[0][1] <= ccloc < spans[-1][0]:
-                        ccnode = CCNode(ccloc,
-                                        depth,
-                                        self.osent_words,
-                                        seplocs,
-                                        spans)
-                        # print("vbnk", ccnode)
-                        self.ccnodes.append(ccnode)
-                        # print("klfgh", len(self.ccnodes))
-                        ccloc = -1
-                        seplocs = []
-                        spans = []
-                if ilabel == 0:  # NONE
-                    pass
-                elif ilabel == 1:  # CP
-                    if not started_CP:
-                        started_CP = True
-                        start_loc = i
-                elif ilabel == 2:  # CP_START
-                    # print("hjuk", "was here")
-                    started_CP = True
-                    start_loc = i
-                elif ilabel == 3:  # CC
-                    ccloc = i
-                elif ilabel == 4:  # SEP
-                    seplocs.append(i)
-                elif ilabel == 5:  # OTHERS
-                    pass
-                elif ilabel == -100:
-                    pass
-                else:
-                    assert False, f"{str(ilabel)} out of range 0:6"
+        for depth in range(num_depths):
+            cctags_line = self.l_cctags_line[depth]
+            for ccloc in cctags_line.cclocs:
+                spans = cctags_line.spans
+                span_pair = CCTagsLine.get_span_pair(spans,
+                                                     ccloc,
+                                                     throw_if_None=False)
+                if span_pair:
+                    ccnode = CCNode(ccloc,
+                                    depth,
+                                    self.osent_words,
+                                    span_pair)
+                    self.ccnodes.append(ccnode)
         self.remove_bad_ccnodes()
         # print("llm", len(self.ccnodes))
         for ccnode in self.ccnodes:
@@ -306,7 +269,7 @@ class CCTree:
     # def get_essential_locs(num_osent_words, ccnodes):
     #     """
     #     This method returns the list of all locations in osent that are not
-    #     spanned, or a cc, or a seploc, for ANY ccnode.
+    #     spanned, or a cc, or a sep_loc, for ANY ccnode.
     #
     #     Parameters
     #     ----------
@@ -336,7 +299,7 @@ class CCTree:
     #                 essential_locs.remove(i)
     #             except:
     #                 pass
-    #         for i in ccnode.seplocs:
+    #         for i in ccnode.sep_locs:
     #             try:
     #                 essential_locs.remove(i)
     #             except:
@@ -395,26 +358,26 @@ class CCTree:
         list[list[Node]] | list[list[int]]
 
         """
-        l_path_1root = []
+        l_path_for1root = []
 
         def get_paths_for_single_root_node(root_node, path):
             path = path + [root_node]
             if not parent_to_children[root_node]:
-                l_path_1root.append(path)
+                l_path_for1root.append(path)
             else:
                 for child in parent_to_children[root_node]:
                     get_paths_for_single_root_node(child, path)
-            return l_path_1root
+            return l_path_for1root
 
         l_path = []
         for root_node in root_nodes:
-            l_path_1root = []
-            l_path_1root = \
+            l_path_for1root = []
+            l_path_for1root = \
                 get_paths_for_single_root_node(root_node, path=[])
             if verbose:
                 print(f"paths starting at root node = {root_node}:")
-                print(l_path_1root)
-            l_path += l_path_1root
+                print(l_path_for1root)
+            l_path += l_path_for1root
         return l_path
 
     def get_all_ccnode_paths(self, verbose=False):
@@ -441,122 +404,157 @@ class CCTree:
         return l_ccnode_path
 
     @staticmethod
-    def is_sub_span(sub_span, span):
-        # sub_span empty
-        if sub_span[1]-sub_span[0] <1:
-            return True
-        return span[0] <= sub_span[0] and span[1]>= sub_span[1]
-
-    @staticmethod
-    def span_path_is_decreasing(span_path):
-        len_path = len(span_path)
-        for k in range(len_path-1):
-            if not CCTree.is_sub_span(span_path[k+1], span_path[k]):
-                return False
-        return True
-
-    @staticmethod
-    def get_span_path(ccnode_path, l_bit, verbose=False):
+    def get_inc_exc_span_path(ccnode_path,
+                              l_bit,
+                              all_span,
+                              verbose=False):
         num_depths = len(l_bit)
-        span_path = []
+        inc_span_path = []
+        exc_span_path = []
         for depth in range(num_depths):
-            span_path.append(ccnode_path[depth].spans[l_bit[depth]])
-
-        if CCTree.span_path_is_decreasing(span_path):
+            ccnode = ccnode_path[depth]
+            bit = l_bit[depth]
+            inc_span_path.append(ccnode.span_pair[bit])
+            exc_span_path.append(ccnode.span_pair[flip(bit)])
+        if span_path_is_decreasing(inc_span_path):
             if verbose:
-                print("span-path: ", span_path)
-            return span_path
+                print("included_span_path", inc_span_path)
+                print("excluded_span_path", exc_span_path)
+                draw_inc_exc_span_paths(all_span,
+                                        inc_span_path,
+                                        exc_span_path)
+            return inc_span_path, exc_span_path
         else:
-            return None
+            return None, None
+
+    #
+    # @staticmethod
+    # def get_donut(span,
+    #               sub_spans,
+    #               kept_sub_span):
+    #     """
+    #
+    #     Parameters
+    #     ----------
+    #     span: tuple[int]
+    #     sub_spans: list[list[int]]
+    #     kept_sub_span: int
+    #         either 0 or 1
+    #
+    #     Returns
+    #     -------
+    #     list[int] | None
+    #
+    #     """
+    #     # print("subspan0, span", sub_spans[0], span)
+    #     # print("subspan1, span", sub_spans[1], span)
+    #     if not is_sub_span(sub_spans[0], span) or\
+    #         not is_sub_span(sub_spans[1], span):
+    #         return None
+    #
+    #     span_set = set(range(*span))
+    #     subset0 = set(range(*sub_spans[0]))
+    #     subset1 = set(range(*sub_spans[1]))
+    #
+    #     diff_set = (span_set - subset0) - subset1
+    #     if kept_sub_span == 0:
+    #         return list(diff_set | subset0)
+    #     elif kept_sub_span == 1:
+    #         return list(diff_set | subset1)
+    #     else:
+    #         return False
+
+    # @staticmethod
+    # def get_donut_path(ccnode_path,
+    #                    l_bit,
+    #                    len_osent_words,
+    #                    verbose=False):
+    #     """
+    #
+    #     Parameters
+    #     ----------
+    #     ccnode_path: list[Node]
+    #     l_bit: list[int]
+    #         list of 0's or 1's
+    #     len_osent_words: int
+    #
+    #     Returns
+    #     -------
+    #     list[list[int]]
+    #
+    #     """
+    #     span_path = CCTree.get_span_path(ccnode_path, l_bit, verbose)
+    #     num_depths = len(l_bit)
+    #     for depth in range(num_depths):
+    #         if depth < num_depths - 1:
+    #             donut = CCTree.get_donut(span_all,
+    #                                      ccnode_path[0].spans,
+    #                                      kept_sub_span=l_bit[depth])
+    #         else:
+    #             donut = CCTree.get_donut(span_path[depth],
+    #                                      ccnode_path[depth + 1].spans,
+    #                                      kept_sub_span=l_bit[depth])
+    #         # elif depth == num_depths-1:
+    #         #     donut = CCTree.get_donut(span_path[depth],
+    #         #                              [[0,0], [1,1]],
+    #         #                              kept_sub_span=l_bit[depth])
+    #         if not donut:
+    #             return None
+    #         else:
+    #             donut_path.append(donut)
+    #     if verbose:
+    #         print("donut path: ", donut_path)
+    #     return donut_path
+
+    # @staticmethod
+    # def get_donut_path(ccnode_path,
+    #                    l_bit,
+    #                    len_osent_words,
+    #                    verbose=False):
+    #     """
+    #
+    #     Parameters
+    #     ----------
+    #     ccnode_path: list[Node]
+    #     l_bit: list[int]
+    #         list of 0's or 1's
+    #     len_osent_words: int
+    #
+    #     Returns
+    #     -------
+    #     list[list[int]]
+    #
+    #     """
+    #     span_path = CCTree.get_span_path(ccnode_path, l_bit, verbose)
+    #     # add first dummy item to ccnode_path. Won't be used
+    #     if not span_path:
+    #         return None
+    #     donut_path = []
+    #     span_all = (0, len_osent_words)
+    #     num_depths = len(l_bit)
+    #     for depth in range(-1, num_depths-1):
+    #         if depth == -1:
+    #             donut = CCTree.get_donut(span_all,
+    #                                      ccnode_path[0].spans,
+    #                                      kept_sub_span=l_bit[depth])
+    #         else:
+    #             donut = CCTree.get_donut(span_path[depth],
+    #                                      ccnode_path[depth+1].spans,
+    #                                      kept_sub_span=l_bit[depth])
+    #         # elif depth == num_depths-1:
+    #         #     donut = CCTree.get_donut(span_path[depth],
+    #         #                              [[0,0], [1,1]],
+    #         #                              kept_sub_span=l_bit[depth])
+    #         if not donut:
+    #             return None
+    #         else:
+    #             donut_path.append(donut)
+    #     if verbose:
+    #         print("donut path: ", donut_path)
+    #     return donut_path
 
     @staticmethod
-    def get_donut(span,
-                  sub_spans,
-                  kept_sub_span):
-        """
-
-        Parameters
-        ----------
-        span: list[int] | tuple[int]
-        sub_spans: list[list[str]] | list[list[int]]
-        kept_sub_span: int
-            either 0 or 1
-
-        Returns
-        -------
-        list[int] | None
-
-        """
-        # print("subspan0, span", sub_spans[0], span)
-        # print("subspan1, span", sub_spans[1], span)
-        if not CCTree.is_sub_span(sub_spans[0], span) or\
-            not CCTree.is_sub_span(sub_spans[1], span):
-            return None
-
-        span_set = set(range(*span))
-        subset0 = set(range(*sub_spans[0]))
-        subset1 = set(range(*sub_spans[1]))
-
-        diff_set = (span_set - subset0) - subset1
-        if kept_sub_span == 0:
-            return list(diff_set | subset0)
-        elif kept_sub_span == 1:
-            return list(diff_set | subset1)
-        else:
-            return False
-
-
-
-
-    @staticmethod
-    def get_donut_path(ccnode_path,
-                       l_bit,
-                       len_osent_words,
-                       verbose=False):
-        """
-
-        Parameters
-        ----------
-        ccnode_path: list[Node]
-        l_bit: list[int]
-            list of 0's or 1's
-        len_osent_words: int
-
-        Returns
-        -------
-        list[list[int]]
-
-        """
-        span_path = CCTree.get_span_path(ccnode_path, l_bit, verbose)
-        # add first dummy item to ccnode_path. Won't be used
-        if not span_path:
-            return None
-        donut_path = []
-        span_all = (0, len_osent_words)
-        num_depths = len(l_bit)
-        for depth in range(-1, num_depths-1):
-            if depth == -1:
-                donut = CCTree.get_donut(span_all,
-                                         ccnode_path[0].spans,
-                                         kept_sub_span=l_bit[depth])
-            else:
-                donut = CCTree.get_donut(span_path[depth],
-                                         ccnode_path[depth+1].spans,
-                                         kept_sub_span=l_bit[depth])
-            # elif depth == num_depths-1:
-            #     donut = CCTree.get_donut(span_path[depth],
-            #                              [[0,0], [1,1]],
-            #                              kept_sub_span=l_bit[depth])
-            if not donut:
-                return None
-            else:
-                donut_path.append(donut)
-        if verbose:
-            print("donut path: ", donut_path)
-        return donut_path
-
-    @staticmethod
-    def get_ccsent(donut_path,
+    def get_ccsent(exc_span_path,
                    osent_words):
         """
 
@@ -570,11 +568,13 @@ class CCTree:
         str
 
         """
-        donut_union= []
-        for donut in donut_path:
-            donut_union += donut
-        donut_locs = sorted(list(set(donut_union)))
-        ccsent = " ".join([osent_words[loc] for loc in donut_locs])
+        assert exc_span_path
+        all_span = (0, len(osent_words))
+        in_set = set(range(*all_span))
+        for exc_span in exc_span_path:
+            in_set -= set(range(*exc_span))
+        in_locs = sorted(list(in_set))
+        ccsent = " ".join([osent_words[loc] for loc in in_locs])
         return ccsent
 
     def set_ccsents(self):
@@ -587,6 +587,7 @@ class CCTree:
 
         """
         ccnode_paths = self.get_all_ccnode_paths(self.verbose)
+        all_span = (0, len(self.osent_words))
         l_ccsent = []
         for path in ccnode_paths:
             if self.verbose:
@@ -595,13 +596,13 @@ class CCTree:
             path_len = len(ccnode_path)
             for l_bit in product([0, 1], repeat=path_len):
                 l_bit = list(l_bit)
-                donut_path = CCTree.get_donut_path(
+                _, exc_span_path = CCTree.get_inc_exc_span_path(
                     ccnode_path,
                     l_bit,
-                    len(self.osent_words),
+                    all_span,
                     self.verbose)
-                if donut_path:
-                    ccsent = CCTree.get_ccsent(donut_path, self.osent_words)
+                if exc_span_path:
+                    ccsent = CCTree.get_ccsent(exc_span_path, self.osent_words)
                     l_ccsent.append(ccsent)
         self.ccsents = l_ccsent
 
@@ -894,7 +895,7 @@ if __name__ == "__main__":
         # A1->B1
         # 4 paths
 
-        # leaf nodes must be included!
+        # leaf nodes must be in!
         parent_to_children = {
             'A': ['B'],
             'B': ['C', 'D'],
@@ -914,4 +915,4 @@ if __name__ == "__main__":
 
     main1()
     main2()
-    # main3()
+    main3()

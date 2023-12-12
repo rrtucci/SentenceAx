@@ -96,7 +96,9 @@ class CCNode:
                 assert False
         min0 = self.span_pair[0][0]
         max0 = self.span_pair[1][1] - 1
-        assert min0 <= self.ccloc <= max0
+        # print("nnmkl", self.span_pair)
+        assert min0 <= self.ccloc <= max0, \
+            f"min0={min0}, ccloc={self.ccloc}, max0={max0}"
 
     def is_parent(self, child):
         """

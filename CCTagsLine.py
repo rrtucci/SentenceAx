@@ -4,6 +4,7 @@ class CCTagsLine:
     cctags lines are found under the osent of each sample in a cctags.txt file.
 
     """
+
     def __init__(self, depth, l_ilabel):
         """
         Constructor
@@ -101,10 +102,12 @@ class CCTagsLine:
                 span_pair = (spans[i - 1], spans[i])
                 # there must be at least one point between the
                 # 2 spans, or else the 2 spans would be 1
-                assert span_pair[0][1] <= ccloc \
-                       < span_pair[1][0]
-                break
-        if throw_if_None and span_pair is None:
+                if span_pair[0][1] <= ccloc \
+                        < span_pair[1][0]:
+                    break
+                else:
+                    span_pair = None
+        if throw_if_None and not span_pair:
             raise LookupError(
                 f"Could not find any span_pair for index={ccloc}.")
         return span_pair

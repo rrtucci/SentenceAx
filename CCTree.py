@@ -210,7 +210,7 @@ class CCTree:
                                     span_pair)
                     self.ccnodes.append(ccnode)
         self.remove_bad_ccnodes()
-        # print("llm", len(self.ccnodes))
+        # print("llm", [str(ccnode) for ccnode in self.ccnodes])
         for ccnode in self.ccnodes:
             ccnode.check_self()
 

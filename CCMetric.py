@@ -1,7 +1,7 @@
 from CCScoreManager import *
 import os
 import pickle
-from sax_utils import *
+from utils_gen import *
 from AllenTool import *
 
 

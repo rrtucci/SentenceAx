@@ -316,7 +316,7 @@ class Params:
                 "wreg": 0
             }
 
-        from sax_utils import merge_dicts
+        from utils_gen import merge_dicts
         self.d = merge_dicts(self.d, default_d)
 
         return self.d

@@ -1,13 +1,13 @@
 from CCNode import *
 import numpy as np
-from sax_utils import get_words
+from utils_gen import get_words
 from copy import deepcopy
 import treelib as tr
 from words_tags_ilabels_translation import *
 from itertools import product
-from sax_span_utils import *
+from utiils_span import *
 from CCTagsLine import *
-from sax_tree_utils import *
+from utils_tree import *
 
 
 class CCTree:

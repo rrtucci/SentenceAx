@@ -30,7 +30,7 @@ line), are typical of the input lists for the methods defined in this file.
 
 """
 from Params import *
-from sax_utils import *
+from utils_gen import *
 from SaxExtraction import *
 from CCTree import *
 

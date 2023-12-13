@@ -6,7 +6,7 @@ are used by SentenceAx for reading and writing various types of files.
 """
 
 from Params import *
-from sax_utils import *
+from utils_gen import *
 
 
 def write_tags_file(out_fp,

@@ -10,8 +10,8 @@ from glob import iglob
 from time import time
 from Model import *
 from SaxDataLoaderTool import *
-from sax_utils import *
-from l_sample_str_utils import *
+from utils_gen import *
+from utils_l_sample_str import *
 from Params import *
 from transformers import AutoTokenizer
 import io

@@ -1,6 +1,6 @@
 from Params import *
 
-from sax_utils import *
+from utils_gen import *
 from transformers import AutoTokenizer
 from copy import deepcopy
 from pprint import pprint

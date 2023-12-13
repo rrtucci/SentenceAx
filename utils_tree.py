@@ -8,13 +8,87 @@ parent node to a list children nodes.
 
 
 """
-
 from copy import copy
+import treelib as tr
+
+def get_fun_tree(tree, fun):
+    fun_tree = {}
+    for par, children in tree.items():
+        fun_tree[fun(par)] = [fun(child) for child in children]
+    return fun_tree
+
+def get_root_nodes(polytree):
+    all_children = get_all_children(polytree)
+    return [node for node in polytree if node not in all_children]
+
+def get_trees_of_polytree(polytree,
+                             root_node):
+    subtree = {root_node: []}
+    l_leaf_node = [root_node]
+    while l_leaf_node:
+        l_new_leaf_node = []
+        for leaf_node in l_leaf_node:
+            parents = polytree[leaf_node]
+            subtree[leaf_node] = parents
+            l_leaf_node += parents
+            if l_new_leaf_node:
+                l_leaf_node = l_new_leaf_node
+            else:
+                return subtree
 
 
-def get_root_nodes(politree):
-    all_children = get_all_children(politree)
-    return [node for node in politree if node not in all_children]
+def get_tree_depth(tree, root_node):
+    if root_node not in tree:
+        # If the root is not in the dictionary,
+        # it's a leaf node with depth 0
+        return 0
+
+    children = tree[root_node]
+    if not children:
+        # If the root has no children, its depth is 1
+        return 1
+
+        # Recursively calculate the depth for each child and find the maximum
+    child_depths = [get_tree_depth(tree, child) for child in children]
+    return 1 + max(child_depths)
+
+def get_polytree_tree(polytree,
+                      root_node):
+    
+
+def draw_tree(tree, root_node):
+    """
+    important bug that must be fixed in treelib. In your Python
+    installation, go to Lib\site-packages\treelib and edit tree.py. Find
+    def show. The last line is:
+
+    print(self.reader.encode('utf-8'))
+
+    It should be:
+
+    print(self.reader)
+
+    Returns
+    -------
+    None
+
+    """
+    try:
+        pine_tree = tr.Tree()
+        pine_tree.create_node(root_node,
+                         root_node)
+        for parent, children in tree.items():
+            for child in children:
+                # print(f"{parent}->{child}")
+                if child != root_node:
+                    pine_tree.create_node(child,
+                                     child,
+                                     parent=parent)
+
+        pine_tree.show()
+    except:
+        print("*********************tree not possible")
+        print(tree)
 
 
 def remove_empty_leafs(tree):
@@ -47,13 +121,14 @@ def get_all_children(tree):
     return all_children
 
 
-def get_all_subtrees(full_tree,
-                     root_node,
-                     num_depths,
-                     with_empty_leafs=False,
-                     verbose=False):
+def get_different_depth_subtrees(full_tree,
+                                 root_node,
+                                 num_depths,
+                                 with_empty_leafs=False,
+                                 verbose=False):
     """
     all subtrees with same root node as full tree
+    but different depths.
     
     Parameters
     ----------
@@ -170,7 +245,10 @@ if __name__ == "__main__":
 
 
     def main2():
-        full_tree = {'A': ['B', 'C'], 'B': ['D', 'E'], 'C': ['F']}
+        full_tree = {
+            'A': ['B', 'C'],
+            'B': ['D', 'E'],
+            'C': ['F']}
         root_node = "A"
         num_depths = 2
 
@@ -181,15 +259,44 @@ if __name__ == "__main__":
         new_full_tree = remove_empty_leafs(new_full_tree)
         print("added then removed empty leafs:\n", new_full_tree)
 
-        l_subtree = get_all_subtrees(new_full_tree,
-                                     root_node,
-                                     num_depths,
-                                     with_empty_leafs=False,
-                                     verbose=True)
+        l_subtree = get_different_depth_subtrees(new_full_tree,
+                                                 root_node,
+                                                 num_depths,
+                                                 with_empty_leafs=False,
+                                                 verbose=True)
 
         for i, subtree in enumerate(l_subtree):
             print(f"Subtree {i + 1}: ", subtree)
 
+    def main3():
+        tree = {
+            'A': ['B', 'C'],
+            'B': ['D', 'E'],
+            'C': ['F'],
+            'D': ['G'],
+            'F': ['H', 'I']
+        }
+
+        root_node = 'A'
+        tree_depth = get_tree_depth(tree, root_node)
+
+        print(f"The depth of the tree is: {tree_depth}")
+
+    def main4():
+        parent_to_children = {
+            'A': ['B', 'C'],
+            'B': ['D', 'E'],
+            'C': ['F'],
+            'D': ['G'],
+            'F': ['H', 'I'],
+            'A1': ['B1'],
+            "B1": []
+        }
+        for root_node in [ "A", "A1"]:
+            draw_tree(parent_to_children, root_node)
+
 
     main1()
     main2()
+    main3()
+    main4()

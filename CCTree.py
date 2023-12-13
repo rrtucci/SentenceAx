@@ -7,6 +7,7 @@ from words_tags_ilabels_translation import *
 from itertools import product
 from span_utils import *
 from CCTagsLine import *
+from tree_utils import *
 
 
 class CCTree:
@@ -360,20 +361,27 @@ class CCTree:
         """
         l_path_for1root = []
 
-        def get_paths_for_single_root_node(root_node, path):
-            path = path + [root_node]
-            if not parent_to_children[root_node]:
-                l_path_for1root.append(path)
+        # init input:
+        # cur_root_node = root_node
+        # cur_path =[]
+        # init_output
+        # l_path_for1root = []
+        def get_paths_for_single_root_node(cur_root_node,
+                                           cur_path):
+            cur_path = cur_path + [cur_root_node]
+            if not parent_to_children[cur_root_node]:
+                l_path_for1root.append(cur_path)
             else:
-                for child in parent_to_children[root_node]:
-                    get_paths_for_single_root_node(child, path)
+                for child in parent_to_children[cur_root_node]:
+                    get_paths_for_single_root_node(cur_root_node=child,
+                                                   cur_path=cur_path)
             return l_path_for1root
 
         l_path = []
         for root_node in root_nodes:
             l_path_for1root = []
             l_path_for1root = \
-                get_paths_for_single_root_node(root_node, path=[])
+                get_paths_for_single_root_node(root_node, cur_path=[])
             if verbose:
                 print(f"paths starting at root node = {root_node}:")
                 print(l_path_for1root)
@@ -393,7 +401,7 @@ class CCTree:
                   self.child_ccloc_to_par_cclocs)
             print("par_ccloc_to_child_cclocs",
                   self.par_ccloc_to_child_cclocs)
-        l_ccloc_path = CCTree.get_all_paths(
+        l_ccloc_path = get_all_paths(
             self.root_cclocs,
             self.par_ccloc_to_child_cclocs,
             self.verbose)
@@ -883,36 +891,5 @@ if __name__ == "__main__":
                 print(str(i + 1) + ". " + sent)
             print()
 
-
-    def main3():
-        # Example tree structure
-
-        #        E
-        #       /
-        # A->B->C->F
-        #     \
-        #      D
-        # A1->B1
-        # 4 paths
-
-        # leaf nodes must be in!
-        parent_to_children = {
-            'A': ['B'],
-            'B': ['C', 'D'],
-            'C': ['E', "F"],
-            "E": [],
-            "D": [],
-            "F": [],
-            'A1': ['B1'],
-            "B1": []
-        }
-        root_nodes = ["A", "A1"]
-        l_path = CCTree.get_all_paths(root_nodes,
-                                      parent_to_children,
-                                      verbose=True)
-        print("l_path:\n", l_path)
-
-
     main1()
     main2()
-    main3()

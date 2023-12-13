@@ -417,8 +417,8 @@ def get_all_ccnode_paths(self, verbose=False):
         print("par_ccloc_to_child_cclocs",
               self.par_ccloc_to_child_cclocs)
     l_ccloc_path = get_all_paths(
-        self.root_cclocs,
         self.par_ccloc_to_child_cclocs,
+        self.root_cclocs,
         self.verbose)
     l_ccnode_path = []
     for ccloc_path in l_ccloc_path:
@@ -824,13 +824,12 @@ def draw_self(self):
     None
 
     """
+
     def fun(x):
         return str(self.get_ccnode(x))
-    polytree = get_fun_tree(self.par_ccloc_to_child_cclocs,
-                             fun)
-    trees, root_nodes = get_trees_of_polytree(polytree)
-    for k, tree in enumerate(trees):
-        draw_tree(trees[k], root_nodes[k])
+
+    polytree = get_fun_tree(self.par_ccloc_to_child_cclocs, fun)
+    draw_polytree(polytree)
 
 
 if __name__ == "__main__":

@@ -35,6 +35,18 @@ def get_root_nodes(polytree):
 
 
 def get_tree_depth(tree, root_node):
+    """
+    If tree has empty leafs, depth is 1 more than if it doesn't.
+    
+    Parameters
+    ----------
+    tree
+    root_node
+
+    Returns
+    -------
+
+    """
     if root_node not in tree:
         # If the root is not in the dictionary,
         # it's a leaf node with depth 0
@@ -50,26 +62,32 @@ def get_tree_depth(tree, root_node):
     return 1 + max(child_depths)
 
 
-def get_tree_of_polytree(polytree, root_node):
-    subtree = {root_node: []}
-    l_leaf_node = [root_node]
-    while l_leaf_node:
-        l_new_leaf_node = []
-        for leaf_node in l_leaf_node:
-            parents = polytree[leaf_node]
-            subtree[leaf_node] = parents
+def get_one_tree_of_polytree(polytree,
+                             root_node,
+                             empty_leafs_flag=False):
+    tree0 = {root_node: []}
+    polytree0 = add_empty_leafs(polytree)
+    l_prev_leaf_node = [root_node]
+    while True:
+        l_leaf_node = []
+        for leaf_node in l_prev_leaf_node:
+            parents = polytree0[leaf_node]
+            tree0[leaf_node] = parents
             l_leaf_node += parents
-            if l_new_leaf_node:
-                l_leaf_node = l_new_leaf_node
+            if l_leaf_node:
+                l_prev_leaf_node = copy(l_leaf_node)
             else:
-                return subtree
+                if empty_leafs_flag:
+                    return add_empty_leafs(tree0)
+                else:
+                    return remove_empty_leafs(tree0)
 
 
 def get_all_trees_of_polytree(polytree):
     root_nodes = get_root_nodes(polytree)
     l_tree = []
     for root_node in root_nodes:
-        tree = get_tree_of_polytree(polytree, root_node)
+        tree = get_one_tree_of_polytree(polytree, root_node)
         l_tree.append(tree)
     return l_tree
 
@@ -107,6 +125,13 @@ def draw_tree(tree, root_node):
     except:
         print("*********************tree not possible")
         print(tree)
+
+
+def draw_polytree(polytree):
+    root_nodes = get_root_nodes(polytree)
+    for root_node in root_nodes:
+        tree = get_one_tree_of_polytree(polytree, root_node)
+        draw_tree(tree, root_node)
 
 
 def remove_empty_leafs(tree):
@@ -162,31 +187,31 @@ def get_different_depth_subtrees(full_tree,
     depth = 0
     init_tree = {root_node: []}
     l_subtree = [init_tree]
-    l_leaf_node = [root_node]
+    l_prev_leaf_node = [root_node]
     tree = copy(init_tree)
     while depth < num_depths:
         if verbose:
             print(f"depth={depth}, tree=", tree)
-        l_new_leaf_node = []
+        l_leaf_node = []
         depth += 1
-        for leaf_node in l_leaf_node:
+        for leaf_node in l_prev_leaf_node:
             parents = full_tree[leaf_node]
             tree[leaf_node] = parents
-            l_new_leaf_node += parents
+            l_leaf_node += parents
         if with_empty_leafs:
             l_subtree.append(remove_empty_leafs(copy(tree)))
         else:
             l_subtree.append(add_empty_leafs(copy(tree)))
         if depth >= num_depths:
             return l_subtree
-        if l_new_leaf_node:
-            l_leaf_node = l_new_leaf_node
+        if l_leaf_node:
+            l_prev_leaf_node = copy(l_leaf_node)
         else:
             return l_subtree
 
 
-def get_all_paths(root_nodes,
-                  tree,
+def get_all_paths(polytree,
+                  root_nodes=None,
                   verbose=False):
     """
     multiplev root nodes
@@ -194,7 +219,7 @@ def get_all_paths(root_nodes,
     Parameters
     ----------
     root_nodes: list[Node] | list[int]
-    tree: dict[Node, list[Node]] | dict[int, list[int]]
+    polytree: dict[Node, list[Node]] | dict[int, list[int]]
     verbose: bool
 
     Returns
@@ -203,7 +228,10 @@ def get_all_paths(root_nodes,
 
     """
     l_path_for1root = []
-    tree0 = add_empty_leafs(tree)
+    
+    if not root_nodes:
+        root_nodes = get_root_nodes(polytree)
+    tree0 = add_empty_leafs(polytree)
 
     # init input:
     # cur_root_node = root_node
@@ -256,8 +284,8 @@ if __name__ == "__main__":
         }
         root_nodes = get_root_nodes(tree)
         print("root nodes=", root_nodes)
-        l_path = get_all_paths(root_nodes,
-                               tree,
+        l_path = get_all_paths(tree,
+                               root_nodes,
                                verbose=True)
         print("l_path:\n", l_path)
 
@@ -303,7 +331,7 @@ if __name__ == "__main__":
 
 
     def main4():
-        parent_to_children = {
+        polytree = {
             'A': ['B', 'C'],
             'B': ['D', 'E'],
             'C': ['F'],
@@ -312,8 +340,7 @@ if __name__ == "__main__":
             'A1': ['B1'],
             "B1": []
         }
-        for root_node in ["A", "A1"]:
-            draw_tree(parent_to_children, root_node)
+        draw_polytree(polytree)
 
 
     main1()

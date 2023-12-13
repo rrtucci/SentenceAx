@@ -11,6 +11,7 @@ parent node to a list children nodes.
 
 from copy import copy
 
+
 def get_root_nodes(politree):
     all_children = get_all_children(politree)
     return [node for node in politree if node not in all_children]
@@ -25,13 +26,6 @@ def remove_empty_leafs(tree):
             pass
     return new_tree
 
-def get_all_children(tree):
-    all_children = []
-    for parent, children in tree.items():
-        for child in children:
-            if child and child not in all_children:
-                all_children.append(child)
-    return all_children
 
 def add_empty_leafs(tree):
     all_parents = list(tree.keys())
@@ -42,6 +36,15 @@ def add_empty_leafs(tree):
         if node not in tree.keys():
             new_tree[node] = []
     return new_tree
+
+
+def get_all_children(tree):
+    all_children = []
+    for parent, children in tree.items():
+        for child in children:
+            if child and child not in all_children:
+                all_children.append(child)
+    return all_children
 
 
 def get_all_subtrees(full_tree,

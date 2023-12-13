@@ -5,9 +5,9 @@ from copy import deepcopy
 import treelib as tr
 from words_tags_ilabels_translation import *
 from itertools import product
-from span_utils import *
+from sax_span_utils import *
 from CCTagsLine import *
-from tree_utils import *
+from sax_tree_utils import *
 
 
 class CCTree:

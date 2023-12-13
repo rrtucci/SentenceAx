@@ -1,6 +1,6 @@
 from sax_utils import *
 from collections import OrderedDict
-from span_utils import *
+from sax_span_utils import *
 
 
 class CCNode:

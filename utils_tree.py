@@ -1,15 +1,26 @@
 """
 
-This file gives some global functions related to trees. These are used in
-the class CCTree.
+This file gives some global functions related to trees. These methods are
+used in the class CCTree.
 
 In this file, `tree` stands for a dictionary parent_to_children mapping each
 parent node to a list children nodes.
+
+For most of the methods in this file, the nodes can be of any type (Node,
+str, etc.). If the nodes need to be of type str, one can use `get_fun_tree(
+)` to map the tree to a "stringified" tree (one whose nodes are all
+specified by strings).
+
+Technically a tree has a single root node. If the dictionary
+parent_to_children yields more than one root node, we call it a polytree.
+The method get_all_trees_of_polytree() can be used to extract all trees  of
+the polytree.
 
 
 """
 from copy import copy
 import treelib as tr
+
 
 def get_fun_tree(tree, fun):
     fun_tree = {}
@@ -17,24 +28,10 @@ def get_fun_tree(tree, fun):
         fun_tree[fun(par)] = [fun(child) for child in children]
     return fun_tree
 
+
 def get_root_nodes(polytree):
     all_children = get_all_children(polytree)
     return [node for node in polytree if node not in all_children]
-
-def get_trees_of_polytree(polytree,
-                             root_node):
-    subtree = {root_node: []}
-    l_leaf_node = [root_node]
-    while l_leaf_node:
-        l_new_leaf_node = []
-        for leaf_node in l_leaf_node:
-            parents = polytree[leaf_node]
-            subtree[leaf_node] = parents
-            l_leaf_node += parents
-            if l_new_leaf_node:
-                l_leaf_node = l_new_leaf_node
-            else:
-                return subtree
 
 
 def get_tree_depth(tree, root_node):
@@ -52,9 +49,30 @@ def get_tree_depth(tree, root_node):
     child_depths = [get_tree_depth(tree, child) for child in children]
     return 1 + max(child_depths)
 
-def get_polytree_tree(polytree,
-                      root_node):
-    
+
+def get_tree_of_polytree(polytree, root_node):
+    subtree = {root_node: []}
+    l_leaf_node = [root_node]
+    while l_leaf_node:
+        l_new_leaf_node = []
+        for leaf_node in l_leaf_node:
+            parents = polytree[leaf_node]
+            subtree[leaf_node] = parents
+            l_leaf_node += parents
+            if l_new_leaf_node:
+                l_leaf_node = l_new_leaf_node
+            else:
+                return subtree
+
+
+def get_all_trees_of_polytree(polytree):
+    root_nodes = get_root_nodes(polytree)
+    l_tree = []
+    for root_node in root_nodes:
+        tree = get_tree_of_polytree(polytree, root_node)
+        l_tree.append(tree)
+    return l_tree
+
 
 def draw_tree(tree, root_node):
     """
@@ -76,14 +94,14 @@ def draw_tree(tree, root_node):
     try:
         pine_tree = tr.Tree()
         pine_tree.create_node(root_node,
-                         root_node)
+                              root_node)
         for parent, children in tree.items():
             for child in children:
                 # print(f"{parent}->{child}")
                 if child != root_node:
                     pine_tree.create_node(child,
-                                     child,
-                                     parent=parent)
+                                          child,
+                                          parent=parent)
 
         pine_tree.show()
     except:
@@ -268,6 +286,7 @@ if __name__ == "__main__":
         for i, subtree in enumerate(l_subtree):
             print(f"Subtree {i + 1}: ", subtree)
 
+
     def main3():
         tree = {
             'A': ['B', 'C'],
@@ -282,6 +301,7 @@ if __name__ == "__main__":
 
         print(f"The depth of the tree is: {tree_depth}")
 
+
     def main4():
         parent_to_children = {
             'A': ['B', 'C'],
@@ -292,7 +312,7 @@ if __name__ == "__main__":
             'A1': ['B1'],
             "B1": []
         }
-        for root_node in [ "A", "A1"]:
+        for root_node in ["A", "A1"]:
             draw_tree(parent_to_children, root_node)
 
 

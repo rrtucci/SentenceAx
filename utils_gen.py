@@ -811,6 +811,34 @@ def flip(x):
         assert False
 
 
+def find_xlist_item_that_minimizes_cost_fun(xlist, cost_fun):
+    """
+    This method finds the item in the list `xlist` that minimizes the
+    function `cost_fun`. The method returns the tuple
+
+    argmin_{x \in xlist} cost_fun(x), min_{x \in xlist} cost_fun(x)
+
+    Parameters
+    ----------
+    xlist: list
+    cost_fun: function
+
+    Returns
+    -------
+    Any, Any
+
+    """
+    y0 = cost_fun(1E4)
+    x0 = -1
+    for x in xlist:
+        y = cost_fun(x)
+        if y < y0:
+            y0 = y
+            x0 = x
+
+    return x0, y0
+
+
 if __name__ == "__main__":
     def main1():
         h = {"x": 5, "y": 3}

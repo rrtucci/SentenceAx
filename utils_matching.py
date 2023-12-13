@@ -1,8 +1,7 @@
 """
 
-The purpose of this file is to gather together a bunch of global methods
-that are used in class SaxExtraction. We could just as well have made these
-methods staticmethods inside class SaxExtraction.
+This file contains string matching methods that build upon the difflib
+python package. These methods are used in the class SaxExtraction.
 
 Ref. on difflib.SequenceMatcher:
 https://stackoverflow.com/questions/35517353/how-does-pythons-sequencematcher-work
@@ -147,34 +146,6 @@ def print_matches(a, b):
     matches = get_matches(a, b)
     print(matches)
     return matches
-
-
-def find_xlist_item_that_minimizes_cost_fun(xlist, cost_fun):
-    """
-    This method finds the item in the list `xlist` that minimizes the
-    function `cost_fun`. The method returns the tuple
-
-    argmin_{x \in xlist} cost_fun(x), min_{x \in xlist} cost_fun(x)
-
-    Parameters
-    ----------
-    xlist: list
-    cost_fun: function
-
-    Returns
-    -------
-    Any, Any
-
-    """
-    y0 = cost_fun(1E4)
-    x0 = -1
-    for x in xlist:
-        y = cost_fun(x)
-        if y < y0:
-            y0 = y
-            x0 = x
-
-    return x0, y0
 
 
 if __name__ == "__main__":

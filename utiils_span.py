@@ -1,8 +1,8 @@
 """
 
-This file contains various simple methods that are useful when dealing with
-spans found in classes CCNode and CCTree. A span is just a tuple of 2
-integers such as (a, b)= (3, 6). It represents the set of integers range(a, b).
+This file contains various methods that are useful when dealing with spans
+found in classes CCNode and CCTree. A span is just a tuple of 2 integers
+such as (a, b)= (3, 6). It represents the set of integers range(a, b).
 
 """
 def is_sub_span(span0, span1):

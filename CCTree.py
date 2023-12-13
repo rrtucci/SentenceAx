@@ -824,10 +824,10 @@ def draw_self(self):
     None
 
     """
-    node_tree = get_fun_tree(self.par_ccloc_to_child_cclocs,
-                             self.get_ccnode)
-    str_tree = get_fun_tree(node_tree,
-                            CCNode.__str__)
+    def fun(x):
+        return str(self.get_ccnode(x))
+    polytree = get_fun_tree(self.par_ccloc_to_child_cclocs,
+                             fun)
     trees, root_nodes = get_trees_of_polytree(polytree)
     for k, tree in enumerate(trees):
         draw_tree(trees[k], root_nodes[k])

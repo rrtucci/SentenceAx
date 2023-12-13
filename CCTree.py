@@ -385,7 +385,7 @@ class CCTree:
         l_path = []
         for root_node in root_nodes:
             num_depths = get_tree_depth(parent_to_children,
-                                        root_node)
+                                        root_node) + 1
             subtrees = get_different_depth_subtrees(parent_to_children,
                                                     root_node,
                                                     num_depths)
@@ -828,7 +828,7 @@ def draw_self(self):
     def fun(x):
         return str(self.get_ccnode(x))
 
-    polytree = get_fun_tree(self.par_ccloc_to_child_cclocs, fun)
+    polytree = get_fun_polytree(self.par_ccloc_to_child_cclocs, fun)
     draw_polytree(polytree)
 
 

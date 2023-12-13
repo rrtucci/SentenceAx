@@ -7,7 +7,7 @@ In this file, `tree` stands for a dictionary parent_to_children mapping each
 parent node to a list children nodes.
 
 For most of the methods in this file, the nodes can be of any type (Node,
-str, etc.). If the nodes need to be of type str, one can use `get_fun_tree(
+str, etc.). If the nodes need to be of type str, one can use `get_fun_polytree(
 )` to map the tree to a "stringified" tree (one whose nodes are all
 specified by strings).
 
@@ -22,11 +22,11 @@ from copy import copy
 import treelib as tr
 
 
-def get_fun_tree(tree, fun):
-    fun_tree = {}
-    for par, children in tree.items():
-        fun_tree[fun(par)] = [fun(child) for child in children]
-    return fun_tree
+def get_fun_polytree(polytree, fun):
+    fun_polytree = {}
+    for par, children in polytree.items():
+        fun_polytree[fun(par)] = [fun(child) for child in children]
+    return fun_polytree
 
 
 def get_root_nodes(polytree):
@@ -37,6 +37,8 @@ def get_root_nodes(polytree):
 def get_tree_depth(tree, root_node):
     """
     If tree has empty leafs, depth is 1 more than if it doesn't.
+
+    num_depths = depth + 1
     
     Parameters
     ----------
@@ -104,6 +106,8 @@ def draw_tree(tree, root_node):
 
     print(self.reader)
 
+    Tree draws the same with and without empty leafs.
+
     Returns
     -------
     None
@@ -134,30 +138,30 @@ def draw_polytree(polytree):
         draw_tree(tree, root_node)
 
 
-def remove_empty_leafs(tree):
-    new_tree = {}
-    for par in tree.keys():
-        if tree[par]:
-            new_tree[par] = tree[par]
+def remove_empty_leafs(polytree):
+    new_polytree = {}
+    for par in polytree.keys():
+        if polytree[par]:
+            new_polytree[par] = polytree[par]
         else:
             pass
-    return new_tree
+    return new_polytree
 
 
-def add_empty_leafs(tree):
-    all_parents = list(tree.keys())
-    all_children = get_all_children(tree)
+def add_empty_leafs(polytree):
+    all_parents = list(polytree.keys())
+    all_children = get_all_children(polytree)
     all_nodes = set(all_parents + all_children)
-    new_tree = copy(tree)
+    new_polytree = copy(polytree)
     for node in all_nodes:
-        if node not in tree.keys():
-            new_tree[node] = []
-    return new_tree
+        if node not in polytree.keys():
+            new_polytree[node] = []
+    return new_polytree
 
 
-def get_all_children(tree):
+def get_all_children(polytree):
     all_children = []
-    for parent, children in tree.items():
+    for parent, children in polytree.items():
         for child in children:
             if child and child not in all_children:
                 all_children.append(child)
@@ -325,9 +329,16 @@ if __name__ == "__main__":
         }
 
         root_node = 'A'
+        print("tree without empty nodes:")
+        draw_tree(tree, root_node)
         tree_depth = get_tree_depth(tree, root_node)
-
         print(f"The depth of the tree is: {tree_depth}")
+        tree0 = add_empty_leafs(tree)
+        print()
+        print("tree with empty nodes:")
+        draw_tree(tree0, root_node)
+        tree0_depth = get_tree_depth(tree0, root_node)
+        print(f"The depth of the tree with empty nodes is: {tree0_depth}")
 
 
     def main4():
@@ -340,6 +351,7 @@ if __name__ == "__main__":
             'A1': ['B1'],
             "B1": []
         }
+        print("draw polytree:")
         draw_polytree(polytree)
 
 

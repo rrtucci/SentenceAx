@@ -767,7 +767,7 @@ class CCTree:
         def fun(x):
             return str(self.get_ccnode(x))
 
-        polytree = get_fun_polytree(self.par_ccloc_to_child_cclocs, fun)
+        polytree = get_mapped_polytree(self.par_ccloc_to_child_cclocs, fun)
         draw_polytree(polytree)
 
 

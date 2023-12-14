@@ -16,27 +16,127 @@ parent_to_children yields more than one root node, we call it a polytree.
 The method get_all_trees_of_polytree() can be used to extract all trees  of
 the polytree.
 
+We use two types of trees: with and without empty leafs. An empty leaf is an
+element of the tree=parent_to_children dictionary of the form "A"->[]. Empty
+leafs are necessary for representing the single node tree, so we usually
+work with trees with empty leafs when doing tree calculations.
+
 
 """
 from copy import copy
 import treelib as tr
 
 
+def get_all_nodes(polytree):
+    """
+    This works whether polytree has empty leafs or not. If it does,
+    empty leaf nodes are not included in output list.
+
+    Parameters
+    ----------
+    polytree
+
+    Returns
+    -------
+
+    """
+    all_children = get_all_children(polytree)
+    all_par = list(polytree.keys())
+    return list(set(all_par) | set(all_children))
+
+
+def get_all_children(polytree):
+    """
+    This works whether polytree has empty leafs or not. If it does,
+    empty children are not included in output list.
+
+
+    Parameters
+    ----------
+    polytree
+
+    Returns
+    -------
+
+    """
+    all_children = []
+    for parent, children in polytree.items():
+        for child in children:
+            if child and child not in all_children:
+                all_children.append(child)
+    return all_children
+
+
+def count_leaf_nodes(polytree):
+    empty_leaf_count = 0
+    nonempty_leaf_count = 0
+    for node in polytree:
+        if node in polytree and polytree[node]:
+            nonempty_leaf_count += 1
+        else:
+            empty_leaf_count += 1
+    return empty_leaf_count, nonempty_leaf_count
+
+
+def all_leafs_are_nonempty(polytree):
+    empty_leaf_count, _ = count_leaf_nodes(polytree)
+
+    if empty_leaf_count == 0:
+        return True
+    else:
+        return False
+
+
+def all_leafs_are_empty(polytree):
+    _, nonempty_leaf_count = count_leaf_nodes(polytree)
+
+    if nonempty_leaf_count == 0:
+        return True
+    else:
+        return False
+
+
 def get_fun_polytree(polytree, fun):
+    """
+    This works whether polytree has empty leafs or not. If thev polytree has 
+    empty leafs, it maps maps parent->[] to fun(parent)->[]
+    
+    Parameters
+    ----------
+    polytree
+    fun
+
+    Returns
+    -------
+
+    """
     fun_polytree = {}
     for par, children in polytree.items():
+        # if children =[], this maps par->[] to fun(par)->[]
         fun_polytree[fun(par)] = [fun(child) for child in children]
     return fun_polytree
 
 
 def get_root_nodes(polytree):
+    """
+    This works whether polytree has empty leafs or not.
+    
+    Parameters
+    ----------
+    polytree
+
+    Returns
+    -------
+
+    """
     all_children = get_all_children(polytree)
     return [node for node in polytree if node not in all_children]
 
 
 def get_tree_depth(tree, root_node):
     """
-    If tree has empty leafs, depth is 1 more than if it doesn't.
+    If tree has empty leafs, depth is 1 more than if it doesn't due to last 
+    layer of empty tree leafs.
 
     num_depths = depth + 1
     
@@ -66,7 +166,20 @@ def get_tree_depth(tree, root_node):
 
 def get_one_tree_of_polytree(polytree,
                              root_node,
-                             empty_leafs_flag=False):
+                             output_empty_leafs=True):
+    """
+    This works whether polytree has empty leafs or not.
+    
+    Parameters
+    ----------
+    polytree
+    root_node
+    output_empty_leafs
+
+    Returns
+    -------
+
+    """
     tree0 = {root_node: []}
     polytree0 = add_empty_leafs(polytree)
     l_prev_leaf_node = [root_node]
@@ -79,17 +192,33 @@ def get_one_tree_of_polytree(polytree,
             if l_leaf_node:
                 l_prev_leaf_node = copy(l_leaf_node)
             else:
-                if empty_leafs_flag:
+                if output_empty_leafs:
                     return add_empty_leafs(tree0)
                 else:
                     return remove_empty_leafs(tree0)
 
 
-def get_all_trees_of_polytree(polytree):
+def get_all_trees_of_polytree(polytree, output_empty_leafs=True):
+    """
+    This works whether polytree has empty leafs or not.
+    
+    
+    Parameters
+    ----------
+    polytree
+    output_empty_leafs
+
+    Returns
+    -------
+
+    """
     root_nodes = get_root_nodes(polytree)
     l_tree = []
     for root_node in root_nodes:
-        tree = get_one_tree_of_polytree(polytree, root_node)
+        tree = get_one_tree_of_polytree(
+            polytree,
+            root_node,
+            output_empty_leafs=output_empty_leafs)
         l_tree.append(tree)
     return l_tree
 
@@ -106,7 +235,9 @@ def draw_tree(tree, root_node):
 
     print(self.reader)
 
-    Tree draws the same with and without empty leafs.
+    This method draws the same thing ( no empty leafs) whether `tree` has 
+    empty leafs or not, but if it does, the method prints out a message 
+    warning that "empty leafs present but not drawn".
 
     Returns
     -------
@@ -124,101 +255,136 @@ def draw_tree(tree, root_node):
                     pine_tree.create_node(child,
                                           child,
                                           parent=parent)
-
         pine_tree.show()
+        if not has_zero_empty_leaf_nodes(tree):
+            print("WARNING: Empty leafs present but not drawn.")
     except:
         print("*********************tree not possible")
         print(tree)
 
 
 def draw_polytree(polytree):
+    """
+    
+    This method draws the same thing ( no empty leafs) whether `polytree` 
+    has empty leafs or not, but if it does, the method prints out a message 
+    warning that "empty leafs present but not drawn".
+    
+    Parameters
+    ----------
+    polytree
+
+    Returns
+    -------
+
+    """
     root_nodes = get_root_nodes(polytree)
     for root_node in root_nodes:
         tree = get_one_tree_of_polytree(polytree, root_node)
         draw_tree(tree, root_node)
 
 
-def remove_empty_leafs(polytree):
-    new_polytree = {}
-    for par in polytree.keys():
-        if polytree[par]:
-            new_polytree[par] = polytree[par]
-        else:
-            pass
-    return new_polytree
+def remove_empty_leafs(x):
+    def _remove_empty_leafs(polytree):
+        if all_leafs_are_nonempty(polytree):
+            return copy(polytree)
+        new_polytree = {}
+        for par in polytree.keys():
+            if polytree[par]:
+                new_polytree[par] = polytree[par]
+            else:
+                pass
+        return new_polytree
+
+    if type(x) == dict:
+        return _remove_empty_leafs(x)
+    elif type(x) == list:
+        return [_remove_empty_leafs(a) for a in x]
+    else:
+        assert False
 
 
-def add_empty_leafs(polytree):
-    all_parents = list(polytree.keys())
-    all_children = get_all_children(polytree)
-    all_nodes = set(all_parents + all_children)
-    new_polytree = copy(polytree)
-    for node in all_nodes:
-        if node not in polytree.keys():
-            new_polytree[node] = []
-    return new_polytree
+def add_empty_leafs(x):
+    def _add_empty_leafs(polytree):
+        if all_leafs_are_empty(polytree):
+            return copy(polytree)
+        all_parents = list(polytree.keys())
+        all_children = get_all_children(polytree)
+        all_nodes = set(all_parents + all_children)
+        new_polytree = copy(polytree)
+        for node in all_nodes:
+            if node not in polytree.keys():
+                new_polytree[node] = []
+        return new_polytree
 
-
-def get_all_children(polytree):
-    all_children = []
-    for parent, children in polytree.items():
-        for child in children:
-            if child and child not in all_children:
-                all_children.append(child)
-    return all_children
+    if type(x) == dict:
+        return _add_empty_leafs(x)
+    elif type(x) == list:
+        return [_add_empty_leafs(a) for a in x]
+    else:
+        assert False
 
 
 def get_different_depth_subtrees(full_tree,
                                  root_node,
-                                 num_depths,
-                                 with_empty_leafs=False,
+                                 output_empty_leafs=True,
                                  verbose=False):
     """
     all subtrees with same root node as full tree
     but different depths.
     
+    This works whether `full_tree` has empty leafs or not.
+    
+    
     Parameters
     ----------
     full_tree
     root_node
-    num_depths
-    with_empty_leafs
+    output_empty_leafs
+    verbose
 
     Returns
     -------
 
     """
+    full_tree0 = add_empty_leafs(full_tree)
+    num_depths = get_tree_depth(full_tree0, root_node)
     depth = 0
     init_tree = {root_node: []}
     l_subtree = [init_tree]
     l_prev_leaf_node = [root_node]
     tree = copy(init_tree)
+    if verbose:
+        print("\nEntering get_different_depth_subtrees()")
+        print(f"full tree:\n {full_tree}")
     while depth < num_depths:
         if verbose:
             print(f"depth={depth}, tree=", tree)
         l_leaf_node = []
         depth += 1
         for leaf_node in l_prev_leaf_node:
-            parents = full_tree[leaf_node]
+            parents = full_tree0[leaf_node]
             tree[leaf_node] = parents
             l_leaf_node += parents
-        if with_empty_leafs:
-            l_subtree.append(remove_empty_leafs(copy(tree)))
-        else:
-            l_subtree.append(add_empty_leafs(copy(tree)))
-        if depth >= num_depths:
+        l_subtree.append(tree)
+        if depth > num_depths - 1:
             return l_subtree
         if l_leaf_node:
             l_prev_leaf_node = copy(l_leaf_node)
         else:
-            return l_subtree
+            if output_empty_leafs:
+                return add_empty_leafs(l_subtree)
+            else:
+                return remove_empty_leafs(l_subtree)
 
 
-def get_all_paths(polytree,
-                  root_nodes=None,
-                  verbose=False):
+
+def get_all_paths_from_root(polytree,
+                            root_nodes,
+                            verbose=False):
     """
-    multiplev root nodes
+    This works whether `polytree` has empty leafs or not. 
+    Outputed paths do not have a [] at the end.
 
     Parameters
     ----------
@@ -232,36 +398,49 @@ def get_all_paths(polytree,
 
     """
     l_path_for1root = []
-    
-    if not root_nodes:
-        root_nodes = get_root_nodes(polytree)
-    tree0 = add_empty_leafs(polytree)
+    polytree0 = add_empty_leafs(polytree)
+
+    if verbose:
+        print("\nEntering get_all_paths_from_root()")
 
     # init input:
     # cur_root_node = root_node
     # cur_path =[]
     # init_output
     # l_path_for1root = []
-    def get_paths_for_single_root_node(cur_root_node,
+    def get_paths_for_single_root_node(polytree0,
+                                       cur_root_node,
                                        cur_path):
         cur_path = cur_path + [cur_root_node]
-        if not tree0[cur_root_node]:
+        if not polytree0[cur_root_node]:
             l_path_for1root.append(cur_path)
         else:
-            for child in tree0[cur_root_node]:
-                get_paths_for_single_root_node(cur_root_node=child,
-                                               cur_path=cur_path)
+            for child in polytree0[cur_root_node]:
+                if child:
+                    get_paths_for_single_root_node(
+                        polytree0=polytree0,
+                        cur_root_node=child,
+                        cur_path=cur_path)
+
         return l_path_for1root
 
     l_path = []
     for root_node in root_nodes:
-        l_path_for1root = []
-        l_path_for1root = \
-            get_paths_for_single_root_node(root_node, cur_path=[])
-        if verbose:
-            print(f"paths starting at root node = {root_node}:")
-            print(l_path_for1root)
-        l_path += l_path_for1root
+        subtrees = get_different_depth_subtrees(polytree0,
+                                                root_node,
+                                                output_empty_leafs=True,
+                                                verbose=verbose)
+        for subtree in subtrees:
+            l_path_for1root = []
+            l_path_for1root = \
+                get_paths_for_single_root_node(
+                    polytree0=subtree,
+                    cur_root_node=root_node,
+                    cur_path=[])
+            if verbose:
+                print(f"paths starting at root node = {root_node}:")
+                print(l_path_for1root)
+            l_path += l_path_for1root
     return l_path
 
 
@@ -278,19 +457,19 @@ if __name__ == "__main__":
         # A1->B1
         # 4 paths
 
-        # leaf nodes must be in!
-        tree = {
+        # leafs must be in!
+        polytree = {
             'A': ['B'],
             'B': ['C', 'D'],
             'C': ['E', "F"],
             'A1': ['B1'],
             "B1": []
         }
-        root_nodes = get_root_nodes(tree)
+        root_nodes = get_root_nodes(polytree)
         print("root nodes=", root_nodes)
-        l_path = get_all_paths(tree,
-                               root_nodes,
-                               verbose=True)
+        l_path = get_all_paths_from_root(polytree,
+                                         root_nodes,
+                                         verbose=True)
         print("l_path:\n", l_path)
 
 
@@ -300,7 +479,6 @@ if __name__ == "__main__":
             'B': ['D', 'E'],
             'C': ['F']}
         root_node = "A"
-        num_depths = 2
 
         print()
         print("full_tree:\n", full_tree)
@@ -311,8 +489,7 @@ if __name__ == "__main__":
 
         l_subtree = get_different_depth_subtrees(new_full_tree,
                                                  root_node,
-                                                 num_depths,
-                                                 with_empty_leafs=False,
+                                                 output_empty_leafs=False,
                                                  verbose=True)
 
         for i, subtree in enumerate(l_subtree):

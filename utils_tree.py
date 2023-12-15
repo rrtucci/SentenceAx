@@ -514,9 +514,9 @@ def get_different_depth_subtrees(full_tree,
             return l_tree
 
 
-def get_all_paths_from_root(polytree,
-                            root_nodes,
-                            verbose=False):
+def get_all_paths_from_any_root(polytree,
+                                root_nodes,
+                                verbose=False):
     """
     This method returns a list of all the paths in polytree `polytree` that
     start at the root node `root_node` and end with a (nonempty) leaf node.
@@ -539,7 +539,7 @@ def get_all_paths_from_root(polytree,
     polytree0 = add_empty_leafs(polytree)
 
     if verbose:
-        print("\nEntering get_all_paths_from_root()")
+        print("\nEntering get_all_paths_from_any_root()")
 
     # init input:
     # cur_root_node = root_node
@@ -611,9 +611,9 @@ if __name__ == "__main__":
         }
         root_nodes = get_root_nodes(polytree)
         print("root nodes=", root_nodes)
-        l_path = get_all_paths_from_root(polytree,
-                                         root_nodes,
-                                         verbose=True)
+        l_path = get_all_paths_from_any_root(polytree,
+                                             root_nodes,
+                                             verbose=True)
         print("l_path:\n", l_path)
 
 

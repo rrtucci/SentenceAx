@@ -130,7 +130,6 @@ class CCTree:
         """
         unique_k = -1
         l_hot_k = []
-        bad_ccnodes = []
         for k, ccnode in enumerate(ccnodes):
             if ccnode.ccloc == ccloc:
                 l_hot_k.append(k)
@@ -266,7 +265,13 @@ class CCTree:
     def set_tree_structure(self):
         """
         similar to Openie6.data.get_tree(conj) where conj=coords=ccnodes.
-        Openie6 normally uses conj=ccloc, but not here.
+        Openie6 uses conj=ccloc almost everywhere else!
+
+        This method creates the dictionaries self.child_ccloc_to_par_cclocs
+        and self.par_ccloc_to_child_cclocs that define the polytree.
+
+        This method also finds the root nodes of the polytree and stores in
+        in the list self.root_nodes.
 
 
         Returns
@@ -392,6 +397,16 @@ class CCTree:
 
     def get_all_ccnode_paths(self):
         """
+        This method calls the global function
+        utils_tree.get_all_paths_from_any_root() for the polytree `self`.
+
+        This method considers subtrees of the polytree self that have as a
+        root node one of the root nodes of the polytree, and vary in depth
+        from a zero to the depth of the polytree `self`
+
+        The method returns a list of all paths of CCNodes for all such
+        subtrees. Each path starts at the root_node of its subtree and ends
+        at a (nonempty) leaf node of its subtree.
 
         Returns
         -------
@@ -403,7 +418,7 @@ class CCTree:
                   self.child_ccloc_to_par_cclocs)
             print("par_ccloc_to_child_cclocs",
                   self.par_ccloc_to_child_cclocs)
-        l_ccloc_path = get_all_paths_from_root(
+        l_ccloc_path = get_all_paths_from_any_root(
             self.par_ccloc_to_child_cclocs,
             self.root_cclocs,
             self.verbose)
@@ -418,6 +433,48 @@ class CCTree:
                               l_bit,
                               all_span,
                               verbose=False):
+        """
+        This method starts with a list of N ccnodes `ccnode_path`
+
+        N= len(ccnode_path) = len(l_bit)
+
+        The method then uses that ccnode path to generate the list of 2^N
+        span paths obtained by choosing either the left span or the right
+        span of each ccnode of that ccnode path. Those 2^N span paths are
+        labelled by N-bit vectors (0 if left span is chosen or 1 if right
+        span is chosen).
+
+        The method then chooses, from those 2^N span paths, the single one
+        `inc_span_path` that is labelled by the input bit vector `l_bit`. At
+        the same time, the method stores another span path `exc_span_path`.
+        `exc_span_path` is an anti-twin, contrarian twin, to `inc_span_path`
+        which chooses the right span every time `inc_span_path` chooses the
+        left span (and vice versa).
+
+        inc=included, exc=excluded
+
+        The method then asks if `inc_span_path` satisfies the
+        span_path_is_decreasing() condition. If it does, the method returns
+        the pair of span paths `inc_span_path, exc_span_path`. If it doesn't
+        satisfy that condition, the method returns `None, None`.
+
+        Parameters
+        ----------
+        ccnode_path: list[CCNode]
+            a path (i.e., list) of CCNodes
+        l_bit: list[int]
+            a list of ints [0, 1]. len(l_bit)=len(ccnode_path)=N
+        all_span: tuple[int, int]
+            The span (0, number of words in osent)
+        verbose: bool
+
+        Returns
+        -------
+        list[tuple[int, int]], list[tuple[int, int]]
+            inc_span_path, exc_span_path
+
+        """
+
         num_depths = len(l_bit)
         inc_span_path = []
         exc_span_path = []
@@ -563,13 +620,19 @@ class CCTree:
     #         print("donut path: ", donut_path)
     #     return donut_path
 
-    def get_ccsent(self,
-                   exc_span_path):
+    def get_ccsent(self, exc_span_path):
         """
+        This method returns the ccsent (cc sentence) corresponding to the
+        span path `exc_span_path`. It calculates that ccsent by removing
+        from all_span = (0, length of osent_words), all locs included in
+        `exc_span_path` (that is why we call it an excluded span path,
+        because it dictates what locs to remove/exclude). The method also
+        removes from all_span, the cclocs (conjunction locations), sep_locs
+        (separator locations) and other_locs.
 
         Parameters
         ----------
-        exc_span_path: list[list[int]]
+        exc_span_path: list[tuple[int, int]]
 
         Returns
         -------
@@ -597,6 +660,10 @@ class CCTree:
     def set_ccsents(self):
         """
         similar to Openie6.data.get_sentences()
+
+        This method sets self.ccsents. It does this by calling
+        get_inc_exc_span_path() to get an `exc_span_path`, and then calling
+        `get_ccsent(exc_span_path)` to get a ccsent.
 
         Returns
         -------

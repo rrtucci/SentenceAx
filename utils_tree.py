@@ -580,7 +580,7 @@ def get_all_paths_from_root(polytree,
                 print(f"paths starting at root node = {root_node}:")
                 print(l_path_for1root)
             l_path += l_path_for1root
-    # some paths will be repeated
+    # Some paths will be repeated. Remove repeats.
     l_paso = []
     for path in l_path:
         if path not in l_paso:

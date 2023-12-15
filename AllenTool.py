@@ -303,7 +303,7 @@ class AllenTool:
         first line is osentL, the next 2 lines give the extags of
         extractions from that osent. The osent line and the 2 extraction
         lines have the same number of words. (You can get the words of a
-        text string using sax_utils.get_words()).
+        text string using utils_gen.get_words()).
 
         This method writes an extags file (if ftype=="ex") or a simple
         sentences file (if ftype=="ss"). In a simple sentences file,

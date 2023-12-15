@@ -29,7 +29,7 @@ class CCNode:
     loc= location of a word relative to self.osent_words
 
     SentenceAx uses NLTK both to tokenize sentences into words (see
-    sax_utils.get_words()), and to find the POS of each token/word. A
+    utils_gen.get_words()), and to find the POS of each token/word. A
     token/word may be a punctuation mark. Openie6 mixes NLTK and Spacy (bad!)
 
 

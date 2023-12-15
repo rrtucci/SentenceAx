@@ -7,14 +7,14 @@ In this file, `tree` stands for a dictionary parent_to_children mapping each
 parent node to a list of children nodes. 
 
 For most of the methods in this file, the nodes can be of any type (CCNode,
-str, int, A, B, etc.), although strings are preferred. If the nodes need to
-be of type B, one can use `get_mapped_polytree( )` to map an A tree (one
-whose nodes are all specified by type A) to a B tree. The opposite
-translation B->A can also be performed with the same method.
+str, int, A, B, etc.), although strings are preferred. If the nodes are of
+type A but need to be of type B, one can use `get_mapped_polytree( )` to map
+an A tree (one whose nodes are all specified by type A) to a B tree. The
+opposite translation B->A can also be performed with the same method.
 
 Technically a tree has a single root node. If the dictionary 
 parent_to_children contains more than one root node, we call it a polytree. 
-The method get_all_trees_of_polytree() can be used to extract all trees  of 
+The method get_all_trees_of_polytree() can be used to extract all trees of
 a polytree.
 
 We use two types of trees: with and without empty leafs. An empty leaf is an 
@@ -34,8 +34,8 @@ def get_mapped_polytree(polytree, fun):
     and returns a polytree whose nodes are of type B, where B = fun(A). For 
     example, str->CCNode or CCNode->Str.
     
-    This method works whether polytree has empty leafs or not. If thev 
-    polytree has empty leafs, it maps maps parent->[] to fun(parent)->[]
+    This method works whether polytree has empty leafs or not. If the
+    polytree has empty leafs, it maps parent->[] to fun(parent)->[]
 
     Parameters
     ----------
@@ -56,8 +56,9 @@ def get_mapped_polytree(polytree, fun):
 
 def copy_polytree(polytree):
     """
-    This method takes as input a polytree and returns a copy of the 
-    polytree. The nodes are not copied (in case they are of type CCNode).
+    This method takes as input a polytree and returns a copy of the
+    polytree. The nodes are not copied (in case they are of type CCNode,
+    this would be important).
     
     This method works whether polytree has empty leafs or not.
 
@@ -158,7 +159,7 @@ def get_all_children(polytree):
 
 def get_root_nodes(polytree):
     """
-    This method returns a list of all the nodes in polytree `polytree`.
+    This method returns a list of all the root nodes in polytree `polytree`.
     
     This method works whether polytree has empty leafs or not.
 
@@ -318,13 +319,13 @@ def draw_tree(tree, root_node):
     """
     This method draws the tree `tree` with root node `root_node`.
 
-    This method draws the same thing ( no empty leafs) whether `tree` has 
-    empty leafs or not, but if it does, the method prints out a message 
-    warning that "empty leafs present but not drawn".
+    This method draws the same thing ( no empty leafs) whether `tree` has
+    empty leafs or not, but if it does contain empty leafs, the method
+    prints out a message warning that "empty leafs present but not drawn".
 
     IMPORTANT: bug that must be fixed in treelib. In your Python
-    installation, go to Lib\site-packages\treelib and edit tree.py. Find
-    def show. The last line is:
+    installation, go to `Lib\site-packages\treelib and edit tree.py`. Find
+    `def show`. The last line is:
 
     print(self.reader.encode('utf-8'))
 
@@ -368,9 +369,9 @@ def draw_polytree(polytree):
     This method calls the method draw_tree() for each of the trees contained 
     in the polytree `polytree`.
 
-    This method draws the same thing ( no empty leafs) whether `polytree` 
-    has empty leafs or not, but if it does, the method prints out a message 
-    warning that "empty leafs present but not drawn".
+    This method draws the same thing ( no empty leafs) whether `polytree`
+    has empty leafs or not, but if it does contain empty leafs, the method
+    prints out a message warning that "empty leafs present but not drawn".
 
     Parameters
     ----------
@@ -391,8 +392,8 @@ def get_one_tree_of_polytree(polytree,
                              root_node,
                              output_empty_leafs=True):
     """
-    This method returns one tree (the one with root node `root_node`) out of 
-    presumably several trees of the polytree `polytree`. 
+    This method returns one tree (the one with root node `root_node`) out of
+    possibly several trees of the polytree `polytree`.
     
     The output tree will have empty leafs iff output_empty_leafs=True.
     
@@ -429,8 +430,7 @@ def get_one_tree_of_polytree(polytree,
 
 def get_all_trees_of_polytree(polytree, output_empty_leafs=True):
     """
-    This method returns a list of all the trees of the polytree `polytree`. 
-    The output trees will have empty leafs iff output_empty_leafs=True.
+    This method returns a list of all the trees of the polytree `polytree`.
     
     The output trees will have empty leafs iff output_empty_leafs=True.
     

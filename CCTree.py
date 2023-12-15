@@ -12,34 +12,68 @@ from utils_tree import *
 
 class CCTree:
     """
+    This class builds a polytree (see utils_tree.py) from `ll_ilabel`,
+    which is either an output of a run with task "cc", or can be derived
+    from a cctags file.
+
+    Think of a CCNode by its __str__. For example, an __str__ for a CCNode 
+    might be (2, 5)6(7, 23). (2, 3) is its left span `span_pair[0]`, 
+    6 is its `ccloc` (cc location) and (7, 23) is its right span `span_pair[ 
+    1]`. The CCNode's ccloc is always located between but outside the range 
+    of its left and right spans.
+
+    The tree nodes are of type CCNode or int (the int corresponding to 
+    CCNode.ccloc). Each ccloc can only have one CCNode assigned to it.
+    
     
     Attributes
     ----------
     ccnodes: list[CCNode]
+        a list of the CCNodes of the tree `self`.
     ccsents: list[str]
+        This class derives from the tree `self`, a list of cc sentences ( i.e,
+        split sentences, obtained by splitting a compound sentence at a
+        coordinating conjunction (CC)).
     child_ccloc_to_par_cclocs: dict[int, list[int]]
-    forced_tree: bool
+        dictionary mapping each child's ccloc to a list of the cclocs of the
+        parents.
+    forced_polytree: bool
+        Sometimes ll_ilabel yields more than one parent for a given node,
+        but in a polytree every node must have 0 or 1 parent. Iff this is
+        True, this tells SentenceAx to discard all but one parent.
     ll_ilabel: list[list[int]]
+        a matrix of ints for one sample. The outer dim ranges over depths
+        and the inner one over word locations in osent_words.
     orig_sent: str
+        the original sentence, before splitting (done first) and extraction (
+        done second).
     osent_words: list[str]
+        list of words in the original sentence.
     par_ccloc_to_child_cclocs: list[int,list[int]]
+        dictionary mapping each parent's ccloc to a list of the cclocs of the
+        children.
     root_cclocs: list[int]
+        list of the cclocs of the roots of the polytree `self`.
     verbose: str
+        True iff want verbose output to be printed out in console.
     
     """
 
-    def __init__(self, orig_sent, ll_ilabel, forced_tree=True,
+    def __init__(self, orig_sent, ll_ilabel, forced_polytree=True,
                  calc_tree_struc=True, verbose=False):
         """
-        orig_sent is a coordinated sentence, the full original sentence
-        before extractions
+        Constructor
 
         Parameters
         ----------
         orig_sent: str
         ll_ilabel: list[list[int]]
-        forced_tree: bool
+        forced_polytree: bool
         calc_tree_struc: bool
+            setting this to False makes this class basically a structureless
+            lightweight list of ccnodes. Things like the tree dictionary and
+            the ccsents are not calculated.
+        verbose: bool
         """
         self.orig_sent = orig_sent
         self.osent_words = get_words(orig_sent)
@@ -47,7 +81,7 @@ class CCTree:
             print("New cctree:")
             print(orig_sent)
         self.ll_ilabel = ll_ilabel
-        self.forced_tree = forced_tree
+        self.forced_polytree = forced_polytree
         self.verbose = verbose
 
         # self.osent_locs = range(len(self.osent_words))
@@ -62,8 +96,7 @@ class CCTree:
         self.child_ccloc_to_par_cclocs = None
         # this fill the 3 previous None's
         #
-        # calc_tree_struc=False makes this class basically a structureless
-        # lightweight list of ccnodes
+
         if calc_tree_struc:
             self.set_tree_structure()
 
@@ -82,6 +115,8 @@ class CCTree:
     @staticmethod
     def get_ccnode_from_ccloc(ccloc, ccnodes):
         """
+        This static method returns the unique CCNode out of `ccnodes` that
+        owns the ccloc `ccloc`.
 
         Parameters
         ----------
@@ -116,6 +151,8 @@ class CCTree:
 
     def get_ccnode(self, ccloc):
         """
+        This non-static method returns the unique CCNode out of
+        `self.ccnodes` that owns the ccloc `ccloc`.
 
         Parameters
         ----------
@@ -132,6 +169,8 @@ class CCTree:
     def remove_bad_ccnodes(self):
         """
         similar to Openie6.data.coords_to_sentences
+
+        This method removes unacceptable ccnodes from the list self.ccnodes
 
         Returns
         -------
@@ -182,6 +221,15 @@ class CCTree:
     def set_ccnodes(self):
         """
         similar to Openie6.metric.get_coords()
+
+        This method creates the list of ccnodes `self.ccnodes`.
+
+        The method also stores in `l_cctags_line` the info it gleans from
+        each line of a sample.
+
+        The method also removes bad nodes by calling remove_bad_ccnodes(),
+        and performs a sanity check of the newly created ccnodes by calling
+        ccnode.check_self() for each ccnode.
 
         Returns
         -------
@@ -240,7 +288,7 @@ class CCTree:
                     par_cclocs.append(par_ccloc)
             self.child_ccloc_to_par_cclocs[child_ccloc] = par_cclocs
 
-        if self.forced_tree:
+        if self.forced_polytree:
             for child_ccnode in self.ccnodes:
                 child_ccloc = child_ccnode.ccloc
                 mapa = self.child_ccloc_to_par_cclocs
@@ -275,7 +323,7 @@ class CCTree:
     #     Parameters
     #     ----------
     #     num_osent_words: int
-    #     ccnodes: list[Nodes]
+    #     ccnodes: list[CCNodes]
     #
     #     Returns
     #     -------
@@ -317,7 +365,7 @@ class CCTree:
     #     ----------
     #     osent: str
     #         original sentence
-    #     ccnodes: list[Node]
+    #     ccnodes: list[CCNode]
     #
     #     Returns
     #     -------
@@ -347,7 +395,7 @@ class CCTree:
 
         Returns
         -------
-        list[list[Node]]
+        list[list[CCNode]]
 
         """
         if self.verbose:
@@ -435,7 +483,7 @@ class CCTree:
     #
     #     Parameters
     #     ----------
-    #     ccnode_path: list[Node]
+    #     ccnode_path: list[CCNode]
     #     l_bit: list[int]
     #         list of 0's or 1's
     #     len_osent_words: int
@@ -477,7 +525,7 @@ class CCTree:
     #
     #     Parameters
     #     ----------
-    #     ccnode_path: list[Node]
+    #     ccnode_path: list[CCNode]
     #     l_bit: list[int]
     #         list of 0's or 1's
     #     len_osent_words: int
@@ -782,7 +830,7 @@ if __name__ == "__main__":
         file_translate_tags_to_ilabels("cc", in_fp, out_fp)
 
 
-    def main2(forced_tree=True):
+    def main2(forced_polytree=True):
         in_fp = "tests/one_sample_cc_ilabels.txt"
         # out_fp = "tests/cc_trees.txt"
         with open(in_fp, "r", encoding="utf-8") as f:
@@ -812,7 +860,7 @@ if __name__ == "__main__":
             osent = l_osent[k]
             tree = CCTree(osent,
                           lll_ilabel[k],
-                          forced_tree,
+                          forced_polytree,
                           verbose=True)
             tree.draw_self()
             for i, sent in enumerate(tree.ccsents):

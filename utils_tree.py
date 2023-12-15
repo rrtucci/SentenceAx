@@ -6,11 +6,11 @@ used in the class CCTree.
 In this file, `tree` stands for a dictionary parent_to_children mapping each
 parent node to a list of children nodes. 
 
-For most of the methods in this file, the nodes can be of any type (Node, 
-str, A, B, etc.), although strings are preferred. If the nodes need to be of 
-type B, one can use `get_mapped_polytree( )` to map an A tree (one whose 
-nodes are all specified by type A) to a B tree. The opposite translation 
-B->A can also be performed with the same method.
+For most of the methods in this file, the nodes can be of any type (CCNode,
+str, int, A, B, etc.), although strings are preferred. If the nodes need to
+be of type B, one can use `get_mapped_polytree( )` to map an A tree (one
+whose nodes are all specified by type A) to a B tree. The opposite
+translation B->A can also be performed with the same method.
 
 Technically a tree has a single root node. If the dictionary 
 parent_to_children contains more than one root node, we call it a polytree. 
@@ -32,7 +32,7 @@ def get_mapped_polytree(polytree, fun):
     """
     This method takes as input a polytree whose nodes are of type A, 
     and returns a polytree whose nodes are of type B, where B = fun(A). For 
-    example, str->Node or Node->Str.
+    example, str->CCNode or CCNode->Str.
     
     This method works whether polytree has empty leafs or not. If thev 
     polytree has empty leafs, it maps maps parent->[] to fun(parent)->[]
@@ -57,7 +57,7 @@ def get_mapped_polytree(polytree, fun):
 def copy_polytree(polytree):
     """
     This method takes as input a polytree and returns a copy of the 
-    polytree. The nodes are not copied (in case they are of type Node).
+    polytree. The nodes are not copied (in case they are of type CCNode).
     
     This method works whether polytree has empty leafs or not.
 
@@ -526,7 +526,7 @@ def get_all_paths_from_root(polytree,
 
     Parameters
     ----------
-    polytree: dict[Node, list[Node]]
+    polytree: dict[CCNode, list[CCNode]]
     root_nodes: list[str]
     verbose: bool
 

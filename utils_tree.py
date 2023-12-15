@@ -1,25 +1,26 @@
 """
 
-This file gives some global functions related to trees. These methods are
+This file contains some global functions related to trees. These methods are 
 used in the class CCTree.
 
 In this file, `tree` stands for a dictionary parent_to_children mapping each
-parent node to a list children nodes.
+parent node to a list of children nodes. 
 
-For most of the methods in this file, the nodes can be of any type (Node,
-str, etc.). If the nodes need to be of type str, one can use
-`get_mapped_polytree( )` to map the tree to a "stringified" tree (one whose
-nodes are all specified by strings).
+For most of the methods in this file, the nodes can be of any type (Node, 
+str, A, B, etc.), although strings are preferred. If the nodes need to be of 
+type B, one can use `get_mapped_polytree( )` to map an A tree (one whose 
+nodes are all specified by type A) to a B tree. The opposite translation 
+B->A can also be performed with the same method.
 
-Technically a tree has a single root node. If the dictionary
-parent_to_children yields more than one root node, we call it a polytree.
-The method get_all_trees_of_polytree() can be used to extract all trees  of
-the polytree.
+Technically a tree has a single root node. If the dictionary 
+parent_to_children contains more than one root node, we call it a polytree. 
+The method get_all_trees_of_polytree() can be used to extract all trees  of 
+a polytree.
 
-We use two types of trees: with and without empty leafs. An empty leaf is an
-element of the tree=parent_to_children dictionary of the form "A"->[]. Empty
-leafs are necessary for representing the single node tree, so we usually
-work with trees with empty leafs when doing tree calculations.
+We use two types of trees: with and without empty leafs. An empty leaf is an 
+element of the tree=parent_to_children dictionary of the form "A"->[]. Trees 
+without empty leafs cannot express the single node tree "A"->[]. Hence, 
+we usually work with trees with empty leafs when doing tree calculations.
 
 
 """
@@ -29,8 +30,12 @@ import treelib as tr
 
 def get_mapped_polytree(polytree, fun):
     """
-    This works whether polytree has empty leafs or not. If thev polytree has
-    empty leafs, it maps maps parent->[] to fun(parent)->[]
+    This method takes as input a polytree whose nodes are of type A, 
+    and returns a polytree whose nodes are of type B, where B = fun(A). For 
+    example, str->Node or Node->Str.
+    
+    This method works whether polytree has empty leafs or not. If thev 
+    polytree has empty leafs, it maps maps parent->[] to fun(parent)->[]
 
     Parameters
     ----------
@@ -51,6 +56,10 @@ def get_mapped_polytree(polytree, fun):
 
 def copy_polytree(polytree):
     """
+    This method takes as input a polytree and returns a copy of the 
+    polytree. The nodes are not copied (in case they are of type Node).
+    
+    This method works whether polytree has empty leafs or not.
 
     Parameters
     ----------
@@ -66,8 +75,11 @@ def copy_polytree(polytree):
 
 def get_tree_depth(tree, root_node):
     """
+    This method returns the depth of the tree `tree` with root node 
+    `root_node`.
+    
     If tree has empty leafs, depth is 1 more than if it doesn't due to last
-    layer of empty tree leafs.
+    layer of empty leafs.
 
     num_depths = depth + 1
 
@@ -90,15 +102,15 @@ def get_tree_depth(tree, root_node):
     if not children:
         # If the root has no children, its depth is 1
         return 1
-
-        # Recursively calculate the depth for each child and find the maximum
     child_depths = [get_tree_depth(tree, child) for child in children]
     return 1 + max(child_depths)
 
 
 def get_all_nodes(polytree):
     """
-    This works whether polytree has empty leafs or not. If it does,
+    This method returns a list of all nodes of polytree `polytree`.
+    
+    This method works whether polytree has empty leafs or not. If it does,
     empty leaf nodes are not included in output list.
 
     Parameters
@@ -122,9 +134,10 @@ def get_all_nodes(polytree):
 
 def get_all_children(polytree):
     """
-    This works whether polytree has empty leafs or not. If it does,
+    This method returns a list of all the children of polytree `polytree`.
+    
+    This method works whether polytree has empty leafs or not. If it does,
     empty children are not included in output list.
-
 
     Parameters
     ----------
@@ -145,7 +158,9 @@ def get_all_children(polytree):
 
 def get_root_nodes(polytree):
     """
-    This works whether polytree has empty leafs or not.
+    This method returns a list of all the nodes in polytree `polytree`.
+    
+    This method works whether polytree has empty leafs or not.
 
     Parameters
     ----------
@@ -162,6 +177,10 @@ def get_root_nodes(polytree):
 
 def count_leaf_nodes(polytree):
     """
+    This method returns a tuple with the number of empty and nonempty leaf 
+    nodes in polytree `polytree`.
+    
+    This method works whether polytree has empty leafs or not.
 
     Parameters
     ----------
@@ -186,6 +205,8 @@ def count_leaf_nodes(polytree):
 
 def all_leafs_are_nonempty(polytree):
     """
+    This method returns True iff all the leafs of polytree `polytree` are 
+    nonempty.
 
     Parameters
     ----------
@@ -206,6 +227,8 @@ def all_leafs_are_nonempty(polytree):
 
 def all_leafs_are_empty(polytree):
     """
+    This method returns True iff all the leafs of polytree `polytree` are 
+    empty.
 
     Parameters
     ----------
@@ -226,6 +249,8 @@ def all_leafs_are_empty(polytree):
 
 def remove_empty_leafs(x):
     """
+    This method returns a copy of x with all empty leafs removed. x can be 
+    either a polytree or a list of polytrees.
 
     Parameters
     ----------
@@ -258,6 +283,8 @@ def remove_empty_leafs(x):
 
 def add_empty_leafs(x):
     """
+    This method returns a copy of x in which all empty leafs have been 
+    added. x can be either a polytree or a list of polytrees.
 
     Parameters
     ----------
@@ -287,70 +314,15 @@ def add_empty_leafs(x):
         assert False
 
 
-def get_one_tree_of_polytree(polytree,
-                             root_node,
-                             output_empty_leafs=True):
-    """
-    This works whether polytree has empty leafs or not.
-    
-    Parameters
-    ----------
-    polytree: dict[str, list[str]]
-    root_node: str
-    output_empty_leafs: bool
-
-    Returns
-    -------
-    polytree: dict[str, list[str]]
-
-    """
-    tree0 = {root_node: []}
-    polytree0 = add_empty_leafs(polytree)
-    l_prev_leaf_node = [root_node]
-    while True:
-        l_leaf_node = []
-        for leaf_node in l_prev_leaf_node:
-            parents = polytree0[leaf_node]
-            tree0[leaf_node] = parents
-            l_leaf_node += parents
-            if l_leaf_node:
-                l_prev_leaf_node = copy(l_leaf_node)
-            else:
-                if output_empty_leafs:
-                    return add_empty_leafs(tree0)
-                else:
-                    return remove_empty_leafs(tree0)
-
-
-def get_all_trees_of_polytree(polytree, output_empty_leafs=True):
-    """
-    This works whether polytree has empty leafs or not.
-    
-    
-    Parameters
-    ----------
-    polytree: dict[str, list[str]]
-    output_empty_leafs: bool
-
-    Returns
-    -------
-    list[dict[str, list[str]]]
-
-    """
-    root_nodes = get_root_nodes(polytree)
-    l_tree = []
-    for root_node in root_nodes:
-        tree = get_one_tree_of_polytree(
-            polytree,
-            root_node,
-            output_empty_leafs=output_empty_leafs)
-        l_tree.append(tree)
-    return l_tree
-
-
 def draw_tree(tree, root_node):
     """
-    important bug that must be fixed in treelib. In your Python
+    This method draws the tree `tree` with root node `root_node`.
+
+    This method draws the same thing ( no empty leafs) whether `tree` has 
+    empty leafs or not, but if it does, the method prints out a message 
+    warning that "empty leafs present but not drawn".
+
+    IMPORTANT: bug that must be fixed in treelib. In your Python
     installation, go to Lib\site-packages\treelib and edit tree.py. Find
     def show. The last line is:
 
@@ -359,10 +331,6 @@ def draw_tree(tree, root_node):
     It should be:
 
     print(self.reader)
-
-    This method draws the same thing ( no empty leafs) whether `tree` has 
-    empty leafs or not, but if it does, the method prints out a message 
-    warning that "empty leafs present but not drawn".
 
     Parameters
     ----------
@@ -397,11 +365,13 @@ def draw_tree(tree, root_node):
 
 def draw_polytree(polytree):
     """
-    
+    This method calls the method draw_tree() for each of the trees contained 
+    in the polytree `polytree`.
+
     This method draws the same thing ( no empty leafs) whether `polytree` 
     has empty leafs or not, but if it does, the method prints out a message 
     warning that "empty leafs present but not drawn".
-    
+
     Parameters
     ----------
     polytree: dict[str, list[str]]
@@ -417,17 +387,89 @@ def draw_polytree(polytree):
         draw_tree(tree, root_node)
 
 
+def get_one_tree_of_polytree(polytree,
+                             root_node,
+                             output_empty_leafs=True):
+    """
+    This method returns one tree (the one with root node `root_node`) out of 
+    presumably several trees of the polytree `polytree`. 
+    
+    The output tree will have empty leafs iff output_empty_leafs=True.
+    
+    This method works whether polytree has empty leafs or not.
+    
+    Parameters
+    ----------
+    polytree: dict[str, list[str]]
+    root_node: str
+    output_empty_leafs: bool
+
+    Returns
+    -------
+    polytree: dict[str, list[str]]
+
+    """
+    tree0 = {root_node: []}
+    polytree0 = add_empty_leafs(polytree)
+    l_prev_leaf_node = [root_node]
+    while True:
+        l_leaf_node = []
+        for leaf_node in l_prev_leaf_node:
+            parents = polytree0[leaf_node]
+            tree0[leaf_node] = parents
+            l_leaf_node += parents
+            if l_leaf_node:
+                l_prev_leaf_node = copy(l_leaf_node)
+            else:
+                if output_empty_leafs:
+                    return add_empty_leafs(tree0)
+                else:
+                    return remove_empty_leafs(tree0)
+
+
+def get_all_trees_of_polytree(polytree, output_empty_leafs=True):
+    """
+    This method returns a list of all the trees of the polytree `polytree`. 
+    The output trees will have empty leafs iff output_empty_leafs=True.
+    
+    The output trees will have empty leafs iff output_empty_leafs=True.
+    
+    This method works whether polytree has empty leafs or not.
+    
+    Parameters
+    ----------
+    polytree: dict[str, list[str]]
+    output_empty_leafs: bool
+
+    Returns
+    -------
+    list[dict[str, list[str]]]
+
+    """
+    root_nodes = get_root_nodes(polytree)
+    l_tree = []
+    for root_node in root_nodes:
+        tree = get_one_tree_of_polytree(
+            polytree,
+            root_node,
+            output_empty_leafs=output_empty_leafs)
+        l_tree.append(tree)
+    return l_tree
+
+
 def get_different_depth_subtrees(full_tree,
                                  root_node,
                                  output_empty_leafs=True,
                                  verbose=False):
     """
-    all subtrees with same root node as full tree
-    but different depths.
+    This method returns a list of subtrees of the tree `full_tree`. The 
+    subtrees are constrained to have the same root node as `full_tree` but 
+    different depths.
     
-    This works whether `full_tree` has empty leafs or not.
+    The output trees will have empty leafs iff output_empty_leafs=True.
     
-    
+    This method works whether `full_tree` has empty leafs or not.
+
     Parameters
     ----------
     full_tree: dict[str, list[str]]
@@ -476,7 +518,10 @@ def get_all_paths_from_root(polytree,
                             root_nodes,
                             verbose=False):
     """
-    This works whether `polytree` has empty leafs or not. 
+    This method returns a list of all the paths in polytree `polytree` that
+    start at the root node `root_node` and end with a (nonempty) leaf node.
+
+    This method works whether `polytree` has empty leafs or not. 
     Outputed paths do not have a [] at the end.
 
     Parameters

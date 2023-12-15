@@ -1,4 +1,4 @@
-This file gives examples of various openie6 file formats
+This file contains examples of various openie6 file formats
 
 This file is best viewed in NotePad++, with the following preferences ON:
  "View/Word Wrap" and "View/Show Symbol/Show All Symbols" 

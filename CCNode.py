@@ -8,15 +8,15 @@ class CCNode:
     CCNode is similar to Openie6.metric.Coordination
     
     This class defines the nodes (ccnodes) of a CCTree. Think of a CCNode by
-    its __str__. For example, an __str__ for a CCNode might be (2, 5)6(7,
+    its __str__. For example, a __str__ for a CCNode might be (2, 5)6(7,
     23). (2, 5) is its left span `span_pair[0]`, 6 is its `ccloc` (cc
     location) and (7, 23) is its right span `span_pair[1]`. The CCNode's
     ccloc is always located between but outside the range of its left and
     right spans.
 
     A span is a tuple (i,j), where i is position of first token/word and j-1
-    is the position  (location, loc) of last token/word. Hence, span(5,
-    8) covers range(5, 8) = (5, 6, 7).
+    is the position  (i.e., location, loc) of last token/word. Hence,
+    span(5, 8) covers range(5, 8) = (5, 6, 7).
 
     self.span_pair is a list of 2 spans.
     e.g. osent = "He ate apples and oranges ."
@@ -43,12 +43,11 @@ class CCNode:
         between CCNodes. Not used for anything.
     osent_words: list[str]
         list of words in osent (original sentence)
-    sep_locs: list[int]
-        locs of separators (like commas and period)
+    span_pair: list[tuple[int, int], tuple[int, int]]
+        a list of 2 spans, left and right, of self. spans exclude location
+        `ccloc`
     spanned_locs: list[int]
         locs that are within a span
-    spans: list[tuple[int, int]]
-        a list of spans. spans exclude location ccloc
 
     """
 
@@ -77,9 +76,8 @@ class CCNode:
 
     def check_self(self):
         """
-        This method checks that the spans don't overlap. It also checks that
-        self.ccloc is not included in the spanned locs. It also checks that
-        self.ccloc is between the lowest and highest spanned loc.
+        This method checks that the left and right spans don't overlap and
+        that self.ccloc is between the 2 spans but not in their ranges.
 
         Returns
         -------
@@ -152,15 +150,8 @@ class CCNode:
 
     def get_spanned_locs(self):
         """
-        This method returns the word locations, relative to 
-        self.osent_words, of all words inside a span (spanned words).
-
-        Parameters
-        ----------
-        fat: bool
-            iff fat=True, the spanned_locs are augmented by adding to them
-            all locs to the left of the first span and all locs to the right
-            of the last span.
+        This method returns all locations in the ranges of the left and
+        right spans.
 
         Returns
         -------
@@ -174,12 +165,12 @@ class CCNode:
                     spanned_locs.append(i)
         return sorted(spanned_locs)
 
-    def get_spanned_unbreakable_word_to_loc(self):
+    def get_spanned_unbreakable_loc_to_word(self):
         """
         similar to Openie6.data.remove_unbreakable_conjuncts()
 
-        This method returns a dictionary mapping the spanned unbreakable
-        words to their locations.
+        This method returns a dictionary mapping the location of each
+        spanned unbreakable word to the word.
          
         Used in CCTree.remove_bad_ccnodes()
 
@@ -189,13 +180,13 @@ class CCNode:
 
         """
 
-        spanned_unbreakable_word_to_loc = OrderedDict()
-        spanned_words = [self.osent_words[loc] for loc in self.spanned_locs]
+        spanned_unbreakable_loc_to_word = OrderedDict()
         for i, word in enumerate(self.osent_words):
-            if word.lower() in SAX_UNBREAKABLE_WORDS and i in self.spanned_locs:
-                spanned_unbreakable_word_to_loc[word] = i
+            if word.lower() in SAX_UNBREAKABLE_WORDS and \
+                    i in self.spanned_locs:
+                spanned_unbreakable_loc_to_word[i] = word
 
-        return spanned_unbreakable_word_to_loc
+        return spanned_unbreakable_loc_to_word
 
     def __eq__(self, node):
         """

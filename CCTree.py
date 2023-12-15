@@ -202,17 +202,17 @@ class CCTree:
                 self.ccnodes.remove(ccnode)
                 continue
             ccword = self.osent_words[ccloc]
-            word_to_loc = ccnode.get_spanned_unbreakable_word_to_loc()
+            loc_to_word = ccnode.get_spanned_unbreakable_loc_to_word()
             if ccword in ['nor', '&']:
                 if self.verbose:
                     print(f"node {ccnode} removed because "
                           f"{ccword} is not allowed as a CC.")
                 self.ccnodes.remove(ccnode)
-            elif len(word_to_loc):
+            elif len(loc_to_word):
                 if self.verbose:
                     print(f"node {ccnode} removed because "
                           "its span contains unbreakable words.")
-                    print("unbreakable_word_to_loc=", word_to_loc)
+                    print("unbreakable_loc_to_word=", loc_to_word)
                 self.ccnodes.remove(ccnode)
 
     def set_ccnodes(self):

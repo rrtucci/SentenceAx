@@ -9,7 +9,7 @@ class CCNode:
     
     This class defines the nodes (ccnodes) of a CCTree. Think of a CCNode by
     its __str__. For example, an __str__ for a CCNode might be (2, 5)6(7,
-    23). (2, 3) is its left span `span_pair[0]`, 6 is its `ccloc` (cc
+    23). (2, 5) is its left span `span_pair[0]`, 6 is its `ccloc` (cc
     location) and (7, 23) is its right span `span_pair[1]`. The CCNode's
     ccloc is always located between but outside the range of its left and
     right spans.

@@ -12,12 +12,12 @@ from utils_tree import *
 
 class CCTree:
     """
-    This class builds a polytree (see utils_tree.py) from `ll_ilabel`,
-    which is either an output of a run with task "cc", or can be derived
-    from a cctags file.
+    This class builds a polytree (see utils_tree.py for def of polytree)
+    from `ll_ilabel`, which is either an output of a run with task "cc",
+    or can be derived from a cctags file.
 
-    Think of a CCNode by its __str__. For example, an __str__ for a CCNode 
-    might be (2, 5)6(7, 23). (2, 3) is its left span `span_pair[0]`, 
+    Think of a CCNode by its __str__. For example, a __str__ for a CCNode
+    might be (2, 5)6(7, 23). (2, 5) is its left span `span_pair[0]`,
     6 is its `ccloc` (cc location) and (7, 23) is its right span `span_pair[ 
     1]`. The CCNode's ccloc is always located between but outside the range 
     of its left and right spans.
@@ -29,11 +29,11 @@ class CCTree:
     Attributes
     ----------
     ccnodes: list[CCNode]
-        a list of the CCNodes of the tree `self`.
+        a list of the CCNodes of the polytree `self`.
     ccsents: list[str]
-        This class derives from the tree `self`, a list of cc sentences ( i.e,
-        split sentences, obtained by splitting a compound sentence at a
-        coordinating conjunction (CC)).
+        This class derives from the polytree `self`, a list of cc sentences
+        ( i.e, split sentences, obtained by splitting a compound sentence at
+        a coordinating conjunction (CC)).
     child_ccloc_to_par_cclocs: dict[int, list[int]]
         dictionary mapping each child's ccloc to a list of the cclocs of the
         parents.
@@ -95,8 +95,6 @@ class CCTree:
         self.par_ccloc_to_child_cclocs = None
         self.child_ccloc_to_par_cclocs = None
         # this fill the 3 previous None's
-        #
-
         if calc_tree_struc:
             self.set_tree_structure()
 
@@ -227,8 +225,8 @@ class CCTree:
         each line of a sample.
 
         The method also removes bad nodes by calling remove_bad_ccnodes(),
-        and performs a sanity check of the newly created ccnodes by calling
-        ccnode.check_self() for each ccnode.
+        and it performs a sanity check of the newly created ccnodes by
+        calling ccnode.check_self() for each ccnode.
 
         Returns
         -------
@@ -270,8 +268,8 @@ class CCTree:
         This method creates the dictionaries self.child_ccloc_to_par_cclocs
         and self.par_ccloc_to_child_cclocs that define the polytree.
 
-        This method also finds the root nodes of the polytree and stores in
-        in the list self.root_nodes.
+        This method also finds the root nodes of the polytree and stores
+        them in the list self.root_nodes.
 
 
         Returns
@@ -400,7 +398,7 @@ class CCTree:
         This method calls the global function
         utils_tree.get_all_paths_from_any_root() for the polytree `self`.
 
-        This method considers subtrees of the polytree self that have as a
+        This method considers subtrees of the polytree `self` that have as a
         root node one of the root nodes of the polytree, and vary in depth
         from a zero to the depth of the polytree `self`
 
@@ -447,6 +445,7 @@ class CCTree:
         The method then chooses, from those 2^N span paths, the single one
         `inc_span_path` that is labelled by the input bit vector `l_bit`. At
         the same time, the method stores another span path `exc_span_path`.
+
         `exc_span_path` is an anti-twin, contrarian twin, to `inc_span_path`
         which chooses the right span every time `inc_span_path` chooses the
         left span (and vice versa).
@@ -463,7 +462,7 @@ class CCTree:
         ccnode_path: list[CCNode]
             a path (i.e., list) of CCNodes
         l_bit: list[int]
-            a list of ints [0, 1]. len(l_bit)=len(ccnode_path)=N
+            a list of ints [0, 1]. N=len(l_bit)=len(ccnode_path)
         all_span: tuple[int, int]
             The span (0, number of words in osent)
         verbose: bool
@@ -626,9 +625,9 @@ class CCTree:
         span path `exc_span_path`. It calculates that ccsent by removing
         from all_span = (0, length of osent_words), all locs included in
         `exc_span_path` (that is why we call it an excluded span path,
-        because it dictates what locs to remove/exclude). The method also
-        removes from all_span, the cclocs (conjunction locations), sep_locs
-        (separator locations) and other_locs.
+        because it dictates what locs to remove/exclude) from all_span. The
+        method also removes from all_span, the cclocs (conjunction
+        locations), sep_locs (separator locations) and other_locs.
 
         Parameters
         ----------
@@ -876,6 +875,8 @@ class CCTree:
 
     def draw_self(self):
         """
+        This method draws self by calling the global function
+        utils_tree.draw_polytree().
 
         Returns
         -------

@@ -7,9 +7,9 @@ In this file, `tree` stands for a dictionary parent_to_children mapping each
 parent node to a list children nodes.
 
 For most of the methods in this file, the nodes can be of any type (Node,
-str, etc.). If the nodes need to be of type str, one can use `get_mapped_polytree(
-)` to map the tree to a "stringified" tree (one whose nodes are all
-specified by strings).
+str, etc.). If the nodes need to be of type str, one can use
+`get_mapped_polytree( )` to map the tree to a "stringified" tree (one whose
+nodes are all specified by strings).
 
 Technically a tree has a single root node. If the dictionary
 parent_to_children yields more than one root node, we call it a polytree.
@@ -34,11 +34,12 @@ def get_mapped_polytree(polytree, fun):
 
     Parameters
     ----------
-    polytree
-    fun
+    polytree: dict[str, list[str]]
+    fun: function
 
     Returns
     -------
+    polytree: dict[Any, list[Any]]
 
     """
     fun_polytree = {}
@@ -49,6 +50,17 @@ def get_mapped_polytree(polytree, fun):
 
 
 def copy_polytree(polytree):
+    """
+
+    Parameters
+    ----------
+    polytree: dict[str, list[str]]
+
+    Returns
+    -------
+    polytree: dict[str, list[str]]
+
+    """
     return {par: copy(polytree[par]) for par in polytree}
 
 
@@ -61,11 +73,12 @@ def get_tree_depth(tree, root_node):
 
     Parameters
     ----------
-    tree
-    root_node
+    tree: dict[str, list[str]]
+    root_node: str
 
     Returns
     -------
+    int
 
     """
     if root_node not in tree:
@@ -90,10 +103,11 @@ def get_all_nodes(polytree):
 
     Parameters
     ----------
-    polytree
+    polytree: dict[str, list[str]]
 
     Returns
     -------
+    list[str]
 
     """
     all_nodes = []
@@ -114,10 +128,11 @@ def get_all_children(polytree):
 
     Parameters
     ----------
-    polytree
+    polytree: dict[str, list[str]]
 
     Returns
     -------
+    list[str]
 
     """
     all_children = []
@@ -134,10 +149,11 @@ def get_root_nodes(polytree):
 
     Parameters
     ----------
-    polytree
+    polytree: dict[str, list[str]]
 
     Returns
     -------
+    list[str]
 
     """
     all_children = get_all_children(polytree)
@@ -145,6 +161,17 @@ def get_root_nodes(polytree):
 
 
 def count_leaf_nodes(polytree):
+    """
+
+    Parameters
+    ----------
+    polytree: dict[str, list[str]]
+
+    Returns
+    -------
+    tuple[int, int]
+
+    """
     empty_leaf_count = 0
     nonempty_leaf_count = 0
     all_nodes = get_all_nodes(polytree)
@@ -154,10 +181,21 @@ def count_leaf_nodes(polytree):
         else:
             if polytree[node] == []:
                 empty_leaf_count += 1
-    return empty_leaf_count, nonempty_leaf_count
+    return (empty_leaf_count, nonempty_leaf_count)
 
 
 def all_leafs_are_nonempty(polytree):
+    """
+
+    Parameters
+    ----------
+    polytree: dict[str, list[str]]
+
+    Returns
+    -------
+    bool
+
+    """
     empty_leaf_count, _ = count_leaf_nodes(polytree)
 
     if empty_leaf_count == 0:
@@ -167,6 +205,17 @@ def all_leafs_are_nonempty(polytree):
 
 
 def all_leafs_are_empty(polytree):
+    """
+
+    Parameters
+    ----------
+    polytree: dict[str, list[str]]
+
+    Returns
+    -------
+    bool
+
+    """
     _, nonempty_leaf_count = count_leaf_nodes(polytree)
 
     if nonempty_leaf_count == 0:
@@ -176,6 +225,18 @@ def all_leafs_are_empty(polytree):
 
 
 def remove_empty_leafs(x):
+    """
+
+    Parameters
+    ----------
+    x: dict[str, list[str]] | list[dict[str, list[str]]]
+
+    Returns
+    -------
+    dict[str, list[str]] | list[dict[str, list[str]]]
+
+    """
+
     def _remove_empty_leafs(polytree):
         if all_leafs_are_nonempty(polytree):
             return copy_polytree(polytree)
@@ -196,6 +257,18 @@ def remove_empty_leafs(x):
 
 
 def add_empty_leafs(x):
+    """
+
+    Parameters
+    ----------
+    x: dict[str, list[str]] | list[dict[str, list[str]]]
+
+    Returns
+    -------
+    dict[str, list[str]] | list[dict[str, list[str]]]
+
+    """
+
     def _add_empty_leafs(polytree):
         if all_leafs_are_empty(polytree):
             return copy_polytree(polytree)
@@ -222,12 +295,13 @@ def get_one_tree_of_polytree(polytree,
     
     Parameters
     ----------
-    polytree
-    root_node
-    output_empty_leafs
+    polytree: dict[str, list[str]]
+    root_node: str
+    output_empty_leafs: bool
 
     Returns
     -------
+    polytree: dict[str, list[str]]
 
     """
     tree0 = {root_node: []}
@@ -255,11 +329,12 @@ def get_all_trees_of_polytree(polytree, output_empty_leafs=True):
     
     Parameters
     ----------
-    polytree
-    output_empty_leafs
+    polytree: dict[str, list[str]]
+    output_empty_leafs: bool
 
     Returns
     -------
+    list[dict[str, list[str]]]
 
     """
     root_nodes = get_root_nodes(polytree)
@@ -289,6 +364,12 @@ def draw_tree(tree, root_node):
     empty leafs or not, but if it does, the method prints out a message 
     warning that "empty leafs present but not drawn".
 
+    Parameters
+    ----------
+    tree: dict[str, list[str]]
+    root_node: str
+
+
     Returns
     -------
     None
@@ -308,7 +389,6 @@ def draw_tree(tree, root_node):
         pine_tree.show()
         if count_leaf_nodes(tree)[0] > 0:
             print("WARNING: Empty leafs present but not drawn.")
-            tree_depth = get_tree_depth(tree, root_node)
             print(tree)
     except:
         print("*********************tree not possible")
@@ -324,10 +404,11 @@ def draw_polytree(polytree):
     
     Parameters
     ----------
-    polytree
+    polytree: dict[str, list[str]]
 
     Returns
     -------
+    None
 
     """
     root_nodes = get_root_nodes(polytree)
@@ -349,13 +430,14 @@ def get_different_depth_subtrees(full_tree,
     
     Parameters
     ----------
-    full_tree
-    root_node
-    output_empty_leafs
-    verbose
+    full_tree: dict[str, list[str]]
+    root_node: str
+    output_empty_leafs: bool
+    verbose: bool
 
     Returns
     -------
+    list[dict[str, list[str]]]
 
     """
     full_tree0 = add_empty_leafs(full_tree)
@@ -399,13 +481,13 @@ def get_all_paths_from_root(polytree,
 
     Parameters
     ----------
-    root_nodes: list[Node] | list[int]
-    polytree: dict[Node, list[Node]] | dict[int, list[int]]
+    polytree: dict[Node, list[Node]]
+    root_nodes: list[str]
     verbose: bool
 
     Returns
     -------
-    list[list[Node]] | list[list[int]]
+    list[list[str]]
 
     """
     l_path_for1root = []
@@ -419,18 +501,18 @@ def get_all_paths_from_root(polytree,
     # cur_path =[]
     # init_output
     # l_path_for1root = []
-    def get_paths_for_single_root_node(polytree0,
+    def get_paths_for_single_root_node(polytree1,
                                        cur_root_node,
                                        cur_path):
         cur_path = cur_path + [cur_root_node]
-        polytree0 = add_empty_leafs(polytree0)
-        if not polytree0[cur_root_node]:
+        polytree1 = add_empty_leafs(polytree1)
+        if not polytree1[cur_root_node]:
             l_path_for1root.append(cur_path)
         else:
-            for child in polytree0[cur_root_node]:
+            for child in polytree1[cur_root_node]:
                 if child:
                     get_paths_for_single_root_node(
-                        polytree0=polytree0,
+                        polytree1=polytree1,
                         cur_root_node=child,
                         cur_path=cur_path)
 
@@ -446,7 +528,7 @@ def get_all_paths_from_root(polytree,
             l_path_for1root = []
             l_path_for1root = \
                 get_paths_for_single_root_node(
-                    polytree0=subtree,
+                    polytree1=subtree,
                     cur_root_node=root_node,
                     cur_path=[])
             if verbose:

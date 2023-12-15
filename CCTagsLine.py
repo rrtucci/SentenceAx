@@ -3,6 +3,13 @@ class CCTagsLine:
     This class is simply a container for the info in a cctags line>
     cctags lines are found under the osent of each sample in a cctags.txt file.
 
+    Attributes
+    ----------
+    cclocs: list[int]
+    depth: int
+    other_locs: list[int]
+    sep_locs: list[int]
+    spans: list[tuple[int, int]]
     """
 
     def __init__(self, depth, l_ilabel):
@@ -18,7 +25,7 @@ class CCTagsLine:
         self.depth = depth
         self.cclocs = []
         self.sep_locs = []
-        self.others_locs = []
+        self.other_locs = []
         self.spans = []
         # similar to Openie6.metric.get_coords()
 
@@ -70,7 +77,7 @@ class CCTagsLine:
             elif ilabel == 4:  # 4=SEP
                 self.sep_locs.append(i)
             elif ilabel == 5:  # 5=OTHERS
-                self.others_locs.append(i)
+                self.other_locs.append(i)
             elif ilabel == -100:
                 pass
             else:
@@ -87,7 +94,7 @@ class CCTagsLine:
 
         Parameters
         ----------
-        spans: list[tuple[int]]
+        spans: list[tuple[int, int]]
         ccloc: int
         throw_if_None: bool
 

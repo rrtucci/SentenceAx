@@ -342,7 +342,7 @@ class CCTree:
     #         ccsents.append(ccsent)
     #     return ccsents
 
-    def get_all_ccnode_paths(self, verbose=False):
+    def get_all_ccnode_paths(self):
         """
 
         Returns
@@ -364,7 +364,6 @@ class CCTree:
             ccnode_path = [self.get_ccnode(ccloc) for ccloc in ccloc_path]
             l_ccnode_path.append(ccnode_path)
         return l_ccnode_path
-
 
     @staticmethod
     def get_inc_exc_span_path(ccnode_path,
@@ -389,7 +388,6 @@ class CCTree:
             return inc_span_path, exc_span_path
         else:
             return None, None
-
 
     #
     # @staticmethod
@@ -517,15 +515,13 @@ class CCTree:
     #         print("donut path: ", donut_path)
     #     return donut_path
 
-    @staticmethod
-    def get_ccsent(exc_span_path,
-                   osent_words):
+    def get_ccsent(self,
+                   exc_span_path):
         """
 
         Parameters
         ----------
         exc_span_path: list[list[int]]
-        osent_words: list[str]
 
         Returns
         -------
@@ -533,14 +529,22 @@ class CCTree:
 
         """
         assert exc_span_path
-        all_span = (0, len(osent_words))
-        in_set = set(range(*all_span))
+        all_span = (0, len(self.osent_words))
+        fin_set = set(range(*all_span))
         for exc_span in exc_span_path:
-            in_set -= set(range(*exc_span))
-        in_locs = sorted(list(in_set))
-        ccsent = " ".join([osent_words[loc] for loc in in_locs])
+            fin_set -= set(range(*exc_span))
+        fin_locs = sorted(list(fin_set))
+        # remove also cclocs, sep_locs and other_locs
+        new_fin_locs = copy(fin_locs)
+        for i in fin_locs:
+            for cctags_line in self.l_cctags_line:
+                if i in cctags_line.cclocs or \
+                        i in cctags_line.sep_locs or \
+                        i in cctags_line.other_locs:
+                    if i in new_fin_locs:
+                        new_fin_locs.remove(i)
+        ccsent = " ".join([self.osent_words[loc] for loc in new_fin_locs])
         return ccsent
-
 
     def set_ccsents(self):
         """
@@ -551,7 +555,7 @@ class CCTree:
         None
 
         """
-        ccnode_paths = self.get_all_ccnode_paths(self.verbose)
+        ccnode_paths = self.get_all_ccnode_paths()
         all_span = (0, len(self.osent_words))
         l_ccsent = []
         for path in ccnode_paths:
@@ -567,8 +571,9 @@ class CCTree:
                     all_span,
                     self.verbose)
                 if exc_span_path:
-                    ccsent = CCTree.get_ccsent(exc_span_path, self.osent_words)
+                    ccsent = self.get_ccsent(exc_span_path)
                     l_ccsent.append(ccsent)
+
         self.ccsents = l_ccsent
 
         # this mimics Openie6.get_sentences()
@@ -592,7 +597,6 @@ class CCTree:
         #         ccsents.append(' '.join(left_words))
         #         ccsents.append(' '.join(right_words))
         # self.ccsents = ccsents
-
 
     # not used anymore
     # @staticmethod

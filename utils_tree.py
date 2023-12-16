@@ -489,7 +489,7 @@ def get_different_depth_subtrees(full_tree,
     l_prev_leaf_node = [root_node]
     tree = copy_polytree(init_tree)
     if verbose:
-        print("\nEntering get_different_depth_trees()")
+        print("\nEntering utils_tree.get_different_depth_trees()")
         print(f"full tree:\n {full_tree}")
     for depth in range(num_depths):
         l_leaf_node = []
@@ -539,7 +539,7 @@ def get_all_paths_from_any_root(polytree,
     polytree0 = add_empty_leafs(polytree)
 
     if verbose:
-        print("\nEntering get_all_paths_from_any_root()")
+        print("\nEntering utils_tree.get_all_paths_from_any_root()")
 
     # init input:
     # cur_root_node = root_node

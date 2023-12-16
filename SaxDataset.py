@@ -5,15 +5,13 @@ from PaddedMInput import *
 
 """
 
-import torchtext as tt 
+Classes torchtext.data.Example and torchtext.data.Field are used in the 
+Openie6 code, but they are now deprecated, so they are not used in SentenceAx.
 
-Classes tt.data.Example and tt.data.Field are used in the Openie6 code, 
-but they are now deprecated, so they are not used in SentenceAx.
-
-Note also that Openie6 uses ttt.data.Dataset, which understands 
-ttt.data.Field and ttt.data.Example. SentenceAx uses 
+Note also that Openie6 uses torchtext.data.Dataset, which understands 
+torchtext.data.Field and torchtext.data.Example. SentenceAx uses 
 torch.utils.data.Dataset which has a different signature than the now 
-deprecated ttt.data.Dataset
+deprecated torchtext.data.Dataset
 
 Refs:
 https://colab.research.google.com/github/pytorch/text/blob/master/examples/legacy_tutorial/migration_tutorial.ipynb#scrollTo=kBV-Wvlo07ye

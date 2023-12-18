@@ -40,5 +40,6 @@ directory `input_data` of this github repo.
 * (2023/11/05) [This blog post](https://qbnets.wordpress.com/2023/11/05/sentenceax-my-open-source-software-for-sentence-splitting/)
  gives more info about SentenceAx,
 at the time  of its first public unveiling.
-* (2023/12/17) Finally, SentenceAx ready for last step, training. [Call for 
-  GPU help here](https://qbnets.wordpress.com/2023/12/17/call-for-help-with-open-source-project-sentenceax/).
+* (2023/12/17) Finally, SentenceAx ready for last step, training. [Posted 
+  here](https://qbnets.wordpress.com/2023/12/17/call-for-help-with-open-source-project-sentenceax/)
+ our call for GPU help.

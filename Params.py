@@ -108,11 +108,16 @@ class Params:
         """
         x = self.d["batch_size"]
         y = self.d["num_steps_per_epoch"]
+        num_epochs = self.d["num_epochs"]
         if x and y:
             assert x * y >= num_samples, \
-                "Not all samples will be tested." \
-                f"batch_size={x}, num_steps_per_epoch={y}, " \
-                f"num_samples={num_samples}"
+                "Not all samples will be tested.\n" \
+                f"number of samples per batch={x}\n" \
+                f"number of batches per epoch={y}\n" \
+                f"number of samples per epoch={x * y}\n" \
+                f"number of epochs={num_epochs}\n" \
+                f"number of samples that will be tested={x * y * num_epochs}\n" \
+                f"actual number of samples={num_samples}"
 
     def get_d(self):
         """

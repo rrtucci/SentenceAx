@@ -108,17 +108,14 @@ class Params:
         """
         x = self.d["batch_size"]
         y = self.d["num_steps_per_epoch"]
-        num_epochs = self.d["num_epochs"]
+        print("Checking Params.py:")
+        print(f"number of samples per batch={x}\n"
+            f"number of batches={y}\n"
+            f"number of samples that can be tested={x * y}\n"
+            f"actual number of samples={num_samples}")
         if x and y:
-            assert x * y >= num_samples, \
-                "Not all samples will be tested.\n" \
-                f"number of samples per batch={x}\n" \
-                f"number of batches per epoch={y}\n" \
-                f"number of samples per epoch={x * y}\n" \
-                f"number of epochs={num_epochs}\n" \
-                f"number of samples that will be tested={x * y * num_epochs}\n" \
-                f"actual number of samples={num_samples}"
-            
+            assert x * y >= num_samples, "tested< actual"
+
     def get_d(self):
         """
         This is an internal method to be called only by __init__. The user

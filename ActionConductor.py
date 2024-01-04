@@ -213,7 +213,7 @@ class ActionConductor:
 
         For Openie6, the best checkpoint files are:
         If task="cc": "models/conj_model/epoch=28_eval_acc=0.854.ckpt"
-        If task="ex": "models/warmup_oie_model/epoch=13_eval_acc=0.544.ckpt"
+        If task="ex": "models/oie_model/epoch=14_eval_acc=0.551_v0.ckpt"
 
         Returns
         -------

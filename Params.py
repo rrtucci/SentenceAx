@@ -118,7 +118,7 @@ class Params:
                 f"number of epochs={num_epochs}\n" \
                 f"number of samples that will be tested={x * y * num_epochs}\n" \
                 f"actual number of samples={num_samples}"
-
+            
     def get_d(self):
         """
         This is an internal method to be called only by __init__. The user

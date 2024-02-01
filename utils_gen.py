@@ -17,6 +17,7 @@ from copy import copy
 import pkg_resources as pkg
 from unidecode import unidecode
 import os
+from inspect import currentframe, getframeinfo
 
 
 class DotDict(dict):
@@ -837,6 +838,84 @@ def find_xlist_item_that_minimizes_cost_fun(xlist, cost_fun):
             x0 = x
 
     return x0, y0
+
+
+def comment(verbose,
+            params_d,
+            prefix=None):
+    """
+    This method prints comments iff verbose = True
+
+    Parameters
+    ----------
+    verbose: bool
+        This method will print iff verbose = True
+    prefix: str | None
+        A prefix string, will appear at beginning of comment, followed by
+        newline.
+    params_d: dict[str, Any]
+        A dictionary mapping variable names to their values.
+
+    Returns
+    -------
+    None
+
+    """
+    if not verbose:
+        return
+
+    if prefix:
+        print(prefix)
+    else:
+        info = getframeinfo(currentframe())
+        print(f"file={info.filename}, line={info.lineno}\n")
+    for var_name, value in params_d.items():
+        print(f"\t{var_name}={value}")
+
+
+class Counter:
+    """
+    A simple class that increments a counter every time the method new_one()
+    is called. Iff verbose is True, it prints a notification that the count
+    has increased.
+
+    """
+
+    def __init__(self, verbose, name, start=0):
+        """
+        Constructor
+
+        Parameters
+        ----------
+        verbose: bool
+        name: str
+        start: int
+        """
+        self.verbose = verbose
+        self.name = name
+        self.count = start
+
+    def new_one(self, reset=False):
+        """
+        This method increments the counter self.count. Iff
+        self.verbose=True, the method prints a notification that the
+        counter has changed.
+
+        Parameters
+        ----------
+        reset: bool
+
+        Returns
+        -------
+        None
+
+        """
+        if reset:
+            self.count = 0
+        self.count += 1
+        if self.verbose:
+            print(f"'{self.name}' count changed: "
+                  f"{self.count - 1}->{self.count}")
 
 
 if __name__ == "__main__":

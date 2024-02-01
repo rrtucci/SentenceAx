@@ -349,12 +349,14 @@ class ActionConductor:
         None
 
         """
-        if self.verbose:
-            print("Checkpoint dictionary:")
-            ckpt_d = torch.load(checkpoint_fp)
-            print("ckpt_keys: ", ckpt_d.keys())
-            print('ckpt_d["hyper_parameters"]', ckpt_d["hyper_parameters"])
-            print('ckpt_d["hparams_name"]', ckpt_d["hparams_name"])
+        ckpt_d = torch.load(checkpoint_fp)
+        comment(self.verbose,
+                prefix="Checkpoint dictionary:",
+                params_d={"keys": ckpt_d.keys(),
+                          "hyperparams": ckpt_d["hyper_parameters"],
+                          "hparams_name": ckpt_d["hparams_name"]}
+                )
+
         # if self.has_cuda:
         #     ckpt_params_d = torch.load(checkpoint_fp)["hparams"]
         # else:

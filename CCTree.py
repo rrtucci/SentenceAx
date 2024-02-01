@@ -411,11 +411,10 @@ class CCTree:
         list[list[CCNode]]
 
         """
-        if self.verbose:
-            print("child_ccloc_to_par_cclocs",
-                  self.child_ccloc_to_par_cclocs)
-            print("par_ccloc_to_child_cclocs",
-                  self.par_ccloc_to_child_cclocs)
+        comment(self.verbose,
+                params_d={
+                    "child_to_par": self.child_ccloc_to_par_cclocs,
+                    "par_to_child": self.par_ccloc_to_child_cclocs})
         l_ccloc_path = get_all_paths_from_any_root(
             self.par_ccloc_to_child_cclocs,
             self.root_cclocs,

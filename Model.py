@@ -68,35 +68,10 @@ class Model(L.LightningModule):
     SentenceAX is a fine-tuning of bert-base-cased and bert-large-cased.
     Both of these weights/models are cased (meaning they both distinguish
     between upper and lower cases), but bert-large-cased > bert-base-cased.
-    
-    Some stats about BERT
 
-    BERT is characterized by tensor of shape (L, A, H) where
-    L = encoding length
-    A = number of attention heads
-    H = dim of hidden space, called self.hidden_size below
-
-    BERT BASE (L=12, A=12, H=768) Total Parameters=110M
-    BERT LARGE (L=24, A=16, H=1024) Total Parameters=340M
-
-    embedding = nn.Embedding(num_embeddings=10, embedding_dim=3) an
-    embedding or encoding takes a tensor ll_x with shape (2, 4) to a
-    tensor lll_x of shape (2, 4, 3) The elements of the tensor will be
-    called icodes. The num of possible icodes here is 10. This is also
-    the vocab size.
-
-    a = torch.LongTensor([[1, 2, 3, 9], [4, 3, 2, 0]]) # (2, 4)
-    embedding(a) has shape (2, 4, 3)
-    num_embeddings (int) – vocab size, num icodes
-    embedding_dim (int) – 3 = len(lll[0][0])
-
-    Embedding is a layer that takes a tensor of icodes to another tensor
-    of icodes with one more index. An encoder takes each word and
-    replaces it by an icode.
-
-    output = nn.Linear(na, nb)(input)
-    If input has shape (10, 20, na), then output has shape (10, 20, nb)
-
+    embedding = nn.Embedding(num_embeddings=L, embedding_dim=d)
+    d= hidden_size = 768 for BERT base
+    L = 100
 
     Attributes
     ----------
@@ -174,8 +149,8 @@ class Model(L.LightningModule):
             return_dict=False)
         self.hidden_size = self.starting_model.config.hidden_size
         if self.verbose:
-            print("****** model name= ", self.name)
-            print("hidden size=", self.hidden_size)
+            print("Model init")
+            print(f"\tname={self.name}, hidden_size={self.hidden_size}")
 
         # Actually, self.params.d["num_iterative_layers"]=2 for all Params.pid
         if self.params.d["num_iterative_layers"] > 0:
@@ -183,7 +158,8 @@ class Model(L.LightningModule):
             num_encoder_layers = \
                 num_layers - self.params.d["num_iterative_layers"]
             self.iterative_transformer = \
-                self.starting_model.encoder.layer[num_encoder_layers:num_layers]
+                self.starting_model.encoder.layer[
+                num_encoder_layers:num_layers]
             # this truncation of self.starting_model.encoder.layer must
             # be done after, not before defining self.iterative_transformer
             self.starting_model.encoder.layer = \
@@ -202,9 +178,9 @@ class Model(L.LightningModule):
         self.embedding = nn.Embedding(
             100,  # vocab size
             self.hidden_size)  # dim of embedding space
-        self.merge_layer = nn.Linear(self.hidden_size,
-                                     ILABELLING_DIM)  # 300
-        self.ilabelling_layer = nn.Linear(ILABELLING_DIM,  # 300
+        self.merge_layer = nn.Linear(self.hidden_size,  # 768
+                                     MERGE_DIM)  # 300
+        self.ilabelling_layer = nn.Linear(MERGE_DIM,  # 300
                                           NUM_ILABELS)  # 6
 
         # ignore_index=-100 is the default, but including it
@@ -259,7 +235,7 @@ class Model(L.LightningModule):
         # self.l_cc_epoch_sample_str = []  # Openie6.all_predictions_conj
         # self.l_cc_epoch_spanned_word = []  # Openie6.all_conjunct_words_conj
         # self.lll_cc_epoch_spanned_loc = []  # Openie6.all_sentence_indices_conj
-        
+
         # not used
         # self.l_ex_pred_sample_str = []  # Openie6.all_predictions_oie
 
@@ -290,7 +266,8 @@ class Model(L.LightningModule):
             return [pair for pair in all_pairs if "starting_model" in pair[0]]
 
         def non_starting_model_pairs():
-            return [pair for pair in all_pairs if "starting_model" not in pair[0]]
+            return [pair for pair in all_pairs if
+                    "starting_model" not in pair[0]]
 
         xnames = ["bias", "gamma", "beta"]
 
@@ -421,7 +398,7 @@ class Model(L.LightningModule):
         batch_size= 24,
         hidden_size= 768,
         NUM_ILABELS= 6,
-        ILABELLING_DIM= 30
+        MERGE_DIM= 300
         2 iterative layers and 5 depths.
 
         Below we show the shape of the input and output tensors for each layer.
@@ -488,13 +465,15 @@ class Model(L.LightningModule):
         # batch_text = " ".join(redoL(meta_d["l_orig_sent"]))
         # starting_model_input = \
         #     torch.Tensor(self.auto_tokenizer.encode(batch_text))
-
-        lll_hidden_state, _ = self.starting_model(x_d["ll_osent_icode"])
+        hstate_count = Counter(verbose, "lll_hidstate")
+        word_hstate_count = Counter(verbose, "lll_word_hidstate")
+        lll_hidstate, _ = self.starting_model(x_d["ll_osent_icode"])
+        hstate_count.new_one(reset=True)
         if verbose:
             print()
             print("ll_osent_icode.shape", x_d["ll_osent_icode"].shape)
-            print("after starting_model, lll_hidden_state.shape",
-                  lll_hidden_state.shape)
+            print("after starting_model, lll_hidstate.shape",
+                  lll_hidstate.shape)
 
         lll_word_score = Ten([0])  # this statement is unecessary
         llll_word_score = []  # ~ Openie6.all_depth_scores
@@ -502,59 +481,113 @@ class Model(L.LightningModule):
         # loop over depths
         while True:
             for ilay, layer in enumerate(self.iterative_transformer):
-                if verbose:
-                    print(f"*********** Starting iterative layer={ilay}")
-                # layer(lll_hidden_state)[0] returns a copy
-                # of the tensor lll_hidden_state after transforming it
+                comment(verbose,
+                        prefix="*********** Starting iterative layer",
+                        params_d={"ilay": ilay})
+                # layer(lll_hidstate)[0] returns a copy
+                # of the tensor lll_hidstate after transforming it
                 # in some way
                 # [0] chooses first component
-                if verbose:
-                    print(f"before iterative layer {ilay}: depth, "
-                          "lll_hidden_state.shape\n\t",
-                          f"{depth}, {lll_hidden_state.shape}")
-                lll_hidden_state = layer(lll_hidden_state)[0]
-                if verbose:
-                    print(f"after iterative layer {ilay}: depth, "
-                          "lll_hidden_state.shape\n\t",
-                          f"{depth}, {lll_hidden_state.shape}")
-
-            if verbose:
-                print("before dropout: depth, lll_hidden_state.shape\n\t",
-                      f"{depth}, {lll_hidden_state.shape}")
-            lll_hidden_state = self.dropout_fun(lll_hidden_state)
-            if verbose:
-                print("after dropout: depth, lll_hidden_state.shape\n\t",
-                      f"{depth}, {lll_hidden_state.shape}")
+                comment(
+                    verbose,
+                    prefix="Before iterative layer",
+                    params_d={
+                        "ilay": ilay,
+                        "depth": depth,
+                        "lll_hidstate.shape": lll_hidstate.shape})
+                lll_hidstate = layer(lll_hidstate)[0]
+                hstate_count.new_one()
+                comment(
+                    verbose,
+                    prefix="After iterative layer",
+                    params_d={
+                        "ilay": ilay,
+                        "depth": depth,
+                        "lll_hidstate.shape": lll_hidstate.shape})
+            comment(verbose,
+                    prefix="Before dropout",
+                    params_d={
+                        "depth": depth,
+                        "lll_hidstate.shape": lll_hidstate.shape})
+            lll_hidstate = self.dropout_fun(lll_hidstate)
+            hstate_count.new_one()
+            comment(verbose,
+                    prefix="After dropout",
+                    params_d={
+                        "depth": depth,
+                        "lll_hidstate.shape": lll_hidstate.shape})
             # a chaptgpt generated explanation of this transformation
-            # is given in misc/hidden_states_transformation2.txt
+            # is given in misc/hidstates_transformation2.txt
             lll_loc = x_d["ll_osent_wstart_loc"].unsqueeze(2). \
-                repeat(1, 1, lll_hidden_state.shape[2])
-            lll_word_hidden_state = torch.gather(
-                input=lll_hidden_state,
+                repeat(1, 1, lll_hidstate.shape[2])
+            lll_word_hidstate = torch.gather(
+                input=lll_hidstate,
                 dim=1,
                 index=lll_loc)
-
+            comment(
+                verbose,
+                prefix="gather 2 inputs, then output",
+                params_d={
+                    "lll_hidstate.shape": lll_hidstate.shape,
+                    "lll_loc.shape": lll_loc.shape,
+                    "lll_word_hidstate.shape": lll_word_hidstate.shape})
+            word_hstate_count.new_one(reset=True)
             if depth != 0:
+                comment(
+                    verbose,
+                    prefix="before argmax",
+                    params_d={"lll_word_score.shape": lll_word_score.shape})
                 ll_greedy_ilabel = torch.argmax(lll_word_score, dim=-1)
+                comment(
+                    verbose,
+                    prefix="after argmax",
+                    params_d={"ll_greedy_ilabel.shape":
+                                  ll_greedy_ilabel.shape})
                 # not an integer code/embedding
+                comment(
+                    verbose,
+                    prefix="before embedding",
+                    params_d={"ll_greedy_ilabel.shape":
+                                  ll_greedy_ilabel.shape})
                 lll_pred_code = self.embedding(ll_greedy_ilabel)
-                lll_word_hidden_state += lll_pred_code
-
-            if verbose:
-                print("before merge layer: depth, "
-                      "lll_word_hidden_state.shape\n\t",
-                      f"{depth}, {lll_word_hidden_state.shape}")
-            lll_word_hidden_state = self.merge_layer(lll_word_hidden_state)
-            if verbose:
-                print("after merge layer: depth, "
-                      "lll_word_hidden_state.shape\n\t",
-                      f"{depth}, {lll_word_hidden_state.shape}")
-                print("before ilabelling layer: depth, "
-                      "lll_word_hidden_state.shape\n\t",
-                      f"{depth}, {lll_word_hidden_state.shape}")
-            lll_word_score = self.ilabelling_layer(lll_word_hidden_state)
-            print("after ilabelling layer: depth, lll_word_score.shape\n\t",
-                  f"{depth}, {lll_word_score.shape}")
+                comment(
+                    verbose,
+                    prefix="after embedding",
+                    params_d={"lll_word_hidstate.state":
+                                  lll_word_hidstate.shape})
+                lll_word_hidstate += lll_pred_code
+                word_hstate_count.new_one()
+                comment(
+                    verbose,
+                    prefix="just summed two signals with this shape",
+                    params_d={
+                        "depth": depth,
+                        "lll_word_hidstate.shape": lll_word_hidstate.shape})
+            comment(verbose,
+                    prefix="Before merge layer",
+                    params_d={
+                        "depth": depth,
+                        "lll_word_hidstate.shape": lll_word_hidstate.shape})
+            lll_word_hidstate = self.merge_layer(lll_word_hidstate)
+            comment(
+                verbose,
+                prefix="After merge layer",
+                params_d={
+                    "depth": depth,
+                    "lll_word_hidstate.shape": lll_word_hidstate.shape})
+            comment(
+                verbose,
+                prefix="Before ilabelling",
+                params_d={
+                    "depth": depth,
+                    "lll_word_hidstate.shape": lll_word_hidstate.shape})
+            lll_word_score = self.ilabelling_layer(lll_word_hidstate)
+            comment(
+                verbose,
+                prefix="After ilabelling",
+                params_d={
+                    "depth": depth,
+                    "lll_word_score.shape": lll_word_score.shape})
             llll_word_score.append(lll_word_score)
 
             depth += 1
@@ -571,22 +604,22 @@ class Model(L.LightningModule):
                         break
                 if not valid_extraction:
                     break
-
-        if verbose:
-            print("len(llll_word_score)=", len(llll_word_score))
-            print("llll_word_score[0].shape", llll_word_score[0].shape)
-
+        comment(
+            verbose,
+            params_d={
+                "len(llll_word_score)": len(llll_word_score),
+                "llll_word_score[0].shape": llll_word_score[0].shape})
         return llll_word_score
 
     @staticmethod
-    def sax_hinge_loss(x_d,
+    def sax_penalty_loss(x_d,
                        llll_word_scoreT,
                        con_to_weight):
         """
         similar to Openie6.model.constrained_loss()
 
         This method is called inside sax_batch_loss(). It returns the
-        constraint loss (a.k.a. hinge loss).
+        penalty loss.
 
         Parameters
         ----------
@@ -597,69 +630,72 @@ class Model(L.LightningModule):
         Returns
         -------
         float
-            hinge_loss
+            penalty_loss
 
         """
-        batch_size, num_depths, num_words, icode_dim = llll_word_scoreT.shape
-        hinge_loss = 0
-        llll_index = x_d["ll_osent_verb_loc"].unsqueeze(1).unsqueeze(3). \
-            repeat(1, num_depths, 1, icode_dim)
-        llll_verb_confidence = torch.gather(
+        batch_size, num_depths, num_words, icode_dim = \
+            llll_word_scoreT.shape
+        penalty_loss = 0
+        llll_index = x_d["ll_osent_verb_loc"].\
+            unsqueeze(1).unsqueeze(3).repeat(1, num_depths, 1, icode_dim)
+        llll_verb_trust = torch.gather(
             input=llll_word_scoreT,
             dim=2,
             index=llll_index)
-        lll_verb_rel_confidence = llll_verb_confidence[:, :, :, 2]
+        lll_verb_rel_trust = llll_verb_trust[:, :, :, 2]
         # (batch_size, depth, num_words)
         lll_bool = (x_d["ll_osent_verb_loc"] != 0).unsqueeze(1).float()
 
-        lll_verb_rel_confidence = lll_verb_rel_confidence * lll_bool
+        lll_verb_rel_trust = lll_verb_rel_trust * lll_bool
         # every head-verb must be included in a relation
         if 'hvc' in con_to_weight:
             ll_column_loss = \
-                torch.abs(1 - torch.sum(lll_verb_rel_confidence, dim=1))
+                torch.abs(1 - torch.sum(lll_verb_rel_trust, dim=1))
             ll_column_loss = \
                 ll_column_loss[x_d["ll_osent_verb_loc"] != 0]
-            hinge_loss += con_to_weight['hvc'] * ll_column_loss.sum()
+            penalty_loss += con_to_weight['hvc'] * ll_column_loss.sum()
 
-        # extractions must have at least k-relations with
+        # extractions must have at least k-relations with 
         # a head verb in them
         if 'hvr' in con_to_weight:
             l_a = x_d["ll_osent_verb_bool"].sum(dim=1).float()
-            l_b = torch.max(lll_verb_rel_confidence, dim=2)[0].sum(dim=1)
+            l_b = torch.max(lll_verb_rel_trust, dim=2)[0].sum(dim=1)
             row_rel_loss = F.relu(l_a - l_b)
-            hinge_loss += con_to_weight['hvr'] * row_rel_loss.sum()
+            penalty_loss += con_to_weight['hvr'] * row_rel_loss.sum()
 
         # one relation cannot contain more than one head verb
         if 'hve' in con_to_weight:
-            ll_ex_loss = F.relu(torch.sum(lll_verb_rel_confidence, dim=2) - 1)
-            hinge_loss += con_to_weight['hve'] * ll_ex_loss.sum()
+            ll_ex_loss = \
+                F.relu(torch.sum(lll_verb_rel_trust, dim=2) - 1)
+            penalty_loss += con_to_weight['hve'] * ll_ex_loss.sum()
 
         if 'posm' in con_to_weight:
-            llll_index = x_d["ll_osent_pos_loc"]. \
-                unsqueeze(1).unsqueeze(3).repeat(1, num_depths, 1, icode_dim)
-            llll_pred_confidence = torch.gather(
+            llll_index = \
+                x_d["ll_osent_pos_loc"].unsqueeze(1).unsqueeze(3).\
+                repeat(1, num_depths, 1, icode_dim)
+            llll_pred_trust = torch.gather(
                 input=llll_word_scoreT,
                 dim=2,
                 index=llll_index)
-            lll_pos_not_none_confidence = \
-                torch.max(llll_pred_confidence[:, :, :, 1:], dim=-1)[0]
+            lll_pos_not_none_trust = \
+                torch.max(llll_pred_trust[:, :, :, 1:], dim=-1)[0]
             ll_column_loss = \
-                (1 - torch.max(lll_pos_not_none_confidence, dim=1)[0]) * \
+                (1 - torch.max(lll_pos_not_none_trust, dim=1)[0]) * \
                 (x_d["ll_osent_pos_loc"] != 0).float()
-            hinge_loss += con_to_weight['posm'] * ll_column_loss.sum()
+            penalty_loss += con_to_weight['posm'] * ll_column_loss.sum()
 
-        return hinge_loss
+        return penalty_loss
 
-    def sax_get_con_to_l_hinge_loss(self,
+    def sax_get_con_to_l_penalty_loss(self,
                                     x_d,
                                     llll_word_score,
                                     lll_pred_ilabel0):
         """
-        This method returns a dictionary con_to_l_hinge_loss. Although
-        Openie6 calculates con_to_l_hinge_loss inside self.forward(),
+        This method returns a dictionary con_to_l_penalty_loss. Although
+        Openie6 calculates con_to_l_penalty_loss inside self.forward(),
         it never uses it. SentenceAx doeesn't either.
 
-        con_to_l_hinge_loss similar to Openie6._constD.
+        con_to_l_penalty_loss similar to Openie6._constD.
 
         Parameters
         ----------
@@ -672,7 +708,7 @@ class Model(L.LightningModule):
         dict[str, list[float]]
 
         """
-        con_to_l_hinge_loss = {}
+        con_to_l_penalty_loss = {}
         # this calculates llll_word_score
         if self.constraint_str and \
                 'extract' not in self.params.action and \
@@ -697,16 +733,16 @@ class Model(L.LightningModule):
                 src=1)
 
             # this uses llll_word_score that was calculated previously
-            # to calculate con_to_l_hinge_loss
+            # to calculate con_to_l_penalty_loss
             for constraint, con_weight in self.con_to_weight.items():
-                hinge_loss = Model.sax_hinge_loss(
+                penalty_loss = Model.sax_penalty_loss(
                     x_d,
                     llll_word_scoreT,
                     {constraint: con_weight})
-                if constraint not in con_to_l_hinge_loss:
-                    con_to_l_hinge_loss[constraint] = []
-                con_to_l_hinge_loss[constraint].append(hinge_loss)
-        return con_to_l_hinge_loss
+                if constraint not in con_to_l_penalty_loss:
+                    con_to_l_penalty_loss[constraint] = []
+                con_to_l_penalty_loss[constraint].append(penalty_loss)
+        return con_to_l_penalty_loss
 
     def forward(self, batch, batch_idx, ttt):
         """
@@ -866,7 +902,7 @@ class Model(L.LightningModule):
                     [lll.unsqueeze(1) for lll in llll_word_score], dim=1)
                 llll_word_scoreT = torch.softmax(llll_word_scoreT, dim=-1)
 
-                hinge_loss = Model.sax_hinge_loss(
+                penalty_loss = Model.sax_penalty_loss(
                     x_d,
                     llll_word_scoreT,
                     self.con_to_weight) / batch_size
@@ -875,7 +911,7 @@ class Model(L.LightningModule):
                 # loss = const_loss
                 # instead of
                 # loss += const_loss
-                loss += hinge_loss
+                loss += penalty_loss
 
             if "wreg" in self.params.d:
                 weight_diff = 0
@@ -971,7 +1007,6 @@ class Model(L.LightningModule):
                 al_sample_str += f"<arg2> {arg2} </arg2>\t"
                 al_sample_str += f"{pred_ex.confidence}\n"
             l_pred_al_sample_str.append(al_sample_str.strip())
-
 
         out_fp = f"{M_OUT_DIR}/ex_ssents.txt"
         appended = False if batch_idx == 0 else True
@@ -1262,13 +1297,13 @@ class Model(L.LightningModule):
               str(self.trainer.current_epoch) + ":")
         pprint(scores_epoch_end_d)
         # For computing the constraint violations
-        # if hasattr(self, 'con_to_l_hinge_loss') and \
+        # if hasattr(self, 'con_to_l_penalty_loss') and \
         # self.params.d["constraint_str"] != '':
-        #     for key in self.con_to_l_hinge_loss:
-        #         self.con_to_l_hinge_loss[key] =
-        #         sum(self.con_to_l_hinge_loss[key]).item()
-        #     print('\nViolations: ', self.con_to_l_hinge_loss)
-        #     self.con_to_l_hinge_loss = dict()
+        #     for key in self.con_to_l_penalty_loss:
+        #         self.con_to_l_penalty_loss[key] =
+        #         sum(self.con_to_l_penalty_loss[key]).item()
+        #     print('\nViolations: ', self.con_to_l_penalty_loss)
+        #     self.con_to_l_penalty_loss = dict()
         return scores_epoch_end_d
 
     def sax_on_ttt_epoch_end(self, ttt):

@@ -401,36 +401,12 @@ class Model(L.LightningModule):
         MERGE_DIM= 300
         2 iterative layers and 5 depths.
 
-        Below we show the shape of the input and output tensors for each layer.
-
-        LINES for depth=0
-        LINES for depth=1
-        LINES for depth=2
-        LINES for depth=3
-        LINES for depth=4
-
-        where LINES=
-        encoding_layer: [24, 84, 6]->[24, 105, 768]
-        *****iterative layer 0: [24, 105, 768]->[24, 105, 768]
-        dropout: [24, 105, 768]->[24, 105, 768]
-        bunch of torch operations: [24, 105, 768]->[24, 84, 768]
-        merge layer: [24, 84, 768]->[24, 84, 300]
-        ilabelling_layer: [24, 84, 300]->[24, 84, 6]
-        encoding_layer: [24, 84, 6]->[24, 105, 768]
-        *****iterative layer 1:  [24, 105, 768]->[24, 105, 768]
-        dropout: [24, 105, 768]->[24, 105, 768]
-        bunch of torch operations: [24, 105, 768]->[24, 84, 768]
-        merge layer: [24, 84, 768]->[24, 84, 300]
-        ilabelling_layer: [24, 84, 300]->[24, 84, 6]
-
         lll_word_score is the output of the last ilabelling_layer for each
         depth
 
         llll_word_score is a list of lll_word_score
 
         len( llll_word_score)= 5 = num_depths
-
-        lll_word_score[0].shape = [24, 84, 6]
 
         Note that llll_word_scoreT = Ten(llll_word_score)
         
@@ -516,8 +492,6 @@ class Model(L.LightningModule):
                     params_d={
                         "depth": depth,
                         "lll_hidstate.shape": lll_hidstate.shape})
-            # a chaptgpt generated explanation of this transformation
-            # is given in misc/hidstates_transformation2.txt
             lll_loc = x_d["ll_osent_wstart_loc"].unsqueeze(2). \
                 repeat(1, 1, lll_hidstate.shape[2])
             lll_word_hidstate = torch.gather(
@@ -526,7 +500,7 @@ class Model(L.LightningModule):
                 index=lll_loc)
             comment(
                 verbose,
-                prefix="gather 2 inputs, then output",
+                prefix="Gather's 2 inputs, then output",
                 params_d={
                     "lll_hidstate.shape": lll_hidstate.shape,
                     "lll_loc.shape": lll_loc.shape,

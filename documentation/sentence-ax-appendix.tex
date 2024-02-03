@@ -7,7 +7,8 @@
 
 
 
-\title{SentenceAx Appendix}
+\title{Appendix
+to Bayesuvius Chapter about SentenceAx}
 \date{ \today}
 \author{Robert R. Tucci\\
         tucci@ar-tiste.com}
@@ -118,35 +119,166 @@ def sax_penalty_loss(x_d,
 
 
 
-\section{Original O6 bnet}
+\section{Sax bnet}
 
-In Sax, I have replaced the original
-O6 bnet by a slightly different one.
-In this section, I describe the
-original O6 bnet. In the next section, I describe the current
-Sax bnet and explain why I changed it slightly.
+The Sax chapter gives 
+a drawing
+of the Sax bnet,
+and a list
+of its structural
+equations.
+Both were produced with the texnn tool (Ref.\cite{texnn})
 
-This section describes the bnet 
-in the O6 software in 3 part:
+In this section,
+we provide 
+evidence that
+ sax
+ does indeed implement
+ that bnet correctly.
+
+This section has 3 parts.
+
 \begin{enumerate}
 
-\item Sax code, now replaced, that 
-reproduces the original O6 bnet.
+\item texnn output
+
+\item Sax code
+that implements the bnet.
 \item Excerpt of print-out to console produced when I run
 the jupyter notebook for training 
-the NN for task=ex.
-
-\item Output of texnn tool (Ref.\cite{texnn})
-with drawing 
-and structural equations for original O6 bnet.
+the NN for task=ex. 
 
 
 \end{enumerate}
 
+\subsection{texnn output}
+
+\begin{figure}[h!]\centering
+$$\xymatrix@R=2.5pc@C=3.5pc{
+&&
+\\
+&&
+\\
+&*+[F*:Dandelion]{\underline{M}^{[86], [300]}}\ar[uu]\ar[r]^{W_{il}}&*+[F*:SkyBlue]{\underline{L}^{[86], [6]}}\ar[uu]
+\\
+*+[F*:pink]{\underline{S}^{[86], [768]}}\ar[ur]^{W_{me}}&*+[F*:pink]{\underline{E}^{[86], [768]}}\ar[l]^{1}&*+[F*:yellow]{\underline{a}^{[86]}}\ar[l]
+\\
+*+[F*:Orchid]{\underline{d}^{[121], [768]}}\ar[r]&*+[F*:pink]{\underline{G}^{[86], [768]}}\ar@[red]@/_5pc/[uu]|-{\color{red} W_{me}}\ar[ul]^{1}&
+\\
+&*+[F*:Orchid]{\underline{I}^{[121], [768]}}\ar[ul]&
+\\
+&*+[F*:Orchid]{\underline{B}^{[121], [768]}}\ar[u]&*+[F*:SkyBlue]{\underline{X}^{[86], [6]}}\ar[uuu]
+\save
+\POS"3,1"."6,1"."3,3"."6,3"!C*+<4.8em>\frm{-,}
+\POS"6,2"."6,2"."6,2"."6,2"!C*+<3.8em>\frm{--}
+\POS"4,1"."4,1"."4,3"."4,3"!C*+<1.0em>\frm{.}
+\restore
+}$$
+\caption{Sax bnet. 2 copies of dashed box are connected in series. 5 copies (5 depths) of plain box are connected in series.  However, in the first of those 5 plain box copies, the dotted box  is omitted and node $\ul{G}$ feeds directly into node  $\ul{M}$ (indicated by red arrow). We display the tensor shape superscripts in the PyTorch L2R order. All tensor shape superscripts have been simplified by omitting a $[s_{ba}]$ from their left side, where $s_{ba}=24$ is the batch size. $D= d n_\rvh$ where $d=768$ is the hidden dimension per head, and $n_\rvh=12$ is the number of heads. }
+\label{fig-texnn-for-sentence-ax-bnet}
+\end{figure}
+
+\begin{tabular}{ll}
+$\underline{a}^{[86]}$ :&{\tt ll\_greedy\_ilabel}\\
+$\underline{B}^{[121], [768]}$ :&{\tt lll\_hidstate}\\
+$\underline{d}^{[121], [768]}$ :&{\tt lll\_hidstate}\\
+$\underline{E}^{[86], [768]}$ :&{\tt lll\_pred\_code}\\
+$\underline{G}^{[86], [768]}$ :&{\tt lll\_word\_hidstate}\\
+$\underline{I}^{[121], [768]}$ :&{\tt lll\_hidstate}\\
+$\underline{L}^{[86], [6]}$ :&{\tt lll\_word\_score}\\
+$\underline{M}^{[86], [300]}$ :&{\tt lll\_word\_hidstate}\\
+$\underline{S}^{[86], [768]}$ :&{\tt lll\_word\_hidstate}\\
+$\underline{X}^{[86], [6]}$ :&{\tt lll\_word\_score}
+\end{tabular}
+
+
+
+\begin{subequations}
+
+\begin{equation}\color{blue}
+\begin{aligned}
+a^{[86]} &= \text{argmax}(X^{[86], [6]};dim=-1)
+\label{eq-a-fun-sentence-ax-bnet}
+\\ &:{\tt ll\_greedy\_ilabel}
+\end{aligned}
+\end{equation}
+
+\begin{equation}\color{blue}
+\begin{aligned}
+B^{[121], [768]} &= \text{BERT}()
+\label{eq-B-fun-sentence-ax-bnet}
+\\ &:{\tt lll\_hidstate}
+\end{aligned}
+\end{equation}
+
+\begin{equation}\color{blue}
+\begin{aligned}
+d^{[121], [768]} &= \text{dropout}(I^{[121], [768]})
+\label{eq-d-fun-sentence-ax-bnet}
+\\ &:{\tt lll\_hidstate}
+\end{aligned}
+\end{equation}
+
+\begin{equation}\color{blue}
+\begin{aligned}
+E^{[86], [768]} &= \text{embedding}(a^{[86]})
+\label{eq-E-fun-sentence-ax-bnet}
+\\ &:{\tt lll\_pred\_code}
+\end{aligned}
+\end{equation}
+
+\begin{equation}\color{blue}
+\begin{aligned}
+G^{[86], [768]} &= \text{gather}(d^{[121], [768]};dim=-2)
+\label{eq-G-fun-sentence-ax-bnet}
+\\ &:{\tt lll\_word\_hidstate}
+\end{aligned}
+\end{equation}
+
+\begin{equation}\color{blue}
+\begin{aligned}
+I^{[121], [768]} &= \left[B^{[121], [768]}\indi(depth=0) M^{[86], [300]}\indi(depth> 0)\right]
+\label{eq-I-fun-sentence-ax-bnet}
+\\ &:{\tt lll\_hidstate}
+\end{aligned}
+\end{equation}
+
+\begin{equation}\color{blue}
+\begin{aligned}
+L^{[86], [6]} &= M^{[86], [300]}W_{il}^{[300],[6]}
+\label{eq-L-fun-sentence-ax-bnet}
+\\ &:{\tt lll\_word\_score}
+\end{aligned}
+\end{equation}
+
+\begin{equation}\color{blue}
+\begin{aligned}
+M^{[86], [300]} &= \left[G^{[86], [768]}\indi(depth=0) + S^{[86], [768]}\indi(depth> 0) \right] W_{me}^{[768], [300]}
+\label{eq-M-fun-sentence-ax-bnet}
+\\ &:{\tt lll\_word\_hidstate}
+\end{aligned}
+\end{equation}
+
+\begin{equation}\color{blue}
+\begin{aligned}
+S^{[86], [768]} &= E^{[86], [768]} + G^{[86], [768]}
+\label{eq-S-fun-sentence-ax-bnet}
+\\ &:{\tt lll\_word\_hidstate}
+\end{aligned}
+\end{equation}
+
+\begin{equation}\color{blue}
+\begin{aligned}
+X^{[86], [6]} &= L^{[86], [6]}\indi(depth> 0)
+\label{eq-X-fun-sentence-ax-bnet}
+\\ &:{\tt lll\_word\_score}
+\end{aligned}
+\end{equation}
+
+\end{subequations}
 
 \subsection{ 
-Defunct Sax code that reproduces
-O6 bnet}
+Sax code that implements the Sax bnet}
 
 \begin{lstlisting}[language=Python]
 def sax_get_llll_word_score(self, x_d, ttt, verbose=False):
@@ -171,7 +303,7 @@ depth
 
 llll_word_score is a list of lll_word_score
 
-len( llll_word_score)= 5 = num_depths
+len(llll_word_score)= 5 = num_depths
 
 Note that llll_word_scoreT = Ten(llll_word_score)
 
@@ -197,7 +329,6 @@ list[torch.Tensor]
 # sometimes num_depths will exceed max.
 # This doesn't happen when training, because
 # num_depths is specified when training.
-# if ttt != 'train':
 num_depths = get_num_depths(self.params.task)
 
 # `loss_fun` is not used in this function anymore
@@ -210,13 +341,13 @@ hstate_count = Counter(verbose, "lll_hidstate")
 word_hstate_count = Counter(verbose, "lll_word_hidstate")
 lll_hidstate, _ = self.starting_model(x_d["ll_osent_icode"])
 hstate_count.new_one(reset=True)
-if verbose:
-    print()
-    print("ll_osent_icode.shape", x_d["ll_osent_icode"].shape)
-    print("after starting_model, lll_hidstate.shape",
-          lll_hidstate.shape)
-
-lll_word_score = Ten([0])  # this statement is unecessary
+comment(
+    verbose,
+    prefix="after starting_model",
+    params_d={
+        "ll_osent_icode.shape": x_d["ll_osent_icode"].shape,
+        "lll_hidstate.shape": lll_hidstate.shape})
+lll_word_score = Ten([0])  # this statement is unnecessary
 llll_word_score = []  # ~ Openie6.all_depth_scores
 depth = 0
 # loop over depths
@@ -227,8 +358,7 @@ while True:
                 params_d={"ilay": ilay})
         # layer(lll_hidstate)[0] returns a copy
         # of the tensor lll_hidstate after transforming it
-        # in some way
-        # [0] chooses first component
+        # in some way. [0] chooses first component
         comment(
             verbose,
             prefix="Before iterative layer",
@@ -357,13 +487,18 @@ return llll_word_score
 
 \begin{lstlisting}[language=Python]
 """
-after starting_model, lll_hidstate.shape torch.Size([4, 121, 768])
+Entering Model.training_step method, batch_idx=0
+'lll_hidstate' count changed: 0->1
+after starting_model
+    ll_osent_icode.shape=torch.Size([4, 121])
+    lll_hidstate.shape=torch.Size([4, 121, 768])
 *********** Starting iterative layer
     ilay=0
 Before iterative layer
     ilay=0
     depth=0
     lll_hidstate.shape=torch.Size([4, 121, 768])
+'lll_hidstate' count changed: 1->2
 After iterative layer
     ilay=0
     depth=0
@@ -374,6 +509,7 @@ Before iterative layer
     ilay=1
     depth=0
     lll_hidstate.shape=torch.Size([4, 121, 768])
+'lll_hidstate' count changed: 2->3
 After iterative layer
     ilay=1
     depth=0
@@ -381,6 +517,7 @@ After iterative layer
 Before dropout
     depth=0
     lll_hidstate.shape=torch.Size([4, 121, 768])
+'lll_hidstate' count changed: 3->4
 After dropout
     depth=0
     lll_hidstate.shape=torch.Size([4, 121, 768])
@@ -388,6 +525,7 @@ Gather's 2 inputs, then output
     lll_hidstate.shape=torch.Size([4, 121, 768])
     lll_loc.shape=torch.Size([4, 86, 768])
     lll_word_hidstate.shape=torch.Size([4, 86, 768])
+'lll_word_hidstate' count changed: 0->1
 Before merge layer
     depth=0
     lll_word_hidstate.shape=torch.Size([4, 86, 768])
@@ -406,6 +544,7 @@ Before iterative layer
     ilay=0
     depth=1
     lll_hidstate.shape=torch.Size([4, 121, 768])
+'lll_hidstate' count changed: 4->5
 After iterative layer
     ilay=0
     depth=1
@@ -416,6 +555,7 @@ Before iterative layer
     ilay=1
     depth=1
     lll_hidstate.shape=torch.Size([4, 121, 768])
+'lll_hidstate' count changed: 5->6
 After iterative layer
     ilay=1
     depth=1
@@ -423,13 +563,15 @@ After iterative layer
 Before dropout
     depth=1
     lll_hidstate.shape=torch.Size([4, 121, 768])
+'lll_hidstate' count changed: 6->7
 After dropout
     depth=1
     lll_hidstate.shape=torch.Size([4, 121, 768])
-gather 2 inputs, then output
+Gather's 2 inputs, then output
     lll_hidstate.shape=torch.Size([4, 121, 768])
     lll_loc.shape=torch.Size([4, 86, 768])
     lll_word_hidstate.shape=torch.Size([4, 86, 768])
+'lll_word_hidstate' count changed: 0->1
 before argmax
     lll_word_score.shape=torch.Size([4, 86, 6])
 after argmax
@@ -438,6 +580,7 @@ before embedding
     ll_greedy_ilabel.shape=torch.Size([4, 86])
 after embedding
     lll_word_hidstate.state=torch.Size([4, 86, 768])
+'lll_word_hidstate' count changed: 1->2
 just summed two signals with this shape
     depth=1
     lll_word_hidstate.shape=torch.Size([4, 86, 768])
@@ -453,297 +596,12 @@ Before ilabelling
 After ilabelling
     depth=1
     lll_word_score.shape=torch.Size([4, 86, 6])
-*********** Starting iterative layer
-    ilay=0
-Before iterative layer
-    ilay=0
-    depth=2
-    lll_hidstate.shape=torch.Size([4, 121, 768])
-After iterative layer
-    ilay=0
-    depth=2
-    lll_hidstate.shape=torch.Size([4, 121, 768])
 """
 \end{lstlisting}
 
-\subsection{texnn output for
-original O6  bnet}
-\begin{figure}[h!]\centering
-$$\xymatrix@R=2.5pc@C=3.5pc{
-&&&
-\\
-&&&
-\\
-&*+[F*:Dandelion]{\underline{M}^{[86], [300]}}\ar[uu]\ar[rr]^{W_{il}}&&*+[F*:SkyBlue]{\underline{L}^{[86], [6]}}
-\\
-*+[F*:pink]{\underline{S}^{[86], [768]}}\ar[ur]^{W_{me}}&*+[F*:pink]{\underline{E}^{[86], [768]}}\ar[l]^{1}&*+[F*:yellow]{\underline{a}^{[86]}}\ar[l]&
-\\
-&*+[F*:pink]{\underline{G}^{[86], [768]}}\ar[ur]\ar@[red]@/_5pc/[uu]|-{\color{red} W_{me}}\ar[ul]^{1}&*+[F*:Orchid]{\underline{d}^{[121], [768]}}\ar[l]&
-\\
-&*+[F*:Orchid]{\underline{I}^{[121], [768]}}\ar[ur]&&
-\\
-&*+[F*:Orchid]{\underline{B}^{[121], [768]}}\ar[u]&&
-\save
-\POS"3,1"."6,1"."3,3"."6,3"!C*+<4.8em>\frm{-,}
-\POS"6,2"."6,2"."6,2"."6,2"!C*+<3.8em>\frm{--}
-\POS"4,1"."4,1"."4,3"."4,3"!C*+<1.0em>\frm{.}
-\restore
-}$$
-\caption{O6 bnet. (Slightly different from Sax bnet). 2 copies of dashed box are connected in series. 5 copies  (5 depths) of plain box are connected in series.  However, in the first of those 5 plain box copies, the dotted box  is omited and node $\ul{G}$ feeds directly into node  $\ul{M}$ (indicated by red arrow). We display the tensor shape superscripts in the PyTorch L2R order. All tensor shape superscripts have been simplified by omitting a $[s_{ba}]$ from their left side, where $s_{ba}=24$ is the batch size. $D= d n_\rvh$ where $d=768$ is the hidden dimension per head, and $n_\rvh=12$ is the number of heads. }
-\label{fig-texnn-for-sentence-ax-o6-bnet}
-\end{figure}
-
-\begin{tabular}{ll}
-$\underline{a}^{[86]}$ :&{\tt ll\_greedy\_ilabel}\\
-$\underline{B}^{[121], [768]}$ :&{\tt lll\_hidstate}\\
-$\underline{d}^{[121], [768]}$ :&{\tt lll\_hidstate}\\
-$\underline{E}^{[86], [768]}$ :&{\tt lll\_pred\_code}\\
-$\underline{G}^{[86], [768]}$ :&{\tt lll\_word\_hidstate}\\
-$\underline{I}^{[121], [768]}$ :&{\tt lll\_hidstate}\\
-$\underline{L}^{[86], [6]}$ :&{\tt lll\_word\_score}\\
-$\underline{M}^{[86], [300]}$ :&{\tt lll\_word\_hidstate}\\
-$\underline{S}^{[86], [768]}$ :&{\tt lll\_word\_hidstate}
-\end{tabular}
 
 
 
-\begin{subequations}
-
-\begin{equation}\color{blue}
-\begin{aligned}
-a^{[86]} &= \text{argmax}(G^{[86], [768]};dim=-1)
-\label{eq-a-fun-sentence-ax-o6-bnet}
-\\ &:{\tt ll\_greedy\_ilabel}
-\end{aligned}
-\end{equation}
-
-\begin{equation}\color{blue}
-\begin{aligned}
-B^{[121], [768]} &= \text{BERT}()
-\label{eq-B-fun-sentence-ax-o6-bnet}
-\\ &:{\tt lll\_hidstate}
-\end{aligned}
-\end{equation}
-
-\begin{equation}\color{blue}
-\begin{aligned}
-d^{[121], [768]} &= \text{dropout}(I^{[121], [768]})
-\label{eq-d-fun-sentence-ax-o6-bnet}
-\\ &:{\tt lll\_hidstate}
-\end{aligned}
-\end{equation}
-
-\begin{equation}\color{blue}
-\begin{aligned}
-E^{[86], [768]} &= \text{embedding}(a^{[86]})
-\label{eq-E-fun-sentence-ax-o6-bnet}
-\\ &:{\tt lll\_pred\_code}
-\end{aligned}
-\end{equation}
-
-\begin{equation}\color{blue}
-\begin{aligned}
-G^{[86], [768]} &= \text{gather}(d^{[121], [768]};dim=-2)
-\label{eq-G-fun-sentence-ax-o6-bnet}
-\\ &:{\tt lll\_word\_hidstate}
-\end{aligned}
-\end{equation}
-
-\begin{equation}\color{blue}
-\begin{aligned}
-I^{[121], [768]} &= \left[B^{[121], [768]}\indi(depth=0) + M^{[86], [300]}\indi(depth\neq 0)\right]
-\label{eq-I-fun-sentence-ax-o6-bnet}
-\\ &:{\tt lll\_hidstate}
-\end{aligned}
-\end{equation}
-
-\begin{equation}\color{blue}
-\begin{aligned}
-L^{[86], [6]} &= M^{[86], [300]}W_{il}^{[300],[6]}
-\label{eq-L-fun-sentence-ax-o6-bnet}
-\\ &:{\tt lll\_word\_score}
-\end{aligned}
-\end{equation}
-
-\begin{equation}\color{blue}
-\begin{aligned}
-M^{[86], [300]} &= \left[S^{[86], [768]}\indi(depth\neq 0) + G^{[86], [768]}\indi(depth=0)\right] W_{mer}^{[768], [300]}
-\label{eq-M-fun-sentence-ax-o6-bnet}
-\\ &:{\tt lll\_word\_hidstate}
-\end{aligned}
-\end{equation}
-
-\begin{equation}\color{blue}
-\begin{aligned}
-S^{[86], [768]} &= E^{[86], [768]} + G^{[86], [768]}
-\label{eq-S-fun-sentence-ax-o6-bnet}
-\\ &:{\tt lll\_word\_hidstate}
-\end{aligned}
-\end{equation}
-
-\end{subequations}
-
-\section{Sax Code for current Sax  bnet}
-
-I changed the O6 bnet
-to the current one
-because the O6 bnet treats
-the first extraction ($depth=0$)
-differently from
-the higher depth extractions.
-(the dotted box is only 
-used for $depth\neq 0$).
-In the current
-Sax bnet, all 5 depths
-are
- treated the same.
- 
- This bnet change was achieved
-easily by
- \begin{enumerate}
- \item
- Calling the output of node $\ul{S}$, {\tt lll\_pred\_code0}.
- 
- Initializing variable
- {\tt lll\_pred\_code0}
- to zero before going through
- any layers.
- \item Eliminating the 
- line {\tt if depth != 0:}
- Note that whereas in the
- O6 bnet, feedback occurred 
- solely through the node $\ul{M}$,
- in the new Sax bnet,
- feedback occurs via nodes
- $\ul{S}$ and $\ul{M}$.
- 
- \end{enumerate}
-
-
-\subsection{texnn output for current Sax bnet}
-
-\begin{figure}[h!]\centering
-$$\xymatrix@R=2.5pc@C=3.5pc{
-&&&
-\\
-&&&
-\\
-&*+[F*:Dandelion]{\underline{M}^{[86], [300]}}\ar[uu]\ar[rr]^{W_{il}}&&*+[F*:SkyBlue]{\underline{L}^{[86], [6]}}
-\\
-*+[F*:pink]{\underline{S}^{[86], [768]}}\ar[uuu]\ar[ur]^{W_{me}}&*+[F*:pink]{\underline{E}^{[86], [768]}}\ar[l]_{1}&*+[F*:yellow]{\underline{a}^{[86]}}\ar[l]&
-\\
-&*+[F*:pink]{\underline{G}^{[86], [768]}}\ar[ur]&*+[F*:Orchid]{\underline{d}^{[121], [768]}}\ar[l]&
-\\
-&*+[F*:Orchid]{\underline{I}^{[121], [768]}}\ar[ur]&&
-\\
-*+[F*:pink]{\underline{X}^{[86], [768]}}\ar[uuu]^{1}&*+[F*:Orchid]{\underline{B}^{[121], [768]}}\ar[u]&&
-\save
-\POS"3,1"."6,1"."3,3"."6,3"!C*+<4.8em>\frm{-,}
-\POS"6,2"."6,2"."6,2"."6,2"!C*+<3.8em>\frm{--}
-\restore
-}$$
-\caption{Sax bnet. (Slightly different from O6 bnet). 2 copies of dashed box are connected in series. 5 copies (5 depths) of plain box are connected in series. We display the tensor shape superscripts in the PyTorch L2R order. All tensor shape superscripts have been simplified by omitting a $[s_{ba}]$ from their left side, where $s_{ba}=24$ is the batch size. $D= d n_\rvh$ where $d=768$ is the hidden dimension per head, and $n_\rvh=12$ is the number of heads. }
-\label{fig-texnn-for-sentence-ax-bnet}
-\end{figure}
-
-\begin{tabular}{ll}
-$\underline{a}^{[86]}$ :&{\tt ll\_greedy\_ilabel}\\
-$\underline{B}^{[121], [768]}$ :&{\tt lll\_hidstate}\\
-$\underline{d}^{[121], [768]}$ :&{\tt lll\_hidstate}\\
-$\underline{E}^{[86], [768]}$ :&{\tt lll\_pred\_code}\\
-$\underline{G}^{[86], [768]}$ :&{\tt lll\_word\_hidstate}\\
-$\underline{I}^{[121], [768]}$ :&{\tt lll\_hidstate}\\
-$\underline{L}^{[86], [6]}$ :&{\tt lll\_word\_score}\\
-$\underline{M}^{[86], [300]}$ :&{\tt lll\_merge\_hidstate}\\
-$\underline{S}^{[86], [768]}$ :&{\tt lll\_pred\_code0}\\
-$\underline{X}^{[86], [768]}$ :&{\tt lll\_pred\_code0}
-\end{tabular}
-
-
-
-\begin{subequations}
-
-\begin{equation}\color{blue}
-\begin{aligned}
-a^{[86]} &= \text{argmax}(G^{[86], [768]};dim=-1)
-\label{eq-a-fun-sentence-ax-bnet}
-\\ &:{\tt ll\_greedy\_ilabel}
-\end{aligned}
-\end{equation}
-
-\begin{equation}\color{blue}
-\begin{aligned}
-B^{[121], [768]} &= \text{BERT}()
-\label{eq-B-fun-sentence-ax-bnet}
-\\ &:{\tt lll\_hidstate}
-\end{aligned}
-\end{equation}
-
-\begin{equation}\color{blue}
-\begin{aligned}
-d^{[121], [768]} &= \text{dropout}(I^{[121], [768]})
-\label{eq-d-fun-sentence-ax-bnet}
-\\ &:{\tt lll\_hidstate}
-\end{aligned}
-\end{equation}
-
-\begin{equation}\color{blue}
-\begin{aligned}
-E^{[86], [768]} &= \text{embedding}(a^{[86]})
-\label{eq-E-fun-sentence-ax-bnet}
-\\ &:{\tt lll\_pred\_code}
-\end{aligned}
-\end{equation}
-
-\begin{equation}\color{blue}
-\begin{aligned}
-G^{[86], [768]} &= \text{gather}(d^{[121], [768]};dim=-2)
-\label{eq-G-fun-sentence-ax-bnet}
-\\ &:{\tt lll\_word\_hidstate}
-\end{aligned}
-\end{equation}
-
-\begin{equation}\color{blue}
-\begin{aligned}
-I^{[121], [768]} &= \left[B^{[121], [768]}\indi(depth=0) + M^{[86], [300]}\indi(depth\neq 0)\right]
-\label{eq-I-fun-sentence-ax-bnet}
-\\ &:{\tt lll\_hidstate}
-\end{aligned}
-\end{equation}
-
-\begin{equation}\color{blue}
-\begin{aligned}
-L^{[86], [6]} &= M^{[86], [300]}W_{il}^{[300],[6]}
-\label{eq-L-fun-sentence-ax-bnet}
-\\ &:{\tt lll\_word\_score}
-\end{aligned}
-\end{equation}
-
-\begin{equation}\color{blue}
-\begin{aligned}
-M^{[86], [300]} &= S^{[86], [768]} W_{me}^{[768], [300]}
-\label{eq-M-fun-sentence-ax-bnet}
-\\ &:{\tt lll\_merge\_hidstate}
-\end{aligned}
-\end{equation}
-
-\begin{equation}\color{blue}
-\begin{aligned}
-S^{[86], [768]} &= E^{[86], [768]} + X^{[86], [768]}
-\label{eq-S-fun-sentence-ax-bnet}
-\\ &:{\tt lll\_pred\_code0}
-\end{aligned}
-\end{equation}
-
-\begin{equation}\color{blue}
-\begin{aligned}
-X^{[86], [768]} &= S^{[86], [768]}\indi(depth\neq 0)
-\label{eq-X-fun-sentence-ax-bnet}
-\\ &:{\tt lll\_pred\_code0}
-\end{aligned}
-\end{equation}
-
-\end{subequations}
 
 
 \bibliographystyle{plain}

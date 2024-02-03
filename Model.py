@@ -406,10 +406,10 @@ class Model(L.LightningModule):
 
         llll_word_score is a list of lll_word_score
 
-        len( llll_word_score)= 5 = num_depths
+        len(llll_word_score)= 5 = num_depths
 
         Note that llll_word_scoreT = Ten(llll_word_score)
-        
+
         Parameters
         ----------
         x_d: OrderedDict
@@ -432,7 +432,6 @@ class Model(L.LightningModule):
         # sometimes num_depths will exceed max.
         # This doesn't happen when training, because
         # num_depths is specified when training.
-        # if ttt != 'train':
         num_depths = get_num_depths(self.params.task)
 
         # `loss_fun` is not used in this function anymore
@@ -445,13 +444,13 @@ class Model(L.LightningModule):
         word_hstate_count = Counter(verbose, "lll_word_hidstate")
         lll_hidstate, _ = self.starting_model(x_d["ll_osent_icode"])
         hstate_count.new_one(reset=True)
-        if verbose:
-            print()
-            print("ll_osent_icode.shape", x_d["ll_osent_icode"].shape)
-            print("after starting_model, lll_hidstate.shape",
-                  lll_hidstate.shape)
-
-        lll_word_score = Ten([0])  # this statement is unecessary
+        comment(
+            verbose,
+            prefix="after starting_model",
+            params_d={
+                "ll_osent_icode.shape": x_d["ll_osent_icode"].shape,
+                "lll_hidstate.shape": lll_hidstate.shape})
+        lll_word_score = Ten([0])  # this statement is unnecessary
         llll_word_score = []  # ~ Openie6.all_depth_scores
         depth = 0
         # loop over depths
@@ -462,8 +461,7 @@ class Model(L.LightningModule):
                         params_d={"ilay": ilay})
                 # layer(lll_hidstate)[0] returns a copy
                 # of the tensor lll_hidstate after transforming it
-                # in some way
-                # [0] chooses first component
+                # in some way. [0] chooses first component
                 comment(
                     verbose,
                     prefix="Before iterative layer",
@@ -587,8 +585,8 @@ class Model(L.LightningModule):
 
     @staticmethod
     def sax_penalty_loss(x_d,
-                       llll_word_scoreT,
-                       con_to_weight):
+                         llll_word_scoreT,
+                         con_to_weight):
         """
         similar to Openie6.model.constrained_loss()
 
@@ -610,7 +608,7 @@ class Model(L.LightningModule):
         batch_size, num_depths, num_words, icode_dim = \
             llll_word_scoreT.shape
         penalty_loss = 0
-        llll_index = x_d["ll_osent_verb_loc"].\
+        llll_index = x_d["ll_osent_verb_loc"]. \
             unsqueeze(1).unsqueeze(3).repeat(1, num_depths, 1, icode_dim)
         llll_verb_trust = torch.gather(
             input=llll_word_scoreT,
@@ -645,8 +643,8 @@ class Model(L.LightningModule):
 
         if 'posm' in con_to_weight:
             llll_index = \
-                x_d["ll_osent_pos_loc"].unsqueeze(1).unsqueeze(3).\
-                repeat(1, num_depths, 1, icode_dim)
+                x_d["ll_osent_pos_loc"].unsqueeze(1).unsqueeze(3). \
+                    repeat(1, num_depths, 1, icode_dim)
             llll_pred_trust = torch.gather(
                 input=llll_word_scoreT,
                 dim=2,
@@ -661,9 +659,9 @@ class Model(L.LightningModule):
         return penalty_loss
 
     def sax_get_con_to_l_penalty_loss(self,
-                                    x_d,
-                                    llll_word_score,
-                                    lll_pred_ilabel0):
+                                      x_d,
+                                      llll_word_score,
+                                      lll_pred_ilabel0):
         """
         This method returns a dictionary con_to_l_penalty_loss. Although
         Openie6 calculates con_to_l_penalty_loss inside self.forward(),

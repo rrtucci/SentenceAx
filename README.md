@@ -28,7 +28,7 @@ www.ar-tiste.xyz
     * SentenceAx (this repo)
     * Causal Fitbit (coming soon)
 
-
+![Mappa Mundi Project](pics/mappa-mundi-4-pillars.jpg)
 ## Weights and Input Dataset
 
 Due to a < 50MB per file limitation at Github, the weights and input datasets will be located at HuggingFace.

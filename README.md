@@ -1,17 +1,18 @@
-# Sentence Ax
+# SentenceAx
 
 
-![Sentence Ax](pics/sentence_ax_logo.jpg)
+![SentenceAx](pics/sentence_ax_logo.jpg)
+![SentenceAx Bayesian Network](pics/sentence-ax-bnet.jpg)
 
-Sentence Ax is a complete rewrite, from stem to stern, of Openie6.
+SentenceAx is a complete rewrite, from stem to stern, of Openie6.
 
 https://github.com/dair-iitd/openie6
 
-Sentence Ax decomposes a compound or complex sentence
+SentenceAx decomposes a compound or complex sentence
 into a set of simple sentences (extractions). It does this using 
 a fine-tuned BERT model.
 
-Sentence Ax is a stand-alone app, but, just like the
+SentenceAx is a stand-alone app, but, just like the
 SCuMpy app,
 it's also 
 a key component of the 
@@ -35,11 +36,11 @@ Due to a < 50MB per file limitation at Github, the weights and input datasets wi
 * input dataset. Unzip [this file](https://huggingface.co/datasets/rrtucci/SentenceAx-input-data) and use it to replace the 
 directory `input_data` of this github repo. 
 
-## History
+## Documentation
 
-* (2023/11/05) [This blog post](https://qbnets.wordpress.com/2023/11/05/sentenceax-my-open-source-software-for-sentence-splitting/)
- gives more info about SentenceAx,
-at the time  of its first public unveiling.
-* (2023/12/17) Finally, SentenceAx is ready for the final step, training. 
-  [Posted here](https://qbnets.wordpress.com/2023/12/17/call-for-help-with-open-source-project-sentenceax/)
- our call for GPU help.
+* [My blog posts about SentenceAx](https://qbnets.wordpress.com/?s=SentenceAx)
+
+* Chapter entitled ``[Sentence Splitting with SentenceAx](https://github.com/rrtucci/Bayesuvius/raw/master/sentence-ax-chapter.pdf)" in my free open 
+  source
+book Bayesuvius 
+* [Appendix](https://github.com/rrtucci/SentenceAx/raw/master/documentation/sentence-ax-appendix.pdf) to the Chapter in Bayesuvius

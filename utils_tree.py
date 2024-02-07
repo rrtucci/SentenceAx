@@ -509,8 +509,9 @@ def get_different_depth_subtrees(full_tree,
                 l_tree = add_empty_leafs(l_tree)
             else:
                 l_tree = remove_empty_leafs(l_tree)
-            for depth1, tree1 in enumerate(l_tree):
-                print(f"depth={depth1}, tree={tree1}")
+            if verbose:
+                for depth1, tree1 in enumerate(l_tree):
+                    print(f"depth={depth1}, tree={tree1}")
             return l_tree
 
 

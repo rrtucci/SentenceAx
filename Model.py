@@ -81,7 +81,6 @@ class Model(L.LightningModule):
     embedding: Embedding
     hidden_size: int
     ilabelling_layer: Linear
-    init_name_to_param: dict[str, variable]
     iterative_transformer: ModuleList
     l_batch_m_out: list[MOutput]
     l_cc_epoch_sample_str: list[str]
@@ -91,10 +90,11 @@ class Model(L.LightningModule):
     merge_layer: Linear
     metric: CCMetric | ExMetric
     name: str
+    name_to_param0: dict[str, Any]
     osent_to_words: dict[str, list[str]]
     params: Params
     scores_epoch_end_d: dict[str, Any]
-    prior_model: BertModel
+    base_model: BertModel
     sub_osent_to_osent: dict[str, str]
         dictionary that maps sentences to sentences.
         Both Model and ExMetric possess a pointer to this dictionary.
@@ -138,46 +138,44 @@ class Model(L.LightningModule):
 
         self.params = params
         self.auto_tokenizer = auto_tokenizer
-        self.init_name_to_param = None
         self.verbose = verbose
         self.name = name
 
         # return_dict=False avoids error message from Dropout
-        self.prior_model = AutoModel.from_pretrained(
+        self.base_model = AutoModel.from_pretrained(
             self.params.d["model_str"],
             cache_dir=CACHE_DIR,
             return_dict=False)
-        self.hidden_size = self.prior_model.config.hidden_size
+        self.hidden_size = self.base_model.config.hidden_size
         if self.verbose:
             print("Model init")
             print(f"\tname={self.name}, hidden_size={self.hidden_size}")
 
         # Actually, self.params.d["num_iterative_layers"]=2 for all Params.pid
         if self.params.d["num_iterative_layers"] > 0:
-            num_layers = len(self.prior_model.encoder.layer)
+            num_layers = len(self.base_model.encoder.layer)
             num_encoder_layers = \
                 num_layers - self.params.d["num_iterative_layers"]
             self.iterative_transformer = \
-                self.prior_model.encoder.layer[
+                self.base_model.encoder.layer[
                 num_encoder_layers:num_layers]
-            # this truncation of self.prior_model.encoder.layer must
+            # this truncation of self.base_model.encoder.layer must
             # be done after, not before defining self.iterative_transformer
-            self.prior_model.encoder.layer = \
-                self.prior_model.encoder.layer[0:num_encoder_layers]
+            self.base_model.encoder.layer = \
+                self.base_model.encoder.layer[0:num_encoder_layers]
             if verbose:
                 print("num_iterative_layers= ", num_layers -
                       num_encoder_layers)
                 print("num_encoder_layers= ", num_encoder_layers)
                 print("total num layers= ", num_layers)
-                print("iterative_transformer=", self.iterative_transformer)
         else:
             self.iterative_transformer = []
 
-        self.dropout_fun = nn.Dropout(p=DROPOUT)  # 0.0
+        self.dropout_fun = nn.Dropout(p=PROB_DROPOUT)  # 0.0
 
         self.embedding = nn.Embedding(
-            100,  # vocab size
-            self.hidden_size)  # dim of embedding space
+            MAX_NUM_OSENTL_WORDS, # maximum number of words analyzed, 100
+            self.hidden_size)  # dim of embedding space, 768
         self.merge_layer = nn.Linear(self.hidden_size,  # 768
                                      MERGE_DIM)  # 300
         self.ilabelling_layer = nn.Linear(MERGE_DIM,  # 300
@@ -209,9 +207,6 @@ class Model(L.LightningModule):
 
         self.scores_epoch_end_d = {}  # filled in test_epoch_end()
 
-        # Openie6 has this as Model attribute but not SentenceAx
-        # self.init_name_to_param=None
-
         if "multi_opt" not in self.params.d \
                 or not self.params.d["multi_opt"]:
             constraint_str = ""
@@ -232,9 +227,14 @@ class Model(L.LightningModule):
                               l_constraint[k]}
 
         # no longer used
-        # self.l_cc_epoch_sample_str = []  # Openie6.all_predictions_conj
-        # self.l_cc_epoch_spanned_word = []  # Openie6.all_conjunct_words_conj
-        # self.lll_cc_epoch_spanned_loc = []  # Openie6.all_sentence_indices_conj
+        # Openie6.all_predictions_conj
+        # self.l_cc_epoch_sample_str = []
+
+        # Openie6.all_conjunct_words_conj
+        # self.l_cc_epoch_spanned_word = []
+
+        # Openie6.all_sentence_indices_conj
+        # self.lll_cc_epoch_spanned_loc = []
 
         # not used
         # self.l_ex_pred_sample_str = []  # Openie6.all_predictions_oie
@@ -242,10 +242,69 @@ class Model(L.LightningModule):
         self.l_batch_m_out = \
             PickleList(f"action_{self.name}_l_batch_m_out_dir")
 
+        self.name_to_param0 = None
+
     def configure_optimizers(self):
         """
+        similar to Openie6.model.configure_optimizers()
+
         This method returns a list of optimizers, one for each constraint in
         self.con_to_weight. Optimizers can be either all Adam or all AdamW.
+
+        This is how ChatGPT explains the Openie6.model.configure_optimizers(
+        ) method:
+
+        This PyTorch code is a method called `configure_optimizers` inside a
+        PyTorch Lightning module or a subclass of it. This method is
+        responsible for configuring the optimizers used during the training
+        process. Let's break down the code:
+
+        1. `all_params = list(self.named_parameters())`: This line retrieves
+        all the parameters of the model along with their names.
+
+        2. `bert_params = []` and `other_params = []`: These lists are used
+        to separate parameters that belong to the BERT model (presumably a
+        pre-trained language model) and other parameters (possibly
+        task-specific layers or embeddings).
+
+        3. `no_decay = ["bias", "gamma", "beta"]`: This list contains names
+        of parameters for which weight decay is not applied. These are
+        typically bias terms or normalization parameters like those in
+        BatchNorm layers.
+
+        4. `opt_params`: This list contains dictionaries, each specifying
+        the parameters for a particular optimizer. The parameters are
+        separated based on whether they should undergo weight decay or not.
+
+        - For parameters that do not contain any strings in the `no_decay`
+        list and contain the string `'base_model'` in their name, a weight
+        decay rate of 0.01 is applied.
+
+        - For parameters that contain strings in the `no_decay` list and
+        contain the string `'base_model'` in their name, no weight decay is
+        applied.
+
+        - For parameters that do not contain the string `'base_model'` in
+        their name, no weight decay is applied.
+
+        5. `if self.hparams.optimizer == 'adamW':` and `elif
+        self.hparams.optimizer == 'adam':`: These conditions select between
+        the AdamW optimizer and the Adam optimizer based on the value of
+        `self.hparams.optimizer`.
+
+        6. `if self.hparams.multi_opt and self.hparams.constraints != None:`:
+        This condition checks if multiple optimizers are to be used and if
+        constraints are provided.
+
+        - If both conditions are true, the number of optimizers is
+        determined by the number of constraints provided, and a list of
+        optimizers is returned with each optimizer having the same
+        configuration.
+
+        - If the condition is not met, a single optimizer is returned.
+
+        Finally, the method returns a list containing the selected
+        optimizer(s) for training.
 
         Returns
         -------
@@ -255,35 +314,40 @@ class Model(L.LightningModule):
         # self.named_parameters() is a method inherited from parent class
         # Its type is Iterator[Tuple[str, Parameter]]. Apply dict() to
         # to turn it into dict[str, Parameter] or list() to turn into
-        # list[tuple(str, Parameter)]
+        # list[tuple(str, Parameter)].
+        
+        # self.named_parameters() contains all (name, value) pairs of 
+        # weights to be optimized
         all_pairs = list(self.named_parameters())
 
         # opt = optimizer
-        # x = parameter
-        # pair = ("x", x)
+        # apple = parameter
+        # pair = ("apple", apple)
 
-        def prior_model_pairs():
-            return [pair for pair in all_pairs if "prior_model" in pair[0]]
+        def base_model_pairs():
+            return [pair for pair in all_pairs if 
+                    "base_model" in pair[0]]
 
-        def non_prior_model_pairs():
-            return [pair for pair in all_pairs if
-                    "prior_model" not in pair[0]]
+        def non_base_model_pairs():
+            return [pair for pair in all_pairs if 
+                    "base_model" not in pair[0]]
 
+        # parameters that do not decay, fixed during optimization
         xnames = ["bias", "gamma", "beta"]
 
         def pair_in_xnames(pair):
             return any((pair[0] in xname) for xname in xnames)
 
         opt_param_d = [
-            {"params": [pair[1] for pair in prior_model_pairs() if
+            {"params": [pair[1] for pair in base_model_pairs() if
                         not pair_in_xnames(pair)],
              "weight_decay_rate": 0.01,
              'lr': self.params.d["lr"]},
-            {"params": [pair[1] for pair in prior_model_pairs() if
+            {"params": [pair[1] for pair in base_model_pairs() if
                         pair_in_xnames(pair)],
              "weight_decay_rate": 0.0,
              'lr': self.params.d["lr"]},
-            {"params": [pair[1] for pair in non_prior_model_pairs()],
+            {"params": [pair[1] for pair in non_base_model_pairs()],
              'lr': self.params.d["lr"]}
         ]
 
@@ -306,19 +370,19 @@ class Model(L.LightningModule):
 
         Use this inherited method to add to super( ).get_progress_bar_dict()
         additional items to be displayed in the progress bar. We will not
-        add any. The modified dictionary is returned  by the method.
+        add any. The modified dictionary is returned by the method.
 
         Openie6 uses tqdm for all progress bars, including this one. We do
         too, except for this one. For this one, we use the one built into
         lightning.
 
         tqdm derives from the Arabic word taqaddum which can mean "progress"
-        and is an abbreviation for "I love you so much" in Spanish (te
+        and is also an abbreviation for "I love you so much" in Spanish (te
         quiero demasiado).
 
         Returns
         -------
-        Dict[str, Union[int, str]]
+        Dict[str, int | str]
             Dictionary with the items to be displayed in the progress bar.
 
         """
@@ -367,7 +431,8 @@ class Model(L.LightningModule):
 
         Parameters
         ----------
-        batch: tuple[torch.Tensor, torch.Tensor, list[str]]
+        batch: tuple[torch.Tensor,
+            torch.Tensor, list[str], dict[str, list[int]]
 
         Returns
         -------
@@ -438,17 +503,17 @@ class Model(L.LightningModule):
         # loss_fun, lstm_loss = 0, 0
 
         # batch_text = " ".join(redoL(meta_d["l_orig_sent"]))
-        # prior_model_input = \
+        # base_model_input = \
         #     torch.Tensor(self.auto_tokenizer.encode(batch_text))
         if verbose:
             print("Entering model.get_llll_word_score()")
         hstate_count = Counter(verbose, "lll_hidstate")
         word_hstate_count = Counter(verbose, "lll_word_hidstate")
-        lll_hidstate, _ = self.prior_model(x_d["ll_osent_icode"])
+        lll_hidstate, _ = self.base_model(x_d["ll_osent_icode"])
         hstate_count.new_one(reset=True)
         comment(
             verbose,
-            prefix="after prior_model",
+            prefix="after base_model",
             params_d={
                 "ll_osent_icode.shape": x_d["ll_osent_icode"].shape,
                 "lll_hidstate.shape": lll_hidstate.shape})
@@ -669,7 +734,7 @@ class Model(L.LightningModule):
         """
         This method returns a dictionary con_to_l_penalty_loss. Although
         Openie6 calculates con_to_l_penalty_loss inside self.forward(),
-        it never uses it. SentenceAx doeesn't either.
+        it never uses it. SentenceAx doesn't either.
 
         con_to_l_penalty_loss similar to Openie6._constD.
 
@@ -732,7 +797,7 @@ class Model(L.LightningModule):
         training_step(), validation_step(), test_step()
 
         lll_word_score = Openie6.word_scores
-        llll_word_score = Openie6.all_depth_scores
+        llll_word_score = Openie6.all_depth_scores (shape=(5,..))
 
         lll_pred_ilabel0 = Openie6.predictions
         llll_pred_ilabel = Openie6.all_depth_predictions
@@ -745,7 +810,7 @@ class Model(L.LightningModule):
         Many of the tensor contortions in this method are done in order to
         move that depth index in llll_word_score from the outermost position
         to the dim=1, where it is located in lll_ilabel. Also, we need to
-        get rid (by averaging) of the innermost index corresponding to the 6
+        get rid (by argmax) of the innermost index corresponding to the 6
         possible ilabels (classes).
 
 
@@ -756,7 +821,8 @@ class Model(L.LightningModule):
 
         Parameter
         ----------
-        batch: tuple[torch.Tensor, torch.Tensor, list[str]]
+        batch: tuple[torch.Tensor,
+            torch.Tensor, list[str], dict[str, list[int]]
         batch_idx: int
         ttt: str
 
@@ -769,9 +835,15 @@ class Model(L.LightningModule):
         x_d, y_d, meta_d = Model.sax_get_batch_in_dicts(batch)
         # print_tensor("y_d['lll_ilabel']", y_d['lll_ilabel'])
         # print_list("y_d['lll_ilabel'][0][0]", y_d['lll_ilabel'][0][0])
-        if "wreg" in self.params.d:
-            self.init_name_to_param = deepcopy(
-                dict(self.named_parameters()))
+
+        use_wreg = "wreg" in self.params.d and self.params.d["wreg"] != 0
+        if use_wreg:
+            # wreg=weight regulator
+            # name_to_param0 is self.named_parameters() when
+            # forward() is first called
+            if not self.name_to_param0:
+                name_to_param0 = deepcopy(
+                    dict(self.named_parameters()))
 
         # lll_label is similar to Openie6.labels
         # first (outer) list over batch/sample of events
@@ -784,7 +856,7 @@ class Model(L.LightningModule):
         # loss_fun, lstm_loss = 0, 0
 
         # batch_text = " ".join(redoL(meta_d["l_orig_sent"]))
-        # prior_model_input = \
+        # base_model_input = \
         #     torch.Tensor(self.auto_tokenizer.encode(batch_text))
 
         llll_word_score = self.sax_get_llll_word_score(
@@ -803,7 +875,10 @@ class Model(L.LightningModule):
         #     y_d["lll_ilabel"].long()
         for depth, lll_word_score in enumerate(llll_word_score):
             if ttt == 'train':
-                # here -1 will be num_ilabels=6
+                # Here -1 will be
+                # num_ilabels=6=number of classes to classify.
+                # In general, reshape(x, -1) means final shape = (x, y)
+                # where y is whatever it takes to get original num of entries
                 ll_loss_input = \
                     lll_word_score.reshape(batch_size * num_words, -1)
                 # print_tensor("lll_word_score", lll_word_score)
@@ -816,6 +891,9 @@ class Model(L.LightningModule):
 
                 l_loss_target = \
                     y_d["lll_ilabel"][:, depth, :].reshape(-1)
+                sh = y_d["lll_ilabel"][:, depth, :].shape
+                assert sh == (batch_size, num_words),\
+                    f"{sh} != {batch_size}, {num_words}"
                 loss += self.loss_fun(ll_loss_input,
                                       l_loss_target)
 
@@ -889,12 +967,14 @@ class Model(L.LightningModule):
                 # loss += const_loss
                 loss += penalty_loss
 
-            if "wreg" in self.params.d:
+            if use_wreg:
                 weight_diff = 0
+                # name_to_param0 is self.named_parameters()
+                # when forward() is first called
                 name_to_param = dict(self.named_parameters())
-                for name in self.init_name_to_param:
-                    weight_diff += torch.norm(name_to_param[name]
-                                              - self.init_name_to_param[name])
+                for name in name_to_param0:
+                    weight_diff += torch.linalg.vector_norm(
+                        name_to_param[name] - name_to_param0[name])
                 loss += self.params.d["wreg"] * weight_diff
 
         # llll_pred_ilabel: list[tensor]
@@ -1122,7 +1202,8 @@ class Model(L.LightningModule):
 
         Parameters
         ----------
-        batch: tuple[torch.Tensor, torch.Tensor, list[str]]
+        batch: tuple[torch.Tensor,
+            torch.Tensor, list[str], dict[str, list[int]]
         batch_idx: int
         ttt: str
 
@@ -1173,7 +1254,8 @@ class Model(L.LightningModule):
 
         Parameters
         ----------
-        batch: tuple[torch.Tensor, torch.Tensor, list[str]]
+        batch: tuple[torch.Tensor,
+            torch.Tensor, list[str], dict[str, list[int]]
         batch_idx: int
 
         Returns
@@ -1190,7 +1272,8 @@ class Model(L.LightningModule):
 
         Parameters
         ----------
-        batch: tuple[torch.Tensor, torch.Tensor, list[str]]
+        batch: tuple[torch.Tensor,
+            torch.Tensor, list[str], dict[str, list[int]]
         batch_idx: int
 
         Returns
@@ -1207,7 +1290,8 @@ class Model(L.LightningModule):
 
         Parameters
         ----------
-        batch: tuple[torch.Tensor, torch.Tensor, list[str]]
+        batch: tuple[torch.Tensor,
+            torch.Tensor, list[str], dict[str, list[int]]
         batch_idx: int
 
         Returns

@@ -334,15 +334,15 @@ num_depths = get_num_depths(self.params.task)
 # loss_fun, lstm_loss = 0, 0
 
 # batch_text = " ".join(redoL(meta_d["l_orig_sent"]))
-# prior_model_input = \
+# base_model_input = \
 #     torch.Tensor(self.auto_tokenizer.encode(batch_text))
 hstate_count = Counter(verbose, "lll_hidstate")
 word_hstate_count = Counter(verbose, "lll_word_hidstate")
-lll_hidstate, _ = self.prior_model(x_d["ll_osent_icode"])
+lll_hidstate, _ = self.base_model(x_d["ll_osent_icode"])
 hstate_count.new_one(reset=True)
 comment(
     verbose,
-    prefix="after prior_model",
+    prefix="after base_model",
     params_d={
         "ll_osent_icode.shape": x_d["ll_osent_icode"].shape,
         "lll_hidstate.shape": lll_hidstate.shape})
@@ -488,7 +488,7 @@ return llll_word_score
 """
 Entering Model.training_step method, batch_idx=0
 'lll_hidstate' count changed: 0->1
-after prior_model
+after base_model
     ll_osent_icode.shape=torch.Size([4, 121])
     lll_hidstate.shape=torch.Size([4, 121, 768])
 *********** Starting iterative layer

@@ -552,8 +552,8 @@ class MInput:
                     print(
                         f"{str(num_omitted_sents)}. Line {k_osent} has > "
                         f"{MAX_NUM_OSENTL_WORDS} words."
-                        f" length={len(osentL_words)}\n[" +
-                        osentL[0:60] + "]")
+                        f" length={len(osentL_words)}. first 60 words:\n" +
+                        osentL[0:60])
                     # print("prev_line_rrt", prev_line)
                     # print("line_rrt", line)
                     # print(is_osent_line_of_sample(line))

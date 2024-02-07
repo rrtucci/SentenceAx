@@ -86,10 +86,10 @@ class CCMetric:
         lll_ilabel: list[list[list[[int]]]
 
         """
+        num_samples = len(lll_ilabel)
         if self.verbose:
             print("Entering CCMetric.__call__() method.")
-        num_samples = len(lll_ilabel)
-        print("number of samples=", num_samples)
+            print("number of samples=", num_samples)
         for k in range(num_samples):
             pred_ccnodes = CCTree(l_osent[k],
                                   lll_pred_ilabel[k],

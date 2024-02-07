@@ -890,10 +890,7 @@ class Model(L.LightningModule):
                 # loss is scalar
 
                 l_loss_target = \
-                    y_d["lll_ilabel"][:, depth, :].reshape(-1)
-                sh = y_d["lll_ilabel"][:, depth, :].shape
-                assert sh == (batch_size, num_words),\
-                    f"{sh} != {batch_size}, {num_words}"
+                    y_d["lll_ilabel"][:, depth, :num_words].reshape(-1)
                 loss += self.loss_fun(ll_loss_input,
                                       l_loss_target)
 

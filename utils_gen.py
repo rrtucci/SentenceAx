@@ -865,7 +865,7 @@ def comment(verbose,
         return
 
     if prefix:
-        print(prefix)
+        print("\n" + prefix)
     else:
         info = getframeinfo(currentframe())
         print(f"file={info.filename}, line={info.lineno}\n")

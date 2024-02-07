@@ -94,7 +94,7 @@ class Model(L.LightningModule):
     osent_to_words: dict[str, list[str]]
     params: Params
     scores_epoch_end_d: dict[str, Any]
-    starting_model: BertModel
+    prior_model: BertModel
     sub_osent_to_osent: dict[str, str]
         dictionary that maps sentences to sentences.
         Both Model and ExMetric possess a pointer to this dictionary.
@@ -143,27 +143,27 @@ class Model(L.LightningModule):
         self.name = name
 
         # return_dict=False avoids error message from Dropout
-        self.starting_model = AutoModel.from_pretrained(
+        self.prior_model = AutoModel.from_pretrained(
             self.params.d["model_str"],
             cache_dir=CACHE_DIR,
             return_dict=False)
-        self.hidden_size = self.starting_model.config.hidden_size
+        self.hidden_size = self.prior_model.config.hidden_size
         if self.verbose:
             print("Model init")
             print(f"\tname={self.name}, hidden_size={self.hidden_size}")
 
         # Actually, self.params.d["num_iterative_layers"]=2 for all Params.pid
         if self.params.d["num_iterative_layers"] > 0:
-            num_layers = len(self.starting_model.encoder.layer)
+            num_layers = len(self.prior_model.encoder.layer)
             num_encoder_layers = \
                 num_layers - self.params.d["num_iterative_layers"]
             self.iterative_transformer = \
-                self.starting_model.encoder.layer[
+                self.prior_model.encoder.layer[
                 num_encoder_layers:num_layers]
-            # this truncation of self.starting_model.encoder.layer must
+            # this truncation of self.prior_model.encoder.layer must
             # be done after, not before defining self.iterative_transformer
-            self.starting_model.encoder.layer = \
-                self.starting_model.encoder.layer[0:num_encoder_layers]
+            self.prior_model.encoder.layer = \
+                self.prior_model.encoder.layer[0:num_encoder_layers]
             if verbose:
                 print("num_iterative_layers= ", num_layers -
                       num_encoder_layers)
@@ -262,12 +262,12 @@ class Model(L.LightningModule):
         # x = parameter
         # pair = ("x", x)
 
-        def starting_model_pairs():
-            return [pair for pair in all_pairs if "starting_model" in pair[0]]
+        def prior_model_pairs():
+            return [pair for pair in all_pairs if "prior_model" in pair[0]]
 
-        def non_starting_model_pairs():
+        def non_prior_model_pairs():
             return [pair for pair in all_pairs if
-                    "starting_model" not in pair[0]]
+                    "prior_model" not in pair[0]]
 
         xnames = ["bias", "gamma", "beta"]
 
@@ -275,15 +275,15 @@ class Model(L.LightningModule):
             return any((pair[0] in xname) for xname in xnames)
 
         opt_param_d = [
-            {"params": [pair[1] for pair in starting_model_pairs() if
+            {"params": [pair[1] for pair in prior_model_pairs() if
                         not pair_in_xnames(pair)],
              "weight_decay_rate": 0.01,
              'lr': self.params.d["lr"]},
-            {"params": [pair[1] for pair in starting_model_pairs() if
+            {"params": [pair[1] for pair in prior_model_pairs() if
                         pair_in_xnames(pair)],
              "weight_decay_rate": 0.0,
              'lr': self.params.d["lr"]},
-            {"params": [pair[1] for pair in non_starting_model_pairs()],
+            {"params": [pair[1] for pair in non_prior_model_pairs()],
              'lr': self.params.d["lr"]}
         ]
 
@@ -438,15 +438,17 @@ class Model(L.LightningModule):
         # loss_fun, lstm_loss = 0, 0
 
         # batch_text = " ".join(redoL(meta_d["l_orig_sent"]))
-        # starting_model_input = \
+        # prior_model_input = \
         #     torch.Tensor(self.auto_tokenizer.encode(batch_text))
+        if verbose:
+            print("Entering model.get_llll_word_score()")
         hstate_count = Counter(verbose, "lll_hidstate")
         word_hstate_count = Counter(verbose, "lll_word_hidstate")
-        lll_hidstate, _ = self.starting_model(x_d["ll_osent_icode"])
+        lll_hidstate, _ = self.prior_model(x_d["ll_osent_icode"])
         hstate_count.new_one(reset=True)
         comment(
             verbose,
-            prefix="after starting_model",
+            prefix="after prior_model",
             params_d={
                 "ll_osent_icode.shape": x_d["ll_osent_icode"].shape,
                 "lll_hidstate.shape": lll_hidstate.shape})
@@ -565,10 +567,12 @@ class Model(L.LightningModule):
             depth += 1
             if depth >= num_depths:
                 break
-
             if ttt != 'train':
+                # torch.max() returns a tuple (max, argmax)
                 ll_pred_ilabel = torch.max(lll_word_score, dim=2)[1]
                 valid_extraction = False
+                # if not training, leave while loop if
+                # ll_pred_ilabel has no valid extractions in it
                 for l_pred_ilabel in ll_pred_ilabel:
                     if is_valid_label_list(
                             l_pred_ilabel, self.params.task, "ilabels"):
@@ -576,8 +580,8 @@ class Model(L.LightningModule):
                         break
                 if not valid_extraction:
                     break
-        comment(
-            verbose,
+        comment(verbose,
+            prefix="Leaving Model.sax_get_llll_word_score()",
             params_d={
                 "len(llll_word_score)": len(llll_word_score),
                 "llll_word_score[0].shape": llll_word_score[0].shape})
@@ -780,7 +784,7 @@ class Model(L.LightningModule):
         # loss_fun, lstm_loss = 0, 0
 
         # batch_text = " ".join(redoL(meta_d["l_orig_sent"]))
-        # starting_model_input = \
+        # prior_model_input = \
         #     torch.Tensor(self.auto_tokenizer.encode(batch_text))
 
         llll_word_score = self.sax_get_llll_word_score(

@@ -885,7 +885,9 @@ class Model(L.LightningModule):
                 # print_tensor("ll_loss_input", ll_loss_input)
 
                 # ll_loss_input.shape = (batch_size * num_words, num_classes=6)
+                #                       = data
                 # l_loss_target.shape = (batch_size * num_words, )
+                #                       = theory
                 # l_loss_target[i] \in range(6)
                 # loss is scalar
 

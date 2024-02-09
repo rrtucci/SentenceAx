@@ -165,9 +165,9 @@ class ActionConductor:
         weights_dir = self.params.d["weights_dir"]
         return ModelCheckpoint(
             dirpath=f"{weights_dir}/{self.params.task}_model",
-            filename='{epoch:02d}_{epoch_acc:.3f}',
+            filename='{epoch:02d}_{tune_epoch_acc:.3f}',
             verbose=True,
-            monitor='epoch_acc',
+            monitor='tune_epoch_acc',
             mode='max',
             save_top_k=self.params.d["save_k"])
 

@@ -1211,21 +1211,9 @@ class Model(L.LightningModule):
         None
 
         """
-        if self.verbose:
-            if ttt == "train":
-                str0 = "training_step"
-            elif ttt == "tune":
-                str0 = "validation_step"
-            elif ttt == "test":
-                str0 = "test_step"
-            else:
-                assert False
-            if self.verbose:
-                print(f"Entering Model.{str0} method, "
-                      f"batch_idx={batch_idx}")
-
         batch_m_out = self.forward(batch, batch_idx, ttt)
-        loss = batch_m_out.loss
+        loss_d = {}
+        loss_d[ttt + "_loss"] = round(float(batch_m_out.loss), 6)
 
         if "extract" in self.params.action:
             # Openie6 only writes on validation (tune) step
@@ -1238,10 +1226,12 @@ class Model(L.LightningModule):
             # only remember batch_m_out if going to score it
             # at end of epoch. This only happens if ttt != "train".
             self.l_batch_m_out.append(batch_m_out)
-            assert loss == 0
-        log_d = {'loss': round(float(loss), 6)}
+        if self.verbose:
+            print(f"Inside Model.{ttt}_step method, "
+                  f"batch_idx={batch_idx}")
+            print("\t", loss_d)
         self.log_dict(
-            log_d,
+            loss_d,
             prog_bar=True,
             logger=True,
             on_step=True)
@@ -1402,8 +1392,9 @@ class Model(L.LightningModule):
         #     epoch_end_d["progress_bar"] = self.scores_epoch_end_d
 
         epoch_acc = self.scores_epoch_end_d["epoch_acc"]
-        log_d = {"epoch_acc": round(float(epoch_acc), 6)}
-        self.log_dict(log_d,
+        acc_d = {}
+        acc_d[ttt + "_epoch_acc"] = round(float(epoch_acc), 6)
+        self.log_dict(acc_d,
                       prog_bar=True,
                       logger=True,
                       on_epoch=True)

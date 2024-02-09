@@ -174,7 +174,7 @@ class Model(L.LightningModule):
         self.dropout_fun = nn.Dropout(p=PROB_DROPOUT)  # 0.0
 
         self.embedding = nn.Embedding(
-            MAX_NUM_OSENTL_WORDS, # maximum number of words analyzed, 100
+            MAX_NUM_OSENTL_WORDS,  # maximum number of words analyzed, 100
             self.hidden_size)  # dim of embedding space, 768
         self.merge_layer = nn.Linear(self.hidden_size,  # 768
                                      MERGE_DIM)  # 300
@@ -315,7 +315,7 @@ class Model(L.LightningModule):
         # Its type is Iterator[Tuple[str, Parameter]]. Apply dict() to
         # to turn it into dict[str, Parameter] or list() to turn into
         # list[tuple(str, Parameter)].
-        
+
         # self.named_parameters() contains all (name, value) pairs of 
         # weights to be optimized
         all_pairs = list(self.named_parameters())
@@ -325,11 +325,11 @@ class Model(L.LightningModule):
         # pair = ("apple", apple)
 
         def base_model_pairs():
-            return [pair for pair in all_pairs if 
+            return [pair for pair in all_pairs if
                     "base_model" in pair[0]]
 
         def non_base_model_pairs():
-            return [pair for pair in all_pairs if 
+            return [pair for pair in all_pairs if
                     "base_model" not in pair[0]]
 
         # parameters that do not decay, fixed during optimization
@@ -646,10 +646,10 @@ class Model(L.LightningModule):
                 if not valid_extraction:
                     break
         comment(verbose,
-            prefix="Leaving Model.sax_get_llll_word_score()",
-            params_d={
-                "len(llll_word_score)": len(llll_word_score),
-                "llll_word_score[0].shape": llll_word_score[0].shape})
+                prefix="Leaving Model.sax_get_llll_word_score()",
+                params_d={
+                    "len(llll_word_score)": len(llll_word_score),
+                    "llll_word_score[0].shape": llll_word_score[0].shape})
         return llll_word_score
 
     @staticmethod
@@ -1228,7 +1228,7 @@ class Model(L.LightningModule):
         loss = batch_m_out.loss
 
         if "extract" in self.params.action:
-            # Openie6 only writes on vslidation (tune) step
+            # Openie6 only writes on validation (tune) step
             # We will write iff "extract" in action
             # because that is the only time these files are
             # read later on.
@@ -1239,12 +1239,12 @@ class Model(L.LightningModule):
             # at end of epoch. This only happens if ttt != "train".
             self.l_batch_m_out.append(batch_m_out)
             assert loss == 0
-
-        self.log('loss',
-                 round(float(loss), 6),
-                 prog_bar=True,
-                 logger=True,
-                 on_step=True)
+        log_d = {'loss': round(float(loss), 6)}
+        self.log_dict(
+            log_d,
+            prog_bar=True,
+            logger=True,
+            on_step=True)
 
     def training_step(self, batch, batch_idx):
         """
@@ -1402,11 +1402,11 @@ class Model(L.LightningModule):
         #     epoch_end_d["progress_bar"] = self.scores_epoch_end_d
 
         epoch_acc = self.scores_epoch_end_d["epoch_acc"]
-        self.log("epoch_acc",
-                 round(float(epoch_acc), 6),
-                 prog_bar=True,
-                 logger=True,
-                 on_epoch=True)
+        log_d = {"epoch_acc": round(float(epoch_acc), 6)}
+        self.log_dict(log_d,
+                      prog_bar=True,
+                      logger=True,
+                      on_epoch=True)
 
         self.l_batch_m_out.restart()
         # self.l_batch_m_out.clear()  # free memory
@@ -1421,7 +1421,7 @@ class Model(L.LightningModule):
         None
 
         """
-        self.sax_on_ttt_epoch_end("tune")
+        return self.sax_on_ttt_epoch_end("tune")
 
     def on_test_epoch_end(self):
         """
@@ -1433,7 +1433,7 @@ class Model(L.LightningModule):
         None
 
         """
-        self.sax_on_ttt_epoch_end("test")
+        return self.sax_on_ttt_epoch_end("test")
 
     def train_dataloader(self):
         """

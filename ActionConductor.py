@@ -276,6 +276,7 @@ class ActionConductor:
             new_id = num_numbered_logs + 1
             print('Retiring current log file by changing its name')
             print(shutil.move(prefix, prefix + f'_{new_id}'))
+        # logs are saved in /save_dir/name/version/sub_dir/
         logger = TensorBoardLogger(
             save_dir=LOGS_DIR,
             name=self.params.task,

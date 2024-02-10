@@ -15,7 +15,7 @@ class Params:
 
     Instead of this Params class, Openie6 stores all its parameters in a
     dictionary called `hparams` (hyperparameters) that is an attribute of
-    the Model class.
+    the ModelTamer class.
 
 
     Possible choices for self.d:

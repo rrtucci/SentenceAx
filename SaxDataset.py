@@ -134,7 +134,7 @@ class SaxDataset(Dataset):
 
     def __getitem__(self, isample):
         """
-        This method allows Model to access the x and y (and other "metadata"
+        This method allows ModelTamer to access the x and y (and other "metadata"
         ) of each sample by a sample index `isample`. All this method does
         is to return self.x[isample], self.y[isample], self.l_orig_sent[
         isample], self.xname_to_dim1.

@@ -8,7 +8,7 @@ import math
 import shutil
 from glob import iglob
 from time import time
-from Model import *
+from ModelTamer import *
 from SaxDataLoaderTool import *
 from utils_gen import *
 from utils_l_sample_str import *
@@ -46,7 +46,7 @@ class ActionConductor:
     called internally by those 5 action methods. Actions can be combined.
     For example, action train_test calls train() first and test() second.
 
-    Note that 4 different Model instances are created by this class: for
+    Note that 4 different ModelTamer instances are created by this class: for
     ttt= train, tune, test, and for extract.
 
     Attributes
@@ -148,7 +148,7 @@ class ActionConductor:
             # ttt dloaders not used for action="extract", "splitextract"
             # for those actions, only a extract dloader is used.
             self.dloader_tool.set_all_ttt_dataloaders()
-            # always set dataloader before constructing a Model instance
+            # always set dataloader before constructing a ModelTamer instance
 
     def get_new_checkpoint_callback(self):
         """
@@ -162,7 +162,7 @@ class ActionConductor:
         ModelCheckpoint
 
         """
-        # epoch and epoch_acc known by ModelCheckPoint instance
+        # epoch and epoch_acc known by ModelTamerCheckPoint instance
         # str "epoch_acc"  entered via `monitor` variable.
         weights_dir = self.params.d["weights_dir"]
         return ModelCheckpoint(
@@ -359,7 +359,7 @@ class ActionConductor:
         deprecated: This method loads parameters from the checkpoint file
         and inserts them into the Params instance self.params.
 
-        hparams is an attribute of Model, and there are several (4) Model
+        hparams is an attribute of ModelTamer, and there are several (4) ModelTamer
         instances created in SentenceAx. A checkpoint file does not belong
         to any particular model.
 
@@ -394,7 +394,7 @@ class ActionConductor:
         """
         similar to Openie6.run.train()
 
-        This method does the training. It creates instances of Model and a
+        This method does the training. It creates instances of ModelTamer and a
         Trainer. Then it asks the trainer to fit the model. Finally,
         it creates log file and stores it in either the logs/ex/train or
         logs/cc/train directories.
@@ -409,7 +409,7 @@ class ActionConductor:
         """
         # train is the only action that doesn't require update_params()
 
-        model = Model(self.params,
+        model = ModelTamer(self.params,
                       self.auto_tokenizer,
                       verbose=self.verbose,
                       name="train")
@@ -430,7 +430,7 @@ class ActionConductor:
 
         This method resumes the training after an interruption. It uses the
         latest checkpoint to retrieve the weights and other params close to
-        the ones when it was halted. It creates instances of Model and a
+        the ones when it was halted. It creates instances of ModelTamer and a
         Trainer. Then it asks the trainer to fit the model. Finally,
         it creates log file and stores it in either the logs/ex/resume or
         logs/cc/resume directories.
@@ -445,7 +445,7 @@ class ActionConductor:
         # train is the only action that doesn't require
         # update_params() because it is called first
         self.update_params(checkpoint_fp)
-        model = Model(self.params,
+        model = ModelTamer(self.params,
                       self.auto_tokenizer,
                       verbose=self.verbose,
                       name="resume")
@@ -468,7 +468,7 @@ class ActionConductor:
         Note: this method self.test() is different from Trainer.test() which
         is called inside this method.
 
-        This method does testing. It creates an instance of Model. It then
+        This method does testing. It creates an instance of ModelTamer. It then
         goes down the list of checkpoints and creates a Trainer for each
         one. This trainer is used to call trainer.test(), instead of
         trainer.fit( ) as done in self.train(). trainer.test( ) scores the
@@ -489,7 +489,7 @@ class ActionConductor:
             # because no checkpoints exists yet.
             self.update_params(self.get_latest_checkpoint_fp())
 
-        model = Model(self.params,
+        model = ModelTamer(self.params,
                       self.auto_tokenizer,
                       verbose=self.verbose,
                       name="test")
@@ -541,7 +541,7 @@ class ActionConductor:
     #     l_osentL: list[str]
     #     l_split_sentL: list[str]
     #     out_fp: str
-    #     model: Model
+    #     model: ModelTamer
     #
     #
     #     Returns
@@ -659,13 +659,13 @@ class ActionConductor:
 
         This method does reading and writing of files. 
         
-        The method creates instances of Model and Trainer. The trainer is 
+        The method creates instances of ModelTamer and Trainer. The trainer is 
         used to call trainer.test() (instead of trainer.fit( ) as is done in 
         self.train()). trainer.test() is also called in self.test(), 
         but there it takes the test data as input. Here it reads the file at 
         `pred_in_fp` (a file of osents, one per line) to get data input.
 
-        This method creates a Model and a Trainer. When it calls
+        This method creates a ModelTamer and a Trainer. When it calls
         trainer.test(), this writes a file f"{PREDICTING_DIR}/{M_OUT_DIR}/{
         task}_ssents.txt" or where task="ex" or task="cc".
                   
@@ -680,7 +680,7 @@ class ActionConductor:
 
         Returns
         -------
-        Model
+        ModelTamer
 
         """
         # This distinguishes between tasks "ex" and "cc".
@@ -691,9 +691,9 @@ class ActionConductor:
 
         self.update_params(checkpoint_fp)
         self.dloader_tool.set_extract_dataloader(pred_in_fp)
-        # always set dataloader before constructing a Model instance
+        # always set dataloader before constructing a ModelTamer instance
         test_name = "test_" + name
-        model = Model(self.params,
+        model = ModelTamer(self.params,
                       self.auto_tokenizer,
                       verbose=self.verbose,
                       name=test_name)
@@ -738,7 +738,7 @@ class ActionConductor:
         Returns
         -------
         list[str], list[str], model
-            l_osentL, l_split_sentL, Model
+            l_osentL, l_split_sentL, ModelTamer
 
         """
         # For task="cc" and action="train_test", Openie6 uses
@@ -824,7 +824,7 @@ class ActionConductor:
         ----------
         l_osentL: list[str]
         l_split_sentL: list[str]
-        cc_model: Model
+        cc_model: ModelTamer
         pred_in_fp: str
             This file has no tags or ilabels. Only one osent per line for
             each sample.

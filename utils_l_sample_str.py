@@ -1,7 +1,7 @@
 """
 
 This file contains methods related to l_sample_str. These methods are mostly
-used inside classes Model and ActionConductor.
+used inside classes ModelTamer and ActionConductor.
 
 An l_sample_str is a list of sample strings. Each sample string consists of
 one or more "\n" terminated sentences.

@@ -15,7 +15,7 @@ nltk.download('universal_tagset', quiet=True)
 
 class MInput:
     """
-    MInput = ModelTamer Input
+    MInput = Model Input
     The main method and work horse of this class is read_input_tags_file().
     That method reads the input data from an extags or a cctags or a
     prediction file (prediction files have one sentence per line, with no

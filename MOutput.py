@@ -5,8 +5,8 @@ from MInput import *
 
 class MOutput:
     """
-    MOutput = ModelTamer Output
-    This class stores the outputs of ModelTamer, usually for one batch.
+    MOutput = Model Output
+    This class stores the outputs of Model, usually for one batch.
 
     Attributes
     ----------

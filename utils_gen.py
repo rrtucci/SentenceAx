@@ -469,7 +469,7 @@ def add_key_to_this_d(key, grow_d, this_d):
     """
     This method returns a dictionary after adding to it a key.
 
-    This method is used in ModelTamer.
+    This method is used in Model.
 
     Parameters
     ----------
@@ -494,7 +494,7 @@ def add_key_value_pair_to_this_d(key, value, grow_d, this_d):
     """
     This method returns a dictionary after adding to it a key-value pair.
 
-    This method is used in ModelTamer.
+    This method is used in Model.
 
     Parameters
     ----------

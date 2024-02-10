@@ -30,7 +30,7 @@ logging.getLogger(
 logging.getLogger().setLevel(logging.ERROR)
 
 
-class ModelTamer(L.LightningModule):
+class Model(L.LightningModule):
     """
     
     This class inherits from L.LightningModule some powerful methods that
@@ -94,10 +94,10 @@ class ModelTamer(L.LightningModule):
     osent_to_words: dict[str, list[str]]
     params: Params
     scores_epoch_end_d: dict[str, Any]
-    base_model: BertModelTamer
+    base_model: BertModel
     sub_osent_to_osent: dict[str, str]
         dictionary that maps sentences to sentences.
-        Both ModelTamer and ExMetric possess a pointer to this dictionary.
+        Both Model and ExMetric possess a pointer to this dictionary.
     verbose: bool
     # some inherited attributes that won't be used
     # hparams (dictionary, Used by Openie6, but not by us.
@@ -122,8 +122,8 @@ class ModelTamer(L.LightningModule):
         auto_tokenizer: AutoTokenizer
         verbose: bool
         name: str
-            name of ModelTamer instance if more than one is being used at the
-            same time. ActionConductor declares 4 ModelTamer instances which it
+            name of Model instance if more than one is being used at the
+            same time. ActionConductor declares 4 Model instances which it
             calls "train", "resume", "test", "pred"
         """
         super().__init__()
@@ -148,7 +148,7 @@ class ModelTamer(L.LightningModule):
             return_dict=False)
         self.hidden_size = self.base_model.config.hidden_size
         if self.verbose:
-            print("ModelTamer init")
+            print("Model init")
             print(f"\tname={self.name}, hidden_size={self.hidden_size}")
 
         # Actually, self.params.d["num_iterative_layers"]=2 for all Params.pid
@@ -196,7 +196,7 @@ class ModelTamer(L.LightningModule):
         if self.params.task == "ex":
             # ExMetric gets a pointer (address) to the sub_osent_to_osent
             # dict. This dictionary is initially empty, but if we add
-            # elements to it later on, both ModelTamer and ExMetric will know
+            # elements to it later on, both Model and ExMetric will know
             # about it because the dictionary pointer will not have changed,
             # only its contents.
             self.metric = ExMetric(
@@ -646,7 +646,7 @@ class ModelTamer(L.LightningModule):
                 if not valid_extraction:
                     break
         comment(verbose,
-                prefix="Leaving ModelTamer.sax_get_llll_word_score()",
+                prefix="Leaving Model.sax_get_llll_word_score()",
                 params_d={
                     "len(llll_word_score)": len(llll_word_score),
                     "llll_word_score[0].shape": llll_word_score[0].shape})
@@ -776,7 +776,7 @@ class ModelTamer(L.LightningModule):
             # this uses llll_word_score that was calculated previously
             # to calculate con_to_l_penalty_loss
             for constraint, con_weight in self.con_to_weight.items():
-                penalty_loss = ModelTamer.sax_penalty_loss(
+                penalty_loss = Model.sax_penalty_loss(
                     x_d,
                     llll_word_scoreT,
                     {constraint: con_weight})
@@ -832,7 +832,7 @@ class ModelTamer(L.LightningModule):
             batch_m_out
 
         """
-        x_d, y_d, meta_d = ModelTamer.sax_get_batch_in_dicts(batch)
+        x_d, y_d, meta_d = Model.sax_get_batch_in_dicts(batch)
         # print_tensor("y_d['lll_ilabel']", y_d['lll_ilabel'])
         # print_list("y_d['lll_ilabel'][0][0]", y_d['lll_ilabel'][0][0])
 
@@ -955,7 +955,7 @@ class ModelTamer(L.LightningModule):
                     [lll.unsqueeze(1) for lll in llll_word_score], dim=1)
                 llll_word_scoreT = torch.softmax(llll_word_scoreT, dim=-1)
 
-                penalty_loss = ModelTamer.sax_penalty_loss(
+                penalty_loss = Model.sax_penalty_loss(
                     x_d,
                     llll_word_scoreT,
                     self.con_to_weight) / batch_size
@@ -1232,7 +1232,7 @@ class ModelTamer(L.LightningModule):
             ttt_to_long = {"train": "training",
                            "tune": "validation",
                            "test": "test"}
-            print(f"Inside ModelTamer.{ttt_to_long[ttt]}_step method, "
+            print(f"Inside Model.{ttt_to_long[ttt]}_step method, "
                   f"batch_idx={batch_idx}",
                   round_dict_values(loss_d))
 
@@ -1393,7 +1393,7 @@ class ModelTamer(L.LightningModule):
             else:
                 assert False
             if self.verbose:
-                print(f"Entering ModelTamer.{str0} method")
+                print(f"Entering Model.{str0} method")
 
         self.scores_epoch_end_d = \
             self.sax_get_scores_on_ttt_epoch_end(ttt)

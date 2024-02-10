@@ -1,6 +1,6 @@
 from lightning.pytorch import Trainer
 from lightning.pytorch.loggers import TensorBoardLogger
-from lightning.pytorch.callbacks import ModelCheckpoint
+from lightning.pytorch.callbacks import ModelCheckpoint, EarlyStopping
 import warnings
 
 import os
@@ -61,6 +61,7 @@ class ActionConductor:
         this is just a method of the AutoTokenizer class. It transforms text
         into a list of icode integers.
     has_cuda: bool
+    logger_fpaths: list[str]
     pad_icode: int
         For BERT models, this is 0
     params: Param
@@ -119,6 +120,7 @@ class ActionConductor:
             self.checkpoint_callback = self.get_new_checkpoint_callback()
         else:
             self.checkpoint_callback = None
+        self.logger_fpaths = []
 
         do_lower_case = ('uncased' in self.params.d["model_str"])
         self.auto_tokenizer = AutoTokenizer.from_pretrained(
@@ -165,7 +167,7 @@ class ActionConductor:
         weights_dir = self.params.d["weights_dir"]
         return ModelCheckpoint(
             dirpath=f"{weights_dir}/{self.params.task}_model",
-            filename='{epoch:02d}_{tune_epoch_acc:.3f}',
+            filename='{epoch:02d}_{tune_epoch_acc:.4f}',
             verbose=True,
             monitor='tune_epoch_acc',
             mode='max',
@@ -190,6 +192,7 @@ class ActionConductor:
         weights_dir = self.params.d["weights_dir"]
         paths = iglob(f"{weights_dir}/{self.params.task}_model/*.ckpt")
         # latest first in list
+        paths = [path.replace("\\", "/") for path in paths]
         return sorted(paths, key=os.path.getctime, reverse=True)
 
     def get_latest_checkpoint_fp(self):
@@ -201,7 +204,7 @@ class ActionConductor:
         str
 
         """
-        return self.get_all_checkpoint_fp()[0]
+        return self.get_all_checkpoint_fp()[0].replace("\\", "/")
 
     def get_best_checkpoint_fp(self):
         """
@@ -227,7 +230,7 @@ class ActionConductor:
             assert False, f"There is no checkpoint file ending in '.best' " \
                           f"in the `{weights_dir}/{task}_model/` directory."
         if len(paths) == 1:
-            return paths[0]
+            return paths[0].replace("\\", "/")
         else:
             assert False, f"There are multiple best checkpoint files " \
                           f"in the`{weights_dir}/{task}_model/` directory."
@@ -257,8 +260,14 @@ class ActionConductor:
         similar to Openie6.run.get_logger()
 
         This method returns a TB (TensorBoard) logger. We start a new logger
-        everytime we start a new Trainer. The current log file will have no
+        everytime we start a new Trainer.
+
+        deprecated: The latest directory inside logs/task/ will have no
         number suffix. Retired ones will.
+
+        All directories inside logs/task/ that end in "_" will be deleted.
+        So if you want to keep some of them, add a suffix like "best" to
+        them.
 
         Parameters
         ----------
@@ -270,17 +279,27 @@ class ActionConductor:
 
         """
         prefix = get_task_logs_dir(self.params.task) + f'/{name}'
-        if os.path.exists(prefix):
-            fps = iglob(prefix + '_*')
-            num_numbered_logs = len(list(fps))
-            new_id = num_numbered_logs + 1
-            print('Retiring current log file by changing its name')
-            print(shutil.move(prefix, prefix + f'_{new_id}'))
+        # if os.path.exists(prefix):
+        #     fpaths = iglob(prefix + '_*')
+        #     num_numbered_logs = len(list(fpaths))
+        #     new_id = num_numbered_logs + 1
+        #     print('Retiring current log file by changing its name')
+        #     print(shutil.move(prefix, prefix + f'_{new_id}'))
+        for fpath in iglob(prefix + '_*'):
+            # remove all folders that end in "_"
+            if fpath[-1] == "_":
+                shutil.rmtree(fpath)
+
         # logs are saved in /save_dir/name/version/sub_dir/
         logger = TensorBoardLogger(
             save_dir=LOGS_DIR,
             name=self.params.task,
-            version=name + '.part')
+            version=name + '.in_progress'
+        )
+        path0 = LOGS_DIR + "/" + self.params.task + "/" + name
+        # path changed from path0 + ".in_progress" to
+        # path0 + "_" after trainer does fit.
+        self.logger_fpaths.append(path0 + "_")
         return logger
 
     def get_new_trainer(self, logger, use_minimal):
@@ -307,13 +326,14 @@ class ActionConductor:
                 num_sanity_val_steps=0,
                 limit_train_batches=num_steps,
                 limit_val_batches=num_steps,
-                limit_test_batches=num_steps
+                limit_test_batches=num_steps,
+                callbacks= [self.checkpoint_callback,
+                            EarlyStopping(monitor="train_loss")]
             )
         else:
             trainer = Trainer(
                 accumulate_grad_batches=self.params.d[
                     "accumulate_grad_batches"],
-                callbacks=self.checkpoint_callback,
                 enable_progress_bar=True,
                 gradient_clip_val=self.params.d["gradient_clip_val"],
                 logger=logger,
@@ -326,7 +346,9 @@ class ActionConductor:
                 # track_grad_norm= no longer used
                 limit_train_batches=num_steps,
                 limit_val_batches=num_steps,
-                limit_test_batches=num_steps
+                limit_test_batches=num_steps,
+                callbacks=[self.checkpoint_callback,
+                           EarlyStopping(monitor="train_loss")]
             )
         return trainer
 
@@ -399,8 +421,8 @@ class ActionConductor:
             train_dataloaders=self.dloader_tool.train_dloader,
             val_dataloaders=self.dloader_tool.tune_dloader)
         tdir = get_task_logs_dir(self.params.task)
-        shutil.move(tdir + '/train.part',
-                    tdir + '/train')
+        shutil.move(tdir + '/train.in_progress',
+                    tdir + '/train_')
 
     def resume(self):
         """
@@ -436,8 +458,8 @@ class ActionConductor:
             val_dataloaders=self.dloader_tool.tune_dloader,
             ckpt_path=checkpoint_fp)  # only if resuming
         tdir = get_task_logs_dir(self.params.task)
-        shutil.move(tdir + '/resume.part',
-                    tdir + '/resume')
+        shutil.move(tdir + '/resume.in_progress',
+                    tdir + '/resume_')
 
     def test(self):
         """
@@ -495,8 +517,8 @@ class ActionConductor:
                 # note test_f created outside loop.
                 # refresh/clear/flush test_f after each write
                 test_f.flush()
-        shutil.move(tdir + '/test.part',
-                    tdir + '/test')
+        shutil.move(tdir + '/test.in_progress',
+                    tdir + '/test_')
 
     # no longer used.
     # @staticmethod
@@ -981,6 +1003,11 @@ class ActionConductor:
                 getattr(self, process)(pred_in_fp, split_only)
             else:
                 getattr(self, process)()
+        for fpath in self.logger_fpaths:
+            ckpt_path = self.get_latest_checkpoint_fp()
+            ckpt_name = ckpt_path.split("/")[-1].replace(".ckpt", "")
+            new_fpath = fpath + ckpt_name + "_"
+            os.rename(fpath, new_fpath)
 
 
 if __name__ == "__main__":

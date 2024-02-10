@@ -1213,7 +1213,9 @@ class Model(L.LightningModule):
         """
         batch_m_out = self.forward(batch, batch_idx, ttt)
         loss_d = {}
-        loss_d[ttt + "_loss"] = round(float(batch_m_out.loss), 6)
+        loss_d[ttt + "_loss"] = batch_m_out.loss
+        if ttt == "train":
+            loss_d["loss"] = batch_m_out.loss
 
         if "extract" in self.params.action:
             # Openie6 only writes on validation (tune) step
@@ -1226,15 +1228,21 @@ class Model(L.LightningModule):
             # only remember batch_m_out if going to score it
             # at end of epoch. This only happens if ttt != "train".
             self.l_batch_m_out.append(batch_m_out)
-        if self.verbose:
-            print(f"Inside Model.{ttt}_step method, "
-                  f"batch_idx={batch_idx}")
-            print("\t", loss_d)
+        if self.verbose or (not self.verbose and batch_idx==0):
+            ttt_to_long = {"train": "training",
+                           "tune": "validation",
+                           "test": "test"}
+            print(f"Inside Model.{ttt_to_long[ttt]}_step method, "
+                  f"batch_idx={batch_idx}",
+                  round_dict_values(loss_d))
+
         self.log_dict(
             loss_d,
             prog_bar=True,
             logger=True,
-            on_step=True)
+            on_step=False,
+            on_epoch=True)
+        return loss_d
 
     def training_step(self, batch, batch_idx):
         """
@@ -1252,7 +1260,7 @@ class Model(L.LightningModule):
         None
 
         """
-        self.sax_ttt_step(batch, batch_idx, "train")
+        return self.sax_ttt_step(batch, batch_idx, "train")
 
     def validation_step(self, batch, batch_idx):
         """
@@ -1270,7 +1278,7 @@ class Model(L.LightningModule):
         None
 
         """
-        self.sax_ttt_step(batch, batch_idx, "tune")
+        return self.sax_ttt_step(batch, batch_idx, "tune")
 
     def test_step(self, batch, batch_idx):
         """
@@ -1288,7 +1296,7 @@ class Model(L.LightningModule):
         None
 
         """
-        self.sax_ttt_step(batch, batch_idx, "test")
+        return self.sax_ttt_step(batch, batch_idx, "test")
 
     def sax_get_scores_on_ttt_epoch_end(self, ttt):
         """
@@ -1329,7 +1337,9 @@ class Model(L.LightningModule):
                         batch_m_out.l_orig_sent,  # meta data
                         batch_m_out.lll_pred_ilabel,  # predictions
                         batch_m_out.ll_pred_confidence)  # scores
+                    # print("qswed", batch_m_out.ll_pred_confidence)
             score_d = self.metric.get_score_d(ttt)
+
 
         if self.params.task == "cc":
             epoch_acc = score_d["F1_exact"]
@@ -1339,6 +1349,7 @@ class Model(L.LightningModule):
             assert False
         scores_epoch_end_d = dict(score_d)
         scores_epoch_end_d["epoch_acc"] = epoch_acc
+
 
         scores_epoch_end_d = round_dict_values(scores_epoch_end_d)
 
@@ -1393,14 +1404,16 @@ class Model(L.LightningModule):
 
         epoch_acc = self.scores_epoch_end_d["epoch_acc"]
         acc_d = {}
-        acc_d[ttt + "_epoch_acc"] = round(float(epoch_acc), 6)
+        acc_d[ttt + "_epoch_acc"] = float(epoch_acc)
         self.log_dict(acc_d,
                       prog_bar=True,
                       logger=True,
+                      on_step=False,
                       on_epoch=True)
 
         self.l_batch_m_out.restart()
         # self.l_batch_m_out.clear()  # free memory
+        return acc_d
 
     def on_validation_epoch_end(self):
         """

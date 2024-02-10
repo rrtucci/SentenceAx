@@ -106,6 +106,7 @@ class ExMetric:
         if self.verbose:
             print("len(self.osentL_to_exs) after merge=",
                   len(self.osentL_to_exs))
+        # print("self.osentL_to_exs", self.osentL_to_exs)
 
     @staticmethod
     def get_zero_score_d():
@@ -213,6 +214,8 @@ class ExMetric:
             {'AUC': auc,
              'F1': optimal_f1_point[2],
              'last_F1': last_f1_point[2]})
+        # print("vrtn", ttt, self.score_d)
+        # print("ooerty", osent_to_exs)
         # necessary because __call__ only
         # appends to self.osentL_to_exs
         if do_reset:

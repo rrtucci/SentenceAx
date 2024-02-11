@@ -18,6 +18,7 @@ import pkg_resources as pkg
 from unidecode import unidecode
 import os
 from inspect import currentframe, getframeinfo
+from glob import iglob
 
 
 class DotDict(dict):
@@ -675,16 +676,35 @@ def get_omit_exless_flag(task, ttt):
     return True
 
 
-def delete_all_files_with_given_ending(dir_fp, ending):
+def get_all_files_with_given_suffix(dir_fp, suffix):
+    """
+    This method gets a list of  all files in the directory with path
+    `dir_fp` whose names end in the string `suffix`.
+
+    Parameters
+    ----------
+    dir_fp: str
+    suffix: str
+
+    Returns
+    -------
+    lisst[str]
+
+    """
+    dir_fp = dir_fp.rstrip().rstrip("/")
+    return iglob(dir_fp + f"/*{suffix}")
+
+
+def delete_all_files_with_given_suffix(dir_fp, suffix):
     """
     This method deletes all files in the directory with path `dir_fp` whose
-    names end in the string `ending`.
+    names end in the string `suffix`.
 
 
     Parameters
     ----------
     dir_fp: str
-    ending: str
+    suffix: str
 
     Returns
     -------
@@ -695,7 +715,7 @@ def delete_all_files_with_given_ending(dir_fp, ending):
         fnames = os.listdir(dir_fp)
         for fname in fnames:
             fpath = os.path.join(dir_fp, fname)
-            if fname.endswith(ending):
+            if fname.endswith(suffix):
                 os.remove(fpath)
     except Exception as e:
         print(f"An error occurred: {e}")

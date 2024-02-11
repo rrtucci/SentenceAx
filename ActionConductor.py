@@ -173,7 +173,7 @@ class ActionConductor:
             mode='max',
             save_top_k=self.params.d["save_k"])
 
-    def get_all_checkpoint_fp(self):
+    def get_all_checkpoint_fp(self, extra_suffixes=None):
         """
         similar to Openie6.run.get_checkpoint_path().
 
@@ -184,27 +184,44 @@ class ActionConductor:
         More than one checkpoint only used by self.test() and those who call
         it. resume() uses the latest checkpoint only.
 
+        Parameters
+        ----------
+        extra_suffixes: list[str] | None
+            A list of checkpoint file suffixes other than ".ckpt"
+
         Returns
         -------
         list[str]
 
         """
         weights_dir = self.params.d["weights_dir"]
-        paths = iglob(f"{weights_dir}/{self.params.task}_model/*.ckpt")
-        # latest first in list
+        suffixes = [".ckpt"]
+        if extra_suffixes:
+            suffixes += extra_suffixes
+        paths = []
+        for suffix in suffixes:
+            paths += \
+                iglob(f"{weights_dir}/{self.params.task}_model/*{suffix}")
         paths = [path.replace("\\", "/") for path in paths]
+        # latest first in list
         return sorted(paths, key=os.path.getctime, reverse=True)
 
-    def get_latest_checkpoint_fp(self):
+    def get_latest_checkpoint_fp(self, extra_suffixes=None):
         """
         This method returns the latest (most recent) checkpoint file path.
+
+        Parameters
+        ----------
+        extra_suffixes: list[str] | None
+            suffixes other than ".ckpt" to look for
 
         Returns
         -------
         str
 
         """
-        return self.get_all_checkpoint_fp()[0].replace("\\", "/")
+        return self.get_all_checkpoint_fp(extra_suffixes)[0]. \
+            replace("\\", "/")
 
     def get_best_checkpoint_fp(self):
         """
@@ -237,8 +254,8 @@ class ActionConductor:
 
     def delete_all_checkpoints(self):
         """
-        This method deletes all files ending in ".ckpt" in the appropriate
-        folder.
+        This method deletes all files with names ending in ".ckpt" in the
+        appropriate folder.
 
         This method does not delete the best checkpoint file because that
         one ends in ".best". If you want to prevent other files besides the
@@ -251,9 +268,9 @@ class ActionConductor:
 
         """
         weights_dir = self.params.d["weights_dir"]
-        delete_all_files_with_given_ending(
+        delete_all_files_with_given_suffix(
             dir_fp=f"{weights_dir}/{self.params.task}_model",
-            ending=".ckpt")
+            suffix=".ckpt")
 
     def get_new_TB_logger(self, name):
         """
@@ -296,6 +313,7 @@ class ActionConductor:
             name=self.params.task,
             version=name + '.in_progress'
         )
+
         path0 = LOGS_DIR + "/" + self.params.task + "/" + name
         # path changed from path0 + ".in_progress" to
         # path0 + "_" after trainer does fit.
@@ -327,8 +345,8 @@ class ActionConductor:
                 limit_train_batches=num_steps,
                 limit_val_batches=num_steps,
                 limit_test_batches=num_steps,
-                callbacks= [self.checkpoint_callback,
-                            EarlyStopping(monitor="train_loss")]
+                callbacks=[self.checkpoint_callback,
+                           EarlyStopping(monitor="train_loss")]
             )
         else:
             trainer = Trainer(
@@ -356,12 +374,14 @@ class ActionConductor:
         """
         similar to Openie6.run.test() and data.override_args().
 
-        deprecated: This method loads parameters from the checkpoint file
-        and inserts them into the Params instance self.params.
+        This method is no longer used.
 
-        hparams is an attribute of Model, and there are several (4) Model
-        instances created in SentenceAx. A checkpoint file does not belong
-        to any particular model.
+        This method loads parameters from the checkpoint file and inserts
+        them into the Params instance self.params.
+
+        hparams is an attribute of Model's parent class. Openie6 stores
+        stuff in hparams. CheckPoint remembers hparams. SentenceAx doesn't
+        store stuff in hparams so its hparams is empty.
 
         Parameters
         ----------
@@ -380,15 +400,15 @@ class ActionConductor:
                           "hparams_name": ckpt_d["hparams_name"]}
                 )
 
-        # if self.has_cuda:
-        #     ckpt_params_d = torch.load(checkpoint_fp)["hparams"]
-        # else:
-        #     map_loc = torch.device('cpu')
-        #     ckpt_params_d = torch.load(
-        #         checkpoint_fp, map_location=map_loc)["hparams"]
+        if self.has_cuda:
+            ckpt_params_d = torch.load(checkpoint_fp)["hparams"]
+        else:
+            map_loc = torch.device('cpu')
+            ckpt_params_d = torch.load(
+                checkpoint_fp, map_location=map_loc)["hparams"]
 
-        # self.params.d = merge_dicts(ckpt_params_d,
-        #                             default_d=self.params.d)
+        self.params.d = merge_dicts(ckpt_params_d,
+                                    default_d=self.params.d)
 
     def train(self):
         """
@@ -444,7 +464,7 @@ class ActionConductor:
         checkpoint_fp = self.get_latest_checkpoint_fp()
         # train is the only action that doesn't require
         # update_params() because it is called first
-        self.update_params(checkpoint_fp)
+        # self.update_params(checkpoint_fp)
         model = Model(self.params,
                       self.auto_tokenizer,
                       verbose=self.verbose,
@@ -469,12 +489,12 @@ class ActionConductor:
         is called inside this method.
 
         This method does testing. It creates an instance of Model. It then
-        goes down the list of checkpoints and creates a Trainer for each
-        one. This trainer is used to call trainer.test(), instead of
-        trainer.fit( ) as done in self.train(). trainer.test( ) scores the
-        test data with the weights of that checkpoint file. test accuracies
-        for each checkpoint are saved in a file logs/ex/test.txt or
-        logs/cc/test.txt.
+        goes down the list of checkpoints with suffixes in [".ckpt",
+        ".best", ".test"] and creates a Trainer for each one. This trainer
+        is used to call trainer.test(), instead of trainer.fit( ) as done in
+        self.train(). trainer.test( ) scores the test data with the weights
+        of that checkpoint file. test accuracies for each checkpoint are
+        saved in a file logs/ex/test.txt or logs/cc/test.txt.
 
 
         Returns
@@ -482,12 +502,12 @@ class ActionConductor:
         None
 
         """
-        checkpoint_paths = self.get_all_checkpoint_fp()
-        if 'train' not in self.params.action:
-            # here parameters are updated from the latest checkpoint. If
-            # train() was called first, then update_params() is unnecessary
-            # because no checkpoints exists yet.
-            self.update_params(self.get_latest_checkpoint_fp())
+
+        # Here parameters are updated from the latest checkpoint. If
+        # train() was called first, then update_params() is unnecessary
+        # because no checkpoints exists yet.
+        # if 'train' not in self.params.action:
+        #     self.update_params(self.get_latest_checkpoint_fp())
 
         model = Model(self.params,
                       self.auto_tokenizer,
@@ -500,10 +520,11 @@ class ActionConductor:
         # if self.params.task == "cc" and self.osent_to_words:
         #     model.metric.sent_to_words = self.osent_to_words
 
+        extra_suffixes = [".best", ".test"]
+        checkpoint_paths = self.get_all_checkpoint_fp(extra_suffixes)
         tdir = get_task_logs_dir(self.params.task)
         with open(tdir + '/test.txt', "w") as test_f:
             logger = self.get_new_TB_logger("test")
-            # might be more than one checkpoint if keep best 2, 3 etc epochs
             for checkpoint_fp in checkpoint_paths:
                 trainer = self.get_new_trainer(logger,
                                                use_minimal=True)
@@ -689,7 +710,7 @@ class ActionConductor:
 
         # assert list(self.get_all_checkpoint_fp()) == [checkpoint_fp]
 
-        self.update_params(checkpoint_fp)
+        # self.update_params(checkpoint_fp)
         self.dloader_tool.set_extract_dataloader(pred_in_fp)
         # always set dataloader before constructing a Model instance
         test_name = "test_" + name
@@ -1003,6 +1024,7 @@ class ActionConductor:
                 getattr(self, process)(pred_in_fp, split_only)
             else:
                 getattr(self, process)()
+
         for fpath in self.logger_fpaths:
             ckpt_path = self.get_latest_checkpoint_fp()
             ckpt_name = ckpt_path.split("/")[-1].replace(".ckpt", "")
@@ -1036,10 +1058,12 @@ if __name__ == "__main__":
         params.describe_self()
 
         conductor = ActionConductor(params, verbose=True)
-        conductor.delete_all_checkpoints()
-        print("checkpoints:", conductor.get_all_checkpoint_fp())
+        if pid in [1, 5]:
+            conductor.delete_all_checkpoints()
+            print("checkpoints:", conductor.get_all_checkpoint_fp())
         conductor.run(pred_in_fp)
-        print("checkpoints:", conductor.get_all_checkpoint_fp())
+        if pid in [1, 5]:
+            print("checkpoints:", conductor.get_all_checkpoint_fp())
 
 
     # main(1)

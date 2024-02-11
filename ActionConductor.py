@@ -496,6 +496,8 @@ class ActionConductor:
         of that checkpoint file. test accuracies for each checkpoint are
         saved in a file logs/ex/test.txt or logs/cc/test.txt.
 
+        Tip: If you want to test more than a single file with name ending in
+        "TEST", you can end the file names in "1TEST", "2TEST", etc.
 
         Returns
         -------

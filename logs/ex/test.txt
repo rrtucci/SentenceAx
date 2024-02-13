@@ -1,0 +1,1 @@
+weights/ex_model/epoch=20_tune_epoch_acc=0.5189.ckpt	{'AUC': 0.3084, 'F1': 0.5055, 'last_F1': 0.5055, 'epoch_acc': 0.5055}

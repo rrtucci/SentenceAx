@@ -295,7 +295,7 @@ class ActionConductor:
         TensorBoardLogger
 
         """
-        prefix = get_task_logs_dir(self.params.task) + f'/{name}'
+        prefix = get_task_logs_dir(self.params) + f'/{name}'
         # if os.path.exists(prefix):
         #     fpaths = iglob(prefix + '_*')
         #     num_numbered_logs = len(list(fpaths))
@@ -309,12 +309,12 @@ class ActionConductor:
 
         # logs are saved in /save_dir/name/version/sub_dir/
         logger = TensorBoardLogger(
-            save_dir=LOGS_DIR,
+            save_dir=self.params.d["logs_dir"],
             name=self.params.task,
             version=name + '.in_progress'
         )
 
-        path0 = LOGS_DIR + "/" + self.params.task + "/" + name
+        path0 = get_task_logs_dir(self.params) + "/" + name
         # path changed from path0 + ".in_progress" to
         # path0 + "_" after trainer does fit.
         self.logger_fpaths.append(path0 + "_")
@@ -440,7 +440,7 @@ class ActionConductor:
             model,
             train_dataloaders=self.dloader_tool.train_dloader,
             val_dataloaders=self.dloader_tool.tune_dloader)
-        tdir = get_task_logs_dir(self.params.task)
+        tdir = get_task_logs_dir(self.params)
         shutil.move(tdir + '/train.in_progress',
                     tdir + '/train_')
 
@@ -477,7 +477,7 @@ class ActionConductor:
             train_dataloaders=self.dloader_tool.train_dloader,
             val_dataloaders=self.dloader_tool.tune_dloader,
             ckpt_path=checkpoint_fp)  # only if resuming
-        tdir = get_task_logs_dir(self.params.task)
+        tdir = get_task_logs_dir(self.params)
         shutil.move(tdir + '/resume.in_progress',
                     tdir + '/resume_')
 
@@ -524,7 +524,7 @@ class ActionConductor:
 
         extra_suffixes = ["best", "TEST"]
         checkpoint_paths = self.get_all_checkpoint_fp(extra_suffixes)
-        tdir = get_task_logs_dir(self.params.task)
+        tdir = get_task_logs_dir(self.params)
         with open(tdir + '/test.txt', "w") as test_f:
             logger = self.get_new_TB_logger("test")
             for checkpoint_fp in checkpoint_paths:

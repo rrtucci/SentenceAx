@@ -42,7 +42,6 @@ CC_METRIC_SAVE = True
 INPUT_DIR = "input_data"
 CACHE_DIR = 'cache'
 PREDICTING_DIR = "predicting"
-LOGS_DIR = "logs"
 CC_METRIC_STORAGE_DIR = "cc_metric_storage"
 M_OUT_DIR = PREDICTING_DIR + "/model_output"
 

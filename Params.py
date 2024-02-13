@@ -299,10 +299,12 @@ class Params:
             {
                 "accumulate_grad_batches": 1,  # torch default is 1
                 "batch_size": 32,
+                "cache_dir": "cache",
                 "con_weight_str": "1",  # for multiple constraints "1_1_1"
                 "dropout_fun": 0.0,
                 "gpus": 1,
                 "gradient_clip_val": 5,
+                "logs_dir": "logs",
                 "lr": 2E-5,
                 "model_str": "bert-base-cased",
                 # "num_extractions": EX_NUM_DEPTHS,

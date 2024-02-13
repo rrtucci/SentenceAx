@@ -86,29 +86,21 @@ def get_tag_to_ilabel(task):
     return tag_to_ilabel
 
 
-def get_task_logs_dir(task):
+def get_task_logs_dir(params):
     """
-    This method returns the logs_directory for the task `task`, where task
-    in ["ex", "cc"].
-
-
+    This method returns the task logs_directory for the logs directory
+    params_d["logs_dir"] and the task params_d["task"].
 
     Parameters
     ----------
-    task: str
+    params: Params
 
     Returns
     -------
     str
 
     """
-    if task == "ex":
-        tdir = LOGS_DIR + '/ex'
-    elif task == "cc":
-        tdir = LOGS_DIR + '/cc'
-    else:
-        assert False
-    return tdir
+    return params.d["logs_dir"] + '/' + params.d["task"]
 
 
 def get_num_depths(task):

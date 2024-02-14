@@ -36,7 +36,7 @@ www.ar-tiste.xyz
     * Causal Fitbit (coming soon)
 
 ![Mappa Mundi Project](pics/mappa-mundi-4-pillars.jpg)
-## Input Dataset and Weight
+## Input Dataset and Weights
 
 Due to a < 50MB per file limitation at Github, 
 the input datasets and weights will be located at HuggingFace, at 

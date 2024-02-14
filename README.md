@@ -17,7 +17,7 @@ as is done by my software [Mappa Mundi](https://github.com/rrtucci/mappa_mundi).
 
 SentenceAx (Sax) is a complete rewrite, from stem to stern, of O6.
 
-SentenceAx is a fine-tuning of BERT written in PyTorch and Lightning.
+SentenceAx is a fine-tuning of BERT written with PyTorch and Lightning.
 
 SentenceAx is a stand-alone app, but, just like the
 SCuMpy app,

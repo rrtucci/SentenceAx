@@ -4,13 +4,20 @@
 ![SentenceAx](pics/sentence_ax_logo.jpg)
 ![SentenceAx Bayesian Network](pics/sentence-ax-bnet.jpg)
 
-SentenceAx is a complete rewrite, from stem to stern, of Openie6.
+The [Openie6 (O6) software](https://github.com/dair-iitd/openie6) 
+splits complex or
+compound sentences into simple ones. 
+Simple sentences are essentially the same 
+as the triples (subject, relationship, object) which, 
+when visualized as a directed or undirected graph, 
+is called a “knowledge graph”. 
+Sentence splitting is also a necessary step 
+in doing causal DAG extraction from text (causal DEFT), 
+as is done by my software [Mappa Mundi](https://github.com/rrtucci/mappa_mundi).
 
-https://github.com/dair-iitd/openie6
+SentenceAx (Sax) is a complete rewrite, from stem to stern, of O6.
 
-SentenceAx decomposes a compound or complex sentence
-into a set of simple sentences (extractions). It does this using 
-a fine-tuned BERT model.
+SentenceAx is a fine-tuning of BERT.
 
 SentenceAx is a stand-alone app, but, just like the
 SCuMpy app,

@@ -29,12 +29,15 @@ www.ar-tiste.xyz
     * Causal Fitbit (coming soon)
 
 ![Mappa Mundi Project](pics/mappa-mundi-4-pillars.jpg)
-## Weights and Input Dataset
+## Input Dataset and Weight
 
-Due to a < 50MB per file limitation at Github, the weights and input datasets will be located at HuggingFace.
+Due to a < 50MB per file limitation at Github, 
+the input datasets ad weights will be located at HuggingFace, at 
+[this location](https://huggingface.co/datasets/rrtucci/SentenceAx).
 
-* input dataset. Unzip [this file](https://huggingface.co/datasets/rrtucci/SentenceAx) and use it to replace the 
-directory `input_data` of this github repo. 
+Download and unzip the zipped files at that loccation. Use them to replace the 
+directories called `input_files` and  `weights` in your local copy of 
+SentenceAx.
 
 ## Documentation
 

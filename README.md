@@ -39,7 +39,7 @@ www.ar-tiste.xyz
 ## Input Dataset and Weight
 
 Due to a < 50MB per file limitation at Github, 
-the input datasets ad weights will be located at HuggingFace, at 
+the input datasets and weights will be located at HuggingFace, at 
 [this location](https://huggingface.co/datasets/rrtucci/SentenceAx).
 
 Download and unzip the zipped files at that loccation. Use them to replace the 

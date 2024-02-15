@@ -220,8 +220,9 @@ class ActionConductor:
         str
 
         """
-        return self.get_all_checkpoint_fp(extra_suffixes)[0]. \
-            replace("\\", "/")
+        paths = self.get_all_checkpoint_fp(extra_suffixes)
+        assert paths, "No checkpoints."
+        return paths[0].replace("\\", "/")
 
     def get_best_checkpoint_fp(self):
         """
@@ -1027,11 +1028,14 @@ class ActionConductor:
             else:
                 getattr(self, process)()
 
-        for fpath in self.logger_fpaths:
+
+        if "train" in self.params.action:
             ckpt_path = self.get_latest_checkpoint_fp()
+            assert ckpt_path, "No latest checkpoint file"
             ckpt_name = ckpt_path.split("/")[-1].replace(".ckpt", "")
-            new_fpath = fpath + ckpt_name + "_"
-            os.rename(fpath, new_fpath)
+            for fpath in self.logger_fpaths:
+                new_fpath = fpath + ckpt_name + "_"
+                os.rename(fpath, new_fpath)
 
 
 if __name__ == "__main__":

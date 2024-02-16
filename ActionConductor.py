@@ -734,6 +734,8 @@ class ActionConductor:
 
         start_time = time()
         # model.all_sentences = all_sentences # never used
+        if self.verbose:
+            print("checkpoint file path:", checkpoint_fp)
         trainer.test(
             model,
             dataloaders=self.dloader_tool.extract_dloader,

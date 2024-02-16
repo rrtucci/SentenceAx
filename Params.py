@@ -108,6 +108,8 @@ class Params:
         """
         x = self.d["batch_size"]
         y = self.d["num_steps_per_epoch"]
+        if not x or not y:
+            return
         print("Checking Params.py:")
         print(f"number of samples per batch={x}\n"
             f"number of batches={y}\n"
@@ -299,7 +301,6 @@ class Params:
             {
                 "accumulate_grad_batches": 1,  # torch default is 1
                 "batch_size": 32,
-                "cache_dir": "cache",
                 "con_weight_str": "1",  # for multiple constraints "1_1_1"
                 "dropout_fun": 0.0,
                 "gpus": 1,

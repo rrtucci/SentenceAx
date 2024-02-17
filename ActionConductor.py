@@ -284,7 +284,7 @@ class ActionConductor:
         number suffix. Retired ones will.
 
         All directories inside logs/task/ that end in "_" will be deleted.
-        So if you want to keep some of them, add a suffix like "best" to
+        So if you want to keep some of them, add a suffix like ".best" to
         them.
 
         Parameters
@@ -491,7 +491,7 @@ class ActionConductor:
 
         This method does testing. It creates an instance of Model. It then
         goes down the list of checkpoints with suffixes in [".ckpt",
-        "best", "TEST"] and creates a Trainer for each one. This trainer
+        ".best", "TEST"] and creates a Trainer for each one. This trainer
         is used to call trainer.test(), instead of trainer.fit( ) as done in
         self.train(). trainer.test( ) scores the test data with the weights
         of that checkpoint file. test accuracies for each checkpoint are
@@ -523,7 +523,7 @@ class ActionConductor:
         # if self.params.task == "cc" and self.osent_to_words:
         #     model.metric.sent_to_words = self.osent_to_words
 
-        extra_suffixes = ["best", "TEST"]
+        extra_suffixes = [".best", "TEST"]
         checkpoint_paths = self.get_all_checkpoint_fp(extra_suffixes)
         tdir = get_task_logs_dir(self.params)
         with open(tdir + '/test.txt', "w") as test_f:

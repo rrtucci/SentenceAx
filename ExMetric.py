@@ -119,9 +119,9 @@ class ExMetric:
         dict[str, float]
 
         """
-        score_d = OrderedDict({'AUC': 0.0,
-                               'F1': 0.0,
-                               'last_F1': 0.0})
+        score_d = {'AUC': 0.0,
+                   'F1': 0.0,
+                   'last_F1': 0.0}
         return score_d
 
     def reset_score_d(self):
@@ -176,7 +176,6 @@ class ExMetric:
         if self.verbose:
             print("Entering ExMetric.get_score_d() method.")
 
-
         assert self.osentL_to_exs
         for osentL, exs in self.osentL_to_exs.items():
             # print("confidences", [ex.confidence for ex in exs])
@@ -210,10 +209,9 @@ class ExMetric:
                 error_file=None,
                 binary=False)
 
-        self.score_d = OrderedDict(
-            {'AUC': auc,
-             'F1': optimal_f1_point[2],
-             'last_F1': last_f1_point[2]})
+        self.score_d = {'AUC': auc,
+                        'F1': optimal_f1_point[2],
+                        'last_F1': last_f1_point[2]}
         # print("vrtn", ttt, self.score_d)
         # print("ooerty", osent_to_exs)
         # necessary because __call__ only

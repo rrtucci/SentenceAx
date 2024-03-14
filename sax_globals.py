@@ -22,8 +22,7 @@ tuning=dev=development=validation
 SAMPLE_SEPARATOR = "[%@!]"
 SEED = 777
 
-#NAN = np.nan
-NAN = 0
+NAN=0
 
 #"ex" stands for extraction
 # "cc" stands for coordinating conjunction
@@ -37,7 +36,7 @@ FANBOYS = ["for" , "and" , "nor", "but", "or", "yet", "so"]
 # I set USE_POS_INFO = True always.
 USE_POS_INFO = True
 
-CC_METRIC_SAVE = True
+CC_METRIC_SAVE = False
 
 INPUT_DIR = "input_data"
 CACHE_DIR = 'cache'

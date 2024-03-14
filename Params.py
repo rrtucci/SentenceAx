@@ -267,7 +267,8 @@ class Params:
                 "num_iterative_layers": 2,
                 "lr": 2E-5,
                 "action": "train_test",
-                "model_str": "bert-large-cased",
+                # "model_str": "bert-large-cased",
+                "model_str": "bert-base-cased",
                 "optimizer": "adamW",
                 # "save": WEIGHTS_DIR + "/cc",
                 "task": "cc"

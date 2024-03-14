@@ -1030,7 +1030,6 @@ class ActionConductor:
             else:
                 getattr(self, process)()
 
-
         if "train" in self.params.action:
             ckpt_path = self.get_latest_checkpoint_fp()
             assert ckpt_path, "No latest checkpoint file"

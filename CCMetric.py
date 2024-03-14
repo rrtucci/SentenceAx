@@ -8,26 +8,23 @@ from AllenTool import *
 class CCMetric:
     """
     similar to Openie6.metric.Conjunction
-    
-    This class does scoring for task="cc". Class ExMetric does scoring for 
+
+    This class does scoring for task="cc". Class ExMetric does scoring for
     task="ex".
-    
-    This class stores scores of model weights. There are 4 types of scoring 
-    managers, called CCScoreManager's: "manager_whole", "manager_outer", 
-    "manager_inner" and "manager_exact". Each of these uses a different 
+
+    This class stores scores of model weights. There are 4 types of scoring
+    managers, instances of CCScoreManager: `kind_to_manager[kind]`,
+    where kind\in SCORE_KINDS. Each of these managers uses a different
     scoring procedure.
 
-    Setting the parameter `save` to True makes this class store the scores 
-    for the current set of weights.
+    Setting the parameter `save` to True makes this class store the tree
+    structure.
 
     Attributes
     ----------
-    manager_exact: CCScoreManager
-    manager_inner: CCScoreManager
-    manager_outer: CCScoreManager
-    manager_whole: CCScoreManager
-    score_d: dict[str, float]
+    kind_to_manager: dict[str, CCScoreManager]
     save: bool
+    score_d: dict[str, float]
     verbose: bool
 
     """
@@ -41,12 +38,14 @@ class CCMetric:
         verbose: bool
 
         """
-        self.verbose = verbose
+
+        self.kind_to_manager = {}
+        for kind in SCORE_KINDS:
+            self.kind_to_manager[kind] = CCScoreManager(kind)
         self.save = CC_METRIC_SAVE
-        self.manager_whole = CCScoreManager("whole")
-        self.manager_outer = CCScoreManager("outer")
-        self.manager_inner = CCScoreManager("inner")
-        self.manager_exact = CCScoreManager("exact")
+        self.score_d = CCMetric.get_zero_score_d()
+        self.verbose = verbose
+
         # self.n_complete = 0 # not used
         # self.n_sentence = 0 # not used
         if self.save:
@@ -59,8 +58,6 @@ class CCMetric:
             if os.path.exists(di + '/l_true_ccnodes.pkl'):
                 os.remove(di + '/l_true_ccnodes.pkl')
 
-        self.score_d = CCMetric.get_zero_score_d()
-
     def __call__(self,
                  l_osent,  # Openie6.meta_data
                  lll_pred_ilabel,  # Openie6.predictions
@@ -68,7 +65,7 @@ class CCMetric:
         """
         similar to Openie6.metric.Conjunction.__call__
 
-        A __call__() method is a new chance to load attributes into the 
+        A __call__() method is a new chance to load attributes into the
         class after the __init__() has been called.
 
         Whereas __init__() is called only once, __call__() can be called
@@ -98,10 +95,9 @@ class CCMetric:
                                   lll_ilabel[k],
                                   calc_tree_struc=True).ccnodes
 
-            self.manager_whole.absorb_new_sample(pred_ccnodes, true_ccnodes)
-            self.manager_outer.absorb_new_sample(pred_ccnodes, true_ccnodes)
-            self.manager_inner.absorb_new_sample(pred_ccnodes, true_ccnodes)
-            self.manager_exact.absorb_new_sample(pred_ccnodes, true_ccnodes)
+            for kind in SCORE_KINDS:
+                self.kind_to_manager[kind]. \
+                    absorb_new_sample(pred_ccnodes, true_ccnodes)
 
             if self.save:
                 # we append to pickle files for each sample.
@@ -114,10 +110,27 @@ class CCMetric:
                 pickle.dump(true_ccnodes, open(
                     di + '/l_true_ccnodes.pkl', 'ab'))
 
+    def get_all_node_ccscore(self, kind='exact'):
+        """
+        Similar to Openie6.metric.Conjunction.get_overall_score().
+
+        This method returns the all_node_ccscore` for kind `kind`.
+
+        Parameters
+        ----------
+        kind: str
+
+        Returns
+        -------
+        CCScore
+
+        """
+        return self.kind_to_manager[kind].all_node_ccscore
+
     @staticmethod
     def get_zero_score_d():
         """
-        This method returns a new copy of the `score_d` dictionary with all 
+        This method returns a new copy of the `score_d` dictionary with all
         values zero.
 
         Returns
@@ -125,20 +138,16 @@ class CCMetric:
         dict[str, float]
 
         """
-        score_d = OrderedDict({
-            'F1_whole': 0,
-            'F1_outer': 0,
-            'F1_inner': 0,
-            'F1_exact': 0,
-            'P_exact': 0,
-            'R_exact': 0
-        })
+        score_d = {}
+        for kind in SCORE_KINDS:
+            score_d[f"acc_nsam_{kind}"] = (0, 0)
+            score_d[f"acc_nsam_{kind}11"] = (0, 0)
         return score_d
 
     def reset_score_d(self):
         """
-        Unlike the method get_zero_score_d(), this method does not create a 
-        new `score_d` dictionary. Instead, it sets to zero all values of the 
+        Unlike the method get_zero_score_d(), this method does not create a
+        new `score_d` dictionary. Instead, it sets to zero all values of the
         existing `self.score_d`.
 
         Returns
@@ -147,12 +156,12 @@ class CCMetric:
 
         """
         for name in self.score_d.keys():
-            self.score_d[name] = 0.0
+            self.score_d[name] = (0, 0)
 
     def reset_managers(self):
         """
         similar to Openie6.metric.Conjunction.reset()
-        
+
         This method sets to zero (resets) the 4 managers.
 
         Note that reset_managers() and reset_score_d() are separate methods.
@@ -163,17 +172,16 @@ class CCMetric:
         None
 
         """
-        self.manager_whole.reset()
-        self.manager_outer.reset()
-        self.manager_inner.reset()
-        self.manager_exact.reset()
+        for kind in SCORE_KINDS:
+            self.kind_to_manager[kind].reset()
+
         # self.n_complete = 0
         # self.n_sentence = 0
 
     def get_score_d(self, ttt, do_reset=True):
         """
         similar to Openie6.metric.Conjunction.get_metric()
-        
+
         This method returns the current `score_d`. It resets the managers iff
         do_reset=True.
 
@@ -191,49 +199,17 @@ class CCMetric:
         """
         if self.verbose:
             print("Entering CCMetric.get_score_d method.")
-        score_d = OrderedDict({
-            'F1_whole': self.manager_whole.overall_ccscores.f1_score(),
-            'F1_outer': self.manager_outer.overall_ccscores.f1_score(),
-            'F1_inner': self.manager_inner.overall_ccscores.f1_score(),
-            'F1_exact': self.manager_exact.overall_ccscores.f1_score(),
-            'P_exact': self.manager_exact.overall_ccscores.precision(),
-            'R_exact': self.manager_exact.overall_ccscores.recall()
-        })
+        score_d = {}
+        for kind in SCORE_KINDS:
+            score_d[f"acc_nsam_{kind}"] = \
+                self.get_all_node_ccscore(kind).get_acc_nsam()
+            score_d[f"acc_nsam_{kind}11"] = \
+                self.get_all_node_ccscore(kind).get_acc_nsam11()
+
         self.score_d = copy(score_d)
         if do_reset:
             self.reset_score_d()
         return score_d
-
-    def get_overall_score(self, manager_kind='exact'):
-        """
-        Similar to Openie6.metric.Conjunction.get_overall_score().
-        
-        There are 4 kinds of managers produced by this class, and each kind
-        has an overall_ccscores. This method returns the F1 score of the
-        overall_ccscores.
-
-        Parameters
-        ----------
-        manager_kind: str
-
-        Returns
-        -------
-        int
-
-        """
-        if manager_kind == 'whole':
-            manager = self.manager_whole
-        elif manager_kind == 'outer':
-            manager = self.manager_outer
-        elif manager_kind == 'inner':
-            manager = self.manager_inner
-        elif manager_kind == 'exact':
-            manager = self.manager_exact
-        else:
-            raise ValueError(
-                'invalid manager_kind: {}'.format(manager_kind))
-        # print("mkcd", manager, self.manager_inner.overall_ccscores)
-        return manager.overall_ccscores.f1_score()
 
 
 if __name__ == "__main__":
@@ -263,7 +239,8 @@ if __name__ == "__main__":
         cc_met(l_osent, lll_ilabel, lll_ilabel)
         score_d = cc_met.get_score_d(ttt="train", do_reset=True)
         print(score_d)
-        print("overall-exact score:", cc_met.get_overall_score("exact"))
+        print("acc-nsam score:", cc_met.get_all_node_ccscore(
+            "exact").get_acc_nsam())
 
 
     main()

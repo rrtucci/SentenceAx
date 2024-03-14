@@ -1342,7 +1342,7 @@ class Model(L.LightningModule):
 
 
         if self.params.task == "cc":
-            epoch_acc = score_d["F1_exact"]
+            epoch_acc = score_d["acc_nsam_exact"][0]
         elif self.params.task == "ex":
             epoch_acc = score_d["F1"]
         else:
@@ -1350,8 +1350,8 @@ class Model(L.LightningModule):
         scores_epoch_end_d = dict(score_d)
         scores_epoch_end_d["epoch_acc"] = epoch_acc
 
-
-        scores_epoch_end_d = round_dict_values(scores_epoch_end_d)
+        if self.params.task == "ex":
+            scores_epoch_end_d = round_dict_values(scores_epoch_end_d)
 
         print('\nScores at end of epoch ' +
               str(self.trainer.current_epoch) + ":")
